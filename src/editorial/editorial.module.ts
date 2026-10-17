@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsModule } from '../accounts/accounts.module';
+import { ChangeLinksController } from './change-links.controller';
+import { ChangeLinksService } from './change-links.service';
 import { DecisionsController } from './decisions.controller';
 import { DecisionsService } from './decisions.service';
 import { EditorialEntitiesController } from './editorial-entities.controller';
@@ -44,8 +46,9 @@ import { ProposalSource } from './entities/proposal-source.entity';
     ProposalsController,
     ProposalChangesController,
     ProposalSourcesController,
+    ChangeLinksController,
     DecisionsController,
   ],
-  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService, DecisionsService],
+  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService, ChangeLinksService, DecisionsService],
 })
 export class EditorialModule {}

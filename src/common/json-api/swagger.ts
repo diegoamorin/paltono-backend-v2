@@ -154,6 +154,30 @@ export function ApiJsonApiResourcesResponse(resource: Type, status = 200) {
   );
 }
 
+/** Documents a response holding the linkage of a to-many relationship. */
+export function ApiJsonApiRelationshipResponse(status = 200) {
+  return applyDecorators(
+    ApiExtraModels(ResourceIdentifier, JsonApiVersion, JsonApiResourceLinks),
+    ApiResponse({
+      status,
+      description: STATUS_CODES[status],
+      content: {
+        [JSON_API_MEDIA_TYPE]: {
+          schema: {
+            type: 'object',
+            required: ['data'],
+            properties: {
+              jsonapi: { $ref: getSchemaPath(JsonApiVersion) },
+              data: { type: 'array', items: { $ref: getSchemaPath(ResourceIdentifier) } },
+              links: { $ref: getSchemaPath(JsonApiResourceLinks) },
+            },
+          },
+        },
+      },
+    }),
+  );
+}
+
 /** Documents a response holding one page of resources. */
 export function ApiJsonApiCollectionResponse(resource: Type) {
   return applyDecorators(

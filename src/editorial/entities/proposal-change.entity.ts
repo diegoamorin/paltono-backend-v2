@@ -88,4 +88,10 @@ export class ProposalChange {
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })
   resolvedAt: Date | null;
+
+  /** The microchanges of the proposal it depends on, when loaded; not a column. */
+  dependsOnIds?: string[];
+
+  /** The general sources of the proposal linked to it, when loaded; not a column. */
+  sourceIds?: string[];
 }

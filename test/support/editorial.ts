@@ -155,6 +155,22 @@ export async function submitIdentityCreation(app: TestApp, accessToken: string) 
   return ids;
 }
 
+function linkageDocument(type: string, ids: string[]) {
+  return { data: ids.map((id) => ({ type, id })) };
+}
+
+/** POST or DELETE /v1/proposal-changes/{id}/relationships/dependencies */
+export function changeDependencies(app: TestApp, accessToken: string, method: 'post' | 'delete', changeId: string, dependsOn: string[]) {
+  const path = `/v1/proposal-changes/${changeId}/relationships/dependencies`;
+  return send(app, method, path, accessToken, linkageDocument('proposal-changes', dependsOn));
+}
+
+/** POST or DELETE /v1/proposal-changes/{id}/relationships/sources */
+export function changeSources(app: TestApp, accessToken: string, method: 'post' | 'delete', changeId: string, sourceIds: string[]) {
+  const path = `/v1/proposal-changes/${changeId}/relationships/sources`;
+  return send(app, method, path, accessToken, linkageDocument('proposal-sources', sourceIds));
+}
+
 /** POST /v1/proposal-changes/{id}/decisions */
 export function decideChange(app: TestApp, accessToken: string, changeId: string, attributes: object, query = '') {
   return send(app, 'post', `/v1/proposal-changes/${changeId}/decisions${query}`, accessToken, {

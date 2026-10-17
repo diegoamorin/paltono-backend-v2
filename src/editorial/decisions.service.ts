@@ -8,6 +8,7 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery } from '../common/json-api/query';
 import { LoadedDecision } from './change-decision.resource';
+import { inDependencyOrder } from './dependency-graph';
 import { ManualDecisionAction } from './dto/change-decision.dto';
 import { changeNotFound, invalid, isStaff, lockContributor } from './editorial-access';
 import { ChangeDecision, DecisionAction } from './entities/change-decision.entity';
@@ -28,10 +29,40 @@ export interface DecisionInput {
 
 const OPEN_STATUSES: ChangeStatus[] = ['pending', 'conflicted'];
 
+/** Statuses of a prerequisite that let its dependents apply: its result exists. */
+const FULFILLED_STATUSES: ChangeStatus[] = ['applied', 'satisfied'];
+
 /** What a decision's transaction committed, and the conflict it found instead of applying, if any. */
 interface Outcome {
   decisions: LoadedDecision[];
   conflict: ChangeDecision | null;
+}
+
+/** The locks and context a decision on a microchange, or on its atomic group, works with. */
+interface DecisionContext {
+  manager: EntityManager;
+  actor: User;
+  input: DecisionInput;
+  proposals: Map<string, ChangeProposal>;
+  /** The version of each targeted root when the decision started, which `apply_rebased` confirms. */
+  versionsBefore: Map<string, number>;
+  now: Date;
+}
+
+/** A microchange's target as a decision observes it. */
+interface Observation {
+  root: EditorialEntity;
+  definition: OperationDefinition;
+  key: RowKey | null;
+  current: ValueEnvelope;
+}
+
+/** What applying one member of a decision did, or the conflict that stops it. */
+type Step = { decision: ChangeDecision } | { conflict: { change: ProposalChange; reason: string } };
+
+/** Thrown inside a group's savepoint to undo the members applied before a conflict. */
+class GroupConflict {
+  constructor(readonly change: ProposalChange, readonly reason: string) {}
 }
 
 /** Review decisions on the microchanges of submissions, and their history. */
@@ -45,9 +76,13 @@ export class DecisionsService {
   /**
    * Decides a microchange in one transaction: the decision, the domain write,
    * the revision, the root's new version, the automatic decisions on competing
-   * microchanges and the closing of their proposals commit together or not at
-   * all. Locks follow the order of submissions: the acting account, the
-   * proposals in id order, the targeted root, then the microchanges.
+   * and dependent microchanges and the closing of their proposals commit
+   * together or not at all. Locks follow the order of submissions: the acting
+   * account, the proposals in id order, the targeted roots, then the
+   * microchanges.
+   *
+   * A microchange of an atomic group decides the whole group: its open members
+   * apply in dependency order, all or none, or close together.
    *
    * Applying never overwrites a changed base: a plain `apply` then records the
    * conflict, commits it and answers 409, and only `apply_rebased`, confirming
@@ -57,93 +92,46 @@ export class DecisionsService {
     const outcome = await this.dataSource.transaction(async (manager): Promise<Outcome> => {
       // Shared, so a concurrent role change or suspension waits until this decision commits.
       const actor = await lockContributor(manager, user.id);
-      if (!isStaff(actor)) {
-        throw new JsonApiException(HttpStatus.FORBIDDEN, [{ code: 'staff_required', detail: 'Only moderators and administrators decide microchanges' }]);
-      }
       const located = await findSubmittedChange(manager, changeId);
+      checkPermission(actor, located, input.action);
       checkInput(input);
 
+      const members = await groupOf(manager, located);
       // Applying a field can resolve competing microchanges of other submissions, so their proposals are locked too.
-      const competingProposalIds = located.operation === 'set_fields' ? await findCompetingProposalIds(manager, located) : [];
+      const competingProposalIds: string[] = [];
+      for (const member of members.filter(({ operation }) => operation === 'set_fields')) {
+        competingProposalIds.push(...(await findCompetingProposalIds(manager, member)));
+      }
       const proposalIds = [...new Set([located.proposalId, ...competingProposalIds])].sort();
       const proposals = new Map<string, ChangeProposal>();
       for (const id of proposalIds) {
         proposals.set(id, await manager.findOneOrFail(ChangeProposal, { where: { id }, lock: { mode: 'pessimistic_write' } }));
       }
-      const root = (await lockTargetedRoots(manager, [located])).get(located.entityId)!;
-      const change = await manager.findOneOrFail(ProposalChange, { where: { id: changeId }, lock: { mode: 'pessimistic_write' } });
+      const roots = await lockTargetedRoots(manager, members);
+      const locked = await manager.find(ProposalChange, {
+        where: { id: In(members.map(({ id }) => id)) },
+        order: { id: 'ASC' },
+        lock: { mode: 'pessimistic_write' },
+      });
+      const change = locked.find(({ id }) => id === changeId)!;
       if (!OPEN_STATUSES.includes(change.status)) {
         throw new JsonApiException(HttpStatus.CONFLICT, [
           { code: 'change_resolved', detail: `The microchange is already ${change.status}; a terminal decision is never reopened` },
         ]);
       }
+      const open = locked.filter(({ status }) => OPEN_STATUSES.includes(status)).sort((a, b) => a.position - b.position);
+      const context: DecisionContext = {
+        manager,
+        actor,
+        input,
+        proposals,
+        versionsBefore: new Map([...roots].map(([id, root]) => [id, root.currentVersion])),
+        now: this.clock.now(),
+      };
 
-      const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
-      const now = this.clock.now();
-      const value = (change.proposedValue as { value?: unknown }).value;
-      // A row or root its key names that is not created yet holds nothing.
-      const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey)).key;
-      const current = change.targetKey !== null && key === null ? ABSENT : await definition.read(manager, root, key, value);
-      const decisionOf = (action: DecisionAction, resultingStatus: ChangeStatus, actorId: number | null, reason: string | null): ChangeDecision => ({
-        id: randomUUID(),
-        changeId,
-        actorId,
-        action,
-        previousStatus: change.status,
-        resultingStatus,
-        reason,
-        observedVersion: root.currentVersion,
-        observedValue: current,
-        decidedAt: now,
-      });
-
-      let decision: ChangeDecision;
-      if (input.action === 'reject') {
-        decision = decisionOf('reject', 'rejected', actor.id, input.reason!);
-        await manager.insert(ChangeDecision, decision);
-      } else {
-        const dependsOn = await checkDependencies(manager, change);
-        // The payload and its references are checked again on the state this transaction sees.
-        const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');
-        if (errors.length > 0) throw invalid(errors);
-
-        // Rows are compared by their keys and the root's constraints, never as a whole list.
-        const clashes = (await definition.constraintProblems?.(manager, root, key, value)) ?? [];
-        const conflicted = change.status === 'conflicted' || clashes.length > 0 || (await baseChanged(manager, change, current, key, dependsOn));
-        if (change.operation !== 'create_entity' && isDeepStrictEqual(current, change.proposedValue)) {
-          // The result already exists: it closes without a write or a new version.
-          decision = decisionOf('mark_satisfied', 'satisfied', null, null);
-          await manager.insert(ChangeDecision, decision);
-        } else if (input.action === 'apply' && conflicted) {
-          if (change.status === 'conflicted') throw baseChangedError(root.currentVersion, current);
-          const reason = clashes[0] ?? `La base de ${change.targetPath} cambió después de la versión ${change.baseVersion} de la ficha`;
-          decision = decisionOf('mark_conflict', 'conflicted', null, reason);
-          await manager.insert(ChangeDecision, decision);
-          await manager.update(ProposalChange, { id: changeId }, { status: 'conflicted' });
-          return { decisions: await loadDecisions(manager, [decision.id]), conflict: decision };
-        } else {
-          if (input.action === 'apply_rebased') {
-            if (!conflicted) {
-              throw new JsonApiException(HttpStatus.CONFLICT, [
-                { code: 'base_unchanged', detail: 'The base of the microchange did not change; apply it without rebasing' },
-              ]);
-            }
-            // A modification after the confirmation was given needs a new look, not the stale confirmation.
-            if (input.confirmedVersion !== root.currentVersion) throw staleConfirmationError(root.currentVersion, current);
-            // A new base is confirmed; the root's constraints never are.
-            if (clashes.length > 0) {
-              throw new JsonApiException(HttpStatus.CONFLICT, clashes.map((detail) => ({ code: 'constraint_violated', detail })));
-            }
-          }
-          decision = decisionOf(input.action, 'applied', actor.id, input.reason || null);
-          const version = await applyChange(manager, definition, root, change, key, decision, now);
-          if (change.operation === 'set_fields') await settleCompetingChanges(manager, change, version, proposals, now);
-        }
-      }
-
-      await manager.update(ProposalChange, { id: changeId }, { status: decision.resultingStatus, resolvedAt: now });
-      await closeIfSettled(manager, change.proposalId, now);
-      return { decisions: await loadDecisions(manager, [decision.id]), conflict: null };
+      const outcome = input.action === 'reject' || input.action === 'withdraw_change' ? await closeTogether(context, open) : await applyAll(context, open);
+      await closeIfSettled(manager, change.proposalId, context.now);
+      return outcome;
     });
     if (outcome.conflict) throw baseChangedError(outcome.conflict.observedVersion, outcome.conflict.observedValue);
     return outcome.decisions;
@@ -176,6 +164,24 @@ async function findSubmittedChange(manager: EntityManager, changeId: string): Pr
   return change;
 }
 
+/** Staff decide; the author of a microchange may only withdraw it. */
+function checkPermission(actor: User, change: ProposalChange, action: ManualDecisionAction): void {
+  if (isStaff(actor)) return;
+  if (action === 'withdraw_change') {
+    if (change.proposal!.authorId === actor.id) return;
+    throw new JsonApiException(HttpStatus.FORBIDDEN, [
+      { code: 'not_change_author', detail: 'Only the author of the microchange and staff withdraw it' },
+    ]);
+  }
+  throw new JsonApiException(HttpStatus.FORBIDDEN, [{ code: 'staff_required', detail: 'Only moderators and administrators decide microchanges' }]);
+}
+
+/** The microchange and the other members of its atomic group, if it has one. */
+async function groupOf(manager: EntityManager, change: ProposalChange): Promise<ProposalChange[]> {
+  if (change.atomicGroupId === null) return [change];
+  return manager.find(ProposalChange, { where: { proposalId: change.proposalId, atomicGroupId: change.atomicGroupId } });
+}
+
 /** A submission stays open while any of its microchanges is pending or conflicted. */
 async function closeIfSettled(manager: EntityManager, proposalId: string, now: Date): Promise<void> {
   if (await manager.existsBy(ProposalChange, { proposalId, status: In(OPEN_STATUSES) })) return;
@@ -198,6 +204,181 @@ function checkInput({ action, reason, confirmedVersion }: DecisionInput): void {
   }
 }
 
+/** Reads a microchange's target as it is now. A row or root its key names that is not created yet holds nothing. */
+async function observe(manager: EntityManager, change: ProposalChange): Promise<Observation> {
+  const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
+  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const value = (change.proposedValue as { value?: unknown }).value;
+  const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey)).key;
+  const current = change.targetKey !== null && key === null ? ABSENT : await definition.read(manager, root, key, value);
+  return { root, definition, key, current };
+}
+
+function decisionOf(
+  change: ProposalChange,
+  { root, current }: Pick<Observation, 'root' | 'current'>,
+  action: DecisionAction,
+  resultingStatus: ChangeStatus,
+  actorId: number | null,
+  reason: string | null,
+  now: Date,
+): ChangeDecision {
+  return {
+    id: randomUUID(),
+    changeId: change.id,
+    actorId,
+    action,
+    previousStatus: change.status,
+    resultingStatus,
+    reason,
+    observedVersion: root.currentVersion,
+    observedValue: current,
+    decidedAt: now,
+  };
+}
+
+/** Records a decision and moves its microchange to the resulting state. */
+async function recordDecision(manager: EntityManager, decision: ChangeDecision): Promise<void> {
+  await manager.insert(ChangeDecision, decision);
+  const open = OPEN_STATUSES.includes(decision.resultingStatus);
+  await manager.update(ProposalChange, { id: decision.changeId }, { status: decision.resultingStatus, resolvedAt: open ? null : decision.decidedAt });
+}
+
+/** Rejects or withdraws the open members together, then blocks what depended on them. */
+async function closeTogether(context: DecisionContext, open: ProposalChange[]): Promise<Outcome> {
+  const { manager, actor, input, now } = context;
+  const [action, resultingStatus] = input.action === 'reject' ? (['reject', 'rejected'] as const) : (['withdraw_change', 'withdrawn'] as const);
+  const decisions: ChangeDecision[] = [];
+  for (const change of open) {
+    const decision = decisionOf(change, await observe(manager, change), action, resultingStatus, actor.id, input.reason || null, now);
+    await recordDecision(manager, decision);
+    decisions.push(decision);
+  }
+  await blockDependents(manager, open.map((change) => ({ ...change, status: resultingStatus })), now);
+  return { decisions: await loadDecisions(manager, decisions.map(({ id }) => id)), conflict: null };
+}
+
+/**
+ * Blocks, with automatic decisions, the open microchanges that depend on a
+ * failed one, and the open members of their atomic groups, then what depends
+ * on those in turn. Dependencies never leave a proposal, whose lock the
+ * decision already holds.
+ */
+async function blockDependents(manager: EntityManager, failed: ProposalChange[], now: Date): Promise<void> {
+  let frontier = failed;
+  while (frontier.length > 0) {
+    const causes = new Map(frontier.map((change) => [change.id, change]));
+    const dependencies = await manager.findBy(ChangeDependency, { dependsOnChangeId: In([...causes.keys()]) });
+    const dependents = await openChanges(manager, [...new Set(dependencies.map(({ changeId }) => changeId))]);
+    const blocked = new Map<string, string>();
+    for (const dependent of dependents) {
+      const cause = causes.get(dependencies.find(({ changeId, dependsOnChangeId }) => changeId === dependent.id && causes.has(dependsOnChangeId))!.dependsOnChangeId)!;
+      blocked.set(dependent.id, `El microcambio ${cause.id}, del que depende, quedó ${cause.status}`);
+      if (dependent.atomicGroupId === null) continue;
+      const mates = await manager.findBy(ProposalChange, {
+        proposalId: dependent.proposalId,
+        atomicGroupId: dependent.atomicGroupId,
+        status: In(OPEN_STATUSES),
+        id: Not(dependent.id),
+      });
+      for (const mate of mates) {
+        if (!blocked.has(mate.id)) blocked.set(mate.id, `El microcambio ${dependent.id}, de su grupo atómico, quedó blocked`);
+      }
+    }
+    const changes = await openChanges(manager, [...blocked.keys()]);
+    for (const change of changes) {
+      await recordDecision(manager, decisionOf(change, await observe(manager, change), 'block_dependency', 'blocked', null, blocked.get(change.id)!, now));
+    }
+    frontier = changes.map((change) => ({ ...change, status: 'blocked' as const }));
+  }
+}
+
+async function openChanges(manager: EntityManager, ids: string[]): Promise<ProposalChange[]> {
+  if (ids.length === 0) return [];
+  return manager.find(ProposalChange, { where: { id: In(ids), status: In(OPEN_STATUSES) }, order: { id: 'ASC' }, lock: { mode: 'pessimistic_write' } });
+}
+
+/**
+ * Applies the open members in dependency order, all or none. Prerequisites
+ * outside them must hold their result already. A member in conflict undoes
+ * the others, which stay pending, and its conflict is recorded instead.
+ */
+async function applyAll(context: DecisionContext, open: ProposalChange[]): Promise<Outcome> {
+  const { manager, input } = context;
+  const dependencies = await manager.findBy(ChangeDependency, { changeId: In(open.map(({ id }) => id)) });
+  await checkDependencies(manager, open, dependencies);
+
+  const decisions: ChangeDecision[] = [];
+  try {
+    // A savepoint, so a conflict found after some members applied undoes them and still records the conflict.
+    await manager.transaction(async (savepoint) => {
+      for (const change of inDependencyOrder(open, dependencies)) {
+        const dependsOn = dependencies.filter(({ changeId }) => changeId === change.id).map(({ dependsOnChangeId }) => dependsOnChangeId);
+        const step = await applyOne({ ...context, manager: savepoint }, change, dependsOn);
+        if ('conflict' in step) throw new GroupConflict(step.conflict.change, step.conflict.reason);
+        decisions.push(step.decision);
+      }
+      if (input.action === 'apply_rebased' && !decisions.some(({ action }) => action === 'apply_rebased')) {
+        throw new JsonApiException(HttpStatus.CONFLICT, [
+          { code: 'base_unchanged', detail: 'The base of the microchange did not change; apply it without rebasing' },
+        ]);
+      }
+    });
+  } catch (error) {
+    if (!(error instanceof GroupConflict)) throw error;
+    const decision = decisionOf(error.change, await observe(manager, error.change), 'mark_conflict', 'conflicted', null, error.reason, context.now);
+    await recordDecision(manager, decision);
+    return { decisions: await loadDecisions(manager, [decision.id]), conflict: decision };
+  }
+  return { decisions: await loadDecisions(manager, decisions.map(({ id }) => id)), conflict: null };
+}
+
+/**
+ * Decides one member on the state the members before it left: satisfied if
+ * its result exists, a conflict if its base changed and the action does not
+ * confirm the new one, applied otherwise.
+ */
+async function applyOne(context: DecisionContext, change: ProposalChange, dependsOn: string[]): Promise<Step> {
+  const { manager, actor, input, proposals, versionsBefore, now } = context;
+  const observation = await observe(manager, change);
+  const { root, definition, key, current } = observation;
+  // The payload and its references are checked again on the state this transaction sees.
+  const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');
+  if (errors.length > 0) throw invalid(errors);
+  if (change.targetKey !== null && key === null) {
+    throw new JsonApiException(HttpStatus.CONFLICT, [
+      { code: 'reference_unresolved', detail: 'A row or root the key names has no result to translate it to; reject or withdraw the microchange' },
+    ]);
+  }
+
+  const value = (change.proposedValue as { value?: unknown }).value;
+  // Rows are compared by their keys and the root's constraints, never as a whole list; prerequisites by what they left.
+  const clashes = [...((await definition.constraintProblems?.(manager, root, key, value)) ?? []), ...(await brokenPostconditions(manager, dependsOn))];
+  const conflicted = change.status === 'conflicted' || clashes.length > 0 || (await baseChanged(manager, change, current, key, dependsOn));
+  if (change.operation !== 'create_entity' && isDeepStrictEqual(current, change.proposedValue)) {
+    // The result already exists: it closes without a write or a new version.
+    const decision = decisionOf(change, observation, 'mark_satisfied', 'satisfied', null, null, now);
+    await recordDecision(manager, decision);
+    return { decision };
+  }
+  if (input.action === 'apply' && conflicted) {
+    if (change.status === 'conflicted') throw baseChangedError(root.currentVersion, current);
+    return { conflict: { change, reason: clashes[0] ?? `La base de ${change.targetPath} cambió después de la versión ${change.baseVersion} de la ficha` } };
+  }
+  const rebased = input.action === 'apply_rebased' && conflicted;
+  if (rebased) {
+    // A modification after the confirmation was given needs a new look, not the stale confirmation.
+    if (input.confirmedVersion !== versionsBefore.get(root.id)) throw staleConfirmationError(versionsBefore.get(root.id)!, current);
+    // A new base is confirmed; the root's constraints never are.
+    if (clashes.length > 0) throw new JsonApiException(HttpStatus.CONFLICT, clashes.map((detail) => ({ code: 'constraint_violated', detail })));
+  }
+  const decision = decisionOf(change, observation, rebased ? 'apply_rebased' : 'apply', 'applied', actor.id, input.reason || null, now);
+  const version = await applyChange(manager, definition, root, change, key, decision, now);
+  await manager.update(ProposalChange, { id: change.id }, { status: 'applied', resolvedAt: now });
+  if (change.operation === 'set_fields') await settleCompetingChanges(manager, change, version, proposals, now);
+  return { decision };
+}
+
 /** The open submissions with another open microchange on the same field of the same root. */
 async function findCompetingProposalIds(manager: EntityManager, change: ProposalChange): Promise<string[]> {
   const rows: { proposalId: string }[] = await manager
@@ -214,18 +395,47 @@ async function findCompetingProposalIds(manager: EntityManager, change: Proposal
 }
 
 /**
- * The microchanges a microchange depends on, which must all be applied before
- * it: the rows and roots its key names exist only then.
+ * The prerequisites of the microchanges being applied, besides those applied
+ * with them, must already hold their result: the rows and roots their keys
+ * name exist only then.
  */
-async function checkDependencies(manager: EntityManager, change: ProposalChange): Promise<string[]> {
-  const dependencies = await manager.findBy(ChangeDependency, { changeId: change.id });
-  const dependsOn = dependencies.map(({ dependsOnChangeId }) => dependsOnChangeId);
-  if (dependsOn.length > 0 && (await manager.existsBy(ProposalChange, { id: In(dependsOn), status: Not('applied') }))) {
+async function checkDependencies(manager: EntityManager, applying: ProposalChange[], dependencies: ChangeDependency[]): Promise<void> {
+  const ids = new Set(applying.map(({ id }) => id));
+  const outside = [...new Set(dependencies.map(({ dependsOnChangeId }) => dependsOnChangeId).filter((id) => !ids.has(id)))];
+  if (outside.length === 0) return;
+  const unresolved = await manager.find(ProposalChange, { where: { id: In(outside), status: Not(In(FULFILLED_STATUSES)) }, order: { id: 'ASC' } });
+  if (unresolved.length > 0) {
     throw new JsonApiException(HttpStatus.CONFLICT, [
-      { code: 'dependency_unresolved', detail: 'Apply the microchanges this one depends on first', meta: { dependsOn } },
+      { code: 'dependency_unresolved', detail: 'Apply the microchanges this one depends on first', meta: { dependsOn: unresolved.map(({ id }) => id) } },
     ]);
   }
-  return dependsOn;
+}
+
+/**
+ * What applied prerequisites left that no longer holds: an applied dependency
+ * only unblocks while its result is still there, not because of its history.
+ * A creation needs its root still published; an inserted or updated row, to
+ * still exist.
+ */
+async function brokenPostconditions(manager: EntityManager, dependsOn: string[]): Promise<string[]> {
+  if (dependsOn.length === 0) return [];
+  const prerequisites = await manager.find(ProposalChange, { where: { id: In(dependsOn), status: 'applied' }, order: { id: 'ASC' } });
+  const broken: string[] = [];
+  for (const prerequisite of prerequisites) {
+    const root = await manager.findOneByOrFail(EditorialEntity, { id: prerequisite.entityId });
+    if (prerequisite.operation === 'create_entity' && root.publicationStatus !== 'published') {
+      broken.push(`La ficha que publicó el microcambio ${prerequisite.id}, del que depende, ya no está publicada`);
+    }
+    if (prerequisite.operation === 'add_relation' || prerequisite.operation === 'update_relation') {
+      const revision = await manager.findOneByOrFail(EntityRevision, { changeId: prerequisite.id });
+      // A removal of the same relation reads its row by key, whatever value an insertion proposed.
+      const removal = findOperation(root.entityType, 'remove_relation', prerequisite.targetPath, prerequisite.payloadSchemaVersion);
+      if (removal && !(await removal.read(manager, root, revision.resultKey as RowKey, null)).exists) {
+        broken.push(`La fila que escribió el microcambio ${prerequisite.id}, del que depende, ya no existe`);
+      }
+    }
+  }
+  return broken;
 }
 
 /**
@@ -327,19 +537,8 @@ async function settleCompetingChanges(
     const satisfied = isDeepStrictEqual(current, competitor.proposedValue);
     if (!satisfied && competitor.status === 'conflicted') continue;
     const resultingStatus = satisfied ? 'satisfied' : 'conflicted';
-    await manager.insert(ChangeDecision, {
-      id: randomUUID(),
-      changeId: competitor.id,
-      actorId: null,
-      action: satisfied ? 'mark_satisfied' : 'mark_conflict',
-      previousStatus: competitor.status,
-      resultingStatus,
-      reason: satisfied ? null : `La versión ${version} de la ficha cambió ${applied.targetPath}, la base de este microcambio`,
-      observedVersion: version,
-      observedValue: current,
-      decidedAt: now,
-    });
-    await manager.update(ProposalChange, { id: competitor.id }, { status: resultingStatus, resolvedAt: satisfied ? now : null });
+    const reason = satisfied ? null : `La versión ${version} de la ficha cambió ${applied.targetPath}, la base de este microcambio`;
+    await recordDecision(manager, decisionOf(competitor, { root, current }, satisfied ? 'mark_satisfied' : 'mark_conflict', resultingStatus, null, reason, now));
     if (satisfied) await closeIfSettled(manager, competitor.proposalId, now);
   }
 }

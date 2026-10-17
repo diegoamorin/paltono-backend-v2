@@ -63,7 +63,11 @@ describe('microchanges and sources of a draft', () => {
             status: 'pending',
             resolvedAt: null,
           },
-          relationships: { entity: { data: { type: 'editorial-entities', id: entityId } } },
+          relationships: {
+            entity: { data: { type: 'editorial-entities', id: entityId } },
+            dependencies: { data: [] },
+            sources: { data: [] },
+          },
         },
         links: { self: `/v1/proposals/${proposalId}/changes/${id}` },
         meta: { informationKind: 'proposed' },

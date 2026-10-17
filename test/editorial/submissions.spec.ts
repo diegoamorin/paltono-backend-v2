@@ -209,7 +209,11 @@ describe('submissions', () => {
         position: 0,
         createdAt: '2026-01-01T00:00:00.000Z',
       });
-      expect(change.relationships).toEqual({ entity: { data: { type: 'editorial-entities', id: entityId } } });
+      expect(change.relationships).toEqual({
+        entity: { data: { type: 'editorial-entities', id: entityId } },
+        dependencies: { data: [] },
+        sources: { data: [] },
+      });
       const author = response.body.included.find((resource: { type: string }) => resource.type === 'users');
       expect(author.attributes.username).toBe('diego_papi');
       expect(author.attributes).not.toHaveProperty('email');

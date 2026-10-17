@@ -35,7 +35,8 @@ export class DecisionsController {
   @ApiOperation({
     summary: 'Decidir un microcambio',
     description:
-      'Solo moderadores y administradores activos; el permiso se vuelve a comprobar dentro de la transacción. ' +
+      'Solo moderadores y administradores activos; el autor del microcambio solo puede `withdraw_change`. El permiso se vuelve a ' +
+      'comprobar dentro de la transacción. ' +
       '`apply` valida de nuevo el payload y lo incorpora a la ficha: al aplicar un alta se inserta la identidad, se publica la raíz ' +
       'y se escriben la decisión y la primera revisión, todo en una transacción. Un cambio de campo cuyo resultado ya existe se cierra como ' +
       '`satisfied` sin escritura ni versión nueva. Si la base relevante cambió, `apply` registra el conflicto (decisión automática con el ' +
@@ -43,14 +44,18 @@ export class DecisionsController {
       '`confirmedVersion` igual a la versión actual de la ficha, lo aplica sobre la base nueva, conservando la base y el valor del autor. ' +
       'Aplicar un campo resuelve los microcambios abiertos que compiten por él: quedan `satisfied` o `conflicted`. ' +
       '`reject` exige motivo; una reserva rechazada sigue sin ficha pública. ' +
+      'Aplicar exige que las dependencias estén aplicadas o satisfechas y que su resultado siga vigente. Si el microcambio pertenece a un ' +
+      'grupo atómico, la decisión se aplica a todos sus miembros abiertos: se aplican en orden de dependencias en una transacción, todos ' +
+      'o ninguno (un conflicto deja los demás pendientes), o se rechazan o retiran juntos. Rechazar o retirar propaga `blocked`, con ' +
+      'decisiones automáticas, a los dependientes y a sus grupos. Retirar no revierte lo aplicado. ' +
       'Un microcambio ya resuelto responde 409. La propuesta se cierra cuando todos sus microcambios quedan resueltos. ' +
-      'Devuelve las decisiones tomadas; `include=revision` añade la revisión con `resultKey.publicId` de la ficha creada.',
+      'Devuelve las decisiones del microcambio o de todo su grupo; `include=revision` añade la revisión con `resultKey.publicId` de la ficha creada.',
   })
   @ApiParam({ name: 'id', description: 'UUID del microcambio' })
   @ApiJsonApiQuery(DECISION_QUERY)
   @ApiJsonApiBody(DecisionDocument)
   @ApiJsonApiResourcesResponse(ChangeDecisionResource, 201)
-  @ApiJsonApiErrorResponses(400, 404, 406, 409, 415, 422)
+  @ApiJsonApiErrorResponses(400, 401, 403, 404, 406, 409, 415, 422)
   async decide(
     @CurrentAuthentication() { user }: Authentication,
     @Param('id') id: string,

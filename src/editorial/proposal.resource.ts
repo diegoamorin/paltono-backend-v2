@@ -55,8 +55,14 @@ const proposedAttributes = {
   createdAt: (change: ProposalChange) => change.createdAt.toISOString(),
 };
 
+const changeIdentitySchema = defineResource<{ id: string }>({ type: 'proposal-changes', id: (change) => change.id, attributes: {} });
+const sourceIdentitySchema = defineResource<{ id: string }>({ type: 'proposal-sources', id: (source) => source.id, attributes: {} });
+
+/** Dependencies and linked sources are part of the frozen content, so both projections show them. */
 const changeRelationships = {
   entity: { schema: () => entityIdentitySchema, get: (change: ProposalChange) => ({ id: change.entityId }) },
+  dependencies: { schema: () => changeIdentitySchema, get: (change: ProposalChange) => change.dependsOnIds?.map((id) => ({ id })) },
+  sources: { schema: () => sourceIdentitySchema, get: (change: ProposalChange) => change.sourceIds?.map((id) => ({ id })) },
 };
 
 export const publicChangeSchema = defineResource<ProposalChange>({
@@ -218,6 +224,12 @@ class EntityLinkage {
 class ChangeRelationships {
   @ApiProperty({ type: EntityLinkage })
   entity: EntityLinkage;
+
+  @ApiProperty({ type: ProposalLinkages, description: 'Microcambios de la misma propuesta de los que depende' })
+  dependencies: ProposalLinkages;
+
+  @ApiProperty({ type: ProposalLinkages, description: 'Fuentes generales de la propuesta vinculadas a este microcambio' })
+  sources: ProposalLinkages;
 }
 
 export class ProposalChangeResource {

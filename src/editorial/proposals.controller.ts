@@ -130,8 +130,9 @@ export class ProposalsController {
   @ApiOperation({
     summary: 'Enviar un borrador',
     description:
-      'Exige descripción, al menos un microcambio, una fuente general y payloads válidos. Después autor, descripción, ' +
-      'operaciones, orden y fuentes quedan congelados: editarlos responde 409. Los errores de cada microcambio llevan su id en `meta.changeId`.',
+      'Exige descripción, al menos un microcambio, una fuente general, payloads válidos y dependencias sin ciclos, contando las que ' +
+      'implican las referencias de cada clave y colapsando los grupos atómicos. Después autor, descripción, operaciones, orden, grupos, ' +
+      'dependencias y fuentes quedan congelados: editarlos responde 409. Los errores de cada microcambio llevan su id en `meta.changeId`.',
   })
   @ApiParam({ name: 'id', description: 'UUID de la propuesta' })
   @ApiJsonApiQuery(PROPOSAL_QUERY)

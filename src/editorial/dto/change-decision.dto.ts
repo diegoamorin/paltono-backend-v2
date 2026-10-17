@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { Equals, IsDefined, IsIn, IsInt, IsString, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
 
-export const MANUAL_DECISION_ACTIONS = ['apply', 'apply_rebased', 'reject'] as const;
+export const MANUAL_DECISION_ACTIONS = ['apply', 'apply_rebased', 'reject', 'withdraw_change'] as const;
 export type ManualDecisionAction = (typeof MANUAL_DECISION_ACTIONS)[number];
 
 export const REASON_MAX_LENGTH = 10_000;
@@ -14,7 +14,7 @@ class DecisionAttributes {
     enum: MANUAL_DECISION_ACTIONS,
     description:
       '`apply` incorpora el microcambio a la ficha si su base no cambió; `apply_rebased` lo incorpora sobre la base actual ' +
-      'de un microcambio en conflicto; `reject` lo descarta',
+      'de un microcambio en conflicto; `reject` lo descarta; `withdraw_change` lo retira de la revisión, también a petición de su autor',
   })
   @IsIn(MANUAL_DECISION_ACTIONS)
   action: ManualDecisionAction;

@@ -7,6 +7,8 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
 import { CollectionQuery } from '../common/json-api/query';
 import { entityNotFound, invalid, isStaff, lockContributor, proposalNotFound } from './editorial-access';
+import { withLinks } from './change-links.service';
+import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
 import { lockOwnDraft } from './drafts';
 import { ChangeProposal } from './entities/change-proposal.entity';
 import { EditorialEntity } from './entities/editorial-entity.entity';
@@ -89,9 +91,9 @@ export class ProposalsService {
   }
 
   /**
-   * Submits a draft: requires a description, a microchange, a general source
-   * and valid payloads, then freezes the content. Only the review state can
-   * change afterwards.
+   * Submits a draft: requires a description, a microchange, a general source,
+   * valid payloads and an acyclic dependency graph, then freezes the content.
+   * Only the review state can change afterwards.
    */
   submit(user: User, id: string): Promise<ChangeProposal> {
     return this.dataSource.transaction(async (manager) => {
@@ -110,10 +112,11 @@ export class ProposalsService {
       for (const change of changes) {
         errors.push(...(await revalidateChange(manager, proposal, change, roots.get(change.entityId))));
       }
-      // Only references imply dependencies yet, and they always point to earlier creations, so there is no graph to check for cycles.
       if (errors.length > 0) throw invalid(errors);
 
+      // References imply dependencies besides the declared ones, and together they must stay acyclic.
       for (const change of changes) await recordImpliedDependencies(manager, change, roots.get(change.entityId)!);
+      if (await hasDependencyCycle(manager, id)) throw invalid([dependencyCycle()]);
       const now = this.clock.now();
       await manager.update(ChangeProposal, { id }, { status: 'open', submittedAt: now, updatedAt: now });
       return loadContents(manager, id);
@@ -156,7 +159,7 @@ export class ProposalsService {
 /** A proposal with its author, its microchanges in order and its sources. */
 export async function loadContents(manager: EntityManager, id: string): Promise<ChangeProposal> {
   const proposal = await manager.findOneOrFail(ChangeProposal, { where: { id }, relations: { author: true } });
-  proposal.changes = await manager.find(ProposalChange, { where: { proposalId: id }, order: { position: 'ASC' } });
+  proposal.changes = await withLinks(manager, await manager.find(ProposalChange, { where: { proposalId: id }, order: { position: 'ASC' } }));
   proposal.sources = await manager.find(ProposalSource, { where: { proposalId: id }, order: { createdAt: 'ASC', id: 'ASC' } });
   return proposal;
 }

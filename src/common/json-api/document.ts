@@ -41,6 +41,11 @@ export function resourcesDocument<T>(
   return withIncluded({ jsonapi: JSON_API_VERSION, data, links: { self: query.path } }, schema, models, query);
 }
 
+/** Builds the document for the linkage of a to-many relationship, served at its relationship URL. */
+export function relationshipDocument(type: string, ids: string[], path: string): JsonApiDocument<ResourceObject[]> {
+  return { jsonapi: JSON_API_VERSION, data: ids.map((id) => ({ type, id })), links: { self: path } };
+}
+
 /** Builds the document for one page of a collection, with pagination links and `meta.total`. */
 export function collectionDocument<T>(
   schema: ResourceSchema<T>,

@@ -5,6 +5,8 @@ import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
 import { Country } from '../vocabularies/entities/country.entity';
+import { withLinks } from './change-links.service';
+import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
 import { changeNotFound, invalid } from './editorial-access';
 import { lockOwnDraft, touchDraft } from './drafts';
 import { ChangeProposal } from './entities/change-proposal.entity';
@@ -87,7 +89,7 @@ export class ProposalChangesService {
         resolvedAt: null,
       });
       await touchDraft(manager, proposal, now);
-      return manager.findOneByOrFail(ProposalChange, { id: change.id });
+      return (await withLinks(manager, [await manager.findOneByOrFail(ProposalChange, { id: change.id })]))[0];
     });
   }
 
@@ -116,6 +118,10 @@ export class ProposalChangesService {
           ...(change.operation === 'add_relation' ? { baseValue: await readBase(manager, entity!, change) } : {}),
         },
       );
+      // Joining or leaving an atomic group changes the collapsed dependency graph.
+      if (change.atomicGroupId !== current.atomicGroupId && (await hasDependencyCycle(manager, proposalId))) {
+        throw invalid([dependencyCycle('/data/attributes/atomicGroupId')]);
+      }
       // Changes to the row an insertion will create start from the value it proposes.
       if (change.operation === 'add_relation') {
         await manager
@@ -127,7 +133,7 @@ export class ProposalChangesService {
           .execute();
       }
       await touchDraft(manager, proposal, this.clock.now());
-      return manager.findOneByOrFail(ProposalChange, { id: changeId });
+      return (await withLinks(manager, [await manager.findOneByOrFail(ProposalChange, { id: changeId })]))[0];
     });
   }
 
@@ -236,9 +242,8 @@ async function changeProblems(
 
 /**
  * A field change targets a published root, and no other microchange of the
- * proposal writes the same field. Changes to a reservation inside its
- * creation's proposal need a dependency on that creation, which cannot be
- * declared yet.
+ * proposal writes the same field. A reservation's fields are set by its
+ * creation itself.
  */
 async function fieldChangeProblems(manager: EntityManager, change: ChangeFields, entity: EditorialEntity): Promise<ChangeProblem[]> {
   if (entity.publicationStatus !== 'published') {
