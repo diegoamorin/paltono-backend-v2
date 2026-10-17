@@ -11,6 +11,7 @@ import {
   sendJsonApi,
   setAccountStatus,
 } from '../support/accounts';
+import { changeStatus, registerFirstAdmin } from '../support/administration';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const MINUTE = 60 * 1000;
@@ -212,6 +213,20 @@ describe('email changes', () => {
       ]);
 
       expect(responses.map((response) => response.status).sort()).toEqual([204, 409]);
+    });
+
+    it('refuses the token of an account suspended since, which keeps its email', async () => {
+      const token = await changeToken();
+      const admin = await registerFirstAdmin(app);
+      await changeStatus(app, admin.accessToken, (await getMe(app.server, accessToken)).body.data.id, {
+        newStatus: 'suspended',
+        reason: 'Spam',
+      }).expect(201);
+
+      const response = await confirmEmailChange(app.server, token).expect(409);
+
+      expect(response.body.errors).toEqual([expect.objectContaining({ code: 'account_suspended' })]);
+      await register(app.server, { username: 'otra', email: 'diego@example.com' }).expect(409);
     });
 
     it('refuses the token of an account deleted since', async () => {

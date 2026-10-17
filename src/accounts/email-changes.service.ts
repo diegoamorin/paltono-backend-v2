@@ -4,6 +4,7 @@ import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
 import { AccountEmails } from './account-emails';
+import { conflict } from './administration';
 import { User } from './entities/user.entity';
 import { UserToken } from './entities/user-token.entity';
 import { requirePassword } from './passwords';
@@ -52,13 +53,16 @@ export class EmailChangesService {
    * to, verified, consuming the token. The address must still be free: that is
    * checked with the account locked and enforced by the unique index, so of two
    * accounts confirming it at once only one gets it. Every other pending token of
-   * the account ends, including reset links sent to the old address.
+   * the account ends, including reset links sent to the old address. A suspended
+   * account cannot confirm.
    */
   async confirm(token: string): Promise<void> {
     try {
       await this.dataSource.transaction(async (manager) => {
         const now = this.clock.now();
         const { stored, user } = await claimUserToken(manager, token, 'email_change', now);
+        // A suspended account keeps its email while suspended (ADR 0002).
+        if (user.status === 'suspended') throw conflict('account_suspended', 'The account is suspended');
         await requireEmailFree(manager, stored.targetEmail!, 'token');
 
         await manager.update(UserToken, { userId: user.id, usedAt: IsNull() }, { usedAt: now });

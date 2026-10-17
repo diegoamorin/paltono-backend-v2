@@ -38,7 +38,8 @@ export class EmailChangesController {
     summary: 'Confirmar el cambio de correo',
     description:
       'Sustituye el correo por el del token, verificado, y consume el token. Revalida bajo bloqueo que nadie use ese ' +
-      'correo e invalida los demás tokens pendientes de la cuenta, incluidos los enlaces enviados al correo anterior.',
+      'correo e invalida los demás tokens pendientes de la cuenta, incluidos los enlaces enviados al correo anterior. ' +
+      'Una cuenta suspendida no puede confirmar: conserva su correo mientras siga suspendida.',
   })
   @ApiJsonApiBody(EmailChangeDocument)
   @ApiNoContentResponse({ description: 'Correo cambiado' })
