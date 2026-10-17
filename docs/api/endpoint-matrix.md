@@ -171,7 +171,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E1 | `GET /v1/editorial-operations` | Registro de selectores permitidos | Pub | Por tipo de raíz: operaciones, `target_path`, forma de `target_key` y JSON Schema del payload por `payload_schema_version` | ok |
 | E2 | `POST /v1/editorial-entities` | Reservar una raíz para un alta | Ver | `{entityType}`; queda `reserved`, versión 0 | ok val authz |
 | E3 | `GET /v1/editorial-entities/{id}` | Estado editorial de una raíz | Pub; reserva solo su creador | tipo, estado, versión, fechas | ok authz |
-| E4 | `GET /v1/editorial-entities/{id}/proposals` | Historial público de envíos | Pub | Proyección pública | ok authz spec |
+| E4 | `GET /v1/editorial-entities/{id}/proposals` | Historial público de envíos | Pub | Proyección pública. Sirve también el historial de una raíz reservada en cuanto tiene un envío; una reserva sin envíos solo existe para su creador **[P9]** | ok authz spec |
 | E5 | `GET /v1/editorial-entities/{id}/revisions` | Revisiones aplicadas | Staff; autor solo las suyas **[P6]** | before/after, versión, fecha | ok authz |
 
 ### Propuestas y borradores
@@ -204,7 +204,7 @@ E19: `filter[status]=pending|conflicted` (defecto ambos), `filter[entityType]`, 
 
 E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[entityType]`; orden `-submittedAt`, `-updatedAt` (borradores).
 
-**E-proyección (pública).** Autor, fechas, descripción, operaciones, valores propuestos y fuentes, rotulados como información propuesta. Excluye estado y fecha de resolución de cada microcambio, decisiones, motivos, resultado global derivado y datos de revisión que revelen el resultado individual. Se construye en el servidor, no ocultando columnas en el cliente.
+**E-proyección (pública).** Autor, fechas, descripción, operaciones, valores propuestos y fuentes, rotulados como información propuesta. Excluye estado y fecha de resolución de cada microcambio, decisiones, motivos, resultado global derivado y datos de revisión que revelen el resultado individual. El estado `open/closed` de la propuesta y su `closedAt` son públicos **[P8]**. Se construye en el servidor, no ocultando columnas en el cliente.
 
 ## 8. Búsqueda (módulo `discovery`)
 
@@ -242,3 +242,5 @@ Aprobadas el 2026-10-17.
 | P5 | Los administradores ven el correo de las cuentas en U1/U2 | Necesario para soporte y bajas solicitadas fuera de la API; nadie más lo ve |
 | P6 | Las revisiones aplicadas solo las ven el personal y, para sus propios microcambios, el autor | La §5 de la especificación excluye del historial público los datos de revisión que revelan el resultado individual; una revisión vinculada a su microcambio lo revela directamente |
 | P7 | `mark_conflict`, `mark_satisfied` y `block_dependency` solo los registra el sistema | La especificación los define como automáticos; el personal resuelve con `apply_rebased`, `reject` o `withdraw_change` |
+| P8 | La proyección pública muestra el estado `open/closed` de la propuesta y `closedAt` | Indican si la revisión terminó, no su resultado: el resultado global derivado (total o parcial) y el estado de cada microcambio siguen ocultos. A19 ya filtra públicamente por ese estado |
+| P9 | E4 sirve el historial de una raíz reservada que ya tiene un envío, aunque E3 siga respondiendo 404 a esa reserva | El envío ya es público en E8 con el UUID de la raíz, y el historial debe verse antes de la publicación; el estado editorial de la reserva sigue siendo privado |
