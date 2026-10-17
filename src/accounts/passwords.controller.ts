@@ -20,7 +20,7 @@ export class PasswordsController {
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({
     summary: 'Pedir la recuperación de la contraseña',
-    description: 'Envía un enlace válido 30 minutos. Responde 202 idéntico exista o no la cuenta.',
+    description: 'Envía un enlace de un solo uso, válido PASSWORD_RESET_TTL_MINUTES (30 por defecto). Responde 202 idéntico exista o no la cuenta.',
   })
   @ApiJsonApiBody(PasswordResetRequestDocument)
   @ApiAcceptedResponse({ description: 'Solicitud recibida' })

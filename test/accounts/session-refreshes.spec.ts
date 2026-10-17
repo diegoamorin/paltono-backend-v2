@@ -1,3 +1,4 @@
+import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { accessTokenFor, getMe, login, logout, refreshSession, register, sendJsonApi, setAccountStatus } from '../support/accounts';
 import { JSON_API } from '../support/json-api';
@@ -136,6 +137,21 @@ describe('POST /v1/session-refreshes', () => {
     }).expect(422);
 
     expect(response.body.errors).toEqual([expect.objectContaining({ source: { pointer: '/data/type' } })]);
+  });
+
+  it('refuses a cookie sent with a content type a cross-site form could use, as CSRF protection', async () => {
+    const loggedIn = await login(app.server, { identifier: 'diego_papi', client: 'web' }).expect(201);
+    const [cookie] = loggedIn.headers['set-cookie'] as unknown as string[];
+
+    for (const contentType of ['application/x-www-form-urlencoded', 'text/plain']) {
+      await request(app.server)
+        .post('/v1/session-refreshes')
+        .set('Accept', JSON_API)
+        .set('Content-Type', contentType)
+        .set('Cookie', cookie.split(';')[0])
+        .send('data=x')
+        .expect(415);
+    }
   });
 
   async function mobileRefreshToken(identifier = 'diego_papi'): Promise<string> {
