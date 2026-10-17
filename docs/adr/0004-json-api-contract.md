@@ -15,3 +15,5 @@ La API se expone bajo el prefijo `/v1` y exige el media type `application/vnd.ap
 La búsqueda global se implementa en PostgreSQL con `pg_trgm` y `unaccent` sobre nombres visibles, alias y títulos, sin motor externo. Los filtros, ordenaciones e `include` permitidos de cada recurso se definen en la matriz de endpoints y se revisan en conjunto.
 
 Swagger UI y el documento OpenAPI están activos en desarrollo; en producción se desactivan por defecto y solo se habilitan mediante variable de entorno, protegidos con autenticación básica. Ocultarlos no sustituye la autorización: la seguridad depende de autenticación, permisos, validación y límites de peticiones. Las pruebas verifican que el documento OpenAPI se genera sin errores.
+
+La [matriz de endpoints](../api/endpoint-matrix.md) concreta rutas, permisos, filtros, ordenaciones, `include` y pruebas de cada caso de uso. Las cuentas se exponen por `users.uuid`, las filas dependientes por su PK entera, y una ficha retirada responde 200 con su aviso.
