@@ -23,6 +23,7 @@ export interface AuthConfig {
   /** Absolute lifetime of a renewable session. */
   sessionTtlMs: number;
   emailVerificationTtlMs: number;
+  passwordResetTtlMs: number;
   /** Requests per minute and client address on each rate-limited route. */
   rateLimit: number;
 }
@@ -45,7 +46,8 @@ export interface AppConfig {
 }
 
 const SECOND = 1000;
-const HOUR = 60 * 60 * SECOND;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
 /** Placeholder signing key outside production, so development and tests need no setup. */
@@ -88,6 +90,7 @@ function authConfig(environment: Environment, env: NodeJS.ProcessEnv): AuthConfi
     accessTokenTtlMs: positiveNumber(env, 'ACCESS_TOKEN_TTL_SECONDS', 15 * 60) * SECOND,
     sessionTtlMs: positiveNumber(env, 'SESSION_TTL_DAYS', 30) * DAY,
     emailVerificationTtlMs: positiveNumber(env, 'EMAIL_VERIFICATION_TTL_HOURS', 24) * HOUR,
+    passwordResetTtlMs: positiveNumber(env, 'PASSWORD_RESET_TTL_MINUTES', 30) * MINUTE,
     rateLimit: positiveNumber(env, 'AUTH_RATE_LIMIT', 10),
   };
 }

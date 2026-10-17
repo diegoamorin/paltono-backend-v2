@@ -11,8 +11,11 @@ import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
 import { UserToken } from './entities/user-token.entity';
 import { MeController } from './me.controller';
+import { OwnSessionsController } from './own-sessions.controller';
+import { PasswordsController } from './passwords.controller';
+import { PasswordsService } from './passwords.service';
 import { RegistrationService } from './registration.service';
-import { SessionsController } from './sessions.controller';
+import { SessionRefreshesController, SessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 import { UsersController } from './users.controller';
 
@@ -24,8 +27,8 @@ import { UsersController } from './users.controller';
       useFactory: ({ auth }: AppConfig) => [{ ttl: 60_000, limit: auth.rateLimit }],
     }),
   ],
-  controllers: [UsersController, EmailVerificationsController, SessionsController, MeController],
-  providers: [RegistrationService, SessionsService, AccessTokens, AccountEmails, AccessGuard],
+  controllers: [UsersController, EmailVerificationsController, SessionsController, SessionRefreshesController, MeController, OwnSessionsController, PasswordsController],
+  providers: [RegistrationService, SessionsService, PasswordsService, AccessTokens, AccountEmails, AccessGuard],
   // Other modules protect their endpoints with `@Authenticated()`, which needs the guard and its services.
   exports: [AccessGuard, SessionsService],
 })

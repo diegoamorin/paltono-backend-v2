@@ -89,3 +89,49 @@ export async function setAccountStatus(dataSource: DataSource, username: string,
     [username, status],
   );
 }
+
+export interface RefreshCredentials {
+  /** Sent in the body, as mobile clients do. */
+  refreshToken?: string;
+  /** A `Set-Cookie` or `Cookie` value to send back, as browsers do. */
+  cookie?: string;
+}
+
+/** POST /v1/session-refreshes */
+export function refreshSession(server: App, { refreshToken, cookie }: RefreshCredentials) {
+  const pending = sendJsonApi(server, 'post', '/v1/session-refreshes', {
+    data: { type: 'session-refreshes', attributes: refreshToken === undefined ? {} : { refreshToken } },
+  });
+  return cookie === undefined ? pending : pending.set('Cookie', cookie.split(';')[0]);
+}
+
+/** GET /v1/me/sessions */
+export function listSessions(server: App, accessToken: string) {
+  return request(server).get('/v1/me/sessions').set('Accept', JSON_API).set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** DELETE /v1/me/sessions/{id} */
+export function revokeSession(server: App, accessToken: string, id: string) {
+  return sendJsonApi(server, 'delete', `/v1/me/sessions/${id}`).set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** POST /v1/password-reset-requests */
+export function requestPasswordReset(server: App, email: string, frontend?: string) {
+  return sendJsonApi(server, 'post', '/v1/password-reset-requests', {
+    data: { type: 'password-reset-requests', attributes: frontend ? { email, frontend } : { email } },
+  });
+}
+
+/** POST /v1/password-resets */
+export function resetPassword(server: App, token: string, password: string) {
+  return sendJsonApi(server, 'post', '/v1/password-resets', {
+    data: { type: 'password-resets', attributes: { token, password } },
+  });
+}
+
+/** POST /v1/me/password-changes */
+export function changePassword(server: App, accessToken: string, currentPassword: string, newPassword: string) {
+  return sendJsonApi(server, 'post', '/v1/me/password-changes', {
+    data: { type: 'password-changes', attributes: { currentPassword, newPassword } },
+  }).set('Authorization', `Bearer ${accessToken}`);
+}

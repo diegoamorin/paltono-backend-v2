@@ -13,6 +13,14 @@ export const sessionSchema = defineResource<AuthSession>({
   },
 });
 
+/** A session listed to its own account, which learns whether it is the one making the request. */
+export type OwnSession = AuthSession & { current: boolean };
+
+export const ownSessionSchema = defineResource<OwnSession>({
+  ...sessionSchema,
+  attributes: { ...sessionSchema.attributes, current: (session) => session.current },
+});
+
 class SessionAttributes {
   @ApiProperty()
   userAgent: string;
@@ -36,6 +44,22 @@ export class SessionResource {
 
   @ApiProperty({ type: SessionAttributes })
   attributes: SessionAttributes;
+}
+
+class OwnSessionAttributes extends SessionAttributes {
+  @ApiProperty({ description: 'Si es la sesión que hace la petición' })
+  current: boolean;
+}
+
+export class OwnSessionResource {
+  @ApiProperty({ enum: ['sessions'] })
+  type: string;
+
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty({ type: OwnSessionAttributes })
+  attributes: OwnSessionAttributes;
 }
 
 export class NewSessionMeta {

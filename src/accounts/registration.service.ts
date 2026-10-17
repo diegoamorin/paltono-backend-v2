@@ -9,7 +9,7 @@ import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
 import { UserToken } from './entities/user-token.entity';
 import { hashPassword } from './passwords';
-import { generateSecretToken, hashSecretToken } from './secret-tokens';
+import { IssuedUserToken, claimUserToken, issueUserToken } from './user-tokens';
 
 export interface NewAccount {
   username: string;
@@ -78,18 +78,7 @@ export class RegistrationService {
   async verifyEmail(token: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const now = this.clock.now();
-      const stored = await manager.findOne(UserToken, {
-        where: { tokenHash: hashSecretToken(token), purpose: 'email_verify' },
-        lock: { mode: 'pessimistic_write' },
-      });
-      const user = stored && (await manager.findOne(User, { where: { id: stored.userId }, lock: { mode: 'pessimistic_write' } }));
-      if (!stored || !user || user.status === 'deleted') {
-        throw new JsonApiException(HttpStatus.UNPROCESSABLE_ENTITY, [
-          { code: 'token_invalid', detail: 'The token is not valid', source: { pointer: '/data/attributes/token' } },
-        ]);
-      }
-      if (stored.usedAt) throw tokenStateError('token_used', 'The token has already been used');
-      if (stored.expiresAt <= now) throw tokenStateError('token_expired', 'The token has expired');
+      const { user } = await claimUserToken(manager, token, 'email_verify', now);
 
       // Verifying consumes every pending verification token of the account, not just this one.
       await manager.update(UserToken, { userId: user.id, purpose: 'email_verify', usedAt: IsNull() }, { usedAt: now });
@@ -111,23 +100,9 @@ export class RegistrationService {
     await this.emails.sendEmailVerification(user, frontend, token, tokenId);
   }
 
-  private async issueVerificationToken(manager: EntityManager, user: User): Promise<{ token: string; tokenId: number }> {
-    const now = this.clock.now();
-    const { token, hash } = generateSecretToken();
-    const { identifiers } = await manager.insert(UserToken, {
-      userId: user.id,
-      purpose: 'email_verify',
-      targetEmail: null,
-      tokenHash: hash,
-      expiresAt: new Date(now.getTime() + this.config.auth.emailVerificationTtlMs),
-      createdAt: now,
-    });
-    return { token, tokenId: identifiers[0].id };
+  private issueVerificationToken(manager: EntityManager, user: User): Promise<IssuedUserToken> {
+    return issueUserToken(manager, user, 'email_verify', this.config.auth.emailVerificationTtlMs, this.clock.now());
   }
-}
-
-function tokenStateError(code: string, detail: string): JsonApiException {
-  return new JsonApiException(HttpStatus.CONFLICT, [{ code, detail, source: { pointer: '/data/attributes/token' } }]);
 }
 
 /** Turns a collision with another account's username or email into a 409. */

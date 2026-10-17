@@ -1,9 +1,9 @@
 import request from 'supertest';
-import { accessTokenFor, getMe, login, register, requestVerification } from '../support/accounts';
+import { accessTokenFor, getMe, login, register, requestPasswordReset, requestVerification } from '../support/accounts';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 
-describe('rate limits on login, registration and verification resends', () => {
+describe('rate limits on login, registration, verification resends and password reset requests', () => {
   let app: TestApp;
 
   beforeEach(async () => {
@@ -42,6 +42,15 @@ describe('rate limits on login, registration and verification resends', () => {
     for (let index = 0; index < 3; index++) await requestVerification(app.server, accessToken).expect(202);
 
     await requestVerification(app.server, accessToken).expect(429);
+  });
+
+  it('limits password reset requests, whether or not the account exists', async () => {
+    await register(app.server).expect(201);
+    await requestPasswordReset(app.server, 'diego@example.com').expect(202);
+    await requestPasswordReset(app.server, 'nobody@example.com').expect(202);
+    await requestPasswordReset(app.server, 'diego@example.com').expect(202);
+
+    await requestPasswordReset(app.server, 'nobody@example.com').expect(429);
   });
 
   it('counts each route separately and leaves other routes alone', async () => {

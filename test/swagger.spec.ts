@@ -55,6 +55,9 @@ describe('Swagger and the OpenAPI document', () => {
         ['/v1/me', 'get'],
         ['/v1/sessions/current', 'delete'],
         ['/v1/email-verification-requests', 'post'],
+        ['/v1/me/sessions', 'get'],
+        ['/v1/me/sessions/{id}', 'delete'],
+        ['/v1/me/password-changes', 'post'],
       ]) {
         expect(document.paths[path][method].security).toEqual([{ bearer: [] }]);
         expect(document.paths[path][method].responses).toHaveProperty('401');
@@ -62,6 +65,9 @@ describe('Swagger and the OpenAPI document', () => {
       expect(document.paths['/v1/email-verifications'].post.responses).toHaveProperty('204');
       expect(document.paths['/v1/email-verification-requests'].post.responses).toHaveProperty('202');
       expect(document.paths['/v1/sessions/current'].delete.responses).toHaveProperty('204');
+      expect(document.paths['/v1/session-refreshes'].post.security).toEqual([{ paltono_refresh_token: [] }]);
+      expect(document.paths['/v1/password-reset-requests'].post.responses).toHaveProperty('202');
+      expect(document.paths['/v1/password-resets'].post.security).toBeUndefined();
     });
   });
 

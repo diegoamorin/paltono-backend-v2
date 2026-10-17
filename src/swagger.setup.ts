@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import { NextFunction, Request, Response } from 'express';
 import { timingSafeEqual } from 'node:crypto';
+import { REFRESH_TOKEN_COOKIE } from './accounts/sessions.controller';
 import { AppConfig } from './config/app-config';
 
 export const SWAGGER_PATH = 'docs';
@@ -12,6 +13,7 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setDescription('API JSON:API del catálogo musical colaborativo de Paltono.')
     .setVersion('1')
     .addBearerAuth()
+    .addCookieAuth(REFRESH_TOKEN_COOKIE, { type: 'apiKey', in: 'cookie', name: REFRESH_TOKEN_COOKIE }, REFRESH_TOKEN_COOKIE)
     .build();
   return SwaggerModule.createDocument(app, config);
 }
