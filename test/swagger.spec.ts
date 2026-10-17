@@ -88,6 +88,33 @@ describe('Swagger and the OpenAPI document', () => {
       expect(document.components.schemas).toHaveProperty('ContributionRoleCreateDocument');
       expect(document.components.schemas).toHaveProperty('ContributionRoleUpdateDocument');
     });
+
+    it('documents the editorial endpoints', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+
+      expect(document.paths['/v1/editorial-operations'].get.security).toBeUndefined();
+      for (const [path, method] of [
+        ['/v1/editorial-entities', 'post'],
+        ['/v1/editorial-entities/{id}', 'get'],
+        ['/v1/editorial-entities/{id}/proposals', 'get'],
+        ['/v1/proposals', 'post'],
+        ['/v1/proposals/{id}', 'get'],
+        ['/v1/proposals/{id}', 'patch'],
+        ['/v1/proposals/{id}', 'delete'],
+        ['/v1/proposals/{id}/changes', 'post'],
+        ['/v1/proposals/{id}/changes', 'get'],
+        ['/v1/proposals/{id}/changes/{changeId}', 'patch'],
+        ['/v1/proposals/{id}/changes/{changeId}', 'delete'],
+        ['/v1/proposals/{id}/sources', 'post'],
+        ['/v1/proposals/{id}/sources/{sourceId}', 'patch'],
+        ['/v1/proposals/{id}/sources/{sourceId}', 'delete'],
+        ['/v1/proposals/{id}/submission', 'post'],
+      ]) {
+        expect(document.paths[path][method].tags).toEqual(['editorial']);
+        expect(document.paths[path][method].responses).toHaveProperty('401');
+      }
+      expect(document.paths['/v1/proposals/{id}/submission'].post.responses).toHaveProperty('200');
+    });
   });
 
   describe('in production', () => {

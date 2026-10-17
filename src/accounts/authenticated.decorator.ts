@@ -16,12 +16,14 @@ import { ApiJsonApiErrorResponses } from '../common/json-api/swagger';
 import { Authentication, SessionsService } from './sessions.service';
 
 /**
- * Access levels of the endpoint matrix that need an account:
+ * Access levels of the endpoint matrix:
+ * - `optional` (`Pub`): anyone, but a request with an access token is made as that account,
+ *   for public resources that show more to their author or to staff;
  * - `authenticated` (`Auth`): any account that can log in, verified or not;
  * - `verified` (`Ver`): an active account with a verified email, as contributing requires;
  * - `admin` (`Admin`): `verified` with the administrator role.
  */
-export type AccessLevel = 'authenticated' | 'verified' | 'admin';
+export type AccessLevel = 'optional' | 'authenticated' | 'verified' | 'admin';
 
 const ACCESS_LEVEL = Symbol('ACCESS_LEVEL');
 
@@ -39,6 +41,7 @@ export class AccessGuard implements CanActivate {
     const http = context.switchToHttp();
     const request = http.getRequest<AuthenticatedRequest>();
 
+    if (level === 'optional' && request.headers.authorization === undefined) return true;
     const [scheme, token] = (request.headers.authorization ?? '').split(' ');
     const authentication = scheme === 'Bearer' && token ? await this.sessions.authenticate(token) : undefined;
     if (!authentication) {
@@ -47,7 +50,7 @@ export class AccessGuard implements CanActivate {
         { code: 'unauthenticated', detail: 'A valid access token is required', source: { header: 'Authorization' } },
       ]);
     }
-    if (level !== 'authenticated' && !authentication.user.emailVerified) {
+    if ((level === 'verified' || level === 'admin') && !authentication.user.emailVerified) {
       throw new JsonApiException(HttpStatus.FORBIDDEN, [
         { code: 'email_not_verified', detail: 'Verify your email before doing this' },
       ]);
@@ -69,7 +72,7 @@ export function Authenticated(level: AccessLevel = 'authenticated') {
     SetMetadata(ACCESS_LEVEL, level),
     UseGuards(AccessGuard),
     ApiBearerAuth(),
-    ApiJsonApiErrorResponses(...(level === 'authenticated' ? [401] : [401, 403])),
+    ApiJsonApiErrorResponses(...(level === 'optional' || level === 'authenticated' ? [401] : [401, 403])),
   );
 }
 
@@ -77,4 +80,10 @@ export function Authenticated(level: AccessLevel = 'authenticated') {
 export const CurrentAuthentication = createParamDecorator(
   (_: unknown, context: ExecutionContext): Authentication =>
     context.switchToHttp().getRequest<AuthenticatedRequest>().authentication!,
+);
+
+/** The account and session of a request to an `@Authenticated('optional')` endpoint, if it sent a token. */
+export const CurrentViewer = createParamDecorator(
+  (_: unknown, context: ExecutionContext): Authentication | undefined =>
+    context.switchToHttp().getRequest<AuthenticatedRequest>().authentication,
 );
