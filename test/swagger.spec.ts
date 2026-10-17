@@ -43,10 +43,40 @@ describe('Swagger and the OpenAPI document', () => {
       const create = document.paths['/v1/widgets'].post;
       expect(Object.keys(create.requestBody.content)).toEqual(['application/vnd.api+json']);
     });
+
+    it('documents the account endpoints, with bearer auth where they need it', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+
+      expect(document.components.securitySchemes).toHaveProperty('bearer');
+      expect(document.paths['/v1/users'].post.security).toBeUndefined();
+      expect(document.paths['/v1/sessions'].post.responses['201'].content['application/vnd.api+json'].schema.properties)
+        .toHaveProperty('meta');
+      for (const [path, method] of [
+        ['/v1/me', 'get'],
+        ['/v1/sessions/current', 'delete'],
+        ['/v1/email-verification-requests', 'post'],
+      ]) {
+        expect(document.paths[path][method].security).toEqual([{ bearer: [] }]);
+        expect(document.paths[path][method].responses).toHaveProperty('401');
+      }
+      expect(document.paths['/v1/email-verifications'].post.responses).toHaveProperty('204');
+      expect(document.paths['/v1/email-verification-requests'].post.responses).toHaveProperty('202');
+      expect(document.paths['/v1/sessions/current'].delete.responses).toHaveProperty('204');
+    });
   });
 
   describe('in production', () => {
-    const production = { NODE_ENV: 'production', SWAGGER_ENABLED: undefined, SWAGGER_USER: undefined, SWAGGER_PASSWORD: undefined };
+    const production = {
+      NODE_ENV: 'production',
+      SWAGGER_ENABLED: undefined,
+      SWAGGER_USER: undefined,
+      SWAGGER_PASSWORD: undefined,
+      ACCESS_TOKEN_SECRET: 'production-secret',
+      RESEND_API_KEY: 're_test',
+      MAIL_FROM: 'Paltono <no-reply@paltono.com>',
+      FRONTEND_URL_KPOP: 'https://kpop.paltono.com',
+      FRONTEND_URL_MAIN: 'https://paltono.com',
+    };
 
     it('is disabled by default', async () => {
       const app = await createTestApp({ env: production });

@@ -103,10 +103,10 @@ const included = {
   items: { type: 'object' },
 };
 
-/** Documents a response holding one resource. */
-export function ApiJsonApiResourceResponse(resource: Type, status = 200) {
+/** Documents a response holding one resource, optionally with a document-level `meta`. */
+export function ApiJsonApiResourceResponse(resource: Type, status = 200, meta?: Type) {
   return applyDecorators(
-    ApiExtraModels(resource, JsonApiVersion, JsonApiResourceLinks),
+    ApiExtraModels(resource, JsonApiVersion, JsonApiResourceLinks, ...(meta ? [meta] : [])),
     ApiResponse({
       status,
       description: STATUS_CODES[status],
@@ -120,6 +120,7 @@ export function ApiJsonApiResourceResponse(resource: Type, status = 200) {
               data: { $ref: getSchemaPath(resource) },
               included,
               links: { $ref: getSchemaPath(JsonApiResourceLinks) },
+              ...(meta ? { meta: { $ref: getSchemaPath(meta) } } : {}),
             },
           },
         },

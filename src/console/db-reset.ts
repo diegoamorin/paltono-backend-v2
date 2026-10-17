@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import { loadConfig, loadEnvFile } from '../config/app-config';
+import { loadConfig, loadEnvFile, loadEnvironment } from '../config/app-config';
 import { databaseOptions } from '../database/database-options';
 import { truncateAllTables } from '../database/truncate';
 import { runCommand } from './run-command';
@@ -10,10 +10,11 @@ import { runCommand } from './run-command';
 loadEnvFile();
 
 runCommand(async () => {
-  const config = loadConfig();
-  if (config.environment !== 'development') {
-    throw new Error(`db:reset runs only in development; NODE_ENV is "${config.environment}"`);
+  const environment = loadEnvironment();
+  if (environment !== 'development') {
+    throw new Error(`db:reset runs only in development; NODE_ENV is "${environment}"`);
   }
+  const config = loadConfig();
 
   const dataSource = new DataSource(databaseOptions(config.databaseUrl));
   await dataSource.initialize();

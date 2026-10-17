@@ -11,12 +11,45 @@ export interface SwaggerConfig {
   credentials?: { user: string; password: string };
 }
 
+/** Frontends that emails may link to; clients name one, never a URL (ADR 0002). */
+export const FRONTENDS = ['kpop', 'main'] as const;
+export type Frontend = (typeof FRONTENDS)[number];
+export const DEFAULT_FRONTEND: Frontend = 'kpop';
+
+export interface AuthConfig {
+  /** HMAC key that signs access tokens. */
+  accessTokenSecret: string;
+  accessTokenTtlMs: number;
+  /** Absolute lifetime of a renewable session. */
+  sessionTtlMs: number;
+  emailVerificationTtlMs: number;
+  /** Requests per minute and client address on each rate-limited route. */
+  rateLimit: number;
+}
+
+export interface MailConfig {
+  /** Without a key, outside production, emails are written to the log instead of sent. */
+  resendApiKey?: string;
+  from: string;
+}
+
 export interface AppConfig {
   environment: Environment;
   port: number;
   databaseUrl: string;
   swagger: SwaggerConfig;
+  auth: AuthConfig;
+  mail: MailConfig;
+  /** Base URL of each frontend. */
+  frontends: Record<Frontend, string>;
 }
+
+const SECOND = 1000;
+const HOUR = 60 * 60 * SECOND;
+const DAY = 24 * HOUR;
+
+/** Placeholder signing key outside production, so development and tests need no setup. */
+const DEVELOPMENT_ACCESS_TOKEN_SECRET = 'development-only-access-token-secret';
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
 
@@ -31,10 +64,7 @@ export function loadEnvFile(path = resolve(process.cwd(), '.env')): void {
  * never touch another database.
  */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const environment = env.NODE_ENV as Environment;
-  if (!ENVIRONMENTS.includes(environment)) {
-    throw new Error(`NODE_ENV must be one of ${ENVIRONMENTS.join(', ')}; got "${env.NODE_ENV ?? ''}"`);
-  }
+  const environment = loadEnvironment(env);
 
   const databaseUrl = required(env, environment === 'test' ? 'DATABASE_URL_TEST' : 'DATABASE_URL');
 
@@ -43,7 +73,52 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port: Number(env.PORT ?? 3000),
     databaseUrl,
     swagger: swaggerConfig(environment, env),
+    auth: authConfig(environment, env),
+    mail: mailConfig(environment, env),
+    frontends: {
+      kpop: requiredInProduction(environment, env, 'FRONTEND_URL_KPOP', 'http://localhost:5173'),
+      main: requiredInProduction(environment, env, 'FRONTEND_URL_MAIN', 'http://localhost:5174'),
+    },
   };
+}
+
+function authConfig(environment: Environment, env: NodeJS.ProcessEnv): AuthConfig {
+  return {
+    accessTokenSecret: requiredInProduction(environment, env, 'ACCESS_TOKEN_SECRET', DEVELOPMENT_ACCESS_TOKEN_SECRET),
+    accessTokenTtlMs: positiveNumber(env, 'ACCESS_TOKEN_TTL_SECONDS', 15 * 60) * SECOND,
+    sessionTtlMs: positiveNumber(env, 'SESSION_TTL_DAYS', 30) * DAY,
+    emailVerificationTtlMs: positiveNumber(env, 'EMAIL_VERIFICATION_TTL_HOURS', 24) * HOUR,
+    rateLimit: positiveNumber(env, 'AUTH_RATE_LIMIT', 10),
+  };
+}
+
+function mailConfig(environment: Environment, env: NodeJS.ProcessEnv): MailConfig {
+  return {
+    resendApiKey: environment === 'production' ? required(env, 'RESEND_API_KEY') : env.RESEND_API_KEY || undefined,
+    // Resend's test sender outside production; the verified paltono.com domain in production.
+    from: requiredInProduction(environment, env, 'MAIL_FROM', 'Paltono <onboarding@resend.dev>'),
+  };
+}
+
+/** A variable required in production that falls back to a development value elsewhere. */
+function requiredInProduction(environment: Environment, env: NodeJS.ProcessEnv, name: string, value: string): string {
+  return environment === 'production' ? required(env, name) : env[name] || value;
+}
+
+function positiveNumber(env: NodeJS.ProcessEnv, name: string, value: number): number {
+  if (!env[name]) return value;
+  const number = Number(env[name]);
+  if (!(number > 0)) throw new Error(`${name} must be a positive number; got "${env[name]}"`);
+  return number;
+}
+
+/** Reads `NODE_ENV` alone, for commands that must refuse an environment before configuring anything. */
+export function loadEnvironment(env: NodeJS.ProcessEnv = process.env): Environment {
+  const environment = env.NODE_ENV as Environment;
+  if (!ENVIRONMENTS.includes(environment)) {
+    throw new Error(`NODE_ENV must be one of ${ENVIRONMENTS.join(', ')}; got "${env.NODE_ENV ?? ''}"`);
+  }
+  return environment;
 }
 
 function swaggerConfig(environment: Environment, env: NodeJS.ProcessEnv): SwaggerConfig {

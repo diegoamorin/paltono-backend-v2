@@ -36,4 +36,19 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 - `collectionDocument` y `resourceDocument` construyen los documentos con `included`, `fields[tipo]`, enlaces de paginación y `meta.total`. La página es de 20 por defecto y 100 como máximo; el orden siempre termina en el `id`.
 - `swagger.ts` documenta los documentos genéricos con `@ApiExtraModels` y `getSchemaPath`.
 
+## Cuentas y autenticación
+
+`src/accounts` implementa el registro, la verificación de correo, el login con username o correo, `GET /v1/me` y el logout (ADR 0002):
+
+- El token de acceso es un JWT HS256 de 15 minutos firmado con `ACCESS_TOKEN_SECRET`, enviado en `Authorization: Bearer`. Cada petición relee la sesión y la cuenta: una sesión revocada o una cuenta suspendida deja de autorizar aunque el token no haya caducado.
+- `@Authenticated()` protege un endpoint para cualquier cuenta que pueda iniciar sesión, verificada o no; `@Authenticated('verified')` exige el correo verificado, como contribuir.
+- Las caducidades se configuran con `ACCESS_TOKEN_TTL_SECONDS` (15 minutos por defecto), `SESSION_TTL_DAYS` (30) y `EMAIL_VERIFICATION_TTL_HOURS` (24).
+- El token de renovación viaja en la cookie `paltono_refresh_token` (web) o en `meta.refreshToken` (móvil).
+- Los correos salen por el puerto `Mailer` después del commit; un fallo de envío no deshace la operación. Con `RESEND_API_KEY` se envían por Resend; sin ella, fuera de producción, se escriben en el log. Los enlaces apuntan a `FRONTEND_URL_KPOP` o `FRONTEND_URL_MAIN` según el `frontend` que pide el cliente.
+- Login, registro y reenvío de la verificación admiten `AUTH_RATE_LIMIT` peticiones por minuto y dirección (10 por defecto); responden 429 por encima.
+
+En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_FROM`, `FRONTEND_URL_KPOP` y `FRONTEND_URL_MAIN`.
+
+En las pruebas, `createTestApp` sustituye el `Mailer` por un doble que captura los correos (`app.mailer`) y `app.reset()` vacía la base antes de cada prueba.
+
 El reloj (`Clock`) es una dependencia inyectable: el código usa `clock.now()` y las pruebas lo sustituyen por un reloj controlado.

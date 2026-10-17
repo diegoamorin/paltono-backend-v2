@@ -11,6 +11,7 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setTitle('Paltono API')
     .setDescription('API JSON:API del catálogo musical colaborativo de Paltono.')
     .setVersion('1')
+    .addBearerAuth()
     .build();
   return SwaggerModule.createDocument(app, config);
 }
