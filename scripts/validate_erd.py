@@ -18,7 +18,8 @@ EDITORIAL = {
 }
 ROOTS = {
     'catalog_identities': 'identity', 'works': 'work',
-    'recordings': 'recording', 'releases': 'release',
+    'recordings': 'recording', 'release_groups': 'release_group',
+    'releases': 'release',
     'events': 'event', 'tours': 'tour',
 }
 

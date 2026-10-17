@@ -27,11 +27,12 @@ Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permi
 | `identity` | `catalog_identities` | `people` o `organizations`, perfil `artists`, alias, nacionalidades, categorías y enlaces; membresías y roles pertenecen a la organización; afiliaciones pertenecen a la identidad del artista. |
 | `work` | `works` | Créditos `work_contributions`. |
 | `recording` | `recordings` | Créditos, géneros y relaciones con obras (`recording_works`). |
-| `release` | `releases` | Créditos del release, pistas, créditos de presentación y enlaces de las pistas. |
+| `release_group` | `release_groups` | Título, tipo, descripción, vínculo de repackage y créditos de presentación del lanzamiento (`release_artist_credits`). |
+| `release` | `releases` | Edición: pertenencia a su lanzamiento, nombre de edición, fecha y hora, cancelación, créditos de la edición (`release_contributions`), pistas, créditos de presentación de las pistas y enlaces de las pistas. |
 | `event` | `events` | Participantes, organizadores y enlaces del concierto. |
 | `tour` | `tours` | Artistas, organizadores y enlaces del tour. |
 
-Las seis tablas de dominio tienen `editorial_entity_id UUID NOT NULL UNIQUE`, FK a `editorial_entities.id`, sin sustituir sus IDs existentes. `artists` y `tracks` no reciben una segunda raíz editorial. Cada relación tiene un único propietario de escritura; sus vistas inversas son derivadas. Las entidades referenciadas también se comprueban al validar dependencias, publicación y retirada, sin inventar revisiones en ellas cuando no cambian sus datos.
+Las siete tablas de dominio tienen `editorial_entity_id UUID NOT NULL UNIQUE`, FK a `editorial_entities.id`, sin sustituir sus IDs existentes. `artists` y `tracks` no reciben una segunda raíz editorial. Cada relación tiene un único propietario de escritura; sus vistas inversas son derivadas. Las entidades referenciadas también se comprueban al validar dependencias, publicación y retirada, sin inventar revisiones en ellas cuando no cambian sus datos.
 
 Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_types`, `contribution_roles` y ámbitos) tienen lectura pública y escritura exclusiva de administradores, fuera del flujo de propuestas. Solo pueden eliminarse entradas sin referencias; una entrada en uso produce rechazo sin cascadas. Son datos administrados, no nuevas fichas colaborativas. Autenticación queda fuera de este flujo. Los likes (`recording_likes`) quedan fuera del MVP: no tienen endpoints, escrituras, seed ni pruebas; se rediseñarán más adelante.
 
@@ -77,9 +78,9 @@ El autor congelado es la cuenta referenciada por su ID, no una copia de su usern
 
 Al iniciar un alta se reserva un UUID en `editorial_entities`; `current_version=0`, `publication_status=reserved` y no existe fila en el dominio. `creation_change_id`, `published_at` y `withdrawn_at` son NULL. Solo su autor puede proponer operaciones sobre esa reserva, dentro de la misma propuesta de creación. Las propuestas de modificación independientes solo se envían contra raíces publicadas.
 
-Una operación `create_entity` contiene una creación mínima válida: todos los datos obligatorios no generados, sus valores válidos y los subtipos necesarios. Por ejemplo, una identidad debe tener exactamente un subtipo coherente con `person/organization`; un release necesita título no vacío y tipo válido, pero puede carecer de fecha, portada y pistas. No relajar las restricciones existentes de grabaciones, obras, créditos, pistas o eventos. Fechas opcionales permanecen desconocidas, sin inventar precisión.
+Una operación `create_entity` contiene una creación mínima válida: todos los datos obligatorios no generados, sus valores válidos y los subtipos necesarios. Por ejemplo, una identidad debe tener exactamente un subtipo coherente con `person/organization`; un lanzamiento necesita título no vacío y tipo válido, pero puede carecer de ediciones; una edición solo necesita su lanzamiento y puede carecer de título propio, fecha, portada y pistas. No relajar las restricciones existentes de grabaciones, obras, créditos, pistas o eventos. Fechas opcionales permanecen desconocidas, sin inventar precisión.
 
-Al aplicar la creación se inserta la raíz del dominio, se fija `creation_change_id`, se publica y se escribe su primera revisión. Los datos adicionales del envío pueden continuar pendientes. `created_by` sigue siendo el autor; el aprobador se obtiene de la decisión de creación. Una raíz publicada o retirada tiene exactamente una fila del tipo correcto entre las seis tablas; `published_at` y `creation_change_id` son obligatorios. Una reserva abandonada permanece sin fila pública.
+Al aplicar la creación se inserta la raíz del dominio, se fija `creation_change_id`, se publica y se escribe su primera revisión. Los datos adicionales del envío pueden continuar pendientes. `created_by` sigue siendo el autor; el aprobador se obtiene de la decisión de creación. Una raíz publicada o retirada tiene exactamente una fila del tipo correcto entre las siete tablas; `published_at` y `creation_change_id` son obligatorios. Una reserva abandonada permanece sin fila pública.
 
 Operaciones admitidas:
 
@@ -100,7 +101,7 @@ Las referencias propuestas a nuevas raíces usan `{"entity_id":"<UUID editorial>
 
 `atomic_group_id` agrupa operaciones del mismo envío. Aplicar un grupo completo en una transacción o no aplicar ninguna. Dentro del grupo se ejecuta en orden de dependencias y se validan las invariantes finales antes del commit. Los grupos también se resuelven juntos al rechazar, retirar o declarar no aplicables sus miembros; una aplicación que contenga operaciones ya satisfechas puede cerrar esas operaciones sin una revisión adicional. Un conflicto que impide el grupo mantiene los demás miembros pendientes.
 
-No es necesario agrupar toda una propuesta: una identidad puede aprobarse antes que su grabación y esta antes que una pista. Para publicar la pista deben estar publicadas tanto la grabación como el release, o publicarse dentro de la misma transacción. Una relación no apunta a una reserva ni a una ficha retirada. Una dependencia aplicada solo desbloquea cuando su postcondición sigue siendo válida; no basta con consultar su estado histórico.
+No es necesario agrupar toda una propuesta: una identidad puede aprobarse antes que su grabación y esta antes que una pista. Para publicar la pista deben estar publicadas tanto la grabación como la edición, o publicarse dentro de la misma transacción. Del mismo modo, una edición exige su lanzamiento publicado y `repackage_of_id` exige el lanzamiento original publicado. Una relación no apunta a una reserva ni a una ficha retirada. Una dependencia aplicada solo desbloquea cuando su postcondición sigue siendo válida; no basta con consultar su estado histórico.
 
 ## 4. Decisiones, conflictos y transacciones
 
@@ -157,12 +158,12 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Dos alturas distintas desde la misma base | Primera aplicada; segunda en conflicto. Confirmación posterior conserva base original y valor realmente sustituido. |
 | Dos propuestas idénticas | Segunda satisfecha, sin escritura ni versión duplicada. |
 | Altura y biografía independientes | Ambas pueden aplicarse aunque la versión de la raíz avance. |
-| Alta de identidad, grabación, release y pista | Se publican en orden válido o dentro de un grupo atómico; nunca hay referencias públicas a reservas. |
+| Alta de identidad, grabación, lanzamiento, edición y pista | Se publican en orden válido o dentro de un grupo atómico; nunca hay referencias públicas a reservas. |
 | Rechazo de una creación prerrequisito | Sus dependientes quedan bloqueados; los cambios independientes siguen disponibles. |
 | Alta mínima válida con altura opcional pendiente | Se publica la ficha y el envío continúa abierto. |
 | Fecha parcial y grupo inseparable | No se publica una fecha inválida ni una fracción de un grupo fallido. |
 | Dos moderadores aplican simultáneamente | Una aplicación efectiva; el segundo relee estado y no duplica revisión. |
-| Dos nuevas pistas compiten por release/disco/posición | Se respeta la unicidad, incluso si los selectores propuestos son distintos. |
+| Dos nuevas pistas compiten por edición/disco/posición | Se respeta la unicidad, incluso si los selectores propuestos son distintos. |
 | Dependencia aplicada cuya entidad fue retirada | No se aplica la relación; se comprueba la publicación actual. |
 | Intento de publicar, retirar o elevar rol sin permiso | Rechazo sin escritura; moderadores no asignan roles ni retiran fichas publicadas. |
 | Bootstrap por consola de una cuenta activa y verificada, sin administradores existentes | Promoción y auditoría atómicas, con `changed_by=NULL` y motivo de bootstrap. |
@@ -173,6 +174,10 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Fuente de otra propuesta o ciclo de dependencias | Rechazo por FK compuesta o validación del grafo. |
 | Visitante consulta historial | Ve todos los envíos y fuentes, sin estados individuales ni motivos; nunca ve borradores. |
 | Autor retira pendientes de un envío parcialmente aplicado | Se conservan las revisiones aplicadas; se cierran pendientes/dependientes según su resultado. |
+| Alta de una edición cuyo lanzamiento se rechaza | La edición queda bloqueada; nunca se publica una edición sin lanzamiento publicado. |
+| Dos ediciones sin nombre en el mismo lanzamiento | La segunda se rechaza por la unicidad de `(release_group_id, edition_name)`. |
+| Repackage que crearía un ciclo o apunta a sí mismo | Rechazo bajo bloqueo, sin escritura ni revisión. |
+| Mover una edición a otro lanzamiento mientras otra propuesta cambia esa edición | Se aplica como `set_fields` de la edición; la segunda queda en conflicto si su base cambió. |
 | Autor cambia de username y otra cuenta toma el anterior | Las contribuciones existentes muestran el username vigente del autor original; sus IDs, contenido e historial no cambian ni se transfieren a la otra cuenta. |
 
 No hay backend ni base de datos ejecutable en este repositorio. Estos casos son criterios de aceptación del diseño, no pruebas de integración ya superadas. Si se implementa sobre datos existentes, habrá que crear raíces y revisiones iniciales con procedencia real o migración explícita; no atribuir autores o fuentes inventados.

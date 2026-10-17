@@ -14,6 +14,24 @@ _Avoid_: Usuario para referirse a una persona del catálogo.
 Unidad de información editorial correspondiente a una identidad, obra, grabación, lanzamiento, evento o tour. Puede reunir datos y relaciones cuya modificación se revisa conjuntamente o por partes.
 _Avoid_: Página como sinónimo de la información del catálogo.
 
+### Música
+
+**Lanzamiento (release group)**:
+Álbum, EP, single o recopilatorio tal como lo presentó su artista o agencia, independientemente de cuántas ediciones tenga. Su tipo es una decisión editorial respaldada por fuentes, no un cálculo por número de pistas.
+_Avoid_: Release a secas, porque puede referirse al lanzamiento o a una edición.
+
+**Edición (release)**:
+Publicación digital concreta de un lanzamiento. Hay una edición distinta cuando cambia el tracklist, el audio de alguna pista o el contenido de una edición regional; las variantes físicas o de empaque no son ediciones.
+_Avoid_: Versión, que puede referirse a una edición, a una grabación alternativa o a una variante de photobook.
+
+**Pista (track)**:
+Posición de una grabación dentro de una edición.
+_Avoid_: Canción, que puede referirse a la obra, a la grabación o a la pista.
+
+**Repackage**:
+Lanzamiento propio que relanza el contenido de otro con material nuevo y suele tener otro título. Se vincula con el lanzamiento original.
+_Avoid_: Edición para referirse a un repackage.
+
 ### Contribuciones editoriales
 
 **Propuesta (change proposal)**:

@@ -5,7 +5,7 @@ Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.m
 ## Convenciones comunes
 
 - Prefijo `/v1`; `Content-Type` y `Accept`: `application/vnd.api+json` (415/406 según JSON:API). `/health` queda fuera.
-- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos, eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
+- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos (`release-groups`), ediciones (`releases`), eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
 - Paginación `page[number]`/`page[size]` (20 por defecto, 100 máximo), con `meta.total` y enlaces `first/prev/next/last`. Orden estable: toda ordenación añade el `id` como desempate.
 - `include` hasta dos niveles, solo por las rutas listadas. `fields[tipo]` en todos los recursos. Un `include`, `sort` o filtro no listado responde 400.
 - Errores en formato JSON:API: 400 consulta mal formada, 401 sin autenticación, 403 autenticado sin permiso, 404 inexistente u oculto por privacidad, 409 estado o concurrencia incompatibles, 415/406 media type, 422 validación, 429 límite de peticiones.
@@ -109,7 +109,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C5 | `GET /v1/identities/{id}/organized-events` y `/organized-tours` | Eventos y tours donde figura como organizador | ok |
 | C6 | `GET /v1/artists` | Perfiles artísticos | ok val |
 | C7 | `GET /v1/artists/{id}` | Perfil y su identidad | ok authz |
-| C8 | `GET /v1/artists/{id}/releases` | Lanzamientos con crédito de presentación | ok val |
+| C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de presentación, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
 | C9 | `GET /v1/artists/{id}/tracks` | Pistas acreditadas (`filter[rank]`) | ok val |
 | C10 | `GET /v1/artists/{id}/events` y `/tours` | Anunciado en eventos y tours | ok val |
 
@@ -127,17 +127,22 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | M3 | `GET /v1/works/{id}/recordings` | Grabaciones que la interpretan, interpolan o samplean (`filter[relationType]`) | ok val |
 | M4 | `GET /v1/recordings` | Grabaciones | ok val |
 | M5 | `GET /v1/recordings/{id}` | Grabación | ok authz |
-| M6 | `GET /v1/recordings/{id}/tracks` | Apariciones en lanzamientos | ok |
-| M7 | `GET /v1/releases` | Lanzamientos | ok val |
-| M8 | `GET /v1/releases/{id}` | Lanzamiento | ok authz |
+| M6 | `GET /v1/recordings/{id}/tracks` | Apariciones en ediciones | ok |
+| M7 | `GET /v1/releases` | Ediciones | ok val |
+| M8 | `GET /v1/releases/{id}` | Edición, con su disponibilidad derivada y su instante de salida | ok authz |
 | M9 | `GET /v1/releases/{id}/tracks` | Lista de pistas por disco y número | ok |
 | M10 | `GET /v1/tracks/{id}` | Pista | ok authz |
+| M11 | `GET /v1/release-groups` | Lanzamientos | ok val |
+| M12 | `GET /v1/release-groups/{id}` | Lanzamiento, con fecha, próxima salida y cuenta regresiva derivadas de sus ediciones | ok authz |
+| M13 | `GET /v1/release-groups/{id}/releases` | Ediciones del lanzamiento | ok val |
+| M14 | `GET /v1/release-groups/{id}/repackages` | Repackages que apuntan a este lanzamiento | ok |
 
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
 | `works` | `q` (título), `slug`, `iswc`, `contributor` (identidad), `role` | `title` (defecto), `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `recordingWorks`, `recordingWorks.recording` |
-| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de pista), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release` |
-| `releases` | `q`, `type`, `artist`, `contributor`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD) | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
+| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de pista), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release`, `tracks.release.releaseGroup` |
+| `release-groups` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `releases`, `repackageOf` |
+| `releases` | `q`, `releaseGroup`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `releaseGroup`, `releaseGroup.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
 | `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks`, `platformLinks.platform` |
 
 ## 6. Catálogo: eventos y tours (módulo `live-events`)
@@ -205,7 +210,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 | # | Método y ruta | Contenido | Pruebas |
 |---|---|---|---|
-| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,releases,events,tours`. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas | ok val |
+| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas | ok val |
 
 `discovery` solo lee, a través de los servicios públicos de lectura de cada módulo, para no acoplarse a sus tablas.
 

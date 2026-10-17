@@ -1375,8 +1375,8 @@
 											"fillColor": "#A3FFA3",
 											"font": "Arial;13;0",
 											"parentStyle": true,
-											"left": 6197,
-											"top": 2811,
+											"left": 3733,
+											"top": 2379,
 											"width": 310,
 											"height": 13
 										},
@@ -1393,7 +1393,24 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2379,
+											"top": 2394,
+											"width": 342,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "e62e3e70433143f897d2d3a139e4d708",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFIEU+c0="
+											},
+											"model": {
+												"$ref": "75225c9e35e34b7c8e3a77e2cb2fa113"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3733,
+											"top": 2409,
 											"width": 342,
 											"height": 13
 										},
@@ -1410,24 +1427,24 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2394,
+											"top": 2424,
 											"width": 342,
 											"height": 13
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "AAAAAAGeD8zJ9YYtjOE=",
+											"_id": "a0ff4779913948fa88677a6de107bfdd",
 											"_parent": {
 												"$ref": "AAAAAAGeD8zCFIEU+c0="
 											},
 											"model": {
-												"$ref": "AAAAAAGeD8zCE4ENGlk="
+												"$ref": "fbe07eac8ce84fa9bf3a4f3bfb2c17fc"
 											},
 											"fillColor": "#A3FFA3",
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2409,
+											"top": 2439,
 											"width": 342,
 											"height": 13
 										},
@@ -1444,7 +1461,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2424,
+											"top": 2454,
 											"width": 342,
 											"height": 13
 										},
@@ -1461,7 +1478,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2439,
+											"top": 2469,
 											"width": 342,
 											"height": 13
 										},
@@ -1478,7 +1495,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2454,
+											"top": 2484,
 											"width": 342,
 											"height": 13
 										},
@@ -1495,7 +1512,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2469,
+											"top": 2499,
 											"width": 342,
 											"height": 13
 										},
@@ -1512,7 +1529,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2484,
+											"top": 2514,
 											"width": 342,
 											"height": 13
 										},
@@ -1529,7 +1546,58 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2499,
+											"top": 2529,
+											"width": 342,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "fc419300a3f3454ea0d55984a28b5543",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFIEU+c0="
+											},
+											"model": {
+												"$ref": "21cb8a2a435846128df0690f94dc559b"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3733,
+											"top": 2544,
+											"width": 342,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "baf4232497654c2f98137b8c6b690268",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFIEU+c0="
+											},
+											"model": {
+												"$ref": "8eca85b35bd049ff93bde64ed7e504bb"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3733,
+											"top": 2559,
+											"width": 342,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "6fdf4e96f75041db945e18e69be2eed7",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFIEU+c0="
+											},
+											"model": {
+												"$ref": "5bbcd7d90c6e47c1b0aac439e47fee3e"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3733,
+											"top": 2574,
 											"width": 342,
 											"height": 13
 										},
@@ -1546,7 +1614,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 3733,
-											"top": 2514,
+											"top": 2589,
 											"width": 342,
 											"height": 13
 										}
@@ -1557,7 +1625,7 @@
 									"left": 3728,
 									"top": 2359,
 									"width": 352,
-									"height": 173
+									"height": 248
 								}
 							],
 							"fillColor": "#A3FFA3",
@@ -5828,9 +5896,9 @@
 								"$ref": "AAAAAAGeD8zCFIEm0UM="
 							},
 							"tail": {
-								"$ref": "AAAAAAGeD8zCFIESGxg="
+								"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
 							},
-							"points": "3728:2540;2264:2540",
+							"points": "3700:3150;2000:3150;2000:2624",
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCG4JjI3Y="
 							},
@@ -9435,6 +9503,405 @@
 							"headNameLabel": {
 								"$ref": "kIss+16eZpPdkzDC8CuSIzpg"
 							}
+						},
+						{
+							"_type": "ERDEntityView",
+							"_id": "149c6557f92a4a78a2babdfc85c3e3d9",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"subViews": [
+								{
+									"_type": "LabelView",
+									"_id": "e13f79ee83014eb0b1ef61397a4fceb1",
+									"_parent": {
+										"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
+									},
+									"fillColor": "#A3FFA3",
+									"font": "Arial;13;1",
+									"parentStyle": true,
+									"left": 3700,
+									"top": 3005,
+									"width": 420,
+									"height": 13,
+									"text": "release_groups"
+								},
+								{
+									"_type": "ERDColumnCompartmentView",
+									"_id": "915a1313904c45d2bcce3721b0240b64",
+									"_parent": {
+										"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
+									},
+									"model": {
+										"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+									},
+									"subViews": [
+										{
+											"_type": "ERDColumnView",
+											"_id": "ed158474cc8e4704a9369c2722243f6d",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "b2f1618901814dccb97467e8c503a17a"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3028,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "07c5544d91c44a6c85db0a7d65afc067",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "71bac842841c414e92cac253ccb3b3b7"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3043,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "2df77627a8094d259b66185c9adffb2d",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "1c444639c9624181831c8a587fada558"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3058,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "d5263d26c9744217b55020f042457865",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "9730fc2dc6a54d978e52ae83aa98e1a3"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3073,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "cfd2bf9eadf246a6bf5a647abc722313",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "398aec7f8cf64e7188429c71e446141c"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3088,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "304a4a75ecce476ea0098c429042b65f",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "2b17674a132c44a8bc7684a7102d67c8"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3103,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "267f83e612e94b4699b6dba01c8b383d",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "c8f9e758aa704fedbe9181032d55dbe4"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3118,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "33798cf05be84e7492f8eef555f86559",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "192fd74fd9ef4f95ba85e437dcbe3eab"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3133,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "f45595db4ddc4b8fb0e6f7a33471a138",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "2a331dbc76074eb3aa5a49b78ff37d4b"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3148,
+											"width": 410,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "9719728d2a3040d3a31ee93e0aa3486b",
+											"_parent": {
+												"$ref": "915a1313904c45d2bcce3721b0240b64"
+											},
+											"model": {
+												"$ref": "8f062eaf77f64394aca6c471a7bb257b"
+											},
+											"fillColor": "#A3FFA3",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 3705,
+											"top": 3163,
+											"width": 410,
+											"height": 13
+										}
+									],
+									"fillColor": "#A3FFA3",
+									"font": "Arial;13;0",
+									"parentStyle": true,
+									"left": 3700,
+									"top": 3023,
+									"width": 420,
+									"height": 158
+								}
+							],
+							"fillColor": "#A3FFA3",
+							"font": "Arial;13;0",
+							"parentStyle": false,
+							"left": 3700,
+							"top": 3000,
+							"width": 420,
+							"height": 189,
+							"nameLabel": {
+								"$ref": "e13f79ee83014eb0b1ef61397a4fceb1"
+							},
+							"columnCompartment": {
+								"$ref": "915a1313904c45d2bcce3721b0240b64"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "00a36b11cd6d4ff986b0501caa786d1d",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "1b9764e8287a4a2bb6d0daac87a65685"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "a3586c8364464fac832ec7554c743a4e",
+									"_parent": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4479,
+									"top": 2724,
+									"width": 50,
+									"height": 11,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									},
+									"edgePosition": 1,
+									"text": "editions"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "c5ab39ec648048acbcfb78793d0d2eaa",
+									"_parent": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4092,
+									"top": 2731,
+									"height": 11,
+									"alpha": 0.5235987755982988,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "bf31cba55d3d42dc8014a558d0f37d64",
+									"_parent": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4915,
+									"top": 2746,
+									"height": 11,
+									"alpha": 0.5235987755982988,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "00a36b11cd6d4ff986b0501caa786d1d"
+									}
+								}
+							],
+							"font": "Arial;13;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "AAAAAAGeD8zCFIESGxg="
+							},
+							"tail": {
+								"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
+							},
+							"points": "3900:3000;3900:2848",
+							"nameLabel": {
+								"$ref": "a3586c8364464fac832ec7554c743a4e"
+							},
+							"tailNameLabel": {
+								"$ref": "c5ab39ec648048acbcfb78793d0d2eaa"
+							},
+							"headNameLabel": {
+								"$ref": "bf31cba55d3d42dc8014a558d0f37d64"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "1a482f2defb04240b0e93ba08d66c451",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "f7bd746378204466a75b97c1954053af"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "c3dd6b6e70424c508cde095ff34adf29",
+									"_parent": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4479,
+									"top": 2724,
+									"width": 50,
+									"height": 11,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									},
+									"edgePosition": 1,
+									"text": "repackage of"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "c192a5021a174be68fdbcf62be88b3a2",
+									"_parent": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4092,
+									"top": 2731,
+									"height": 11,
+									"alpha": 0.5235987755982988,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "0bc983ed6a784310b7b482fb9b84b4fb",
+									"_parent": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									},
+									"font": "Arial;11;0",
+									"parentStyle": false,
+									"left": 4915,
+									"top": 2746,
+									"height": 11,
+									"alpha": 0.5235987755982988,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "1a482f2defb04240b0e93ba08d66c451"
+									}
+								}
+							],
+							"font": "Arial;13;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
+							},
+							"tail": {
+								"$ref": "149c6557f92a4a78a2babdfc85c3e3d9"
+							},
+							"points": "4120:3060;4180:3060;4180:3120;4120:3120",
+							"nameLabel": {
+								"$ref": "c3dd6b6e70424c508cde095ff34adf29"
+							},
+							"tailNameLabel": {
+								"$ref": "c192a5021a174be68fdbcf62be88b3a2"
+							},
+							"headNameLabel": {
+								"$ref": "0bc983ed6a784310b7b482fb9b84b4fb"
+							}
 						}
 					]
 				},
@@ -10087,7 +10554,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Musical membership of an organization. UNIQUE NULLS NOT DISTINCT (organization_id,member_identity_id,joined_year,joined_month,joined_day); CHECK organization_id <> member_identity_id. Validate acyclic organization membership and reject definitely overlapping periods, allowing uncertain overlap with partial dates. Unknown date components are NULL. Year 1..9999; month requires year; day requires month and valid Gregorian calendar. Reject a period only if earliest possible entry is later than latest possible departure. status=current|former|unknown. Any known departure requires former; current requires all departure components NULL. Do not inherit musical credits between group and members. Owned by the group identity editorial root. Approved 2026-10-13. See docs/music-credits-model.md.",
+					"documentation": "Musical membership of an organization. UNIQUE NULLS NOT DISTINCT (organization_id,member_identity_id,joined_year,joined_month,joined_day); CHECK organization_id <> member_identity_id. Validate acyclic organization membership and reject definitely overlapping periods, allowing uncertain overlap with partial dates. Unknown date components are NULL. Year 1..9999; month requires year; day requires month and valid Gregorian calendar. Reject a period only if earliest possible entry is later than latest possible departure. status=current|former|unknown. Any known departure requires former; current requires all departure components NULL. Do not inherit musical credits between group and members. Owned by the group identity editorial root. Approved 2026-10-13. See docs/music-catalog-model.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -10610,6 +11077,216 @@
 				},
 				{
 					"_type": "ERDEntity",
+					"_id": "92a32306931143e39e7a6bf4d97cf64e",
+					"_parent": {
+						"$ref": "AAAAAAGeD8zCEIDLyT4="
+					},
+					"name": "release_groups",
+					"documentation": "Lanzamiento: album, EP, single or compilation as announced by its artist or agency, independent of how many editions it has. Approved 2026-10-17. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. A group may be published with only a nonblank title and valid type, before any edition exists, to record an announcement. Owns its title, type, description, repackage link and presentation credits (release_artist_credits). Its release date and upcoming state are derived from its non-cancelled editions, never stored. No automatic merge of groups. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
+					"columns": [
+						{
+							"_type": "ERDColumn",
+							"_id": "b2f1618901814dccb97467e8c503a17a",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "id",
+							"type": "INTEGER",
+							"primaryKey": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "71bac842841c414e92cac253ccb3b3b7",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "uuid",
+							"type": "UUID",
+							"unique": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "1c444639c9624181831c8a587fada558",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "public_id",
+							"type": "VARCHAR",
+							"documentation": "Opaque stable public ID generated with nanoid; not derived from the title. Never recycle after withdrawal. JSON:API resource identifier.",
+							"unique": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "9730fc2dc6a54d978e52ae83aa98e1a3",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "title",
+							"type": "VARCHAR",
+							"documentation": "Nonblank title of the release group as announced; 1..512 characters. Titles are not unique."
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "398aec7f8cf64e7188429c71e446141c",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "type",
+							"type": "enum",
+							"documentation": "album|ep|single|compilation. Editorial classification as announced by the artist or agency, backed by sources; never derived from track count or duration. Editions carry no type of their own."
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "2b17674a132c44a8bc7684a7102d67c8",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "description",
+							"type": "TEXT",
+							"documentation": "Optional editorial description; NULL when unknown.",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "c8f9e758aa704fedbe9181032d55dbe4",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "repackage_of_id",
+							"type": "INTEGER",
+							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Original release group relaunched by this repackage; NULL when not a repackage. When set it must reference a published group other than itself, never a reservation or a withdrawn group; chains are allowed and cycles are rejected under lock. If the original is later withdrawn the link is retained and resolves to its withdrawal notice.",
+							"foreignKey": true,
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "192fd74fd9ef4f95ba85e437dcbe3eab",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "created_at",
+							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "2a331dbc76074eb3aa5a49b78ff37d4b",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "updated_at",
+							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "8f062eaf77f64394aca6c471a7bb257b",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "editorial_entity_id",
+							"type": "UUID",
+							"documentation": "NOT NULL UNIQUE FK -> editorial_entities.id; ON DELETE RESTRICT. entity_type=release_group. Only applied content; reserved drafts have no row here. Enforce matching root type and exclusivity transactionally.",
+							"foreignKey": true,
+							"unique": true
+						}
+					],
+					"ownedElements": [
+						{
+							"_type": "ERDRelationship",
+							"_id": "AAAAAAGeD8zCG4JffpM=",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "credits",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "AAAAAAGeD8zCG4JgRJ0=",
+								"_parent": {
+									"$ref": "AAAAAAGeD8zCG4JffpM="
+								},
+								"reference": {
+									"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "AAAAAAGeD8zCG4JhC88=",
+								"_parent": {
+									"$ref": "AAAAAAGeD8zCG4JffpM="
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCFIEg0E4="
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "1b9764e8287a4a2bb6d0daac87a65685",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "editions",
+							"documentation": "FK releases.release_group_id. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "118b46776f7348d580df06a02f052532",
+								"_parent": {
+									"$ref": "1b9764e8287a4a2bb6d0daac87a65685"
+								},
+								"reference": {
+									"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "46bdc5ec3c7049209a4fb5c6e62ea9a7",
+								"_parent": {
+									"$ref": "1b9764e8287a4a2bb6d0daac87a65685"
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCE4EIN7U="
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "f7bd746378204466a75b97c1954053af",
+							"_parent": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"name": "repackage of",
+							"documentation": "Optional FK release_groups.repackage_of_id; acyclic. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "859d51919bfe44c8af49bfca2f502d77",
+								"_parent": {
+									"$ref": "f7bd746378204466a75b97c1954053af"
+								},
+								"reference": {
+									"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+								},
+								"cardinality": "0..1"
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "f48b71ab46fa49cdbbe5f5e3a6ecd819",
+								"_parent": {
+									"$ref": "f7bd746378204466a75b97c1954053af"
+								},
+								"reference": {
+									"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
+						}
+					]
+				},
+				{
+					"_type": "ERDEntity",
 					"_id": "AAAAAAGeD8zCE4EIN7U=",
 					"_parent": {
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
@@ -10648,36 +11325,6 @@
 						},
 						{
 							"_type": "ERDRelationship",
-							"_id": "AAAAAAGeD8zCG4JffpM=",
-							"_parent": {
-								"$ref": "AAAAAAGeD8zCE4EIN7U="
-							},
-							"name": "credits",
-							"end1": {
-								"_type": "ERDRelationshipEnd",
-								"_id": "AAAAAAGeD8zCG4JgRJ0=",
-								"_parent": {
-									"$ref": "AAAAAAGeD8zCG4JffpM="
-								},
-								"reference": {
-									"$ref": "AAAAAAGeD8zCE4EIN7U="
-								}
-							},
-							"end2": {
-								"_type": "ERDRelationshipEnd",
-								"_id": "AAAAAAGeD8zCG4JhC88=",
-								"_parent": {
-									"$ref": "AAAAAAGeD8zCG4JffpM="
-								},
-								"reference": {
-									"$ref": "AAAAAAGeD8zCFIEg0E4="
-								},
-								"cardinality": "0..*"
-							},
-							"identifying": false
-						},
-						{
-							"_type": "ERDRelationship",
 							"_id": "fJvDP5U30PRpa4WqOYBF",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
@@ -10707,7 +11354,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Un release es un termino general que se refiere a un lanzamiento\n\nUn release puede ser:\n- Single: un sencillo, normalmente una canción.\n- EP (Extended Play): un lanzamiento corto con varias canciones.\n- Album: un álbum con una colección de canciones. Approved 2026-10-13: a release may be published with only a nonblank title and valid type; cover and partial date may be unknown, and the track collection may be empty. No placeholder cover or fabricated tracks. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/editorial-contributions.md.",
+					"documentation": "Edición: one concrete digital publication of a release group. A new edition exists when the tracklist changes (tracks added, removed or reordered), when the audio of any track changes even with equal titles (explicit vs clean, sped up, slowed + reverb, remastered, instrumental; each track points to its own recording), or when a regional edition has different content. Physical formats and packaging variants (photobook, A/B/C versions, vinyl vs CD) are not editions in the MVP. Approved 2026-10-17, superseding the 2026-10-13 minimum: an edition may be published with only its release group; title, cover, date and tracks may be unknown or empty. No placeholder cover or fabricated tracks. Derived availability: cancelled when is_cancelled; upcoming when the known release instant or date is in the future; released when it has passed; unknown without a date. Explicit content is derived from the recordings of its tracks, never stored. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Publishing an edition requires its release group to be published or published in the same transaction. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -10743,22 +11390,36 @@
 						},
 						{
 							"_type": "ERDColumn",
+							"_id": "75225c9e35e34b7c8e3a77e2cb2fa113",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4EIN7U="
+							},
+							"name": "release_group_id",
+							"type": "INTEGER",
+							"documentation": "NOT NULL FK -> release_groups.id; ON DELETE RESTRICT. Every edition belongs to exactly one release group. Moving an edition to another group is a set_fields change of the edition root; the target group must be published or published in the same transaction.",
+							"foreignKey": true
+						},
+						{
+							"_type": "ERDColumn",
 							"_id": "AAAAAAGeD8zCE4EMXCw=",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "title",
-							"type": "VARCHAR"
+							"type": "VARCHAR",
+							"nullable": true,
+							"documentation": "Optional literal edition title. NULL displays the release group title for display only; never copy the fallback. If present, 1..512 characters and not whitespace-only."
 						},
 						{
 							"_type": "ERDColumn",
-							"_id": "AAAAAAGeD8zCE4ENGlk=",
+							"_id": "fbe07eac8ce84fa9bf3a4f3bfb2c17fc",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
-							"name": "type",
-							"documentation": "album|ep|single|compilation",
-							"type": "enum"
+							"name": "edition_name",
+							"type": "VARCHAR",
+							"documentation": "Optional disambiguation such as Deluxe, Sped Up, Clean or Japan Edition; nonblank when present. UNIQUE NULLS NOT DISTINCT (release_group_id, edition_name): at most one unnamed standard edition per group. Regional editions are named here; no country column in the MVP.",
+							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -10821,6 +11482,38 @@
 							"documentation": "Unknown is NULL; month requires year, day requires month; validate Gregorian calendar.",
 							"type": "SMALLINT",
 							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "21cb8a2a435846128df0690f94dc559b",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4EIN7U="
+							},
+							"name": "release_time",
+							"type": "TIME",
+							"documentation": "Optional announced local release time. release_time and timezone are both NULL or both set, and only with a full release_year/month/day. Together they define the release instant used for countdowns.",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "8eca85b35bd049ff93bde64ed7e504bb",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4EIN7U="
+							},
+							"name": "timezone",
+							"type": "VARCHAR",
+							"documentation": "IANA zone, e.g. Asia/Seoul. Required with release_time and NULL without it. Never inferred from a country.",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "5bbcd7d90c6e47c1b0aac439e47fee3e",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4EIN7U="
+							},
+							"name": "is_cancelled",
+							"type": "BOOLEAN",
+							"documentation": "NOT NULL DEFAULT false. A cancelled edition shows no countdown and is never treated as released. Postponement edits the date and time instead; revisions keep previous values."
 						},
 						{
 							"_type": "ERDColumn",
@@ -10933,7 +11626,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "release_artist_credits",
-					"documentation": " Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-credits-model.md. PK (artist_id,release_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"documentation": " Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,release_group_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name. Owned by the release group editorial root (approved 2026-10-17); editions carry no separate artist credits.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -10952,10 +11645,11 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCFIEg0E4="
 							},
-							"name": "release_id",
+							"name": "release_group_id",
 							"type": "INTEGER",
 							"primaryKey": true,
-							"foreignKey": true
+							"foreignKey": true,
+							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Presentation credits belong to the release group and apply to all its editions."
 						},
 						{
 							"_type": "ERDColumn",
@@ -11137,7 +11831,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "track_artist_credits",
-					"documentation": "Creditos de presentacion de una pista (main/featured/remixer). track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-credits-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"documentation": "Creditos de presentacion de una pista (main/featured/remixer). track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -13586,7 +14280,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "catalog_identities",
-					"documentation": "Stable catalog identity for a person or organization. Exactly one matching people/organizations subtype, enforced transactionally. Optional artists profile, at most one per identity. One identity editorial root owns common metadata and the profile. No automatic artist profile for technical/creative credits. No duplicate identity based only on credited_as. See docs/music-credits-model.md. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/editorial-contributions.md.",
+					"documentation": "Stable catalog identity for a person or organization. Exactly one matching people/organizations subtype, enforced transactionally. Optional artists profile, at most one per identity. One identity editorial root owns common metadata and the profile. No automatic artist profile for technical/creative credits. No duplicate identity based only on credited_as. See docs/music-catalog-model.md. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -20937,9 +21631,40 @@
 								"cardinality": "0..1"
 							},
 							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "888656fe650c4d3bbc25ed6650df0bfb",
+							"_parent": {
+								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
+							},
+							"name": "editorial_entity_id",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "04a58bb72ce84a9fbeb5aa20118745d1",
+								"_parent": {
+									"$ref": "888656fe650c4d3bbc25ed6650df0bfb"
+								},
+								"reference": {
+									"$ref": "3b7372001e4648e791a1fe4ae735cc03"
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "0b73c9d2925041e89eb1ad627da72b89",
+								"_parent": {
+									"$ref": "888656fe650c4d3bbc25ed6650df0bfb"
+								},
+								"reference": {
+									"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+								},
+								"cardinality": "0..1"
+							},
+							"identifying": false
 						}
 					],
-					"documentation": "Stable editorial root for identity, work, recording, release, event or tour. Reserved roots have version=0, no domain row and NULL creation_change_id/published_at/withdrawn_at. Published or withdrawn roots have exactly one matching domain row, current_version>=1 and nonnull creation_change_id/published_at; withdrawn_at is nonnull iff withdrawn. Enforce type/exclusive root and revision consistency transactionally. Creator equals the creation proposal author, never the approving moderator. Publication does not grant ownership permissions. Retain IDs and historical rows after withdrawal; no cascade deletion. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
+					"documentation": "Stable editorial root for identity, work, recording, release group, release edition, event or tour. Reserved roots have version=0, no domain row and NULL creation_change_id/published_at/withdrawn_at. Published or withdrawn roots have exactly one matching domain row, current_version>=1 and nonnull creation_change_id/published_at; withdrawn_at is nonnull iff withdrawn. Enforce type/exclusive root and revision consistency transactionally. Creator equals the creation proposal author, never the approving moderator. Publication does not grant ownership permissions. Retain IDs and historical rows after withdrawal; no cascade deletion. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -20959,7 +21684,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "entity_type",
-							"documentation": "identity | work | recording | release | event | tour. Immutable.",
+							"documentation": "identity | work | recording | release_group | release | event | tour. Immutable.",
 							"type": "enum"
 						},
 						{
@@ -29081,12 +29806,12 @@
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "6c399fd773924517b138e496d0f169f3",
+											"_id": "bf40cefd9c6848e5af3bd27cafbb4fdc",
 											"_parent": {
 												"$ref": "836b654d722a4efcb352c122cd010af7"
 											},
 											"model": {
-												"$ref": "AAAAAAGeD8zCE4EMXCw="
+												"$ref": "75225c9e35e34b7c8e3a77e2cb2fa113"
 											},
 											"fillColor": "#EEEEEE",
 											"font": "Arial;12;0",
@@ -29098,18 +29823,35 @@
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "e2aa1c3e31a7471d85e15821883e5877",
+											"_id": "6c399fd773924517b138e496d0f169f3",
 											"_parent": {
 												"$ref": "836b654d722a4efcb352c122cd010af7"
 											},
 											"model": {
-												"$ref": "AAAAAAGeD8zCE4ENGlk="
+												"$ref": "AAAAAAGeD8zCE4EMXCw="
 											},
 											"fillColor": "#EEEEEE",
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
 											"top": 1533,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b5e0a6d17f1b401fb09494ac7c8c5569",
+											"_parent": {
+												"$ref": "836b654d722a4efcb352c122cd010af7"
+											},
+											"model": {
+												"$ref": "fbe07eac8ce84fa9bf3a4f3bfb2c17fc"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1547,
 											"width": 540,
 											"height": 12
 										},
@@ -29126,7 +29868,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1547,
+											"top": 1561,
 											"width": 540,
 											"height": 12
 										},
@@ -29143,7 +29885,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1561,
+											"top": 1575,
 											"width": 540,
 											"height": 12
 										},
@@ -29160,7 +29902,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1575,
+											"top": 1589,
 											"width": 540,
 											"height": 12
 										},
@@ -29177,7 +29919,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1589,
+											"top": 1603,
 											"width": 540,
 											"height": 12
 										},
@@ -29194,7 +29936,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1603,
+											"top": 1617,
 											"width": 540,
 											"height": 12
 										},
@@ -29211,7 +29953,58 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1617,
+											"top": 1631,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "232f8be0a9404388a0c7c6bb3ea7251b",
+											"_parent": {
+												"$ref": "836b654d722a4efcb352c122cd010af7"
+											},
+											"model": {
+												"$ref": "21cb8a2a435846128df0690f94dc559b"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1645,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "d4b08e5055a7422cb57dabaed1bd58f4",
+											"_parent": {
+												"$ref": "836b654d722a4efcb352c122cd010af7"
+											},
+											"model": {
+												"$ref": "8eca85b35bd049ff93bde64ed7e504bb"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1659,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "dd8a052a2bec4daf89b05f5c35fd7675",
+											"_parent": {
+												"$ref": "836b654d722a4efcb352c122cd010af7"
+											},
+											"model": {
+												"$ref": "5bbcd7d90c6e47c1b0aac439e47fee3e"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1673,
 											"width": 540,
 											"height": 12
 										},
@@ -29228,7 +30021,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 85,
-											"top": 1631,
+											"top": 1687,
 											"width": 540,
 											"height": 12
 										}
@@ -29239,7 +30032,7 @@
 									"left": 80,
 									"top": 1472,
 									"width": 550,
-									"height": 176
+									"height": 232
 								}
 							],
 							"fillColor": "#EEEEEE",
@@ -30540,6 +31333,325 @@
 							"width": 672,
 							"height": 100,
 							"text": "Exactly one matching domain root per published/withdrawn editorial entity; reserved roots have none. Identity owns artist/person/organization details. Release owns tracks and presentation credits. Events and tours use the same moderation policy as music."
+						},
+						{
+							"_type": "ERDEntityView",
+							"_id": "8237c491007d41539262cfc918b0f918",
+							"_parent": {
+								"$ref": "b7d3c84870cc4fc7989d7ff7e57b4955"
+							},
+							"model": {
+								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+							},
+							"subViews": [
+								{
+									"_type": "LabelView",
+									"_id": "1420d778b664431aa3d49c58d1a7cb6a",
+									"_parent": {
+										"$ref": "8237c491007d41539262cfc918b0f918"
+									},
+									"fillColor": "#EEEEEE",
+									"font": "Arial;12;1",
+									"parentStyle": true,
+									"left": 80,
+									"top": 1955,
+									"width": 550,
+									"height": 12,
+									"text": "release_groups"
+								},
+								{
+									"_type": "ERDColumnCompartmentView",
+									"_id": "0ed81b651d8446baaafdfe482e654a11",
+									"_parent": {
+										"$ref": "8237c491007d41539262cfc918b0f918"
+									},
+									"model": {
+										"$ref": "92a32306931143e39e7a6bf4d97cf64e"
+									},
+									"subViews": [
+										{
+											"_type": "ERDColumnView",
+											"_id": "617cbf47a25a4ad8b30f3eea4e95b4ed",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "b2f1618901814dccb97467e8c503a17a"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1977,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "9320beaa85ee426295d2af21370e13be",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "71bac842841c414e92cac253ccb3b3b7"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1991,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "f334b763ff6543c7b4c78b6137adf2c5",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "1c444639c9624181831c8a587fada558"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2005,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "1dd0444968354c4da57e4b56f06ad01b",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "9730fc2dc6a54d978e52ae83aa98e1a3"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2019,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "03accbf8ba0a4ce2bc547132a88350f9",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "398aec7f8cf64e7188429c71e446141c"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2033,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "969b90a4112448fdb79b83e9ff047976",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "2b17674a132c44a8bc7684a7102d67c8"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2047,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "7a1719b0614c47de8e0ef47fd7064c25",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "c8f9e758aa704fedbe9181032d55dbe4"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2061,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "fda54bcc7f8d4b03a97426aafcb0207c",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "192fd74fd9ef4f95ba85e437dcbe3eab"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2075,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "af3376fa4af64329a94b9c1459c6c9b6",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "2a331dbc76074eb3aa5a49b78ff37d4b"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2089,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "1818993efb93412f850ba3b732abd44a",
+											"_parent": {
+												"$ref": "0ed81b651d8446baaafdfe482e654a11"
+											},
+											"model": {
+												"$ref": "8f062eaf77f64394aca6c471a7bb257b"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 2103,
+											"width": 540,
+											"height": 12
+										}
+									],
+									"fillColor": "#EEEEEE",
+									"font": "Arial;12;0",
+									"parentStyle": true,
+									"left": 80,
+									"top": 1972,
+									"width": 550,
+									"height": 148
+								}
+							],
+							"fillColor": "#EEEEEE",
+							"font": "Arial;12;0",
+							"parentStyle": false,
+							"left": 80,
+							"top": 1950,
+							"width": 550,
+							"height": 178,
+							"nameLabel": {
+								"$ref": "1420d778b664431aa3d49c58d1a7cb6a"
+							},
+							"columnCompartment": {
+								"$ref": "0ed81b651d8446baaafdfe482e654a11"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "2952bacb972c4a7e9d84135e56e4dff4",
+							"_parent": {
+								"$ref": "b7d3c84870cc4fc7989d7ff7e57b4955"
+							},
+							"model": {
+								"$ref": "888656fe650c4d3bbc25ed6650df0bfb"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "e2fc32fc55a7451da2082f0b82ea100d",
+									"_parent": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									},
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 602,
+									"top": 874,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									},
+									"edgePosition": 1,
+									"text": "editorial_entity_id"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "a6eb7d29c8cb4480997883e292069f34",
+									"_parent": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 1029,
+									"top": 203,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "d159cfeaaf314e1eabc3daf099af325a",
+									"_parent": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 560,
+									"top": 1547,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "2952bacb972c4a7e9d84135e56e4dff4"
+									}
+								}
+							],
+							"font": "Arial;10;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "8237c491007d41539262cfc918b0f918"
+							},
+							"tail": {
+								"$ref": "dc8ec0440734407f89aead68a17c1069"
+							},
+							"lineStyle": 2,
+							"points": "1100:280;670:280;670:2000;630:2000",
+							"nameLabel": {
+								"$ref": "e2fc32fc55a7451da2082f0b82ea100d"
+							},
+							"tailNameLabel": {
+								"$ref": "a6eb7d29c8cb4480997883e292069f34"
+							},
+							"headNameLabel": {
+								"$ref": "d159cfeaaf314e1eabc3daf099af325a"
+							}
 						}
 					]
 				}
