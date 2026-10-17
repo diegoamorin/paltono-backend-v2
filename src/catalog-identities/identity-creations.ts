@@ -109,7 +109,7 @@ export async function findCreatedIdentity(manager: EntityManager, editorialEntit
   };
 }
 
-function partialDateColumns(prefix: 'founding' | 'dissolution', date: PartialDateValue | null | undefined) {
+export function partialDateColumns(prefix: 'founding' | 'dissolution', date: PartialDateValue | null | undefined) {
   return {
     [`${prefix}Year`]: date?.year ?? null,
     [`${prefix}Month`]: date?.month ?? null,

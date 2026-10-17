@@ -8,10 +8,10 @@ import { OperationDefinition, PayloadProblem } from './operation-registry';
  * operations.
  */
 
-const NAME = { type: ['string', 'null'], maxLength: 200, pattern: '\\S' };
-const COMPLETE_DATE = { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}$' };
+export const NAME = { type: ['string', 'null'], maxLength: 200, pattern: '\\S' };
+export const COMPLETE_DATE = { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}$' };
 
-const PARTIAL_DATE = {
+export const PARTIAL_DATE = {
   anyOf: [
     {
       type: 'object',
@@ -28,15 +28,22 @@ const PARTIAL_DATE = {
   ],
 };
 
+export const DISPLAY_NAME = { type: 'string', minLength: 1, maxLength: 200, pattern: '\\S' };
+export const IMG_PROFILE = { type: ['string', 'null'], maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' };
+export const BIO = { type: ['string', 'null'], maxLength: 10000 };
+export const HEIGHT_CM = { type: ['integer', 'null'], minimum: 1, maximum: 300 };
+export const GENDER = { enum: ['male', 'female', 'other', null] };
+export const COUNTRY_ID = { type: ['integer', 'null'], minimum: 1, description: 'id del país en /v1/countries' };
+
 const IDENTITY = {
   type: 'object',
   additionalProperties: false,
   required: ['type', 'displayName'],
   properties: {
     type: { enum: ['person', 'organization'] },
-    displayName: { type: 'string', minLength: 1, maxLength: 200, pattern: '\\S' },
-    imgProfile: { type: ['string', 'null'], maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' },
-    bio: { type: ['string', 'null'], maxLength: 10000 },
+    displayName: DISPLAY_NAME,
+    imgProfile: IMG_PROFILE,
+    bio: BIO,
     person: {
       type: 'object',
       additionalProperties: false,
@@ -45,8 +52,8 @@ const IDENTITY = {
         familyName: NAME,
         birthDate: COMPLETE_DATE,
         deathDate: COMPLETE_DATE,
-        heightCm: { type: ['integer', 'null'], minimum: 1, maximum: 300 },
-        gender: { enum: ['male', 'female', 'other', null] },
+        heightCm: HEIGHT_CM,
+        gender: GENDER,
       },
     },
     organization: {
@@ -56,7 +63,7 @@ const IDENTITY = {
         legalName: NAME,
         founding: PARTIAL_DATE,
         dissolution: PARTIAL_DATE,
-        originCountryId: { type: ['integer', 'null'], minimum: 1, description: 'id del país en /v1/countries' },
+        originCountryId: COUNTRY_ID,
       },
     },
   },
@@ -129,17 +136,17 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
   return problems;
 }
 
-function isCalendarDate(date: string): boolean {
+export function isCalendarDate(date: string): boolean {
   const [year, month, day] = date.split('-').map(Number);
   return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
 }
 
-function daysInMonth(year: number, month: number): number {
+export function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
 /** The first and last days a partial date may mean, as comparable `YYYYMMDD` numbers. */
-function interval({ year, month, day }: PartialDate): { first: number; last: number } {
+export function interval({ year, month, day }: PartialDate): { first: number; last: number } {
   const at = (m: number, d: number) => year * 10_000 + m * 100 + d;
   if (month === undefined) return { first: at(1, 1), last: at(12, 31) };
   if (day === undefined) return { first: at(month, 1), last: at(month, daysInMonth(year, month)) };

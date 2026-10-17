@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { Equals, IsDefined, IsIn, IsString, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
+import { Equals, IsDefined, IsIn, IsInt, IsString, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
 
-export const MANUAL_DECISION_ACTIONS = ['apply', 'reject'] as const;
+export const MANUAL_DECISION_ACTIONS = ['apply', 'apply_rebased', 'reject'] as const;
 export type ManualDecisionAction = (typeof MANUAL_DECISION_ACTIONS)[number];
 
 export const REASON_MAX_LENGTH = 10_000;
@@ -10,11 +10,26 @@ export const REASON_MAX_LENGTH = 10_000;
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 class DecisionAttributes {
-  @ApiProperty({ enum: MANUAL_DECISION_ACTIONS, description: '`apply` incorpora el microcambio a la ficha; `reject` lo descarta' })
+  @ApiProperty({
+    enum: MANUAL_DECISION_ACTIONS,
+    description:
+      '`apply` incorpora el microcambio a la ficha si su base no cambió; `apply_rebased` lo incorpora sobre la base actual ' +
+      'de un microcambio en conflicto; `reject` lo descarta',
+  })
   @IsIn(MANUAL_DECISION_ACTIONS)
   action: ManualDecisionAction;
 
-  @ApiPropertyOptional({ maxLength: REASON_MAX_LENGTH, description: 'Motivo de la decisión; obligatorio al rechazar' })
+  @ApiPropertyOptional({
+    type: Number,
+    minimum: 0,
+    description: 'Versión actual de la ficha que el personal confirma; obligatoria con `apply_rebased` y no admitida con otras acciones',
+  })
+  @ValidateIf((_, value) => value !== undefined && value !== null)
+  @IsInt()
+  @Min(0)
+  confirmedVersion?: number | null;
+
+  @ApiPropertyOptional({ maxLength: REASON_MAX_LENGTH, description: 'Motivo de la decisión; obligatorio al rechazar y al aplicar sobre una base nueva' })
   @ValidateIf((_, value) => value !== undefined && value !== null)
   @Transform(trim)
   @IsString()

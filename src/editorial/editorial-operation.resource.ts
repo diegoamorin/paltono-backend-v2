@@ -15,7 +15,8 @@ export const operationSchema = defineResource<OperationDefinition>({
     // Root operations select no row; relation operations will publish the shape of their key.
     targetKey: () => null,
     payloadSchemaVersion: (definition) => definition.payloadSchemaVersion,
-    baseValue: () => ABSENT,
+    // A creation starts from absence; any other operation from its target's value when the microchange is added.
+    baseValue: (definition) => (definition.operation === 'create_entity' ? ABSENT : null),
     payloadSchema,
     description: (definition) => definition.description,
   },
@@ -37,8 +38,14 @@ class OperationAttributes {
   @ApiProperty({ example: 1 })
   payloadSchemaVersion: number;
 
-  @ApiProperty({ type: Object, example: { exists: false }, description: 'Base que fija el servidor; una alta parte de ausencia' })
-  baseValue: object;
+  @ApiProperty({
+    type: Object,
+    nullable: true,
+    example: { exists: false },
+    description:
+      'Base que fija el servidor: una alta parte de ausencia; null cuando la base es el valor vigente del objetivo al añadir el microcambio',
+  })
+  baseValue: object | null;
 
   @ApiProperty({ type: Object, description: 'JSON Schema (2020-12) de `proposedValue`' })
   payloadSchema: object;

@@ -3,6 +3,7 @@ import { EntityManager } from 'typeorm';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
 import { IDENTITY_CREATION } from './identity-creation';
+import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 
 /*
  * The registry of operations a microchange may carry (E1). A microchange names
@@ -24,6 +25,16 @@ export interface VocabularyReference {
   path: string;
 }
 
+/**
+ * A problem with a valid payload on the root's current data. `member` names
+ * what is wrong: `targetPath` or a path inside `proposedValue`.
+ */
+export interface TargetProblem {
+  code: string;
+  detail: string;
+  member: string;
+}
+
 /** What applying an operation wrote, for its revision. */
 export interface AppliedOperation {
   /** The value the target holds afterwards, as the domain rows store it. */
@@ -43,13 +54,19 @@ export interface OperationDefinition {
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
+  /**
+   * Rules on the root's current data, such as a field its subtype lacks or an
+   * interval with a field the change leaves as it is. Run when the change is
+   * added, submitted and applied, so they always see the latest data.
+   */
+  targetProblems?(manager: EntityManager, root: EditorialEntity, value: unknown): Promise<TargetProblem[]>;
   /** The value the operation's target holds now, as the base a decision observes. */
   read(manager: EntityManager, root: EditorialEntity): Promise<ValueEnvelope>;
   /** Writes a valid proposed value to the domain tables, inside the transaction of the decision that applies it. */
   apply(manager: EntityManager, root: EditorialEntity, value: unknown, now: Date): Promise<AppliedOperation>;
 }
 
-export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION];
+export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION, ...IDENTITY_FIELD_CHANGES];
 
 /** Creations start from absence, so their base is always the empty envelope. */
 export const ABSENT: ValueEnvelope = { exists: false };

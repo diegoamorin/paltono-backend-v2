@@ -13,12 +13,12 @@ describe('GET /v1/editorial-operations', () => {
     await app.close();
   });
 
-  it('lists the identity creation with the JSON Schema of its payload, without authentication', async () => {
+  it('lists the identity creation, among the other operations, with the JSON Schema of its payload, without authentication', async () => {
     const response = await request(app.server).get('/v1/editorial-operations').set('Accept', JSON_API).expect(200);
 
     expect(response.headers['content-type']).toBe(JSON_API);
-    expect(response.body.meta).toEqual({ total: 1 });
-    const [operation] = response.body.data;
+    expect(response.body.meta.total).toBeGreaterThan(1);
+    const operation = response.body.data.find(({ id }: { id: string }) => id === 'identity.create_entity.catalog_identities.v1');
     expect(operation).toEqual({
       type: 'editorial-operations',
       id: 'identity.create_entity.catalog_identities.v1',

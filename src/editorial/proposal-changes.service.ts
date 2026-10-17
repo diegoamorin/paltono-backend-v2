@@ -11,7 +11,7 @@ import { ChangeProposal } from './entities/change-proposal.entity';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ChangeOperation, ProposalChange, ValueEnvelope } from './entities/proposal-change.entity';
 import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity';
-import { ABSENT, OperationDefinition, findOperation, isRegistered, validatePayload } from './operation-registry';
+import { OperationDefinition, findOperation, isRegistered, validatePayload } from './operation-registry';
 
 export interface NewChange {
   entityId: string;
@@ -47,7 +47,8 @@ export class ProposalChangesService {
   add(user: User, proposalId: string, input: NewChange): Promise<ProposalChange> {
     return this.dataSource.transaction(async (manager) => {
       const proposal = await lockOwnDraft(manager, user, proposalId);
-      const entity = await manager.findOneBy(EditorialEntity, { id: input.entityId.toLowerCase() });
+      // Shared, so the base's version and value are read from the same state.
+      const entity = await manager.findOne(EditorialEntity, { where: { id: input.entityId.toLowerCase() }, lock: { mode: 'pessimistic_read' } });
       const change = {
         id: randomUUID(),
         proposalId,
@@ -66,12 +67,13 @@ export class ProposalChangesService {
       await checkPosition(manager, proposalId, change.id, change.position);
 
       const now = this.clock.now();
+      const definition = findOperation(entity!.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
       await manager.insert(ProposalChange, {
         ...change,
         operation: change.operation as ChangeOperation,
-        // Creations start from absence at version 0, the only base a reservation has.
+        // The target as the author sees it now. Creations start from absence at version 0, the only base a reservation has.
         baseVersion: entity!.currentVersion,
-        baseValue: ABSENT,
+        baseValue: await definition.read(manager, entity!),
         status: 'pending',
         createdAt: now,
         resolvedAt: null,
@@ -171,8 +173,37 @@ async function changeProblems(
 
   const problems: ChangeProblem[] = [];
   if (definition.operation === 'create_entity') problems.push(...(await creationProblems(manager, change, entity)));
+  if (definition.operation === 'set_fields') {
+    const targetProblems = await fieldChangeProblems(manager, change, entity);
+    if (targetProblems.length > 0) return targetProblems;
+  }
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
+  if (problems.length === 0 && definition.targetProblems) {
+    problems.push(...(await definition.targetProblems(manager, entity, (change.proposedValue as { value: unknown }).value)));
+  }
   return problems;
+}
+
+/**
+ * A field change targets a published root, and no other microchange of the
+ * proposal writes the same field. Changes to a reservation inside its
+ * creation's proposal need a dependency on that creation, which cannot be
+ * declared yet.
+ */
+async function fieldChangeProblems(manager: EntityManager, change: ChangeFields, entity: EditorialEntity): Promise<ChangeProblem[]> {
+  if (entity.publicationStatus !== 'published') {
+    return [{ code: 'entity_not_published', detail: 'Only a published root can change its fields', member: 'entity' }];
+  }
+  const overlapping = await manager.existsBy(ProposalChange, {
+    proposalId: change.proposalId,
+    entityId: entity.id,
+    targetPath: change.targetPath,
+    id: Not(change.id),
+  });
+  if (overlapping) {
+    return [{ code: 'overlapping_change', detail: `This proposal already changes ${change.targetPath} of this root`, member: 'targetPath' }];
+  }
+  return [];
 }
 
 /** Names the first member of the selector that no registry entry for the root's type has. */

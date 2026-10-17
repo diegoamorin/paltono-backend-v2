@@ -37,7 +37,12 @@ export class DecisionsController {
     description:
       'Solo moderadores y administradores activos; el permiso se vuelve a comprobar dentro de la transacción. ' +
       '`apply` valida de nuevo el payload y lo incorpora a la ficha: al aplicar un alta se inserta la identidad, se publica la raíz ' +
-      'y se escriben la decisión y la primera revisión, todo en una transacción. `reject` exige motivo; una reserva rechazada sigue sin ficha pública. ' +
+      'y se escriben la decisión y la primera revisión, todo en una transacción. Un cambio de campo cuyo resultado ya existe se cierra como ' +
+      '`satisfied` sin escritura ni versión nueva. Si la base relevante cambió, `apply` registra el conflicto (decisión automática con el ' +
+      'contexto observado) y responde 409 `base_changed` con la versión y el valor actuales; solo `apply_rebased`, con motivo y ' +
+      '`confirmedVersion` igual a la versión actual de la ficha, lo aplica sobre la base nueva, conservando la base y el valor del autor. ' +
+      'Aplicar un campo resuelve los microcambios abiertos que compiten por él: quedan `satisfied` o `conflicted`. ' +
+      '`reject` exige motivo; una reserva rechazada sigue sin ficha pública. ' +
       'Un microcambio ya resuelto responde 409. La propuesta se cierra cuando todos sus microcambios quedan resueltos. ' +
       'Devuelve las decisiones tomadas; `include=revision` añade la revisión con `resultKey.publicId` de la ficha creada.',
   })
