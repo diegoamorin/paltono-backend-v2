@@ -1,0 +1,9 @@
+# Primer administrador mediante promoción auditada por consola
+
+Se acuerda promover una cuenta registrada, activa y con correo verificado mediante un comando de consola cuando no exista ningún administrador. Se evita configurar credenciales iniciales de administrador en variables de entorno y se conserva la auditoría desde la primera promoción.
+
+La excepción de autorización y auditoría se define en [Contribuciones editoriales, sección 1](../editorial-contributions.md#1-roles-y-propiedad-editorial): `changed_by=NULL` representa al operador de consola, sin inventar un administrador previo ni atribuir la acción a la cuenta promovida. La excepción se refleja en el ER; la promoción y su registro son atómicos y se serializan con los demás cambios de rol. No se ofrece por HTTP.
+
+Se impide degradar, suspender o eliminar al último administrador activo y con correo verificado. Debe existir otro administrador operativo antes de confirmar cualquiera de esas acciones, también por consola y bajo concurrencia. La comprobación se coordina transaccionalmente entre los caminos que cambian rol, estado o verificación para impedir que dos operaciones simultáneas dejen el sistema sin administrador operativo.
+
+En desarrollo se dispondrá de un seed K-pop y de un comando independiente que vacíe todos los registros de la aplicación, conservando las tablas. No se limita a los datos del seed: también elimina cuentas, roles e historial editorial, por lo que después se necesitará poblar datos o repetir el bootstrap. Ambos comandos estarán bloqueados fuera de desarrollo. El vaciado es una excepción operativa de desarrollo a la retención del historial, no una capacidad del catálogo ni de su API pública.

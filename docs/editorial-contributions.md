@@ -13,7 +13,11 @@ Especificación del modelo `Editorial Contributions` de `ERDiagram.mdj`, acordad
 | Aplicar retirada de una ficha publicada | No | No | Sí |
 | Asignar o quitar roles | No | No | Sí |
 
-Solo cuentas `active` pueden actuar. El rol `moderator` se añade a `users.role`; `user` es el valor inicial. Cada cambio de rol comprueba el rol anterior bajo bloqueo, exige un administrador activo y escribe `user_role_changes` en la misma transacción que actualiza `users`. La creación inicial de un administrador corresponde al despliegue, no a un permiso de moderador. Una suspensión o revocación debe impedir decisiones posteriores: comprobar y proteger la autorización también en la transacción de aplicación.
+Solo cuentas `active` pueden actuar. El rol `moderator` se añade a `users.role`; `user` es el valor inicial. Cada cambio de rol comprueba el rol anterior bajo bloqueo, exige un administrador activo y escribe `user_role_changes` en la misma transacción que actualiza `users`, salvo el bootstrap inicial descrito a continuación. Una suspensión o revocación debe impedir decisiones posteriores: comprobar y proteger la autorización también en la transacción de aplicación.
+
+El primer administrador se obtiene promoviendo desde consola una cuenta ya registrada, activa y con correo verificado. Esta operación de despliegue solo se permite si no existe ninguna cuenta con rol `admin`; se serializa con todos los caminos de cambio de rol y vuelve a comprobar esa ausencia bajo bloqueo. La promoción y su auditoría se confirman juntas. Exclusivamente en este caso, `user_role_changes.changed_by` es NULL y el motivo de bootstrap es obligatorio: representa una acción del operador de consola sin atribuírsela falsamente al usuario promovido. Los endpoints HTTP nunca admiten esta excepción; los cambios posteriores requieren un administrador activo. No se configura una contraseña inicial de administrador en variables de entorno. Véase [ADR 0003](adr/0003-initial-administrator-bootstrap.md).
+
+No se puede degradar, suspender ni eliminar al último administrador activo con correo verificado. Los cambios de rol, estado y verificación deben comprobar bajo coordinación transaccional que permanezca otro administrador operativo cuando una acción vaya a retirar esa condición al afectado. Esta regla también se aplica a la baja voluntaria y a los comandos de consola.
 
 Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permiso de edición directa. Se mantienen `organization_memberships` y `artist_organization_affiliations`, que describen relaciones musicales e informativas. Un moderador puede publicar su propio contenido sin segunda revisión; la operación utiliza el mismo historial que las propuestas de usuarios.
 
@@ -28,7 +32,7 @@ Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permi
 
 Las seis tablas de dominio tienen `editorial_entity_id UUID NOT NULL UNIQUE`, FK a `editorial_entities.id`, sin sustituir sus IDs existentes. `artists` y `tracks` no reciben una segunda raíz editorial. Cada relación tiene un único propietario de escritura; sus vistas inversas son derivadas. Las entidades referenciadas también se comprueban al validar dependencias, publicación y retirada, sin inventar revisiones en ellas cuando no cambian sus datos.
 
-Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_types`, `contribution_roles` y ámbitos) son administrados, no nuevas fichas colaborativas. Autenticación y likes quedan fuera de este flujo.
+Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_types`, `contribution_roles` y ámbitos) tienen lectura pública y escritura exclusiva de administradores, fuera del flujo de propuestas. Solo pueden eliminarse entradas sin referencias; una entrada en uso produce rechazo sin cascadas. Son datos administrados, no nuevas fichas colaborativas. Autenticación y likes quedan fuera de este flujo.
 
 ## 2. Tablas y restricciones
 
@@ -42,7 +46,7 @@ Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_
 | `change_sources` | Asociación opcional; PK `(change_id, source_id)`. |
 | `change_decisions` | Registro inmutable de decisiones y base observada; permite varios intentos de decisión, pero una sola aplicación efectiva. |
 | `entity_revisions` | Registro inmutable de operaciones aplicadas, sus valores reales anterior/nuevo y clave de la fila generada. |
-| `user_role_changes` | Usuario afectado, administrador, roles anterior/nuevo, motivo y fecha. |
+| `user_role_changes` | Usuario afectado, administrador (NULL exclusivamente en el bootstrap inicial por consola), roles anterior/nuevo, motivo y fecha. |
 
 Todos los IDs de las tablas nuevas son UUID salvo las referencias a `users.id`, que siguen siendo INTEGER; los pares de las tablas puente son sus PK. Todas las FKs editoriales usan `ON DELETE RESTRICT`. Conservar las cuentas mediante el estado `deleted` permite mantener autoría y revisores; no borrar en cascada su historial.
 
@@ -55,7 +59,7 @@ Restricciones que la implementación SQL debe materializar, además de los indic
 - `change_decisions`: UNIQUE `(id,change_id)`.
 - `entity_revisions`: UNIQUE `(entity_id,version)`, `change_id` y `decision_id`; FK directa de `entity_id` a la raíz y FKs compuestas `(change_id,entity_id)` y `(decision_id,change_id)` a `proposal_changes(id,entity_id)` y `change_decisions(id,change_id)`. La decisión debe corresponder a una aplicación efectiva.
 - `editorial_entities`: FK compuesta `(creation_change_id,id)` a `proposal_changes(id,entity_id)`; `creation_change_id` único. Debe ser una operación `create_entity` aplicada, cuyo autor coincide con `created_by`.
-- `user_role_changes`: `previous_role <> new_role`, ambos dentro de los roles de `users`.
+- `user_role_changes`: `previous_role <> new_role`, ambos dentro de los roles de `users`. `changed_by` admite NULL exclusivamente bajo las condiciones transaccionales del bootstrap inicial; en ese caso `new_role=admin` y el motivo no está vacío. La nulabilidad no autoriza promociones anónimas por HTTP.
 
 Las restricciones entre varias tablas, el grafo, las autorizaciones y las transiciones requieren validación transaccional del servicio y, cuando corresponda, triggers de restricción diferidos. No basta con el dibujo de una FK. Para consultas de trabajo, indexar propuestas por autor/fecha y estado/fecha; microcambios por propuesta/estado y por entidad/selector/estado; dependencias por prerrequisito; decisiones por microcambio/fecha; fuentes por propuesta y auditoría por usuario/fecha. Las claves únicas de revisiones cubren la consulta por entidad/versión.
 
@@ -64,6 +68,8 @@ Las restricciones entre varias tablas, el grafo, las autorizaciones y las transi
 Una propuesta puede contener varias fichas relacionadas. El borrador solo es accesible a su autor; su contenido se almacena en la capa editorial. Enviar exige descripción, al menos un microcambio, una fuente general y validación de tipos y dependencias. Esto incluye las acciones directas del personal, que crean un envío y su aplicación en una transacción.
 
 Al enviar, quedan congelados autor, descripción, operaciones, bases, orden, grupos, dependencias y fuentes. Solo cambia el estado de revisión. Para corregir contenido o añadir evidencia se crea otra propuesta con `previous_proposal_id`, del mismo autor y apuntando a un envío previo, sin ciclos. El enlace no cancela automáticamente el envío anterior. Para reemplazar una propuesta de alta no publicada, reservar otra raíz y retirar los microcambios pendientes del alta original; no reutilizar su UUID. Un moderador que redacte un valor distinto del enviado crea su propia propuesta, conservando la atribución de la original.
+
+El autor congelado es la cuenta referenciada por su ID, no una copia de su username. La atribución mostrada usa el username vigente de esa cuenta, también para contribuciones anteriores a un cambio de nombre. Los enlaces de autor conservan su identidad mediante un identificador estable. Reutilizar un username liberado no transfiere contribuciones. Este comportamiento no reescribe descripciones, fuentes ni valores históricos que contengan nombres como texto.
 
 Al iniciar un alta se reserva un UUID en `editorial_entities`; `current_version=0`, `publication_status=reserved` y no existe fila en el dominio. `creation_change_id`, `published_at` y `withdrawn_at` son NULL. Solo su autor puede proponer operaciones sobre esa reserva, dentro de la misma propuesta de creación. Las propuestas de modificación independientes solo se envían contra raíces publicadas.
 
@@ -155,10 +161,14 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Dos nuevas pistas compiten por release/disco/posición | Se respeta la unicidad, incluso si los selectores propuestos son distintos. |
 | Dependencia aplicada cuya entidad fue retirada | No se aplica la relación; se comprueba la publicación actual. |
 | Intento de publicar, retirar o elevar rol sin permiso | Rechazo sin escritura; moderadores no asignan roles ni retiran fichas publicadas. |
+| Bootstrap por consola de una cuenta activa y verificada, sin administradores existentes | Promoción y auditoría atómicas, con `changed_by=NULL` y motivo de bootstrap. |
+| Dos bootstrap simultáneos o bootstrap cuando ya existe un administrador | Como máximo una promoción inicial; el intento incompatible no cambia roles ni deja auditoría de éxito. |
+| Bootstrap de cuenta no verificada/inactiva o intento de usar la excepción por HTTP | Rechazo sin promoción ni auditoría de éxito. |
 | Personal publica directamente | Hay fuente, propuesta enviada, autor, decisión, revisión y versión; puede coincidir autor y aprobador. |
 | Retirada con relaciones existentes | Aviso público, IDs/historial conservados, sin cascadas ni nuevas referencias. |
 | Fuente de otra propuesta o ciclo de dependencias | Rechazo por FK compuesta o validación del grafo. |
 | Visitante consulta historial | Ve todos los envíos y fuentes, sin estados individuales ni motivos; nunca ve borradores. |
 | Autor retira pendientes de un envío parcialmente aplicado | Se conservan las revisiones aplicadas; se cierran pendientes/dependientes según su resultado. |
+| Autor cambia de username y otra cuenta toma el anterior | Las contribuciones existentes muestran el username vigente del autor original; sus IDs, contenido e historial no cambian ni se transfieren a la otra cuenta. |
 
 No hay backend ni base de datos ejecutable en este repositorio. Estos casos son criterios de aceptación del diseño, no pruebas de integración ya superadas. Si se implementa sobre datos existentes, habrá que crear raíces y revisiones iniciales con procedencia real o migración explícita; no atribuir autores o fuentes inventados.

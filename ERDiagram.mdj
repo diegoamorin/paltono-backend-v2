@@ -447,6 +447,40 @@
 										},
 										{
 											"_type": "ERDColumnView",
+											"_id": "99a92d15-0816-454d-95d6-7fcfafadcf81",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4DrSW0="
+											},
+											"model": {
+												"$ref": "c54d7867-0a3e-4dd9-a3d9-cfb2417b3517"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 133,
+											"top": 893,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "6b8af152-0279-4e82-b7a6-ad610239583e",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4DrSW0="
+											},
+											"model": {
+												"$ref": "797d7c1a-ff7f-45e2-b5c9-045259112dd3"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 133,
+											"top": 907,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
 											"_id": "AAAAAAGeD8zJ74XqDzI=",
 											"_parent": {
 												"$ref": "AAAAAAGeD8zCE4DrSW0="
@@ -458,7 +492,41 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 133,
-											"top": 893,
+											"top": 921,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b35c2838-d3fe-4290-b11f-3acfb199965a",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4DrSW0="
+											},
+											"model": {
+												"$ref": "b6e91f3b-3d01-464b-b690-e1fa823c05eb"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 133,
+											"top": 935,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "f8fe83a0-c750-4b9d-beed-f58dfc3ad882",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4DrSW0="
+											},
+											"model": {
+												"$ref": "8e62a76d-85ef-4833-b62e-94438324c2b6"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 133,
+											"top": 949,
 											"width": 510,
 											"height": 12
 										},
@@ -475,7 +543,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 133,
-											"top": 907,
+											"top": 963,
 											"width": 510,
 											"height": 12
 										}
@@ -486,7 +554,7 @@
 									"left": 128,
 									"top": 846,
 									"width": 520,
-									"height": 78
+									"height": 134
 								}
 							],
 							"fillColor": "#DDEEF8",
@@ -3493,6 +3561,23 @@
 											"top": 1216,
 											"width": 414,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "e3e34587-995a-49ef-8489-2699f0d631b3",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFYGEvlQ="
+											},
+											"model": {
+												"$ref": "6bcb1fb0-bc0a-47a4-8056-b1cabb7c20ba"
+											},
+											"fillColor": "#FFFFFF",
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 5917,
+											"top": 1231,
+											"width": 414,
+											"height": 13
 										}
 									],
 									"fillColor": "#FFFFFF",
@@ -3501,7 +3586,7 @@
 									"left": 5912,
 									"top": 1031,
 									"width": 424,
-									"height": 203
+									"height": 218
 								}
 							],
 							"fillColor": "#FFFFFF",
@@ -3510,7 +3595,7 @@
 							"left": 5912,
 							"top": 1008,
 							"width": 424,
-							"height": 226,
+							"height": 241,
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCFYGDz8Q="
 							},
@@ -4138,6 +4223,22 @@
 										},
 										{
 											"_type": "ERDColumnView",
+											"_id": "aaa1c292-43a0-4df4-9c30-c2957b5feae5",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCFoGyO8Y="
+											},
+											"model": {
+												"$ref": "c0f0739d-130b-41ac-9dfe-45f2b56521c6"
+											},
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 6797,
+											"top": 1625,
+											"width": 201.771484375,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
 											"_id": "AAAAAAGeD8zKAodlZFI=",
 											"_parent": {
 												"$ref": "AAAAAAGeD8zCFoGyO8Y="
@@ -4148,7 +4249,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6797,
-											"top": 1625,
+											"top": 1640,
 											"width": 201.771484375,
 											"height": 13
 										},
@@ -4164,7 +4265,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6797,
-											"top": 1640,
+											"top": 1655,
 											"width": 201.771484375,
 											"height": 13
 										},
@@ -4180,7 +4281,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6797,
-											"top": 1655,
+											"top": 1670,
 											"width": 201.771484375,
 											"height": 13
 										},
@@ -4196,7 +4297,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6797,
-											"top": 1670,
+											"top": 1685,
 											"width": 201.771484375,
 											"height": 13
 										}
@@ -4206,7 +4307,7 @@
 									"left": 6792,
 									"top": 1575,
 									"width": 211.771484375,
-									"height": 113
+									"height": 128
 								}
 							],
 							"font": "Arial;13;0",
@@ -4214,7 +4315,7 @@
 							"left": 6792,
 							"top": 1552,
 							"width": 211.771484375,
-							"height": 136,
+							"height": 151,
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCFoGx4f0="
 							},
@@ -6207,7 +6308,7 @@
 									"font": "Arial;13;0",
 									"parentStyle": false,
 									"left": 6295,
-									"top": 1253,
+									"top": 1268,
 									"height": 13,
 									"alpha": 0.5235987755982988,
 									"distance": 30,
@@ -6242,7 +6343,7 @@
 							"tail": {
 								"$ref": "AAAAAAGeD8zCFYGCSFM="
 							},
-							"points": "6280:1234;6280:1620;6792:1620",
+							"points": "6280:1249;6280:1620;6792:1620",
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCHIKN9OU="
 							},
@@ -6292,7 +6393,7 @@
 									"font": "Arial;13;0",
 									"parentStyle": false,
 									"left": 6159,
-									"top": 1253,
+									"top": 1268,
 									"height": 13,
 									"alpha": 0.5235987755982988,
 									"distance": 30,
@@ -6327,7 +6428,7 @@
 							"tail": {
 								"$ref": "AAAAAAGeD8zCFYGCSFM="
 							},
-							"points": "6144:1234;6144:1760;5991:1760",
+							"points": "6144:1249;6144:1760;5991:1760",
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCHILFXhQ="
 							},
@@ -9583,7 +9684,8 @@
 							},
 							"name": "birth_date",
 							"type": "DATE",
-							"nullable": true
+							"nullable": true,
+							"documentation": "Optional complete Gregorian DATE only. NULL when unknown; partial year/month dates are not accepted and missing components must not be fabricated."
 						},
 						{
 							"_type": "ERDColumn",
@@ -9593,7 +9695,8 @@
 							},
 							"name": "death_date",
 							"type": "DATE",
-							"nullable": true
+							"nullable": true,
+							"documentation": "Optional complete Gregorian DATE only. NULL when unknown; partial year/month dates are not accepted and missing components must not be fabricated."
 						},
 						{
 							"_type": "ERDColumn",
@@ -9689,7 +9792,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Organization details for bands, orchestras, collectives, agencies, labels and promoters. catalog_identity_id is shared PK/FK to catalog_identities with type=organization. Categories are multiple and optional. Legal name remains optional; no contracts or ownership model. Public name, image and description come from catalog_identities.",
+					"documentation": "Organization details for bands, orchestras, collectives, agencies, labels and promoters. catalog_identity_id is shared PK/FK to catalog_identities with type=organization. Categories are multiple and optional. Legal name remains optional; no contracts or ownership model. Public name, image and description come from catalog_identities. Founding and dissolution dates are optional hierarchical year/month/day values, following the existing catalog partial-date pattern. Treat each date as a coherent editorial field group. No invented precision; reject a dissolution interval entirely before the founding interval, while retaining uncertainty for overlapping partial intervals.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -9719,8 +9822,31 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4Dk+8I="
 							},
-							"name": "founding_date",
-							"type": "DATE",
+							"name": "founding_year",
+							"type": "SMALLINT",
+							"nullable": true,
+							"documentation": "Optional partial Gregorian date: year 1..9999; NULL when unknown. Never fabricate missing month or day."
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "c54d7867-0a3e-4dd9-a3d9-cfb2417b3517",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4Dk+8I="
+							},
+							"name": "founding_month",
+							"documentation": "Optional month 1..12; requires the corresponding year. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "797d7c1a-ff7f-45e2-b5c9-045259112dd3",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4Dk+8I="
+							},
+							"name": "founding_day",
+							"documentation": "Optional day; requires corresponding year and month; validate actual Gregorian calendar. NULL when unknown.",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{
@@ -9729,8 +9855,31 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4Dk+8I="
 							},
-							"name": "dissolution_date",
-							"type": "DATE",
+							"name": "dissolution_year",
+							"type": "SMALLINT",
+							"nullable": true,
+							"documentation": "Optional partial Gregorian date: year 1..9999; NULL when unknown. Never fabricate missing month or day."
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "b6e91f3b-3d01-464b-b690-e1fa823c05eb",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4Dk+8I="
+							},
+							"name": "dissolution_month",
+							"documentation": "Optional month 1..12; requires the corresponding year. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "8e62a76d-85ef-4833-b62e-94438324c2b6",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4Dk+8I="
+							},
+							"name": "dissolution_day",
+							"documentation": "Optional day; requires corresponding year and month; validate actual Gregorian calendar. NULL when unknown.",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{
@@ -10918,7 +11067,8 @@
 							"name": "name",
 							"type": "VARCHAR"
 						}
-					]
+					],
+					"documentation": "Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading."
 				},
 				{
 					"_type": "ERDEntity",
@@ -11298,7 +11448,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Para los campos supports_*\n\nTambien podría ser un array de supports ('artist', 'track', 'album') pero por el momento no trae ventajas reales.\n\nsuports_* permite mostrar plataformas dependiente de la entidad",
+					"documentation": "Para los campos supports_*\n\nTambien podría ser un array de supports ('artist', 'track', 'album') pero por el momento no trae ventajas reales.\n\nsuports_* permite mostrar plataformas dependiente de la entidad Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -11566,7 +11716,7 @@
 								"$ref": "AAAAAAGeD8zCFYFiHSk="
 							},
 							"name": "play_count",
-							"documentation": "Legacy platform metric; not an editorial credit or mandatory identity field. NULL when unknown; CHECK >= 0. Define period/source before implementing this optional metric.",
+							"documentation": "Deferred beyond the MVP. Keep NULL and exclude from MVP API writes; no playback counting or platform metric ingestion in this version. Retained optional BIGINT, CHECK >= 0 for future use. Define exact metric, period and source before enabling it.",
 							"type": "BIGINT",
 							"length": 0,
 							"nullable": true
@@ -11612,7 +11762,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Catálogo compartido de funciones musicales. slug único y estable. Categoría organiza filtros; contribution_role_scopes determina los ámbitos válidos. No incluir marketing, distribución, administración ni derechos de propiedad. Una persona u organización puede recibir varios roles sin perfil artístico.",
+					"documentation": "Catálogo compartido de funciones musicales. slug único y estable. Categoría organiza filtros; contribution_role_scopes determina los ámbitos válidos. No incluir marketing, distribución, administración ni derechos de propiedad. Una persona u organización puede recibir varios roles sin perfil artístico. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -11955,7 +12105,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "changed_by admin",
-							"documentation": "FK described on the child columns. ON DELETE RESTRICT.",
+							"documentation": "Optional administrator FK only for console initial admin bootstrap; all subsequent role changes require an active administrator. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "a4c4363d68d347f08c9aad488d55c63c",
@@ -11964,7 +12114,8 @@
 								},
 								"reference": {
 									"$ref": "AAAAAAGeD8zCFYF0ZlM="
-								}
+								},
+								"cardinality": "0..1"
 							},
 							"end2": {
 								"_type": "ERDRelationshipEnd",
@@ -11980,7 +12131,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Global account roles user/moderator/admin. Active users may propose; active moderators/admins may publish directly through the audited contribution flow. Only admins withdraw published roots or manage roles. Suspended/deleted users cannot submit or decide. Preserve author/reviewer FKs with soft deletion; auth tables unchanged. See docs/editorial-contributions.md.",
+					"documentation": "Global account roles user/moderator/admin. Active users may propose; active moderators/admins may publish directly through the audited contribution flow. Only admins withdraw published roots or manage roles, except the audited console-only initial admin bootstrap described in user_role_changes. Suspended/deleted users cannot submit or decide. Preserve author/reviewer FKs with soft deletion; Authentication policies are documented in docs/adr/0002-local-authentication.md. See docs/editorial-contributions.md. Preserve at least one active email-verified administrator: reject demotion, suspension or deletion of the last such administrator. Coordinate all role/status/verification changes transactionally, including console paths and concurrent requests.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -12009,7 +12160,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "username",
-							"documentation": "handle único, urls /users/diego",
+							"documentation": "Unique account handle normalized to lowercase. Allowed ASCII letters, digits, underscore and period; length 1..30, including single-letter handles. No hyphen, whitespace, @ or trailing period. TikTok-style character policy with project-specific length and 7-day change interval enforced using username_changed_at. Login accepts handle or email. Public display_name is separate and may contain Unicode. Previous handles are released immediately after a rename; no historical reservation table. Contributions remain attached to the original users.id and display its current username. Author links use stable account identity, never a historical handle. The final handle of a deleted account remains reserved.",
 							"type": "VARCHAR",
 							"unique": true
 						},
@@ -12020,9 +12171,10 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "email",
-							"documentation": "case-insensitive, login local",
+							"documentation": "Case-insensitive UNIQUE for all non-NULL values; local login. CHECK (email IS NOT NULL OR status = deleted); non-NULL email must be valid and nonblank. Active and suspended accounts require email. Account deletion atomically sets email=NULL, releasing it for a separately registered and reverified account with a new identity; never transfer the previous account history or permissions. No partial uniqueness by status; no NULLS NOT DISTINCT constraint.",
 							"type": "VARCHAR",
-							"unique": true
+							"unique": true,
+							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -12040,7 +12192,9 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "avatar_url",
-							"type": "VARCHAR"
+							"type": "VARCHAR",
+							"nullable": true,
+							"documentation": "Optional account avatar; NULL when not supplied at registration."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12049,7 +12203,9 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "bio",
-							"type": "TEXT"
+							"type": "TEXT",
+							"nullable": true,
+							"documentation": "Optional account biography; NULL when not supplied at registration."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12058,7 +12214,8 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "email_verified",
-							"type": "BOOLEAN"
+							"type": "BOOLEAN",
+							"documentation": "Unverified accounts may authenticate only for verification and managing that restricted access; no editorial actions or recording likes. Password change/recovery revokes all existing sessions; suspension/deletion prevents session authorization."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12067,7 +12224,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "status",
-							"documentation": "active|suspended|deleted",
+							"documentation": "active|suspended|deleted. Voluntary deletion requires current password, sets status=deleted and email=NULL atomically, closes sessions, invalidates authentication tokens and hides personal profile while retaining contribution attribution and reserving the final username. Active/suspended accounts require a non-NULL unique email. Re-registering the released email creates an independent account and requires fresh verification. Must preserve the last active email-verified administrator. Other personal-data anonymization remains a separate pending policy.",
 							"type": "enum"
 						},
 						{
@@ -12077,7 +12234,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "role",
-							"documentation": "user | moderator | admin; DEFAULT user. Only active admins assign/revoke moderator/admin roles; audit in user_role_changes. Creatorship grants no editorial privilege.",
+							"documentation": "user | moderator | admin; DEFAULT user. Active admins assign/revoke moderator/admin roles; audit in user_role_changes. Sole exception: console-only initial admin bootstrap when no admin exists, promoting an active email-verified account with changed_by NULL under serialized role-change locking. Creatorship grants no editorial privilege.",
 							"type": "enum"
 						},
 						{
@@ -12106,6 +12263,16 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "updated_at",
+							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "6bcb1fb0-bc0a-47a4-8056-b1cabb7c20ba",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCFYF0ZlM="
+							},
+							"name": "username_changed_at",
+							"documentation": "NOT NULL TIMESTAMPTZ set on initial username assignment at registration and each subsequent effective change. Allow a change only after 7 full days from this timestamp. Check elapsed time and username uniqueness under the same account lock; write username and timestamp atomically. A normalized no-op does not restart the interval.",
 							"type": "TIMESTAMPTZ"
 						}
 					]
@@ -12338,7 +12505,8 @@
 								"$ref": "AAAAAAGeD8zCFoGcG3I="
 							},
 							"name": "expires_at",
-							"type": "TIMESTAMPTZ"
+							"type": "TIMESTAMPTZ",
+							"documentation": "Absolute session expiry; default 30 days from session creation, configurable. Renewal never extends this deadline."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12359,7 +12527,8 @@
 							"name": "created_at",
 							"type": "TIMESTAMPTZ"
 						}
-					]
+					],
+					"documentation": "Refresh-token session records; store only the token hash. Access tokens use Authorization: Bearer. Browser refresh transport uses HttpOnly Secure cookie with CSRF protection where applicable; mobile/external clients receive refresh tokens explicitly. Configurable defaults: access 15 minutes; absolute session lifetime 30 days. Atomically replace the token hash on renewal, invalidating the old token without extending the absolute session deadline. Password change/recovery revokes all sessions; account suspension/deletion prevents authorization. Check current session/account state as required, rather than relying only on access-token expiry."
 				},
 				{
 					"_type": "ERDEntity",
@@ -12396,8 +12565,19 @@
 								"$ref": "AAAAAAGeD8zCFoGonxc="
 							},
 							"name": "purpose",
-							"documentation": "email_verify|password_reset",
+							"documentation": "email_verify|password_reset|email_change",
 							"type": "enum"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "c0f0739d-130b-41ac-9dfe-45f2b56521c6",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCFoGonxc="
+							},
+							"name": "target_email",
+							"documentation": "Destination email bound to this token. Required, nonblank and normalized for purpose=email_change; NULL for other purposes. Keep current users.email until confirmation, then enforce uniqueness and consume token atomically.",
+							"type": "VARCHAR",
+							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -12437,7 +12617,8 @@
 							"name": "created_at",
 							"type": "TIMESTAMPTZ"
 						}
-					]
+					],
+					"documentation": "One-time hashed authentication tokens with expiry and use tracking. Email change requires the current password to initiate; retain current users.email until the bound target_email is verified. Purpose=email_change iff target_email IS NOT NULL, and target_email must be a valid nonblank normalized email. Recheck user state, token validity and destination uniqueness under lock before atomically updating the email and consuming the token. Other pending email-change tokens must not authorize a later change after this confirmation. Configurable one-time token defaults: email_verify 24 hours; password_reset and email_change 30 minutes. All tokens are bound to user_id and purpose, never resolved to a different account by reused email. Deletion invalidates tokens; old verification, password-reset or email-change tokens cannot authorize a new account reusing the email."
 				},
 				{
 					"_type": "ERDEntity",
@@ -12654,7 +12835,8 @@
 							"name": "id",
 							"type": "BIGINT",
 							"length": 0,
-							"primaryKey": true
+							"primaryKey": true,
+							"documentation": "BIGINT primary key and public JSON:API resource identifier for works; serialize as a decimal string, never a JavaScript Number. Editorial operations keep the separate editorial_entity_id UUID."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12674,7 +12856,9 @@
 							},
 							"name": "slug",
 							"type": "VARCHAR",
-							"length": 0
+							"length": 0,
+							"unique": true,
+							"documentation": "UNIQUE nonblank slug generated from the work title and retained when the title changes. Resolve collisions with a suffix such as butter-2 under the database uniqueness constraint. Distinct works may share a title. The JSON:API resource id is the BIGINT primary key serialized as a string."
 						},
 						{
 							"_type": "ERDColumn",
@@ -12863,7 +13047,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "PK (contribution_role_id, scope). Una fila por ámbito permitido. FK contribution_role_id -> contribution_roles.id. Las tablas de créditos y de roles de membresía referencian esta PK mediante una FK compuesta, con role_scope fijo por CHECK.",
+					"documentation": "PK (contribution_role_id, scope). Una fila por ámbito permitido. FK contribution_role_id -> contribution_roles.id. Las tablas de créditos y de roles de membresía referencian esta PK mediante una FK compuesta, con role_scope fijo por CHECK. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -13450,7 +13634,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "countries",
-					"documentation": "Administrated shared country vocabulary. Stable ID and unique uppercase two-letter code. Used independently for nationality, organization origin and event location. No inference between these concepts; do not infer timezone from country.",
+					"documentation": "Administrated shared country vocabulary. Stable ID and unique uppercase two-letter code. Used independently for nationality, organization origin and event location. No inference between these concepts; do not infer timezone from country. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -13589,7 +13773,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "organization_types",
-					"documentation": "Administrated nonexclusive categories: band, orchestra, collective, agency, label, promoter, other. Categories do not grant permissions or imply musical credits.",
+					"documentation": "Administrated nonexclusive categories: band, orchestra, collective, agency, label, promoter, other. Categories do not grant permissions or imply musical credits. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -20731,7 +20915,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "created_by",
-							"documentation": "FK -> users.id. Reservation author; must match author of applied creation. Immutable.",
+							"documentation": "FK -> users.id. Reservation author; must match author of applied creation. Immutable. Attribution follows this stable account reference and displays its current username; a renamed or reassigned handle never transfers authorship.",
 							"type": "INTEGER",
 							"foreignKey": true
 						},
@@ -20914,7 +21098,7 @@
 								"$ref": "7a5dd1a5592344549a1e9425feeea131"
 							},
 							"name": "author_id",
-							"documentation": "FK -> users.id; immutable after submission.",
+							"documentation": "FK -> users.id; immutable after submission. Attribution follows this stable account reference and displays its current username; a renamed or reassigned handle never transfers authorship.",
 							"type": "INTEGER",
 							"foreignKey": true
 						},
@@ -21795,7 +21979,7 @@
 						"$ref": "dc6874edb22f477fb2927a700c06cfbe"
 					},
 					"name": "user_role_changes",
-					"documentation": "Append-only role audit. Both users retained through soft deletion; all FKs ON DELETE RESTRICT. changed_by must be an active admin at transaction time. CHECK previous_role <> new_role. Match locked users.role to previous_role, then update role and append audit atomically. User registration defaults to user; initial admin bootstrap is deployment-only and not a moderator capability. Role changes are account administration, not public catalog contributions.",
+					"documentation": "Append-only role audit. Referenced users retained through soft deletion; all FKs ON DELETE RESTRICT. changed_by must be an active admin at transaction time, except console-only initial admin bootstrap: changed_by IS NULL, new_role=admin, target account active and email_verified, no existing admin, and a required bootstrap reason. Serialize bootstrap with every role-change path, recheck absence of admins under lock, then update users.role and append audit atomically. CHECK previous_role <> new_role. Match locked users.role to previous_role. User registration defaults to user. NULL actor is never accepted by HTTP role-management endpoints and is not a moderator capability. Role changes are account administration, not public catalog contributions. Preserve at least one active email-verified administrator: reject demotion, suspension or deletion of the last such administrator. Coordinate all role/status/verification changes transactionally, including console paths and concurrent requests.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -21825,9 +22009,10 @@
 								"$ref": "189dc0c50d2e44698bd82384e7f786e1"
 							},
 							"name": "changed_by",
-							"documentation": "FK -> users.id; administrator performing the change.",
+							"documentation": "FK -> users.id; active administrator performing the change. NULL exclusively for console initial admin bootstrap under the table invariants; represents the console operator, not the affected user.",
 							"type": "INTEGER",
-							"foreignKey": true
+							"foreignKey": true,
+							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -21856,7 +22041,7 @@
 								"$ref": "189dc0c50d2e44698bd82384e7f786e1"
 							},
 							"name": "reason",
-							"documentation": "Optional administrative explanation; not public.",
+							"documentation": "Administrative explanation; not public. Required and non-empty for console initial admin bootstrap; optional otherwise.",
 							"type": "TEXT",
 							"nullable": true
 						},
@@ -22134,6 +22319,23 @@
 											"top": 371,
 											"width": 540,
 											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "ed3197ed-72f9-4225-9bfc-2a583895aa00",
+											"_parent": {
+												"$ref": "e68b9cfca44d4514bed5de4eb093e1fe"
+											},
+											"model": {
+												"$ref": "6bcb1fb0-bc0a-47a4-8056-b1cabb7c20ba"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2085,
+											"top": 385,
+											"width": 540,
+											"height": 12
 										}
 									],
 									"fillColor": "#EEEEEE",
@@ -22142,7 +22344,7 @@
 									"left": 2080,
 									"top": 198,
 									"width": 550,
-									"height": 190
+									"height": 204
 								}
 							],
 							"fillColor": "#EEEEEE",
@@ -25258,6 +25460,23 @@
 											"top": 295,
 											"width": 540,
 											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "7d2da587-04f2-4268-b5a3-1a64de4f08ee",
+											"_parent": {
+												"$ref": "c8395ee6941c46aca467732c06334f2f"
+											},
+											"model": {
+												"$ref": "6bcb1fb0-bc0a-47a4-8056-b1cabb7c20ba"
+											},
+											"fillColor": "#EEEEEE",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 309,
+											"width": 540,
+											"height": 12
 										}
 									],
 									"fillColor": "#EEEEEE",
@@ -25266,7 +25485,7 @@
 									"left": 80,
 									"top": 122,
 									"width": 550,
-									"height": 190
+									"height": 204
 								}
 							],
 							"fillColor": "#EEEEEE",
