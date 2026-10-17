@@ -16,3 +16,6 @@ export const USERNAME_CHANGE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export function normalizeUsername(value: unknown): unknown {
   return typeof value === 'string' ? value.toLowerCase() : value;
 }
+
+export const BIO_MAX_LENGTH = 1000;
+export const AVATAR_URL_MAX_LENGTH = 2048;

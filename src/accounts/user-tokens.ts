@@ -12,19 +12,39 @@ export interface IssuedUserToken {
   tokenId: number;
 }
 
-/** Stores a new one-time token of an account for a purpose, valid for `ttlMs`. */
+/**
+ * Stores a new one-time token of an account for a purpose, valid for `ttlMs`.
+ * An email change token is bound to its destination, `targetEmail`, normalized
+ * to lowercase.
+ */
 export async function issueUserToken(
   manager: EntityManager,
   user: User,
   purpose: Exclude<UserTokenPurpose, 'email_change'>,
   ttlMs: number,
   now: Date,
+): Promise<IssuedUserToken>;
+export async function issueUserToken(
+  manager: EntityManager,
+  user: User,
+  purpose: 'email_change',
+  ttlMs: number,
+  now: Date,
+  targetEmail: string,
+): Promise<IssuedUserToken>;
+export async function issueUserToken(
+  manager: EntityManager,
+  user: User,
+  purpose: UserTokenPurpose,
+  ttlMs: number,
+  now: Date,
+  targetEmail?: string,
 ): Promise<IssuedUserToken> {
   const { token, hash } = generateSecretToken();
   const { identifiers } = await manager.insert(UserToken, {
     userId: user.id,
     purpose,
-    targetEmail: null,
+    targetEmail: targetEmail?.toLowerCase() ?? null,
     tokenHash: hash,
     expiresAt: new Date(now.getTime() + ttlMs),
     createdAt: now,

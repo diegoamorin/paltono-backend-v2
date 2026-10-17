@@ -1,16 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import { EntityManager, IsNull } from 'typeorm';
-import { conflict, keepAnOperationalAdministrator, lockAdministeredAccount } from './administration';
+import { conflict, keepAnOperationalAdministrator, lockAdministeredAccount, lockAdministration } from './administration';
 import { AuthSession } from './entities/auth-session.entity';
 import { UserCredential } from './entities/user-credential.entity';
 import { UserStatusChange } from './entities/user-status-change.entity';
 import { UserToken } from './entities/user-token.entity';
 import { User, UserStatus } from './entities/user.entity';
+import { requirePassword } from './passwords';
 
 /*
  * Suspensions, reactivations and deletions of suspended accounts by an
- * administrator (ADR 0002). Each is audited in the transaction that changes
- * `users.status`, serialized by the administration lock with role changes.
+ * administrator, and voluntary deletions by the account itself (ADR 0002). Each
+ * is audited in the transaction that changes `users.status`, serialized by the
+ * administration lock with role changes.
  */
 
 export interface StatusChangeRequest {
@@ -64,6 +66,31 @@ export async function changeStatus(manager: EntityManager, request: StatusChange
   });
   await manager.insert(UserStatusChange, change);
   return { ...change, user: { ...user, status: request.newStatus }, changedBy: actor };
+}
+
+/**
+ * Deletes an active account at its own request, once it gives its password. The
+ * account is its own actor in the audit, with no reason. It may not take away
+ * the last operational administrator.
+ */
+export async function deleteOwnAccount(manager: EntityManager, userId: number, password: string, now: Date): Promise<void> {
+  // The slow password check comes before the administration lock, so it does not hold up other changes.
+  await requirePassword(manager, userId, password, 'password');
+  await lockAdministration(manager);
+  const user = await manager.findOneOrFail(User, { where: { id: userId }, lock: { mode: 'pessimistic_write' } });
+  if (user.status !== 'active') throw conflict('account_not_active', `The account is ${user.status}`);
+  await keepAnOperationalAdministrator(manager, user, 'The last active administrator with a verified email cannot be deleted');
+
+  await scrubDeletedAccount(manager, user, now);
+  await manager.insert(UserStatusChange, {
+    id: randomUUID(),
+    userId: user.id,
+    changedById: user.id,
+    previousStatus: 'active',
+    newStatus: 'deleted',
+    reason: null,
+    changedAt: now,
+  });
 }
 
 /**

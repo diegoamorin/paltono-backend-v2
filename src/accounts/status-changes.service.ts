@@ -6,9 +6,12 @@ import { CollectionQuery } from '../common/json-api/query';
 import { accountNotFound } from './administration';
 import { UserStatusChange } from './entities/user-status-change.entity';
 import { User, UserStatus } from './entities/user.entity';
-import { changeStatus } from './status-changes';
+import { changeStatus, deleteOwnAccount } from './status-changes';
 
-/** Account status administration over HTTP; every change needs an operational administrator. */
+/**
+ * Account status changes over HTTP: those of an operational administrator and
+ * the voluntary deletion of an account by itself.
+ */
 @Injectable()
 export class StatusChangesService {
   constructor(
@@ -20,6 +23,10 @@ export class StatusChangesService {
     return this.dataSource.transaction((manager) =>
       changeStatus(manager, { actorId: actor.id, userUuid, newStatus, reason, now: this.clock.now() }),
     );
+  }
+
+  deleteOwn(user: User, password: string): Promise<void> {
+    return this.dataSource.transaction((manager) => deleteOwnAccount(manager, user.id, password, this.clock.now()));
   }
 
   /** One page of the status changes of an account, with the accounts they link to. */

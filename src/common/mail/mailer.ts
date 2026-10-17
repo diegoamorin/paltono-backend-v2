@@ -1,4 +1,4 @@
-export type EmailTemplate = 'email-verification' | 'password-reset';
+export type EmailTemplate = 'email-verification' | 'password-reset' | 'email-change';
 
 /** A rendered email, ready to hand to the provider. */
 export interface Email {

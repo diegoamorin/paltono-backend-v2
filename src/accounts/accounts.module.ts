@@ -3,10 +3,13 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { AccessTokens } from './access-tokens';
+import { AccountDeletionsController } from './account-deletions.controller';
 import { AccountEmails } from './account-emails';
 import { AdminUsersController } from './admin-users.controller';
 import { AdminUsersService } from './admin-users.service';
 import { AccessGuard } from './authenticated.decorator';
+import { EmailChangesController } from './email-changes.controller';
+import { EmailChangesService } from './email-changes.service';
 import { EmailVerificationsController } from './email-verifications.controller';
 import { AuthSession } from './entities/auth-session.entity';
 import { User } from './entities/user.entity';
@@ -18,6 +21,7 @@ import { MeController } from './me.controller';
 import { OwnSessionsController } from './own-sessions.controller';
 import { PasswordsController } from './passwords.controller';
 import { PasswordsService } from './passwords.service';
+import { ProfilesService } from './profiles.service';
 import { RegistrationService } from './registration.service';
 import { RoleChangesController } from './role-changes.controller';
 import { RoleChangesService } from './role-changes.service';
@@ -38,6 +42,7 @@ import { UsersController } from './users.controller';
   controllers: [
     UsersController,
     EmailVerificationsController,
+    EmailChangesController,
     SessionsController,
     SessionRefreshesController,
     MeController,
@@ -46,8 +51,21 @@ import { UsersController } from './users.controller';
     AdminUsersController,
     RoleChangesController,
     StatusChangesController,
+    AccountDeletionsController,
   ],
-  providers: [RegistrationService, SessionsService, PasswordsService, RoleChangesService, StatusChangesService, AdminUsersService, AccessTokens, AccountEmails, AccessGuard],
+  providers: [
+    RegistrationService,
+    ProfilesService,
+    EmailChangesService,
+    SessionsService,
+    PasswordsService,
+    RoleChangesService,
+    StatusChangesService,
+    AdminUsersService,
+    AccessTokens,
+    AccountEmails,
+    AccessGuard,
+  ],
   // Other modules protect their endpoints with `@Authenticated()`, which needs the guard and its services.
   exports: [AccessGuard, SessionsService],
 })

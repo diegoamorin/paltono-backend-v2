@@ -1,14 +1,13 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, IsNull } from 'typeorm';
 import { Clock } from '../common/clock/clock';
-import { JsonApiException } from '../common/json-api/json-api.exception';
 import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
 import { AccountEmails } from './account-emails';
 import { AuthSession } from './entities/auth-session.entity';
 import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
 import { UserToken } from './entities/user-token.entity';
-import { hashPassword, verifyPassword } from './passwords';
+import { hashPassword, requirePassword } from './passwords';
 import { claimUserToken, issueUserToken } from './user-tokens';
 
 /** Password recovery by email and password changes; both end every session of the account (ADR 0002). */
@@ -62,19 +61,7 @@ export class PasswordsService {
   async changePassword(user: User, currentPassword: string, newPassword: string): Promise<void> {
     const passwordHash = await hashPassword(newPassword);
     await this.dataSource.transaction(async (manager) => {
-      const credential = await manager.findOne(UserCredential, {
-        where: { userId: user.id },
-        lock: { mode: 'pessimistic_write' },
-      });
-      if (!credential || !(await verifyPassword(credential.passwordHash, currentPassword))) {
-        throw new JsonApiException(HttpStatus.UNPROCESSABLE_ENTITY, [
-          {
-            code: 'password_incorrect',
-            detail: 'The current password is incorrect',
-            source: { pointer: '/data/attributes/currentPassword' },
-          },
-        ]);
-      }
+      await requirePassword(manager, user.id, currentPassword, 'currentPassword');
       await this.replacePassword(manager, user, passwordHash, this.clock.now());
     });
   }

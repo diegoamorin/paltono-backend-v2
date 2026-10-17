@@ -135,6 +135,62 @@ export class AdminAccountResource {
   attributes: AdminAccountAttributes;
 }
 
+/**
+ * An account as anyone sees it: never its email or other private data. A deleted
+ * account shows only its reserved username and its status.
+ */
+export const publicAccountSchema = defineResource<User>({
+  type: 'users',
+  id: (user) => user.uuid,
+  attributes: {
+    username: (user) => user.username,
+    displayName: (user) => unlessDeleted(user, user.displayName),
+    avatarUrl: (user) => unlessDeleted(user, user.avatarUrl),
+    bio: (user) => unlessDeleted(user, user.bio),
+    role: (user) => unlessDeleted(user, user.role),
+    status: (user) => user.status,
+    createdAt: (user) => unlessDeleted(user, user.createdAt.toISOString()),
+  },
+});
+
+function unlessDeleted<T>(user: User, value: T): T | null {
+  return user.status === 'deleted' ? null : value;
+}
+
+class PublicAccountAttributes {
+  @ApiProperty({ example: 'diego_papi' })
+  username: string;
+
+  @ApiProperty({ type: String, nullable: true, example: 'Diego', description: 'null en una cuenta eliminada' })
+  displayName: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  avatarUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  bio: string | null;
+
+  @ApiProperty({ enum: USER_ROLES, nullable: true, description: 'null en una cuenta eliminada' })
+  role: string | null;
+
+  @ApiProperty({ enum: USER_STATUSES, description: '`suspended` indica una suspensión vigente' })
+  status: string;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true, description: 'Fecha de registro; null en una cuenta eliminada' })
+  createdAt: string | null;
+}
+
+export class PublicAccountResource {
+  @ApiProperty({ enum: ['users'] })
+  type: string;
+
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ type: PublicAccountAttributes })
+  attributes: PublicAccountAttributes;
+}
+
 /** Only the identity of an account, for linkage from administrative resources. */
 export const accountIdentitySchema = defineResource<User>({ type: 'users', id: (user) => user.uuid, attributes: {} });
 

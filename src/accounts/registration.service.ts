@@ -1,6 +1,6 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { DataSource, EntityManager, IsNull, QueryFailedError } from 'typeorm';
+import { DataSource, EntityManager, IsNull } from 'typeorm';
 import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
@@ -9,6 +9,7 @@ import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
 import { UserToken } from './entities/user-token.entity';
 import { hashPassword } from './passwords';
+import { takenError } from './taken-errors';
 import { IssuedUserToken, claimUserToken, issueUserToken } from './user-tokens';
 
 export interface NewAccount {
@@ -17,14 +18,6 @@ export interface NewAccount {
   password: string;
   displayName: string;
 }
-
-const UNIQUE_VIOLATION = '23505';
-
-/** The attribute behind each unique constraint a registration can collide with. */
-const TAKEN_BY_CONSTRAINT: Record<string, 'username' | 'email'> = {
-  users_username_key: 'username',
-  users_email_key: 'email',
-};
 
 /** Registration and email verification. */
 @Injectable()
@@ -103,15 +96,4 @@ export class RegistrationService {
   private issueVerificationToken(manager: EntityManager, user: User): Promise<IssuedUserToken> {
     return issueUserToken(manager, user, 'email_verify', this.config.auth.emailVerificationTtlMs, this.clock.now());
   }
-}
-
-/** Turns a collision with another account's username or email into a 409. */
-function takenError(error: unknown): JsonApiException | undefined {
-  if (!(error instanceof QueryFailedError)) return undefined;
-  const { code, constraint } = error.driverError as { code?: string; constraint?: string };
-  const attribute = code === UNIQUE_VIOLATION && constraint ? TAKEN_BY_CONSTRAINT[constraint] : undefined;
-  if (!attribute) return undefined;
-  return new JsonApiException(HttpStatus.CONFLICT, [
-    { code: `${attribute}_taken`, detail: `${attribute} is already taken`, source: { pointer: `/data/attributes/${attribute}` } },
-  ]);
 }

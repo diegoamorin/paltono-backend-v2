@@ -1,9 +1,17 @@
 import request from 'supertest';
-import { accessTokenFor, getMe, login, register, requestPasswordReset, requestVerification } from '../support/accounts';
+import {
+  accessTokenFor,
+  getMe,
+  login,
+  register,
+  requestEmailChange,
+  requestPasswordReset,
+  requestVerification,
+} from '../support/accounts';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 
-describe('rate limits on login, registration, verification resends and password reset requests', () => {
+describe('rate limits on login, registration, verification resends, password reset and email change requests', () => {
   let app: TestApp;
 
   beforeEach(async () => {
@@ -51,6 +59,16 @@ describe('rate limits on login, registration, verification resends and password 
     await requestPasswordReset(app.server, 'diego@example.com').expect(202);
 
     await requestPasswordReset(app.server, 'nobody@example.com').expect(429);
+  });
+
+  it('limits email change requests, counting refused ones too', async () => {
+    await register(app.server).expect(201);
+    const accessToken = await accessTokenFor(app.server, 'diego_papi');
+    await requestEmailChange(app.server, accessToken, { newEmail: 'a@example.com', currentPassword: 'wrong password' }).expect(422);
+    await requestEmailChange(app.server, accessToken, { newEmail: 'b@example.com' }).expect(202);
+    await requestEmailChange(app.server, accessToken, { newEmail: 'c@example.com' }).expect(202);
+
+    await requestEmailChange(app.server, accessToken, { newEmail: 'd@example.com' }).expect(429);
   });
 
   it('counts each route separately and leaves other routes alone', async () => {

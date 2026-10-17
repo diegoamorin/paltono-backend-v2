@@ -64,6 +64,30 @@ export class AccountEmails {
     });
   }
 
+  /** Goes to the new address, which the link proves the account controls. */
+  async sendEmailChange(user: User, newEmail: string, frontend: Frontend, token: string, tokenId: number): Promise<void> {
+    const link = this.link(frontend, 'confirmar-correo', token);
+    const expiry = `El enlace caduca en ${Math.round(this.config.auth.emailChangeTtlMs / 60_000)} minutos y solo sirve una vez.`;
+    await this.send({
+      template: 'email-change',
+      to: newEmail,
+      subject: 'Confirma tu nuevo correo en Paltono',
+      text: [
+        `Hola, ${user.displayName}:`,
+        `Recibimos una solicitud para usar esta dirección en tu cuenta de Paltono (@${user.username}). Confírmala aquí:`,
+        link,
+        `${expiry} Hasta que la confirmes, tu cuenta seguirá usando su correo anterior. Si no lo pediste, ignora este mensaje.`,
+      ].join('\n\n'),
+      html: [
+        `<p>Hola, ${escapeHtml(user.displayName)}:</p>`,
+        `<p>Recibimos una solicitud para usar esta dirección en tu cuenta de Paltono (@${escapeHtml(user.username)}). Confírmala aquí:</p>`,
+        `<p><a href="${escapeHtml(link)}">Confirmar mi nuevo correo</a></p>`,
+        `<p>${expiry} Hasta que la confirmes, tu cuenta seguirá usando su correo anterior. Si no lo pediste, ignora este mensaje.</p>`,
+      ].join('\n'),
+      idempotencyKey: `email-change/${tokenId}`,
+    });
+  }
+
   private link(frontend: Frontend, path: string, token: string): string {
     const url = new URL(path, `${this.config.frontends[frontend].replace(/\/+$/, '')}/`);
     url.searchParams.set('token', token);

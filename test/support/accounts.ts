@@ -136,3 +136,40 @@ export function changePassword(server: App, accessToken: string, currentPassword
     data: { type: 'password-changes', attributes: { currentPassword, newPassword } },
   }).set('Authorization', `Bearer ${accessToken}`);
 }
+
+/** PATCH /v1/me */
+export function updateProfile(server: App, accessToken: string, id: string, attributes: object) {
+  return sendJsonApi(server, 'patch', '/v1/me', { data: { type: 'users', id, attributes } }).set(
+    'Authorization',
+    `Bearer ${accessToken}`,
+  );
+}
+
+export interface EmailChangeRequest {
+  currentPassword?: string;
+  newEmail: string;
+  frontend?: string;
+}
+
+/** POST /v1/me/email-change-requests */
+export function requestEmailChange(
+  server: App,
+  accessToken: string,
+  { currentPassword = DEFAULT_PASSWORD, ...attributes }: EmailChangeRequest,
+) {
+  return sendJsonApi(server, 'post', '/v1/me/email-change-requests', {
+    data: { type: 'email-change-requests', attributes: { currentPassword, ...attributes } },
+  }).set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** POST /v1/email-changes */
+export function confirmEmailChange(server: App, token: string) {
+  return sendJsonApi(server, 'post', '/v1/email-changes', { data: { type: 'email-changes', attributes: { token } } });
+}
+
+/** POST /v1/account-deletions */
+export function deleteAccount(server: App, accessToken: string, password = DEFAULT_PASSWORD) {
+  return sendJsonApi(server, 'post', '/v1/account-deletions', {
+    data: { type: 'account-deletions', attributes: { password } },
+  }).set('Authorization', `Bearer ${accessToken}`);
+}

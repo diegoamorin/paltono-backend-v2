@@ -24,6 +24,7 @@ export interface AuthConfig {
   sessionTtlMs: number;
   emailVerificationTtlMs: number;
   passwordResetTtlMs: number;
+  emailChangeTtlMs: number;
   /** Requests per minute and client address on each rate-limited route. */
   rateLimit: number;
 }
@@ -91,6 +92,7 @@ function authConfig(environment: Environment, env: NodeJS.ProcessEnv): AuthConfi
     sessionTtlMs: positiveNumber(env, 'SESSION_TTL_DAYS', 30) * DAY,
     emailVerificationTtlMs: positiveNumber(env, 'EMAIL_VERIFICATION_TTL_HOURS', 24) * HOUR,
     passwordResetTtlMs: positiveNumber(env, 'PASSWORD_RESET_TTL_MINUTES', 30) * MINUTE,
+    emailChangeTtlMs: positiveNumber(env, 'EMAIL_CHANGE_TTL_MINUTES', 30) * MINUTE,
     rateLimit: positiveNumber(env, 'AUTH_RATE_LIMIT', 10),
   };
 }
