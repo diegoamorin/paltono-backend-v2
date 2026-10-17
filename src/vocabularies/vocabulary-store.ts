@@ -157,12 +157,3 @@ export function equalsFilter(column: string, normalize: (value: string) => strin
     builder.andWhere(`entry.${column} = :equals_${column}`, { [`equals_${column}`]: normalize(value) });
   };
 }
-
-/** Rejects a filter value outside the allowed ones with 400. */
-export function requireOneOf(parameter: string, value: string, allowed: readonly string[]): void {
-  if (!allowed.includes(value)) {
-    throw new JsonApiException(HttpStatus.BAD_REQUEST, [
-      { detail: `${parameter} must be one of: ${allowed.join(', ')}`, source: { parameter } },
-    ]);
-  }
-}

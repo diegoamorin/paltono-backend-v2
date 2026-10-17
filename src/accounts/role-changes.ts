@@ -2,32 +2,19 @@ import { HttpStatus } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { EntityManager } from 'typeorm';
 import { JsonApiException } from '../common/json-api/json-api.exception';
+import {
+  conflict,
+  keepAnOperationalAdministrator,
+  lockAdministeredAccount,
+  lockAdministration,
+} from './administration';
 import { UserRoleChange } from './entities/user-role-change.entity';
 import { User, UserRole } from './entities/user.entity';
 
 /*
- * Role changes and the console bootstrap of the first administrator (ADR 0003).
- * Both run inside a caller's transaction and take the administration lock
- * first, so they are serialized with each other and with every other path that
- * can leave the system without an operational administrator.
+ * Role changes and the console bootstrap of the first administrator (ADR 0003),
+ * both serialized by the administration lock.
  */
-
-/** Key of the transaction-level advisory lock that serializes administration changes. */
-const ADMINISTRATION_LOCK_KEY = 4_271_003;
-
-/**
- * Serializes, until the transaction ends, every change that can add or remove an
- * operational administrator: an active admin with a verified email. Take it
- * before locking any account row.
- */
-export async function lockAdministration(manager: EntityManager): Promise<void> {
-  await manager.query('SELECT pg_advisory_xact_lock($1)', [ADMINISTRATION_LOCK_KEY]);
-}
-
-/** Whether the account is an administrator that can act: active and with a verified email. */
-export function isOperationalAdministrator(user: User): boolean {
-  return user.role === 'admin' && user.status === 'active' && user.emailVerified;
-}
 
 /**
  * Promotes an active, verified account to administrator while no administrator
@@ -75,36 +62,17 @@ export interface RoleChangeRequest {
  * operational administrator.
  */
 export async function changeRole(manager: EntityManager, request: RoleChangeRequest): Promise<UserRoleChange> {
-  await lockAdministration(manager);
-
-  const actor = await manager.findOneBy(User, { id: request.actorId });
-  if (!actor || !isOperationalAdministrator(actor)) {
-    throw new JsonApiException(HttpStatus.FORBIDDEN, [
-      { code: 'administrator_required', detail: 'Only an administrator can do this' },
-    ]);
-  }
-  const user = await manager.findOne(User, { where: { uuid: request.userUuid }, lock: { mode: 'pessimistic_write' } });
-  if (!user) throw accountNotFound();
-  if (user.status === 'deleted') throw conflict('account_deleted', 'The account is deleted');
+  const { actor, user } = await lockAdministeredAccount(manager, request.actorId, request.userUuid);
   if (user.role === request.newRole) throw conflict('role_unchanged', `The account already has the role ${user.role}`);
 
-  if (isOperationalAdministrator(user)) {
-    const others = await manager
-      .createQueryBuilder(User, 'user')
-      .where(`user.role = 'admin' AND user.status = 'active' AND user.email_verified`)
-      .andWhere('user.id <> :id', { id: user.id })
-      .getCount();
-    if (others === 0) {
-      throw conflict('last_administrator', 'The last active administrator with a verified email cannot be demoted');
-    }
-  }
+  await keepAnOperationalAdministrator(
+    manager,
+    user,
+    'The last active administrator with a verified email cannot be demoted',
+  );
 
   const change = await recordRoleChange(manager, user, request.newRole, actor.id, request.reason, request.now);
   return { ...change, user: { ...user, role: request.newRole }, changedBy: actor };
-}
-
-export function accountNotFound(): JsonApiException {
-  return new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'account_not_found', detail: 'The account does not exist' }]);
 }
 
 /** Updates the role and appends its audit row, in the caller's transaction. */
@@ -128,8 +96,4 @@ async function recordRoleChange(
   });
   await manager.insert(UserRoleChange, change);
   return change;
-}
-
-function conflict(code: string, detail: string): JsonApiException {
-  return new JsonApiException(HttpStatus.CONFLICT, [{ code, detail }]);
 }

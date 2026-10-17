@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsUrl, MaxLength } from 'class-validator';
 import { DataSource } from 'typeorm';
 import { Clock } from '../common/clock/clock';
-import { collectionQuery } from '../common/json-api/query';
+import { collectionQuery, requireOneOf } from '../common/json-api/query';
 import { defineResource } from '../common/json-api/resource-schema';
 import { Platform } from './entities/platform.entity';
 import {
@@ -15,7 +15,7 @@ import {
   requestDocument,
   responseResource,
 } from './vocabulary-documents';
-import { Vocabulary, VocabularyStore, containsFilter, equalsFilter, requireOneOf } from './vocabulary-store';
+import { Vocabulary, VocabularyStore, containsFilter, equalsFilter } from './vocabulary-store';
 import { vocabularyController } from './vocabulary.controller';
 
 /** `filter[supports]` values and the flag each one checks. */

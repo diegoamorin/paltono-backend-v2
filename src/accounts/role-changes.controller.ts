@@ -10,23 +10,15 @@ import {
   ApiJsonApiQuery,
   ApiJsonApiResourceResponse,
 } from '../common/json-api/swagger';
+import { accountId } from './administration';
 import { Authenticated, CurrentAuthentication } from './authenticated.decorator';
 import { RoleChangeDocument } from './dto/role-change.dto';
 import { RoleChangeResource, roleChangeSchema } from './role-change.resource';
-import { accountNotFound } from './role-changes';
 import { RoleChangesService } from './role-changes.service';
 import { Authentication } from './sessions.service';
 
 const ROLE_CHANGE_QUERY = resourceQuery(roleChangeSchema);
 const ROLE_CHANGES_QUERY = collectionQuery(roleChangeSchema, { sort: ['changedAt'], defaultSort: '-changedAt' });
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/** Account ids are `users.uuid`; anything else names no account. */
-function accountId(id: string): string {
-  if (!UUID.test(id)) throw accountNotFound();
-  return id;
-}
 
 @ApiTags('accounts')
 @Controller('admin/users/:id/role-changes')

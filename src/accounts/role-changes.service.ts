@@ -5,7 +5,8 @@ import { pageWindow } from '../common/json-api/document';
 import { CollectionQuery } from '../common/json-api/query';
 import { UserRoleChange } from './entities/user-role-change.entity';
 import { User, UserRole } from './entities/user.entity';
-import { accountNotFound, changeRole } from './role-changes';
+import { accountNotFound } from './administration';
+import { changeRole } from './role-changes';
 
 /** Role administration over HTTP; every change needs an operational administrator. */
 @Injectable()

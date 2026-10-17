@@ -201,6 +201,15 @@ function prefixes(path: string): string[] {
   return segments.map((_, index) => segments.slice(0, index + 1).join('.'));
 }
 
+/** Rejects a filter value outside the allowed ones with 400. */
+export function requireOneOf(parameter: string, value: string, allowed: readonly string[]): void {
+  if (!allowed.includes(value)) {
+    throw new JsonApiException(HttpStatus.BAD_REQUEST, [
+      { detail: `${parameter} must be one of: ${allowed.join(', ')}`, source: { parameter } },
+    ]);
+  }
+}
+
 function badParameter(parameter: string, detail: string): JsonApiException {
   return new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} ${detail}`, source: { parameter } }]);
 }

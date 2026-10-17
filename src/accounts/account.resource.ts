@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { defineResource } from '../common/json-api/resource-schema';
+import { ResourceIdentifier } from '../common/json-api/swagger';
 import { USERNAME_CHANGE_INTERVAL_MS } from './account-rules';
-import { User } from './entities/user.entity';
+import { USER_ROLES, USER_STATUSES, User } from './entities/user.entity';
 
 /** An account as its owner sees it, with private fields such as the email. */
 export const ownAccountSchema = defineResource<User>({
@@ -67,4 +68,77 @@ export class OwnAccountResource {
 
   @ApiProperty({ type: OwnAccountAttributes })
   attributes: OwnAccountAttributes;
+}
+
+/** An account as administrators see it, email included (P5). A deleted account has no email left. */
+export const adminAccountSchema = defineResource<User>({
+  type: 'users',
+  id: (user) => user.uuid,
+  attributes: {
+    username: (user) => user.username,
+    email: (user) => user.email,
+    displayName: (user) => user.displayName,
+    avatarUrl: (user) => user.avatarUrl,
+    bio: (user) => user.bio,
+    emailVerified: (user) => user.emailVerified,
+    role: (user) => user.role,
+    status: (user) => user.status,
+    createdAt: (user) => user.createdAt.toISOString(),
+    lastLoginAt: (user) => user.lastLoginAt?.toISOString() ?? null,
+    usernameChangedAt: (user) => user.usernameChangedAt.toISOString(),
+  },
+});
+
+class AdminAccountAttributes {
+  @ApiProperty({ example: 'diego_papi' })
+  username: string;
+
+  @ApiProperty({ type: String, nullable: true, example: 'diego@example.com', description: 'null en una cuenta eliminada' })
+  email: string | null;
+
+  @ApiProperty({ example: 'Diego' })
+  displayName: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  avatarUrl: string | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  bio: string | null;
+
+  @ApiProperty()
+  emailVerified: boolean;
+
+  @ApiProperty({ enum: USER_ROLES })
+  role: string;
+
+  @ApiProperty({ enum: USER_STATUSES })
+  status: string;
+
+  @ApiProperty({ format: 'date-time' })
+  createdAt: string;
+
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  lastLoginAt: string | null;
+
+  @ApiProperty({ format: 'date-time' })
+  usernameChangedAt: string;
+}
+
+export class AdminAccountResource {
+  @ApiProperty({ enum: ['users'] })
+  type: string;
+
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ type: AdminAccountAttributes })
+  attributes: AdminAccountAttributes;
+}
+
+/** Only the identity of an account, for linkage from administrative resources. */
+export const accountIdentitySchema = defineResource<User>({ type: 'users', id: (user) => user.uuid, attributes: {} });
+
+export class AccountLinkage {
+  @ApiProperty({ type: ResourceIdentifier })
+  data: ResourceIdentifier;
 }

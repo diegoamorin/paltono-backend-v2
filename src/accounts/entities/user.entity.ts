@@ -1,6 +1,7 @@
 import { Check, Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
-export type UserStatus = 'active' | 'suspended' | 'deleted';
+export const USER_STATUSES = ['active', 'suspended', 'deleted'] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
 export const USER_ROLES = ['user', 'moderator', 'admin'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
@@ -38,10 +39,10 @@ export class User {
   @Column({ name: 'email_verified', type: 'boolean', default: false })
   emailVerified: boolean;
 
-  @Column({ type: 'enum', enum: ['active', 'suspended', 'deleted'], enumName: 'user_status', default: 'active' })
+  @Column({ type: 'enum', enum: USER_STATUSES, enumName: 'user_status', default: 'active' })
   status: UserStatus;
 
-  @Column({ type: 'enum', enum: ['user', 'moderator', 'admin'], enumName: 'user_role', default: 'user' })
+  @Column({ type: 'enum', enum: USER_ROLES, enumName: 'user_role', default: 'user' })
   role: UserRole;
 
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })

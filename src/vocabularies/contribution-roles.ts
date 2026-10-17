@@ -4,7 +4,7 @@ import { ArrayNotEmpty, ArrayUnique, IsArray, IsIn, IsOptional } from 'class-val
 import { DataSource, EntityManager, In } from 'typeorm';
 import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { collectionQuery } from '../common/json-api/query';
+import { collectionQuery, requireOneOf } from '../common/json-api/query';
 import { defineResource } from '../common/json-api/resource-schema';
 import {
   CONTRIBUTION_ROLE_CATEGORIES,
@@ -26,7 +26,7 @@ import {
   requestDocument,
   responseResource,
 } from './vocabulary-documents';
-import { Vocabulary, VocabularyStore, containsFilter, equalsFilter, isInUseViolation, requireOneOf } from './vocabulary-store';
+import { Vocabulary, VocabularyStore, containsFilter, equalsFilter, isInUseViolation } from './vocabulary-store';
 import { vocabularyController } from './vocabulary.controller';
 
 /** The scopes of a role, in their declared order. */

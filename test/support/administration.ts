@@ -47,3 +47,31 @@ export function listRoleChanges(app: TestApp, accessToken: string, userId: strin
     .set('Accept', JSON_API)
     .set('Authorization', `Bearer ${accessToken}`);
 }
+
+/** POST /v1/admin/users/{id}/status-changes */
+export function changeStatus(app: TestApp, accessToken: string, userId: string, attributes: object) {
+  return sendJsonApi(app.server, 'post', `/v1/admin/users/${userId}/status-changes`, {
+    data: { type: 'status-changes', attributes },
+  }).set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** GET /v1/admin/users/{id}/status-changes */
+export function listStatusChanges(app: TestApp, accessToken: string, userId: string) {
+  return request(app.server)
+    .get(`/v1/admin/users/${userId}/status-changes`)
+    .set('Accept', JSON_API)
+    .set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** GET /v1/admin/users */
+export function listAccounts(app: TestApp, accessToken: string) {
+  return request(app.server).get('/v1/admin/users').set('Accept', JSON_API).set('Authorization', `Bearer ${accessToken}`);
+}
+
+/** GET /v1/admin/users/{id} */
+export function getAccount(app: TestApp, accessToken: string, userId: string) {
+  return request(app.server)
+    .get(`/v1/admin/users/${userId}`)
+    .set('Accept', JSON_API)
+    .set('Authorization', `Bearer ${accessToken}`);
+}

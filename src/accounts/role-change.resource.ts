@@ -1,11 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
+import { AccountLinkage, accountIdentitySchema } from './account.resource';
 import { UserRoleChange } from './entities/user-role-change.entity';
-import { USER_ROLES, User } from './entities/user.entity';
-
-/** Only the identity of an account, for linkage from administrative resources. */
-const accountIdentitySchema = defineResource<User>({ type: 'users', id: (user) => user.uuid, attributes: {} });
+import { USER_ROLES } from './entities/user.entity';
 
 /** An audited role change, loaded with its affected account and acting administrator. */
 export const roleChangeSchema = defineResource<UserRoleChange>({
@@ -35,11 +33,6 @@ class RoleChangeAttributes {
 
   @ApiProperty({ format: 'date-time' })
   changedAt: string;
-}
-
-class AccountLinkage {
-  @ApiProperty({ type: ResourceIdentifier })
-  data: ResourceIdentifier;
 }
 
 class ActingAdministratorLinkage {

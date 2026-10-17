@@ -78,8 +78,9 @@ export function logout(server: App, accessToken: string) {
 }
 
 /**
- * Sets an account's status straight in the database, standing in for the
- * administration endpoints (suspension, deletion) until they exist.
+ * Sets an account's status straight in the database, for tests that need a
+ * suspended or deleted account without an administrator to change it, or
+ * without the audit and side effects of a status change.
  */
 export async function setAccountStatus(dataSource: DataSource, username: string, status: 'suspended' | 'deleted') {
   // A deleted account loses its email, as the deletion scrub requires.
