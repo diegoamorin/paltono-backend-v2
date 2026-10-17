@@ -104,6 +104,7 @@ export const IDENTITY_FIELD_CHANGES: OperationDefinition[] = (Object.keys(IDENTI
     payloadSchemaVersion: 1,
     description: rules.description,
     valueSchema: rules.schema,
+    targetKeySchema: null,
     check: (value) => rules.check?.(value) ?? [],
     references: (value) => rules.references?.(value) ?? [],
     targetProblems: async (manager, root, value) => {

@@ -4,6 +4,7 @@ import { EditorialEntity, EditorialEntityType } from './entities/editorial-entit
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
+import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 
 /*
  * The registry of operations a microchange may carry (E1). A microchange names
@@ -18,7 +19,7 @@ export interface PayloadProblem {
   detail: string;
 }
 
-/** A vocabulary entry a payload refers to, which must exist. */
+/** A vocabulary entry a payload or a target key refers to, which must exist. */
 export interface VocabularyReference {
   vocabulary: 'countries';
   id: number;
@@ -35,11 +36,18 @@ export interface TargetProblem {
   member: string;
 }
 
+/**
+ * The primary key of the dependent row a relation operation selects, with
+ * every reference translated to the domain's keys; null for operations that
+ * select no row.
+ */
+export type RowKey = Record<string, number>;
+
 /** What applying an operation wrote, for its revision. */
 export interface AppliedOperation {
   /** The value the target holds afterwards, as the domain rows store it. */
   afterValue: ValueEnvelope;
-  /** The key of the row the operation generated, if any. */
+  /** The key of the row the operation generated or selected, if any. */
   resultKey: object | null;
 }
 
@@ -49,37 +57,59 @@ export interface OperationDefinition {
   targetPath: string;
   payloadSchemaVersion: number;
   description: string;
-  /** JSON Schema of the envelope's `value`. */
-  valueSchema: object;
+  /** JSON Schema of the envelope's `value`; null when the operation proposes absence. */
+  valueSchema: object | null;
+  /**
+   * JSON Schema of `targetKey`: the primary key of the dependent row the
+   * operation selects. Null when it selects no row, as a root operation or an
+   * insertion whose key the row will generate.
+   */
+  targetKeySchema: object | null;
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
+  /**
+   * For an insertion whose row will generate its key, the unique key of a
+   * valid value, which tells two insertions of the same row apart. Undefined
+   * when the value has none.
+   */
+  naturalKey?(value: unknown): object | undefined;
+  /** Vocabulary entries the target key refers to, with paths inside `targetKey`. */
+  keyReferences?(targetKey: object): VocabularyReference[];
   /**
    * Rules on the root's current data, such as a field its subtype lacks or an
    * interval with a field the change leaves as it is. Run when the change is
    * added, submitted and applied, so they always see the latest data.
    */
   targetProblems?(manager: EntityManager, root: EditorialEntity, value: unknown): Promise<TargetProblem[]>;
-  /** The value the operation's target holds now, as the base a decision observes. */
-  read(manager: EntityManager, root: EditorialEntity): Promise<ValueEnvelope>;
+  /**
+   * The value the operation's target holds now, as the base a decision
+   * observes. A relation reads the row its key selects or, for an insertion,
+   * the row its proposed value would collide with by its unique key.
+   */
+  read(manager: EntityManager, root: EditorialEntity, key: RowKey | null, value: unknown): Promise<ValueEnvelope>;
+  /**
+   * What applying the value would break besides its own target, such as a
+   * uniqueness among the root's other rows. Applying never overrides them,
+   * not even over a confirmed new base.
+   */
+  constraintProblems?(manager: EntityManager, root: EditorialEntity, key: RowKey | null, value: unknown): Promise<string[]>;
   /** Writes a valid proposed value to the domain tables, inside the transaction of the decision that applies it. */
-  apply(manager: EntityManager, root: EditorialEntity, value: unknown, now: Date): Promise<AppliedOperation>;
+  apply(manager: EntityManager, root: EditorialEntity, value: unknown, now: Date, key: RowKey | null): Promise<AppliedOperation>;
 }
 
-export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION, ...IDENTITY_FIELD_CHANGES];
+export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION, ...IDENTITY_FIELD_CHANGES, ...IDENTITY_RELATION_CHANGES];
 
 /** Creations start from absence, so their base is always the empty envelope. */
 export const ABSENT: ValueEnvelope = { exists: false };
 
-/** The published JSON Schema of the proposed envelope of an operation. */
+/** The published JSON Schema of the proposed envelope of an operation: a value, or absence for a removal. */
 export function payloadSchema(definition: OperationDefinition): object {
-  return {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    type: 'object',
-    additionalProperties: false,
-    required: ['exists', 'value'],
-    properties: { exists: { const: true }, value: definition.valueSchema },
-  };
+  const envelope =
+    definition.valueSchema === null
+      ? { required: ['exists'], properties: { exists: { const: false } } }
+      : { required: ['exists', 'value'], properties: { exists: { const: true }, value: definition.valueSchema } };
+  return { $schema: 'https://json-schema.org/draft/2020-12/schema', type: 'object', additionalProperties: false, ...envelope };
 }
 
 export function operationId(definition: OperationDefinition): string {
@@ -117,12 +147,21 @@ const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: false, str
 const validators = new Map<OperationDefinition, ValidateFunction>(
   OPERATIONS.map((definition) => [definition, ajv.compile(payloadSchema(definition))]),
 );
+const keyValidators = new Map<OperationDefinition, ValidateFunction>(
+  OPERATIONS.filter(({ targetKeySchema }) => targetKeySchema !== null).map((definition) => [definition, ajv.compile(definition.targetKeySchema!)]),
+);
 
 /** Validates a proposed envelope against the published schema, then against the operation's own rules. */
 export function validatePayload(definition: OperationDefinition, proposed: unknown): PayloadProblem[] {
   const validate = validators.get(definition)!;
   if (!validate(proposed)) return validate.errors!.map(toProblem);
   return definition.check((proposed as { value: unknown }).value);
+}
+
+/** Validates a target key against the operation's schema; paths are inside `targetKey`. */
+export function validateTargetKey(definition: OperationDefinition, targetKey: unknown): PayloadProblem[] {
+  const validate = keyValidators.get(definition)!;
+  return validate(targetKey) ? [] : validate.errors!.map(toProblem);
 }
 
 function toProblem(error: ErrorObject): PayloadProblem {

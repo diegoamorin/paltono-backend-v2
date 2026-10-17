@@ -13,7 +13,7 @@ import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
 import { ProposalSource } from './entities/proposal-source.entity';
 import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity';
-import { lockTargetedRoots, revalidateChange } from './proposal-changes.service';
+import { lockTargetedRoots, recordImpliedDependencies, revalidateChange } from './proposal-changes.service';
 
 /** Which projection of a proposal a viewer gets: see `proposal.resource.ts`. */
 export type ProposalView = 'public' | 'reviewable';
@@ -110,9 +110,10 @@ export class ProposalsService {
       for (const change of changes) {
         errors.push(...(await revalidateChange(manager, proposal, change, roots.get(change.entityId))));
       }
-      // Dependencies cannot be declared yet, so there is no graph to check for cycles.
+      // Only references imply dependencies yet, and they always point to earlier creations, so there is no graph to check for cycles.
       if (errors.length > 0) throw invalid(errors);
 
+      for (const change of changes) await recordImpliedDependencies(manager, change, roots.get(change.entityId)!);
       const now = this.clock.now();
       await manager.update(ChangeProposal, { id }, { status: 'open', submittedAt: now, updatedAt: now });
       return loadContents(manager, id);

@@ -11,7 +11,16 @@ import { ChangeProposal } from './entities/change-proposal.entity';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ChangeOperation, ProposalChange, ValueEnvelope } from './entities/proposal-change.entity';
 import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity';
-import { OperationDefinition, findOperation, isRegistered, validatePayload } from './operation-registry';
+import {
+  ABSENT,
+  OperationDefinition,
+  VocabularyReference,
+  findOperation,
+  isRegistered,
+  validatePayload,
+  validateTargetKey,
+} from './operation-registry';
+import { checkReferences, namesRoot, normalizeKey, resolveKey } from './row-references';
 
 export interface NewChange {
   entityId: string;
@@ -56,7 +65,7 @@ export class ProposalChangesService {
         operation: input.operation,
         targetPath: input.targetPath,
         // targetKey and proposedValue are checked by changeProblems before anything is written.
-        targetKey: (input.targetKey ?? null) as object | null,
+        targetKey: normalizeKey(input.targetKey ?? null) as object | null,
         payloadSchemaVersion: input.payloadSchemaVersion ?? 1,
         proposedValue: input.proposedValue as ValueEnvelope,
         atomicGroupId: input.atomicGroupId ?? null,
@@ -67,13 +76,12 @@ export class ProposalChangesService {
       await checkPosition(manager, proposalId, change.id, change.position);
 
       const now = this.clock.now();
-      const definition = findOperation(entity!.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
       await manager.insert(ProposalChange, {
         ...change,
         operation: change.operation as ChangeOperation,
         // The target as the author sees it now. Creations start from absence at version 0, the only base a reservation has.
         baseVersion: entity!.currentVersion,
-        baseValue: await definition.read(manager, entity!),
+        baseValue: await readBase(manager, entity!, change),
         status: 'pending',
         createdAt: now,
         resolvedAt: null,
@@ -104,8 +112,20 @@ export class ProposalChangesService {
           payloadSchemaVersion: change.payloadSchemaVersion,
           atomicGroupId: change.atomicGroupId,
           position: change.position,
+          // An insertion's base is the row its value would collide with, so it follows the value.
+          ...(change.operation === 'add_relation' ? { baseValue: await readBase(manager, entity!, change) } : {}),
         },
       );
+      // Changes to the row an insertion will create start from the value it proposes.
+      if (change.operation === 'add_relation') {
+        await manager
+          .createQueryBuilder()
+          .update(ProposalChange)
+          .set({ baseValue: change.proposedValue })
+          .where('proposal_id = :proposalId', { proposalId })
+          .andWhere(`jsonb_path_exists(target_key, '$.* ? (@.change_id == $id)', jsonb_build_object('id', :changeId::text))`, { changeId })
+          .execute();
+      }
       await touchDraft(manager, proposal, this.clock.now());
       return manager.findOneByOrFail(ProposalChange, { id: changeId });
     });
@@ -134,16 +154,42 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
   return roots;
 }
 
+/**
+ * Records the dependencies the references of a submitted microchange's target
+ * key imply: on the insertion that creates a row it names, and on the creation
+ * of a reservation it names. Its references were checked already.
+ */
+export async function recordImpliedDependencies(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<void> {
+  if (change.targetKey === null) return;
+  const { dependsOn } = await checkReferences(manager, { ...change, targetKey: change.targetKey }, root);
+  for (const dependsOnChangeId of dependsOn) {
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(ChangeDependency)
+      .values({ changeId: change.id, dependsOnChangeId, proposalId: change.proposalId })
+      .orIgnore()
+      .execute();
+  }
+}
+
 /** Checks a microchange again at submission, reporting each problem with the microchange it belongs to. */
 export async function revalidateChange(
   manager: EntityManager,
   proposal: ChangeProposal,
   change: ProposalChange,
   entity: EditorialEntity | undefined,
+  stage: Stage = 'submission',
 ): Promise<JsonApiErrorInput[]> {
-  const problems = await changeProblems(manager, proposal, change, entity ?? null);
+  const problems = await changeProblems(manager, proposal, change, entity ?? null, stage);
   return problems.map(({ code, detail, member }) => ({ code, detail, meta: { changeId: change.id, member } }));
 }
+
+/**
+ * When a microchange is checked. A decision finds a row gone or a constraint
+ * broken as a conflict or a satisfied result, not as an invalid microchange.
+ */
+type Stage = 'draft' | 'submission' | 'decision';
 
 type ChangeFields = Pick<
   ProposalChange,
@@ -160,6 +206,7 @@ async function changeProblems(
   proposal: ChangeProposal,
   change: ChangeFields,
   entity: EditorialEntity | null,
+  stage: Stage = 'draft',
 ): Promise<ChangeProblem[]> {
   // A reservation is private to its creator, so for anyone else it does not exist.
   if (!entity || (entity.publicationStatus === 'reserved' && entity.createdById !== proposal.authorId)) {
@@ -167,14 +214,17 @@ async function changeProblems(
   }
   const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
   if (!definition) return [unregistered(entity, change)];
-  if (change.targetKey !== null) {
-    return [{ code: 'invalid_target_key', detail: 'This operation selects no row; targetKey must be null', member: 'targetKey' }];
-  }
+  const keyProblems = await targetKeyProblems(manager, definition, change, entity);
+  if (keyProblems.length > 0) return keyProblems;
 
   const problems: ChangeProblem[] = [];
   if (definition.operation === 'create_entity') problems.push(...(await creationProblems(manager, change, entity)));
   if (definition.operation === 'set_fields') {
     const targetProblems = await fieldChangeProblems(manager, change, entity);
+    if (targetProblems.length > 0) return targetProblems;
+  }
+  if (isRelationOperation(definition.operation)) {
+    const targetProblems = await relationChangeProblems(manager, definition, change, entity, stage);
     if (targetProblems.length > 0) return targetProblems;
   }
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
@@ -204,6 +254,93 @@ async function fieldChangeProblems(manager: EntityManager, change: ChangeFields,
     return [{ code: 'overlapping_change', detail: `This proposal already changes ${change.targetPath} of this root`, member: 'targetPath' }];
   }
   return [];
+}
+
+/**
+ * A target key matches the operation's schema, or is null when the operation
+ * selects no row, and its references and vocabulary entries exist.
+ */
+async function targetKeyProblems(
+  manager: EntityManager,
+  definition: OperationDefinition,
+  change: ChangeFields,
+  entity: EditorialEntity,
+): Promise<ChangeProblem[]> {
+  if (definition.targetKeySchema === null) {
+    if (change.targetKey === null) return [];
+    return [{ code: 'invalid_target_key', detail: 'This operation selects no row; targetKey must be null', member: 'targetKey' }];
+  }
+  const invalidKey = validateTargetKey(definition, change.targetKey).map(({ path, detail }) => ({
+    code: 'invalid_target_key',
+    detail: `targetKey${path} ${detail}`,
+    member: `targetKey${path}`,
+  }));
+  if (invalidKey.length > 0) return invalidKey;
+  const { problems } = await checkReferences(manager, { ...change, targetKey: change.targetKey! }, entity);
+  return [...problems, ...(await vocabularyProblems(manager, definition.keyReferences?.(change.targetKey!) ?? [], 'targetKey'))];
+}
+
+/**
+ * A relation change targets a published root, or a reservation its key names
+ * and so depends on creating. No other microchange of the proposal selects the
+ * same row, and an existing row it updates or removes belongs to the root.
+ */
+async function relationChangeProblems(
+  manager: EntityManager,
+  definition: OperationDefinition,
+  change: ChangeFields,
+  entity: EditorialEntity,
+  stage: Stage,
+): Promise<ChangeProblem[]> {
+  if (entity.publicationStatus !== 'published' && !namesRoot(change.targetKey)) {
+    return [{ code: 'entity_not_published', detail: 'Only a published root can change its relations', member: 'entity' }];
+  }
+  const others = manager
+    .createQueryBuilder(ProposalChange, 'other')
+    .where('other.proposal_id = :proposalId', { proposalId: change.proposalId })
+    .andWhere('other.entity_id = :entityId', { entityId: entity.id })
+    .andWhere('other.target_path = :targetPath', { targetPath: change.targetPath })
+    .andWhere('other.id <> :id', { id: change.id });
+  // An insertion whose row has no key yet is told apart by the unique key of its value.
+  const naturalKey = change.targetKey === null ? definition.naturalKey?.((change.proposedValue as { value?: unknown }).value) : undefined;
+  if (change.targetKey !== null) {
+    others.andWhere('other.target_key = :targetKey::jsonb', { targetKey: JSON.stringify(change.targetKey) });
+  } else if (naturalKey) {
+    others
+      .andWhere(`other.operation = 'add_relation'`)
+      .andWhere(`other.proposed_value -> 'value' @> :naturalKey::jsonb`, { naturalKey: JSON.stringify(naturalKey) });
+  }
+  if ((change.targetKey !== null || naturalKey) && (await others.getExists())) {
+    const member = change.targetKey === null ? 'proposedValue/value' : 'targetKey';
+    return [{ code: 'overlapping_change', detail: `This proposal already writes this row of ${change.targetPath}`, member }];
+  }
+  if (change.targetKey === null) return [];
+  if (definition.operation !== 'add_relation' && stage !== 'decision') {
+    const { key } = await resolveKey(manager, entity, change.targetKey);
+    if (key && !(await definition.read(manager, entity, key, null)).exists) {
+      return [{ code: 'relation_row_not_found', detail: `The root has no row of ${change.targetPath} with this key`, member: 'targetKey' }];
+    }
+  }
+  return [];
+}
+
+export function isRelationOperation(operation: string): boolean {
+  return operation === 'add_relation' || operation === 'update_relation' || operation === 'remove_relation';
+}
+
+/**
+ * The base of a microchange: its target as the author sees it now. A row not
+ * created yet is the one its insertion proposes, and a reservation holds no
+ * row at all.
+ */
+async function readBase(manager: EntityManager, entity: EditorialEntity, change: ChangeFields): Promise<ValueEnvelope> {
+  const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const value = (change.proposedValue as { value?: unknown }).value;
+  if (change.targetKey === null) return definition.read(manager, entity, null, value);
+  const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey);
+  if (key) return definition.read(manager, entity, key, value);
+  if (pendingInsertions.length > 0) return (await manager.findOneByOrFail(ProposalChange, { id: pendingInsertions[0] })).proposedValue;
+  return ABSENT;
 }
 
 /** Names the first member of the selector that no registry entry for the root's type has. */
@@ -259,13 +396,18 @@ async function payloadProblems(manager: EntityManager, definition: OperationDefi
     member: `proposedValue${path}`,
   }));
   if (problems.length > 0) return problems;
+  return vocabularyProblems(manager, definition.references((proposed as { value: unknown }).value), 'proposedValue');
+}
 
-  for (const reference of definition.references((proposed as { value: unknown }).value)) {
+/** Each vocabulary entry referred to must exist; `member` is where the paths of the references start. */
+async function vocabularyProblems(manager: EntityManager, references: VocabularyReference[], member: string): Promise<ChangeProblem[]> {
+  const problems: ChangeProblem[] = [];
+  for (const reference of references) {
     if (!(await manager.existsBy(VOCABULARIES[reference.vocabulary], { id: reference.id }))) {
       problems.push({
         code: 'unknown_vocabulary_entry',
         detail: `There is no entry ${reference.id} in ${reference.vocabulary}`,
-        member: `proposedValue${reference.path}`,
+        member: `${member}${reference.path}`,
       });
     }
   }

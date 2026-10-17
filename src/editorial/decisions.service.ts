@@ -15,8 +15,10 @@ import { ChangeProposal } from './entities/change-proposal.entity';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ChangeStatus, ProposalChange, ValueEnvelope } from './entities/proposal-change.entity';
-import { OperationDefinition, findOperation } from './operation-registry';
+import { ChangeDependency } from './entities/proposal-links.entity';
+import { ABSENT, OperationDefinition, RowKey, findOperation } from './operation-registry';
 import { lockTargetedRoots, revalidateChange } from './proposal-changes.service';
+import { resolveKey } from './row-references';
 
 export interface DecisionInput {
   action: ManualDecisionAction;
@@ -78,7 +80,10 @@ export class DecisionsService {
 
       const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
       const now = this.clock.now();
-      const current = await definition.read(manager, root);
+      const value = (change.proposedValue as { value?: unknown }).value;
+      // A row or root its key names that is not created yet holds nothing.
+      const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey)).key;
+      const current = change.targetKey !== null && key === null ? ABSENT : await definition.read(manager, root, key, value);
       const decisionOf = (action: DecisionAction, resultingStatus: ChangeStatus, actorId: number | null, reason: string | null): ChangeDecision => ({
         id: randomUUID(),
         changeId,
@@ -97,18 +102,21 @@ export class DecisionsService {
         decision = decisionOf('reject', 'rejected', actor.id, input.reason!);
         await manager.insert(ChangeDecision, decision);
       } else {
+        const dependsOn = await checkDependencies(manager, change);
         // The payload and its references are checked again on the state this transaction sees.
-        const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root);
+        const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');
         if (errors.length > 0) throw invalid(errors);
 
-        const conflicted = change.status === 'conflicted' || (await baseChanged(manager, change, current));
+        // Rows are compared by their keys and the root's constraints, never as a whole list.
+        const clashes = (await definition.constraintProblems?.(manager, root, key, value)) ?? [];
+        const conflicted = change.status === 'conflicted' || clashes.length > 0 || (await baseChanged(manager, change, current, key, dependsOn));
         if (change.operation !== 'create_entity' && isDeepStrictEqual(current, change.proposedValue)) {
           // The result already exists: it closes without a write or a new version.
           decision = decisionOf('mark_satisfied', 'satisfied', null, null);
           await manager.insert(ChangeDecision, decision);
         } else if (input.action === 'apply' && conflicted) {
           if (change.status === 'conflicted') throw baseChangedError(root.currentVersion, current);
-          const reason = `La base de ${change.targetPath} cambió después de la versión ${change.baseVersion} de la ficha`;
+          const reason = clashes[0] ?? `La base de ${change.targetPath} cambió después de la versión ${change.baseVersion} de la ficha`;
           decision = decisionOf('mark_conflict', 'conflicted', null, reason);
           await manager.insert(ChangeDecision, decision);
           await manager.update(ProposalChange, { id: changeId }, { status: 'conflicted' });
@@ -122,10 +130,14 @@ export class DecisionsService {
             }
             // A modification after the confirmation was given needs a new look, not the stale confirmation.
             if (input.confirmedVersion !== root.currentVersion) throw staleConfirmationError(root.currentVersion, current);
+            // A new base is confirmed; the root's constraints never are.
+            if (clashes.length > 0) {
+              throw new JsonApiException(HttpStatus.CONFLICT, clashes.map((detail) => ({ code: 'constraint_violated', detail })));
+            }
           }
           decision = decisionOf(input.action, 'applied', actor.id, input.reason || null);
-          const version = await applyChange(manager, definition, root, change, decision, now);
-          await settleCompetingChanges(manager, change, version, proposals, now);
+          const version = await applyChange(manager, definition, root, change, key, decision, now);
+          if (change.operation === 'set_fields') await settleCompetingChanges(manager, change, version, proposals, now);
         }
       }
 
@@ -202,19 +214,46 @@ async function findCompetingProposalIds(manager: EntityManager, change: Proposal
 }
 
 /**
+ * The microchanges a microchange depends on, which must all be applied before
+ * it: the rows and roots its key names exist only then.
+ */
+async function checkDependencies(manager: EntityManager, change: ProposalChange): Promise<string[]> {
+  const dependencies = await manager.findBy(ChangeDependency, { changeId: change.id });
+  const dependsOn = dependencies.map(({ dependsOnChangeId }) => dependsOnChangeId);
+  if (dependsOn.length > 0 && (await manager.existsBy(ProposalChange, { id: In(dependsOn), status: Not('applied') }))) {
+    throw new JsonApiException(HttpStatus.CONFLICT, [
+      { code: 'dependency_unresolved', detail: 'Apply the microchanges this one depends on first', meta: { dependsOn } },
+    ]);
+  }
+  return dependsOn;
+}
+
+/**
  * Whether the data a microchange was based on changed: its target holds
  * another value, or a later revision wrote the target even if it went back to
- * the base value. A change elsewhere in the root does not count.
+ * the base value. A change elsewhere in the root does not count: for a
+ * relation, only revisions of the same row do, besides those of the
+ * microchanges it depends on, such as the insertion that created the row.
+ * An insertion has no row yet; the root's constraints judge it instead.
  */
-async function baseChanged(manager: EntityManager, change: ProposalChange, current: ValueEnvelope): Promise<boolean> {
+async function baseChanged(
+  manager: EntityManager,
+  change: ProposalChange,
+  current: ValueEnvelope,
+  key: RowKey | null,
+  dependsOn: string[],
+): Promise<boolean> {
   if (!isDeepStrictEqual(current, change.baseValue)) return true;
-  return manager
+  if (change.operation === 'add_relation') return false;
+  const revisions = manager
     .createQueryBuilder(EntityRevision, 'revision')
     .innerJoin(ProposalChange, 'change', 'change.id = revision.change_id')
     .where('revision.entity_id = :entityId', { entityId: change.entityId })
     .andWhere('revision.version > :baseVersion', { baseVersion: change.baseVersion })
-    .andWhere('change.target_path = :targetPath', { targetPath: change.targetPath })
-    .getExists();
+    .andWhere('change.target_path = :targetPath', { targetPath: change.targetPath });
+  if (key) revisions.andWhere('revision.result_key = :key::jsonb', { key: JSON.stringify(key) });
+  if (dependsOn.length > 0) revisions.andWhere('revision.change_id NOT IN (:...dependsOn)', { dependsOn });
+  return revisions.getExists();
 }
 
 /** Writes the domain change, the decision and the revision, and consumes a version of the root. Returns that version. */
@@ -223,10 +262,11 @@ async function applyChange(
   definition: OperationDefinition,
   root: EditorialEntity,
   change: ProposalChange,
+  key: RowKey | null,
   decision: ChangeDecision,
   now: Date,
 ): Promise<number> {
-  const applied = await definition.apply(manager, root, (change.proposedValue as { value: unknown }).value, now);
+  const applied = await definition.apply(manager, root, (change.proposedValue as { value?: unknown }).value, now, key);
   await manager.insert(ChangeDecision, decision);
   const version = root.currentVersion + 1;
   await manager.insert(EntityRevision, {
@@ -281,7 +321,7 @@ async function settleCompetingChanges(
   if (competitors.length === 0) return;
   const root = await manager.findOneByOrFail(EditorialEntity, { id: applied.entityId });
   const definition = findOperation(root.entityType, applied.operation, applied.targetPath, applied.payloadSchemaVersion)!;
-  const current = await definition.read(manager, root);
+  const current = await definition.read(manager, root, null, undefined);
 
   for (const competitor of competitors) {
     const satisfied = isDeepStrictEqual(current, competitor.proposedValue);

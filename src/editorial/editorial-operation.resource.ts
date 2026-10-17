@@ -12,8 +12,7 @@ export const operationSchema = defineResource<OperationDefinition>({
     entityType: (definition) => definition.entityType,
     operation: (definition) => definition.operation,
     targetPath: (definition) => definition.targetPath,
-    // Root operations select no row; relation operations will publish the shape of their key.
-    targetKey: () => null,
+    targetKey: (definition) => definition.targetKeySchema,
     payloadSchemaVersion: (definition) => definition.payloadSchemaVersion,
     // A creation starts from absence; any other operation from its target's value when the microchange is added.
     baseValue: (definition) => (definition.operation === 'create_entity' ? ABSENT : null),

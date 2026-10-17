@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CatalogIdentity, Organization, Person } from './entities/catalog-identity.entity';
+import { CatalogIdentityAlias, PersonNationality } from './entities/identity-relation.entity';
 import { IdentitiesController } from './identities.controller';
 import { IdentitiesService } from './identities.service';
 
@@ -10,7 +11,7 @@ import { IdentitiesService } from './identities.service';
  * this module serves their public reads.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([CatalogIdentity, Person, Organization])],
+  imports: [TypeOrmModule.forFeature([CatalogIdentity, Person, Organization, CatalogIdentityAlias, PersonNationality])],
   controllers: [IdentitiesController],
   providers: [IdentitiesService],
 })

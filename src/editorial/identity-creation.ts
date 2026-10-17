@@ -89,6 +89,7 @@ export const IDENTITY_CREATION: OperationDefinition = {
     'Alta mínima de una persona u organización: nombre visible, tipo y exactamente el subtipo de ese tipo. ' +
     'Las fechas de persona son completas; las de organización, parciales.',
   valueSchema: IDENTITY,
+  targetKeySchema: null,
   check: (value) => checkIdentity(value as IdentityCreation),
   references: (value) => {
     const countryId = (value as IdentityCreation).organization?.originCountryId;
