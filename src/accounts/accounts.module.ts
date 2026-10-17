@@ -9,26 +9,38 @@ import { EmailVerificationsController } from './email-verifications.controller';
 import { AuthSession } from './entities/auth-session.entity';
 import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
+import { UserRoleChange } from './entities/user-role-change.entity';
 import { UserToken } from './entities/user-token.entity';
 import { MeController } from './me.controller';
 import { OwnSessionsController } from './own-sessions.controller';
 import { PasswordsController } from './passwords.controller';
 import { PasswordsService } from './passwords.service';
 import { RegistrationService } from './registration.service';
+import { RoleChangesController } from './role-changes.controller';
+import { RoleChangesService } from './role-changes.service';
 import { SessionRefreshesController, SessionsController } from './sessions.controller';
 import { SessionsService } from './sessions.service';
 import { UsersController } from './users.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserCredential, UserToken, AuthSession]),
+    TypeOrmModule.forFeature([User, UserCredential, UserToken, AuthSession, UserRoleChange]),
     ThrottlerModule.forRootAsync({
       inject: [APP_CONFIG],
       useFactory: ({ auth }: AppConfig) => [{ ttl: 60_000, limit: auth.rateLimit }],
     }),
   ],
-  controllers: [UsersController, EmailVerificationsController, SessionsController, SessionRefreshesController, MeController, OwnSessionsController, PasswordsController],
-  providers: [RegistrationService, SessionsService, PasswordsService, AccessTokens, AccountEmails, AccessGuard],
+  controllers: [
+    UsersController,
+    EmailVerificationsController,
+    SessionsController,
+    SessionRefreshesController,
+    MeController,
+    OwnSessionsController,
+    PasswordsController,
+    RoleChangesController,
+  ],
+  providers: [RegistrationService, SessionsService, PasswordsService, RoleChangesService, AccessTokens, AccountEmails, AccessGuard],
   // Other modules protect their endpoints with `@Authenticated()`, which needs the guard and its services.
   exports: [AccessGuard, SessionsService],
 })

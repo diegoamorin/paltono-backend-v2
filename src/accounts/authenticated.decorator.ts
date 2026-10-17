@@ -18,9 +18,10 @@ import { Authentication, SessionsService } from './sessions.service';
 /**
  * Access levels of the endpoint matrix that need an account:
  * - `authenticated` (`Auth`): any account that can log in, verified or not;
- * - `verified` (`Ver`): an active account with a verified email, as contributing requires.
+ * - `verified` (`Ver`): an active account with a verified email, as contributing requires;
+ * - `admin` (`Admin`): `verified` with the administrator role.
  */
-export type AccessLevel = 'authenticated' | 'verified';
+export type AccessLevel = 'authenticated' | 'verified' | 'admin';
 
 const ACCESS_LEVEL = Symbol('ACCESS_LEVEL');
 
@@ -46,9 +47,14 @@ export class AccessGuard implements CanActivate {
         { code: 'unauthenticated', detail: 'A valid access token is required', source: { header: 'Authorization' } },
       ]);
     }
-    if (level === 'verified' && !authentication.user.emailVerified) {
+    if (level !== 'authenticated' && !authentication.user.emailVerified) {
       throw new JsonApiException(HttpStatus.FORBIDDEN, [
         { code: 'email_not_verified', detail: 'Verify your email before doing this' },
+      ]);
+    }
+    if (level === 'admin' && authentication.user.role !== 'admin') {
+      throw new JsonApiException(HttpStatus.FORBIDDEN, [
+        { code: 'administrator_required', detail: 'Only an administrator can do this' },
       ]);
     }
 
@@ -63,7 +69,7 @@ export function Authenticated(level: AccessLevel = 'authenticated') {
     SetMetadata(ACCESS_LEVEL, level),
     UseGuards(AccessGuard),
     ApiBearerAuth(),
-    ApiJsonApiErrorResponses(...(level === 'verified' ? [401, 403] : [401])),
+    ApiJsonApiErrorResponses(...(level === 'authenticated' ? [401] : [401, 403])),
   );
 }
 

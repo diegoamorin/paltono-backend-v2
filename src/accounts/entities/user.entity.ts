@@ -1,7 +1,8 @@
 import { Check, Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 export type UserStatus = 'active' | 'suspended' | 'deleted';
-export type UserRole = 'user' | 'moderator' | 'admin';
+export const USER_ROLES = ['user', 'moderator', 'admin'] as const;
+export type UserRole = (typeof USER_ROLES)[number];
 
 // Mirrors the CreateAccounts migration, so `migration:generate` finds no drift. The
 // case-insensitive email index is an expression index, which TypeORM leaves alone.

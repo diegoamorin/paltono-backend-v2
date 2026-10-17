@@ -69,6 +69,25 @@ describe('Swagger and the OpenAPI document', () => {
       expect(document.paths['/v1/password-reset-requests'].post.responses).toHaveProperty('202');
       expect(document.paths['/v1/password-resets'].post.security).toBeUndefined();
     });
+
+    it('documents role administration and the vocabularies, with bearer auth only on writes', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+
+      for (const method of ['get', 'post']) {
+        const operation = document.paths['/v1/admin/users/{id}/role-changes'][method];
+        expect(operation.security).toEqual([{ bearer: [] }]);
+        expect(operation.responses).toHaveProperty('403');
+      }
+      for (const type of ['countries', 'genres', 'platforms', 'organization-types', 'contribution-roles']) {
+        expect(document.paths[`/v1/${type}`].get.security).toBeUndefined();
+        expect(document.paths[`/v1/${type}/{id}`].get.security).toBeUndefined();
+        expect(document.paths[`/v1/${type}`].post.security).toEqual([{ bearer: [] }]);
+        expect(document.paths[`/v1/${type}/{id}`].patch.responses).toHaveProperty('409');
+        expect(document.paths[`/v1/${type}/{id}`].delete.responses).toHaveProperty('204');
+      }
+      expect(document.components.schemas).toHaveProperty('ContributionRoleCreateDocument');
+      expect(document.components.schemas).toHaveProperty('ContributionRoleUpdateDocument');
+    });
   });
 
   describe('in production', () => {

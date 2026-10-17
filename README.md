@@ -20,6 +20,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm migration:run` / `migration:revert` | Aplica o revierte migraciones sobre `DATABASE_URL` |
 | `pnpm migration:generate src/database/migrations/<Nombre>` | Genera una migración a partir de las entidades |
 | `pnpm db:reset` | Vacía todos los registros conservando las tablas; solo con `NODE_ENV=development` |
+| `pnpm admin:bootstrap -- --username <u> --reason <texto>` | Promueve a administrador la primera cuenta activa y verificada mientras no exista ninguno (ADR 0003); queda auditado sin administrador actuante |
 | `pnpm db:test:prepare` | Recrea la base de pruebas; rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
 
 ## Endpoints de operación
@@ -53,3 +54,9 @@ En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_F
 En las pruebas, `createTestApp` sustituye el `Mailer` por un doble que captura los correos (`app.mailer`) y `app.reset()` vacía la base antes de cada prueba.
 
 El reloj (`Clock`) es una dependencia inyectable: el código usa `clock.now()` y las pruebas lo sustituyen por un reloj controlado.
+
+## Roles y vocabularios
+
+- `@Authenticated('admin')` exige una cuenta verificada con rol administrador; moderadores y usuarios reciben 403.
+- `POST /v1/admin/users/{id}/role-changes` cambia el rol con un motivo obligatorio y `GET` del mismo recurso devuelve la auditoría (`user_role_changes`). El cambio relee el rol bajo bloqueo y no deja degradar al último administrador activo y verificado. Todo camino que pueda retirar o añadir un administrador operativo, también la consola, toma antes `lockAdministration` (`src/accounts/role-changes.ts`), un bloqueo consultivo de transacción que los serializa.
+- `src/vocabularies` sirve `countries`, `genres`, `platforms`, `organization-types` y `contribution-roles` en `/v1/{tipo}`: lectura pública con los filtros y el orden de la matriz, escritura solo de administradores. Cada vocabulario declara su tabla, su recurso, sus filtros y sus documentos; `VocabularyStore` y `vocabularyController` hacen el resto. Las FKs hacia los vocabularios restringen el borrado, así que borrar una entrada en uso o quitar un ámbito en uso de un rol musical responde 409 sin cascadas.

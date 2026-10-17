@@ -7,6 +7,7 @@ import { MailModule } from './common/mail/mail.module';
 import { APP_CONFIG, AppConfig } from './config/app-config';
 import { databaseOptions } from './database/database-options';
 import { HealthModule } from './health/health.module';
+import { VocabulariesModule } from './vocabularies/vocabularies.module';
 
 @Global()
 @Module({})
@@ -21,6 +22,7 @@ export class AppModule {
         MailModule,
         HealthModule,
         AccountsModule,
+        VocabulariesModule,
       ],
       providers: [{ provide: APP_CONFIG, useValue: config }],
       exports: [APP_CONFIG],
