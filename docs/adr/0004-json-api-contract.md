@@ -9,3 +9,9 @@ Se admiten `include`, `fields[tipo]`, `sort`, filtros documentados por recurso y
 Las obras usan su PK `works.id` BIGINT como identificador de recurso, serializada como cadena. Los demás recursos conservan sus identificadores públicos existentes y las operaciones editoriales utilizan sus UUID editoriales. No se añade una segunda columna de identidad a `works`.
 
 El slug de una obra es único, se genera a partir del título y se conserva cuando cambia ese título. Una colisión genera un sufijo como `butter-2`; la asignación debe respetar la unicidad incluso ante creaciones simultáneas. Los títulos de obras no son únicos. El slug no sustituye al identificador estable del recurso.
+
+La API se expone bajo el prefijo `/v1` y exige el media type `application/vnd.api+json`, respondiendo 415 o 406 según la especificación, también en los endpoints de autenticación. `/health` queda fuera de `/v1`, responde JSON simple mediante `@nestjs/terminus` y sirve al healthcheck de Railway.
+
+La búsqueda global se implementa en PostgreSQL con `pg_trgm` y `unaccent` sobre nombres visibles, alias y títulos, sin motor externo. Los filtros, ordenaciones e `include` permitidos de cada recurso se definen en la matriz de endpoints y se revisan en conjunto.
+
+Swagger UI y el documento OpenAPI están activos en desarrollo; en producción se desactivan por defecto y solo se habilitan mediante variable de entorno, protegidos con autenticación básica. Ocultarlos no sustituye la autorización: la seguridad depende de autenticación, permisos, validación y límites de peticiones. Las pruebas verifican que el documento OpenAPI se genera sin errores.

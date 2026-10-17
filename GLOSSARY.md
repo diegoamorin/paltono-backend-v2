@@ -59,3 +59,17 @@ _Avoid_: Borrado de ficha.
 **Retirada de microcambio (change withdrawal)**:
 Cierre de un microcambio todavía no resuelto por su autor o por el personal. No revierte los cambios que ya se aplicaron.
 _Avoid_: Reversión de una aplicación.
+
+### Cuentas
+
+**Cuenta (account)**:
+Registro de una persona que participa en la plataforma, identificado de forma estable con independencia de su username.
+_Avoid_: Identidad de catálogo para referirse a una cuenta.
+
+**Suspensión**:
+Estado de una cuenta a la que un administrador impide actuar temporalmente, con un motivo registrado. Se puede revertir mediante reactivación.
+_Avoid_: Baja o bloqueo como sinónimos de suspensión.
+
+**Baja (account deletion)**:
+Cierre definitivo de una cuenta por decisión de su titular. Libera su correo, conserva su username reservado y mantiene la atribución de sus contribuciones.
+_Avoid_: Borrado para referirse a la baja, porque la cuenta y su historial se conservan.

@@ -12129,9 +12129,72 @@
 								"cardinality": "0..*"
 							},
 							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "57b98875f3c94d22b580c7f798e9ab26",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCFYF0ZlM="
+							},
+							"name": "status affected user",
+							"documentation": "FK described on the child columns. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "8aa829b3d58e4c4db3dd4744d414c504",
+								"_parent": {
+									"$ref": "57b98875f3c94d22b580c7f798e9ab26"
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCFYF0ZlM="
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "26a706c8a05945d089a040b5c90358b3",
+								"_parent": {
+									"$ref": "57b98875f3c94d22b580c7f798e9ab26"
+								},
+								"reference": {
+									"$ref": "4da200b13764487aa46d398a356953c3"
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "b5c83554310c49bab3fea11b4bd3bb9e",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCFYF0ZlM="
+							},
+							"name": "status changed_by",
+							"documentation": "Required actor FK: administrator for suspension/reactivation, the account itself for voluntary deletion. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "ac4c013cc1be49729ac0b6ea168d9667",
+								"_parent": {
+									"$ref": "b5c83554310c49bab3fea11b4bd3bb9e"
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCFYF0ZlM="
+								},
+								"cardinality": "1"
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "25b4053ece0646c3991600f63bc0e841",
+								"_parent": {
+									"$ref": "b5c83554310c49bab3fea11b4bd3bb9e"
+								},
+								"reference": {
+									"$ref": "4da200b13764487aa46d398a356953c3"
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
 						}
 					],
-					"documentation": "Global account roles user/moderator/admin. Active users may propose; active moderators/admins may publish directly through the audited contribution flow. Only admins withdraw published roots or manage roles, except the audited console-only initial admin bootstrap described in user_role_changes. Suspended/deleted users cannot submit or decide. Preserve author/reviewer FKs with soft deletion; Authentication policies are documented in docs/adr/0002-local-authentication.md. See docs/editorial-contributions.md. Preserve at least one active email-verified administrator: reject demotion, suspension or deletion of the last such administrator. Coordinate all role/status/verification changes transactionally, including console paths and concurrent requests.",
+					"documentation": "Global account roles user/moderator/admin. Active users may propose; active moderators/admins may publish directly through the audited contribution flow. Only admins withdraw published roots or manage roles, except the audited console-only initial admin bootstrap described in user_role_changes. Suspended/deleted users cannot submit or decide. Preserve author/reviewer FKs with soft deletion; Authentication policies are documented in docs/adr/0002-local-authentication.md. See docs/editorial-contributions.md. Preserve at least one active email-verified administrator: reject demotion, suspension or deletion of the last such administrator. Coordinate all role/status/verification changes transactionally, including console paths and concurrent requests. Deletion scrub: email=NULL, avatar_url=NULL, bio=NULL, display_name set to the reserved username, user_credentials and user_identities rows removed, sessions and pending tokens revoked/invalidated. Completing password recovery proves mailbox control: it sets email_verified=true and revokes every existing session, transferring control to the mailbox owner. Passwords: length 8..128, no composition rules, Argon2id.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -12224,7 +12287,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "status",
-							"documentation": "active|suspended|deleted. Voluntary deletion requires current password, sets status=deleted and email=NULL atomically, closes sessions, invalidates authentication tokens and hides personal profile while retaining contribution attribution and reserving the final username. Active/suspended accounts require a non-NULL unique email. Re-registering the released email creates an independent account and requires fresh verification. Must preserve the last active email-verified administrator. Other personal-data anonymization remains a separate pending policy.",
+							"documentation": "active|suspended|deleted. Voluntary deletion requires current password, sets status=deleted and email=NULL atomically, closes sessions, invalidates authentication tokens and hides personal profile while retaining contribution attribution and reserving the final username. Active/suspended accounts require a non-NULL unique email. Re-registering the released email creates an independent account and requires fresh verification. Must preserve the last active email-verified administrator. Other personal-data anonymization remains a separate pending policy. Every status transition is audited in user_status_changes. Suspension and reactivation are admin-only with reason; deletion is terminal. Suspended accounts cannot log in: after a correct password the login returns a specific account-suspended error without the internal reason; a wrong password gets the generic failure. Their submitted proposals stay public and reviewable, but they cannot create, submit or withdraw while suspended; drafts stay private and intact; past decisions remain valid.",
 							"type": "enum"
 						},
 						{
@@ -12659,7 +12722,8 @@
 							"name": "created_at",
 							"type": "TIMESTAMPTZ"
 						}
-					]
+					],
+					"documentation": "Out of MVP scope (2026-10-17): no endpoints, writes, seed rows or tests. A more robust likes model will be designed later; keep the table untouched until then. Account deletion does not need to handle it while unused."
 				},
 				{
 					"_type": "ERDEntity",
@@ -22057,6 +22121,90 @@
 					]
 				},
 				{
+					"_type": "ERDEntity",
+					"_id": "4da200b13764487aa46d398a356953c3",
+					"_parent": {
+						"$ref": "dc6874edb22f477fb2927a700c06cfbe"
+					},
+					"name": "user_status_changes",
+					"documentation": "Append-only account status audit, approved 2026-10-17. Referenced users retained through soft deletion; all FKs ON DELETE RESTRICT. Transitions: active->suspended and suspended->active only by an active administrator with a required nonblank reason; suspensions have no automatic end and last until manual reactivation. active->deleted by voluntary self-deletion (changed_by = user_id, reason optional). suspended->deleted only by an active administrator at the account holder's out-of-band request, reason required. deleted is terminal. Moderators cannot suspend or reactivate. CHECK previous_status <> new_status. Match locked users.status to previous_status, then update users.status and append this row in one transaction. Suspension revokes all sessions immediately and must preserve the last active email-verified administrator, coordinated with role changes. Not exposed in public history; account administration, not catalog contribution.",
+					"columns": [
+						{
+							"_type": "ERDColumn",
+							"_id": "e61158759cdb420b84f50f32f8ad9762",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "id",
+							"type": "UUID",
+							"primaryKey": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "023e63ba84cf4e2b9f5c8293b1070a1a",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "user_id",
+							"documentation": "FK -> users.id; affected account.",
+							"type": "INTEGER",
+							"foreignKey": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "37e7f60c781843ba9a90659ed759cb7d",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "changed_by",
+							"documentation": "FK -> users.id; NOT NULL. Active administrator for suspension, reactivation and deletion of a suspended account at the holder request; the affected account itself for voluntary deletion. No console bootstrap exception.",
+							"type": "INTEGER",
+							"foreignKey": true,
+							"nullable": false
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "530bd2d4a496402d9889f54011273106",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "previous_status",
+							"documentation": "active | suspended | deleted",
+							"type": "enum"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "dd4e7fab2fe14c4c83ea6ec7461508ab",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "new_status",
+							"documentation": "active | suspended | deleted",
+							"type": "enum"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "36a2360b7471417e8d0979887272c1b1",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "reason",
+							"documentation": "Administrative explanation; not public. Required and nonblank for suspension, reactivation and administrator deletion; optional for voluntary deletion.",
+							"type": "TEXT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "a3c2ea259e3f423d8120b2b5a8702144",
+							"_parent": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"name": "changed_at",
+							"type": "TIMESTAMPTZ"
+						}
+					]
+				},
+				{
 					"_type": "ERDDiagram",
 					"_id": "b0605d9d76fe40cb8b0378c2217d3dc7",
 					"_parent": {
@@ -27560,6 +27708,364 @@
 							"width": 520,
 							"height": 100,
 							"text": "Apply = decision + domain write + revision + version increment in one transaction. Preserve author versus approver. NULL decision actor is restricted to system conflict/satisfaction/dependency outcomes. Only admins manage roles and withdraw published roots."
+						},
+						{
+							"_type": "ERDEntityView",
+							"_id": "824f7ea9587d437e84d47ca4ce32ff98",
+							"_parent": {
+								"$ref": "c863713bac414b2d986cbffcb79556a6"
+							},
+							"model": {
+								"$ref": "4da200b13764487aa46d398a356953c3"
+							},
+							"subViews": [
+								{
+									"_type": "LabelView",
+									"_id": "8a710fc5a4e14760aed661d836697ead",
+									"_parent": {
+										"$ref": "824f7ea9587d437e84d47ca4ce32ff98"
+									},
+									"fillColor": "#E7F3FF",
+									"font": "Arial;12;1",
+									"parentStyle": true,
+									"left": 80,
+									"top": 1265,
+									"width": 550,
+									"height": 12,
+									"text": "user_status_changes"
+								},
+								{
+									"_type": "ERDColumnCompartmentView",
+									"_id": "1fe7f36ec8a64e08b74cd05124631342",
+									"_parent": {
+										"$ref": "824f7ea9587d437e84d47ca4ce32ff98"
+									},
+									"model": {
+										"$ref": "4da200b13764487aa46d398a356953c3"
+									},
+									"subViews": [
+										{
+											"_type": "ERDColumnView",
+											"_id": "ae70e66cabf04aa0aa9f0dcab9ab90c5",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "e61158759cdb420b84f50f32f8ad9762"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1287,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "ea1d47e27dfb45199872f3659bbbc3ed",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "023e63ba84cf4e2b9f5c8293b1070a1a"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1301,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b5a5686a977b4d648c65365796f50c82",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "37e7f60c781843ba9a90659ed759cb7d"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1315,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "c5af52e76b9e4e54b1fefe9c049b9382",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "530bd2d4a496402d9889f54011273106"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1329,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "78d642f270674b538af3131166fa0c35",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "dd4e7fab2fe14c4c83ea6ec7461508ab"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1343,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "9b80723d2f434984a670d2fddd7b1e1a",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "36a2360b7471417e8d0979887272c1b1"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1357,
+											"width": 540,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "58bed03cb1e848459fdd6f23b8ab1d45",
+											"_parent": {
+												"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+											},
+											"model": {
+												"$ref": "a3c2ea259e3f423d8120b2b5a8702144"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 85,
+											"top": 1371,
+											"width": 540,
+											"height": 12
+										}
+									],
+									"fillColor": "#E7F3FF",
+									"font": "Arial;12;0",
+									"parentStyle": true,
+									"left": 80,
+									"top": 1282,
+									"width": 550,
+									"height": 106
+								}
+							],
+							"fillColor": "#E7F3FF",
+							"font": "Arial;12;0",
+							"parentStyle": false,
+							"left": 80,
+							"top": 1260,
+							"width": 550,
+							"height": 180,
+							"nameLabel": {
+								"$ref": "8a710fc5a4e14760aed661d836697ead"
+							},
+							"columnCompartment": {
+								"$ref": "1fe7f36ec8a64e08b74cd05124631342"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "63c118e3f7e646a09389b8e203db86a6",
+							"_parent": {
+								"$ref": "c863713bac414b2d986cbffcb79556a6"
+							},
+							"model": {
+								"$ref": "57b98875f3c94d22b580c7f798e9ab26"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "ff232e01886a4c3f9fcdd1a3234bcd40",
+									"_parent": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									},
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": -110,
+									"top": 1000,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 85,
+									"hostEdge": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									},
+									"edgePosition": 1,
+									"text": "status affected user"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "51750fa072c8430ab15a771aed5d582d",
+									"_parent": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 283,
+									"top": 394,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "a6a3de48ddd44822816fc088d2b2b4b8",
+									"_parent": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 247,
+									"top": 844,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "63c118e3f7e646a09389b8e203db86a6"
+									}
+								}
+							],
+							"font": "Arial;10;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "824f7ea9587d437e84d47ca4ce32ff98"
+							},
+							"tail": {
+								"$ref": "25e639b52e2b4b4c9a718d3bd27efabe"
+							},
+							"lineStyle": 2,
+							"points": "80:300;40:300;40:1300;80:1300",
+							"nameLabel": {
+								"$ref": "ff232e01886a4c3f9fcdd1a3234bcd40"
+							},
+							"tailNameLabel": {
+								"$ref": "51750fa072c8430ab15a771aed5d582d"
+							},
+							"headNameLabel": {
+								"$ref": "a6a3de48ddd44822816fc088d2b2b4b8"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "f6a50d62b33846558815a9423a90c06e",
+							"_parent": {
+								"$ref": "c863713bac414b2d986cbffcb79556a6"
+							},
+							"model": {
+								"$ref": "b5c83554310c49bab3fea11b4bd3bb9e"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "5771bd3213cc4112a57d89ac9cd8cefa",
+									"_parent": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									},
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": -94,
+									"top": 1030,
+									"width": 140,
+									"height": 10,
+									"alpha": -1.5707963267948966,
+									"distance": 75,
+									"hostEdge": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									},
+									"edgePosition": 1,
+									"text": "status changed_by"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "51ba1d5f5a16432fa45e7edb2b041c70",
+									"_parent": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 303,
+									"top": 394,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "a5b809aa238543eab562f60c91f7dc5f",
+									"_parent": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 267,
+									"top": 844,
+									"width": 140,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 18,
+									"hostEdge": {
+										"$ref": "f6a50d62b33846558815a9423a90c06e"
+									}
+								}
+							],
+							"font": "Arial;10;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "824f7ea9587d437e84d47ca4ce32ff98"
+							},
+							"tail": {
+								"$ref": "25e639b52e2b4b4c9a718d3bd27efabe"
+							},
+							"lineStyle": 2,
+							"points": "80:330;56:330;56:1330;80:1330",
+							"nameLabel": {
+								"$ref": "5771bd3213cc4112a57d89ac9cd8cefa"
+							},
+							"tailNameLabel": {
+								"$ref": "51ba1d5f5a16432fa45e7edb2b041c70"
+							},
+							"headNameLabel": {
+								"$ref": "a5b809aa238543eab562f60c91f7dc5f"
+							}
 						}
 					]
 				},

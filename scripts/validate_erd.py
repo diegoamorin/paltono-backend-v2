@@ -14,6 +14,7 @@ EDITORIAL = {
     'editorial_entities', 'change_proposals', 'proposal_changes',
     'change_dependencies', 'proposal_sources', 'change_sources',
     'change_decisions', 'entity_revisions', 'user_role_changes',
+    'user_status_changes',
 }
 ROOTS = {
     'catalog_identities': 'identity', 'works': 'work',
@@ -102,6 +103,8 @@ def main():
         ('entity_revisions','decision_id'): 'change_decisions',
         ('user_role_changes','user_id'): 'users',
         ('user_role_changes','changed_by'): 'users',
+        ('user_status_changes','user_id'): 'users',
+        ('user_status_changes','changed_by'): 'users',
     }
     relations = [o for o in objects if o.get('_type') == 'ERDRelationship']
     pairs = set()

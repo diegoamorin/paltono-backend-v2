@@ -23,3 +23,19 @@ Al cambiar el username se libera inmediatamente el anterior para otras cuentas. 
 Se admite cambiar el correo mediante contraseña actual y verificación de la dirección nueva, manteniendo el correo anterior hasta confirmar. El ER amplía `user_tokens` con `target_email` nullable y la finalidad `email_change`; el token queda vinculado a su destino y el cambio debe respetar la unicidad del correo al confirmar.
 
 Los correos se envían mediante Resend después del commit, con reintentos limitados y reenvío explícito. Un fallo de envío conserva la cuenta sin verificar. El MVP no incorpora cola persistente ni promete recuperar automáticamente envíos pendientes tras un reinicio. Los reintentos de una misma solicitud de envío usarán las [claves de idempotencia de Resend](https://resend.com/docs/dashboard/emails/idempotency-keys) dentro de su ventana de 24 horas y con el mismo contenido.
+
+La baja elimina además `avatar_url`, `bio`, las credenciales locales y las identidades sociales; revoca sesiones e invalida tokens pendientes. `display_name` pasa a ser el username reservado, porque la columna no admite NULL y no se inventa otro nombre. El MVP no conserva correos, hashes ni otros registros antiabuso de cuentas eliminadas o sancionadas; una cuenta suspendida mantiene ocupado su correo mientras siga suspendida. Esa retención se revisará con asesoría de privacidad peruana antes del lanzamiento público.
+
+Completar una recuperación de contraseña demuestra el control del buzón: marca el correo como verificado y revoca todas las sesiones existentes. Así, quien registró un correo ajeno sin verificarlo pierde el control de la cuenta frente al dueño real del buzón. El MVP no purga automáticamente cuentas sin verificar.
+
+Las contraseñas tienen entre 8 y 128 caracteres, sin reglas de composición, siguiendo NIST SP 800-63B, y se almacenan con Argon2id. Login y recuperación responden de forma indistinguible exista o no la cuenta. Login, registro, reenvío de correos, recuperación y cambio de correo se limitan con `@nestjs/throttler` y almacenamiento en memoria, válido para una sola instancia; escalar a varias instancias exigirá un almacenamiento compartido.
+
+Los correos de autenticación se redactan solo en español durante el MVP; la internacionalización de la aplicación se abordará más adelante.
+
+Una cuenta suspendida no puede iniciar sesión: con la contraseña correcta recibe un error específico de cuenta suspendida, sin el motivo interno; con una contraseña incorrecta recibe la respuesta genérica. La suspensión no caduca automáticamente; solo un administrador la levanta. Como la cuenta suspendida no puede darse de baja por sí misma, un administrador puede hacerlo a petición de su titular, recibida por soporte fuera de la API, con motivo auditado; la baja libera el correo como cualquier otra.
+
+Los frontends compartirán el dominio `paltono.com`: primero `kpop.paltono.com` y más adelante `paltono.com`; la API se alojará en `api.paltono.com`. Al ser el mismo sitio, la cookie de renovación usa `SameSite=Lax`. Los orígenes CORS permitidos y las URLs de frontend se configuran por entorno. Los enlaces de verificación, recuperación y cambio de correo apuntan a rutas del frontend, que llaman a la API con el token.
+
+Resend envía desde una dirección del dominio verificado `paltono.com` en producción; en desarrollo se usa el remitente de pruebas de Resend. Las pruebas automatizadas sustituyen el cliente de Resend por un doble y nunca envían correos reales.
+
+Una misma cuenta sirve en todos los frontends de Paltono, con el mismo rol, sesiones e historial editorial. Los flujos que envían correos aceptan un identificador de frontend de una lista permitida (`kpop` o `main`, por defecto `kpop`), que la API traduce a la URL base configurada; nunca se acepta una URL arbitraria del cliente.

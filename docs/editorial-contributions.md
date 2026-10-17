@@ -12,6 +12,7 @@ Especificación del modelo `Editorial Contributions` de `ERDiagram.mdj`, acordad
 | Solicitar retirada de una ficha | Sí | Sí | Sí |
 | Aplicar retirada de una ficha publicada | No | No | Sí |
 | Asignar o quitar roles | No | No | Sí |
+| Suspender o reactivar cuentas | No | No | Sí |
 
 Solo cuentas `active` pueden actuar. El rol `moderator` se añade a `users.role`; `user` es el valor inicial. Cada cambio de rol comprueba el rol anterior bajo bloqueo, exige un administrador activo y escribe `user_role_changes` en la misma transacción que actualiza `users`, salvo el bootstrap inicial descrito a continuación. Una suspensión o revocación debe impedir decisiones posteriores: comprobar y proteger la autorización también en la transacción de aplicación.
 
@@ -32,7 +33,9 @@ Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permi
 
 Las seis tablas de dominio tienen `editorial_entity_id UUID NOT NULL UNIQUE`, FK a `editorial_entities.id`, sin sustituir sus IDs existentes. `artists` y `tracks` no reciben una segunda raíz editorial. Cada relación tiene un único propietario de escritura; sus vistas inversas son derivadas. Las entidades referenciadas también se comprueban al validar dependencias, publicación y retirada, sin inventar revisiones en ellas cuando no cambian sus datos.
 
-Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_types`, `contribution_roles` y ámbitos) tienen lectura pública y escritura exclusiva de administradores, fuera del flujo de propuestas. Solo pueden eliminarse entradas sin referencias; una entrada en uso produce rechazo sin cascadas. Son datos administrados, no nuevas fichas colaborativas. Autenticación y likes quedan fuera de este flujo.
+Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_types`, `contribution_roles` y ámbitos) tienen lectura pública y escritura exclusiva de administradores, fuera del flujo de propuestas. Solo pueden eliminarse entradas sin referencias; una entrada en uso produce rechazo sin cascadas. Son datos administrados, no nuevas fichas colaborativas. Autenticación queda fuera de este flujo. Los likes (`recording_likes`) quedan fuera del MVP: no tienen endpoints, escrituras, seed ni pruebas; se rediseñarán más adelante.
+
+Suspender y reactivar cuentas corresponde exclusivamente a administradores, con motivo obligatorio. Cada transición de estado de cuenta se audita en `user_status_changes`, en la misma transacción que actualiza `users.status`; la baja voluntaria la registra la propia cuenta y `deleted` es terminal. La suspensión revoca las sesiones de inmediato y respeta la protección del último administrador operativo. Esa auditoría no forma parte del historial público.
 
 ## 2. Tablas y restricciones
 
@@ -47,6 +50,7 @@ Los vocabularios compartidos (`countries`, `genres`, `platforms`, `organization_
 | `change_decisions` | Registro inmutable de decisiones y base observada; permite varios intentos de decisión, pero una sola aplicación efectiva. |
 | `entity_revisions` | Registro inmutable de operaciones aplicadas, sus valores reales anterior/nuevo y clave de la fila generada. |
 | `user_role_changes` | Usuario afectado, administrador (NULL exclusivamente en el bootstrap inicial por consola), roles anterior/nuevo, motivo y fecha. |
+| `user_status_changes` | Usuario afectado, actor (administrador o la propia cuenta en la baja voluntaria), estados anterior/nuevo, motivo y fecha. |
 
 Todos los IDs de las tablas nuevas son UUID salvo las referencias a `users.id`, que siguen siendo INTEGER; los pares de las tablas puente son sus PK. Todas las FKs editoriales usan `ON DELETE RESTRICT`. Conservar las cuentas mediante el estado `deleted` permite mantener autoría y revisores; no borrar en cascada su historial.
 
@@ -172,3 +176,7 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Autor cambia de username y otra cuenta toma el anterior | Las contribuciones existentes muestran el username vigente del autor original; sus IDs, contenido e historial no cambian ni se transfieren a la otra cuenta. |
 
 No hay backend ni base de datos ejecutable en este repositorio. Estos casos son criterios de aceptación del diseño, no pruebas de integración ya superadas. Si se implementa sobre datos existentes, habrá que crear raíces y revisiones iniciales con procedencia real o migración explícita; no atribuir autores o fuentes inventados.
+
+## 7. Cuentas suspendidas en el flujo editorial
+
+Los envíos abiertos de una cuenta suspendida siguen visibles y el personal puede resolverlos con normalidad. La cuenta no puede crear, enviar ni retirar propuestas mientras esté suspendida; sus borradores permanecen privados e intactos. Las decisiones tomadas antes por un moderador después suspendido conservan su validez.
