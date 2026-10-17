@@ -109,11 +109,22 @@ describe('Swagger and the OpenAPI document', () => {
         ['/v1/proposals/{id}/sources/{sourceId}', 'patch'],
         ['/v1/proposals/{id}/sources/{sourceId}', 'delete'],
         ['/v1/proposals/{id}/submission', 'post'],
+        ['/v1/proposal-changes/{id}/decisions', 'post'],
+        ['/v1/proposal-changes/{id}/decisions', 'get'],
       ]) {
         expect(document.paths[path][method].tags).toEqual(['editorial']);
         expect(document.paths[path][method].responses).toHaveProperty('401');
       }
       expect(document.paths['/v1/proposals/{id}/submission'].post.responses).toHaveProperty('200');
+      expect(document.paths['/v1/proposal-changes/{id}/decisions'].post.responses).toHaveProperty('201');
+      expect(document.paths['/v1/proposal-changes/{id}/decisions'].get.responses).toHaveProperty('403');
+    });
+
+    it('documents the public reads of identities', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+
+      expect(document.paths['/v1/identities/{id}'].get.security).toBeUndefined();
+      expect(document.paths['/v1/identities/{id}'].get.tags).toEqual(['catalog-identities']);
     });
   });
 

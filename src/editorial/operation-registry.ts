@@ -1,5 +1,6 @@
 import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
-import { EditorialEntityType } from './entities/editorial-entity.entity';
+import { EntityManager } from 'typeorm';
+import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
 import { IDENTITY_CREATION } from './identity-creation';
 
@@ -23,6 +24,14 @@ export interface VocabularyReference {
   path: string;
 }
 
+/** What applying an operation wrote, for its revision. */
+export interface AppliedOperation {
+  /** The value the target holds afterwards, as the domain rows store it. */
+  afterValue: ValueEnvelope;
+  /** The key of the row the operation generated, if any. */
+  resultKey: object | null;
+}
+
 export interface OperationDefinition {
   entityType: EditorialEntityType;
   operation: ChangeOperation;
@@ -34,6 +43,10 @@ export interface OperationDefinition {
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
+  /** The value the operation's target holds now, as the base a decision observes. */
+  read(manager: EntityManager, root: EditorialEntity): Promise<ValueEnvelope>;
+  /** Writes a valid proposed value to the domain tables, inside the transaction of the decision that applies it. */
+  apply(manager: EntityManager, root: EditorialEntity, value: unknown, now: Date): Promise<AppliedOperation>;
 }
 
 export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION];

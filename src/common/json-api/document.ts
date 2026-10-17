@@ -10,6 +10,7 @@ export interface ResourceIdentifier {
 export interface ResourceObject extends ResourceIdentifier {
   attributes?: Record<string, unknown>;
   relationships?: Record<string, { data: ResourceIdentifier | ResourceIdentifier[] | null }>;
+  meta?: Record<string, unknown>;
 }
 
 export interface JsonApiDocument<Data extends ResourceObject | ResourceObject[] | null> {
@@ -28,6 +29,16 @@ export function resourceDocument<T>(
 ): JsonApiDocument<ResourceObject> {
   const data = toResourceObject(schema, model, query.fields);
   return withIncluded({ jsonapi: JSON_API_VERSION, data, links: { self: query.path } }, schema, [model], query);
+}
+
+/** Builds the document for a few resources that one request produced together, without pagination. */
+export function resourcesDocument<T>(
+  schema: ResourceSchema<T>,
+  models: T[],
+  query: ResourceQuery,
+): JsonApiDocument<ResourceObject[]> {
+  const data = models.map((model) => toResourceObject(schema, model, query.fields));
+  return withIncluded({ jsonapi: JSON_API_VERSION, data, links: { self: query.path } }, schema, models, query);
 }
 
 /** Builds the document for one page of a collection, with pagination links and `meta.total`. */
@@ -63,6 +74,7 @@ function toResourceObject<T>(schema: ResourceSchema<T>, model: T, fields: Map<st
     .filter(([, , related]) => related !== undefined)
     .map(([name, relatedSchema, related]) => [name, { data: linkage(relatedSchema, related) }] as const);
   if (relationships.length > 0) object.relationships = Object.fromEntries(relationships);
+  if (schema.meta) object.meta = schema.meta(model);
 
   return object;
 }

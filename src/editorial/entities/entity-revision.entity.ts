@@ -44,7 +44,7 @@ export class EntityRevision {
   afterValue: ValueEnvelope;
 
   @Column({ name: 'result_key', type: 'jsonb', nullable: true })
-  resultKey: unknown;
+  resultKey: object | null;
 
   @Column({ name: 'applied_at', type: 'timestamptz' })
   appliedAt: Date;

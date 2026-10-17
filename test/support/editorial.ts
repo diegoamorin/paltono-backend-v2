@@ -154,3 +154,10 @@ export async function submitIdentityCreation(app: TestApp, accessToken: string) 
   await submitProposal(app, accessToken, ids.proposalId).expect(200);
   return ids;
 }
+
+/** POST /v1/proposal-changes/{id}/decisions */
+export function decideChange(app: TestApp, accessToken: string, changeId: string, attributes: object, query = '') {
+  return send(app, 'post', `/v1/proposal-changes/${changeId}/decisions${query}`, accessToken, {
+    data: { type: 'change-decisions', attributes },
+  });
+}

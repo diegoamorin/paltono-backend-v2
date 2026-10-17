@@ -1,3 +1,4 @@
+import { IdentityCreationValue as IdentityCreation, PartialDateValue as PartialDate, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { OperationDefinition, PayloadProblem } from './operation-registry';
 
 /*
@@ -72,18 +73,6 @@ const IDENTITY = {
   ],
 };
 
-interface PartialDate {
-  year: number;
-  month?: number;
-  day?: number;
-}
-
-interface IdentityCreation {
-  type: 'person' | 'organization';
-  person?: { birthDate?: string | null; deathDate?: string | null };
-  organization?: { founding?: PartialDate | null; dissolution?: PartialDate | null; originCountryId?: number | null };
-}
-
 export const IDENTITY_CREATION: OperationDefinition = {
   entityType: 'identity',
   operation: 'create_entity',
@@ -97,6 +86,17 @@ export const IDENTITY_CREATION: OperationDefinition = {
   references: (value) => {
     const countryId = (value as IdentityCreation).organization?.originCountryId;
     return countryId == null ? [] : [{ vocabulary: 'countries', id: countryId, path: '/value/organization/originCountryId' }];
+  },
+  read: async (manager, root) => {
+    const created = await findCreatedIdentity(manager, root.id);
+    return created ? { exists: true, value: created.value } : { exists: false };
+  },
+  apply: async (manager, root, value, now) => {
+    const created = await createIdentity(manager, root.id, value as IdentityCreation, now);
+    return {
+      afterValue: { exists: true, value: created.value },
+      resultKey: { id: created.identity.id, publicId: created.identity.publicId },
+    };
   },
 };
 

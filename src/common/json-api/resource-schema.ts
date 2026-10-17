@@ -8,6 +8,8 @@ export interface ResourceSchema<T> {
   id(model: T): string;
   attributes: Record<string, (model: T) => unknown>;
   relationships?: Record<string, RelationshipSchema<T>>;
+  /** Resource-level `meta`, outside sparse fieldsets. */
+  meta?(model: T): Record<string, unknown>;
 }
 
 /** A schema whose model type is irrelevant, for code that only reads names. */

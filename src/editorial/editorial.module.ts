@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsModule } from '../accounts/accounts.module';
+import { DecisionsController } from './decisions.controller';
+import { DecisionsService } from './decisions.service';
 import { EditorialEntitiesController } from './editorial-entities.controller';
 import { EditorialEntitiesService } from './editorial-entities.service';
 import { EditorialOperationsController } from './editorial-operations.controller';
@@ -18,8 +20,9 @@ import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity
 import { ProposalSource } from './entities/proposal-source.entity';
 
 /**
- * Editorial contributions: reservations, proposals, microchanges and their
- * sources. Every write to the catalog goes through this flow.
+ * Editorial contributions: reservations, proposals, microchanges, their
+ * sources and the decisions that apply them. Every write to the catalog goes
+ * through this flow.
  */
 @Module({
   imports: [
@@ -41,7 +44,8 @@ import { ProposalSource } from './entities/proposal-source.entity';
     ProposalsController,
     ProposalChangesController,
     ProposalSourcesController,
+    DecisionsController,
   ],
-  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService],
+  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService, DecisionsService],
 })
 export class EditorialModule {}

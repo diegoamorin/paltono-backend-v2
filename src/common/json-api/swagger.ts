@@ -129,6 +129,31 @@ export function ApiJsonApiResourceResponse(resource: Type, status = 200, meta?: 
   );
 }
 
+/** Documents a response holding the few resources one request produced, without pagination. */
+export function ApiJsonApiResourcesResponse(resource: Type, status = 200) {
+  return applyDecorators(
+    ApiExtraModels(resource, JsonApiVersion, JsonApiResourceLinks),
+    ApiResponse({
+      status,
+      description: STATUS_CODES[status],
+      content: {
+        [JSON_API_MEDIA_TYPE]: {
+          schema: {
+            type: 'object',
+            required: ['data'],
+            properties: {
+              jsonapi: { $ref: getSchemaPath(JsonApiVersion) },
+              data: { type: 'array', items: { $ref: getSchemaPath(resource) } },
+              included,
+              links: { $ref: getSchemaPath(JsonApiResourceLinks) },
+            },
+          },
+        },
+      },
+    }),
+  );
+}
+
 /** Documents a response holding one page of resources. */
 export function ApiJsonApiCollectionResponse(resource: Type) {
   return applyDecorators(
