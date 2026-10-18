@@ -79,6 +79,12 @@ export async function artistReferences(manager: EntityManager, catalogIdentityId
   );
   if (credited) references.push('El perfil artístico tiene créditos de presentación en lanzamientos; quítalos antes de quitar el perfil');
   if (onTracks) references.push('El perfil artístico tiene créditos de presentación en pistas; quítalos antes de quitar el perfil');
+  // Tours and events belong to the live-events module, whose roots own their announced artists.
+  const [{ announced }] = await manager.query(
+    'SELECT EXISTS (SELECT 1 FROM tour_artists WHERE artist_id = $1) OR EXISTS (SELECT 1 FROM event_artists WHERE artist_id = $1) AS announced',
+    [artistId],
+  );
+  if (announced) references.push('El perfil artístico está anunciado en tours o conciertos; quítalo de ellos antes de quitar el perfil');
   return references;
 }
 
