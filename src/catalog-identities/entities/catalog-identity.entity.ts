@@ -86,7 +86,7 @@ export class Person {
   gender: PersonGender | null;
 }
 
-const partialDateCheck = (prefix: string) =>
+export const partialDateCheck = (prefix: string) =>
   `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
 
 @Entity('organizations')

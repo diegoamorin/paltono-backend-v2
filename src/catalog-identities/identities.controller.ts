@@ -11,6 +11,7 @@ import {
 } from '../common/json-api/swagger';
 import { IdentitiesService } from './identities.service';
 import { IdentityResource, identitySchema } from './identity.resource';
+import { MembershipResource, membershipSchema } from './membership.resource';
 
 const INCLUDE = ['aliases', 'nationalities', 'originCountry', 'organizationTypes', 'platformLinks', 'platformLinks.platform', 'artist'];
 
@@ -21,6 +22,13 @@ const IDENTITIES_QUERY = collectionQuery(identitySchema, {
   sort: ['displayName', 'createdAt'],
   defaultSort: 'displayName',
   filters: ['q', 'type', 'hasArtistProfile', 'nationality', 'originCountry', 'organizationType'],
+});
+
+const MEMBERSHIPS_QUERY = collectionQuery(membershipSchema, {
+  include: ['organization', 'member', 'roles', 'roles.role'],
+  sort: ['joined', 'createdAt'],
+  defaultSort: 'joined',
+  filters: ['side'],
 });
 
 @ApiTags('catalog-identities')
@@ -43,6 +51,24 @@ export class IdentitiesController {
   async list(@JsonApiQuery(IDENTITIES_QUERY) query: CollectionQuery) {
     const { entries, total } = await this.identities.list(query);
     return collectionDocument(identitySchema, entries, total, query);
+  }
+
+  @Get(':id/memberships')
+  @ApiOperation({
+    summary: 'Listar las membresías de una identidad',
+    description:
+      'Membresías de la identidad como organización (`filter[side]=organization`: sus miembros) o como miembro ' +
+      '(`filter[side]=member`: las organizaciones a las que pertenece); sin el filtro, ambas. Cada una con sus roles por posición. ' +
+      'Un miembro retirado solo muestra su aviso; las membresías de una organización retirada forman parte de su contenido y no se listan. ' +
+      'Orden `joined` (por defecto, fechas desconocidas al final) o `-createdAt`.',
+  })
+  @ApiParam({ name: 'id', description: 'public_id de la identidad' })
+  @ApiJsonApiQuery(MEMBERSHIPS_QUERY)
+  @ApiJsonApiCollectionResponse(MembershipResource)
+  @ApiJsonApiErrorResponses(400, 404, 406)
+  async memberships(@Param('id') id: string, @JsonApiQuery(MEMBERSHIPS_QUERY) query: CollectionQuery) {
+    const { entries, total } = await this.identities.memberships(id, query);
+    return collectionDocument(membershipSchema, entries, total, query);
   }
 
   @Get(':id')

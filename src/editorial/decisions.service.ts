@@ -19,7 +19,7 @@ import { EntityRevision } from './entities/entity-revision.entity';
 import { ChangeStatus, ProposalChange, ValueEnvelope } from './entities/proposal-change.entity';
 import { ChangeDependency } from './entities/proposal-links.entity';
 import { ABSENT, OperationDefinition, RowKey, findOperation } from './operation-registry';
-import { finalStateProblems, lockTargetedRoots, revalidateChange } from './proposal-changes.service';
+import { finalStateProblems, lockTargetedRoots, revalidateChange, rootReferencesOf } from './proposal-changes.service';
 import { loadContents, submitDraft } from './proposals.service';
 import { resolveKey } from './row-references';
 
@@ -481,6 +481,19 @@ async function applyOne(context: DecisionContext, change: ProposalChange, depend
     throw new JsonApiException(HttpStatus.CONFLICT, [
       { code: 'entity_withdrawn', detail: 'The root is withdrawn; its microchanges cannot apply, but can be rejected or withdrawn' },
     ]);
+  }
+  // A relation only points to published roots; a reservation's creation is a dependency, checked before.
+  for (const reference of rootReferencesOf(definition, change.proposedValue)) {
+    const referenced = await manager.findOneByOrFail(EditorialEntity, { id: reference.entityId.toLowerCase() });
+    if (referenced.publicationStatus !== 'published') {
+      throw new JsonApiException(HttpStatus.CONFLICT, [
+        {
+          code: 'referenced_entity_unpublished',
+          detail: `The root at proposedValue${reference.path} is ${referenced.publicationStatus}; the relation cannot point to it`,
+          meta: { changeId: change.id, entityId: referenced.id },
+        },
+      ]);
+    }
   }
   // The payload and its references are checked again on the state this transaction sees.
   const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');

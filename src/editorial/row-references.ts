@@ -3,7 +3,7 @@ import { identityIdOf } from '../catalog-identities/identity-relations';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
-import { RowKey } from './operation-registry';
+import { RootReference, RowKey } from './operation-registry';
 
 /*
  * References inside a target key. A member names a dependent row by its
@@ -75,6 +75,56 @@ export async function checkReferences(
     }
   }
   return { problems, dependsOn };
+}
+
+/**
+ * Checks the roots a valid value names besides the microchange's own and
+ * returns the creations of the proposal they make it depend on. Each one is a
+ * root of the expected type, published or reserved and created by this same
+ * proposal; a withdrawn root accepts no new relation. Paths are inside
+ * `proposedValue`.
+ */
+export async function checkRootReferences(
+  manager: EntityManager,
+  change: Pick<ProposalChange, 'proposalId' | 'entityId'>,
+  references: RootReference[],
+): Promise<{ problems: ReferenceProblem[]; dependsOn: string[] }> {
+  const problems: ReferenceProblem[] = [];
+  const dependsOn: string[] = [];
+  for (const { entityId, entityType, path } of references) {
+    const id = entityId.toLowerCase();
+    const member = `proposedValue${path}`;
+    if (id === change.entityId) {
+      problems.push({ code: 'invalid_reference', detail: `${member} must name another root than the microchange's`, member });
+      continue;
+    }
+    const referenced = await manager.findOneBy(EditorialEntity, { id });
+    const creation =
+      referenced?.publicationStatus === 'reserved'
+        ? await manager.findOneBy(ProposalChange, { proposalId: change.proposalId, entityId: id, operation: 'create_entity' })
+        : null;
+    if (!referenced || referenced.entityType !== entityType || (referenced.publicationStatus === 'reserved' && !creation)) {
+      const detail = `${member} names no published ${entityType} nor a reservation this proposal creates`;
+      problems.push({ code: 'invalid_reference', detail, member });
+    } else if (referenced.publicationStatus === 'withdrawn') {
+      problems.push({ code: 'entity_withdrawn', detail: `${member} names a withdrawn root, which accepts no new relations`, member });
+    } else if (creation) {
+      dependsOn.push(creation.id);
+    }
+  }
+  return { problems, dependsOn };
+}
+
+/** A proposed value as it is stored: the UUIDs of its references in lower case, like those of target keys. */
+export function normalizeReferences(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeReferences);
+  if (typeof value !== 'object' || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([name, member]) => [
+      name,
+      (name === 'entity_id' || name === 'change_id') && typeof member === 'string' ? member.toLowerCase() : normalizeReferences(member),
+    ]),
+  );
 }
 
 /**
