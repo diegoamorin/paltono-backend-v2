@@ -10,8 +10,8 @@ const URL_CHECK = (column: string) => `${column} ~* '^https?://[^\\s]+$'`;
  * each one owns (ERDiagram.mdj). Only applied microchanges write them; the
  * countries and dates of a tour are derived from its published events.
  */
-export class CreateToursAndEvents1792972800000 implements MigrationInterface {
-  name = 'CreateToursAndEvents1792972800000';
+export class CreateToursAndEvents1793016000000 implements MigrationInterface {
+  name = 'CreateToursAndEvents1793016000000';
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`CREATE TYPE tour_status AS ENUM ('announced', 'scheduled', 'in_progress', 'postponed', 'cancelled', 'completed')`);

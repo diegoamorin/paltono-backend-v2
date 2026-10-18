@@ -66,6 +66,18 @@ export interface KeyRoot {
 }
 
 /**
+ * A member of a target key that names a row of another relation of the same
+ * root, such as the track of a track credit: by its id, or by the insertion of
+ * the same proposal that creates it, `{"change_id": …}`.
+ */
+export interface KeyRow {
+  /** The relation whose insertion may stand for the row. */
+  targetPath: string;
+  /** The member of that insertion's result key that holds the row's id. */
+  resultMember: string;
+}
+
+/**
  * A problem with a valid payload on the root's current data. `member` names
  * what is wrong: `targetPath` or a path inside `proposedValue`.
  */
@@ -125,6 +137,8 @@ export interface OperationDefinition {
    * root the value names: published, or a reservation this proposal creates.
    */
   keyRoots?: Record<string, KeyRoot>;
+  /** Members of the target key that name a row of another relation of the root, by name. */
+  keyRows?: Record<string, KeyRow>;
   /** Vocabulary entries the target key refers to, with paths inside `targetKey`. */
   keyReferences?(targetKey: object): VocabularyReference[];
   /**

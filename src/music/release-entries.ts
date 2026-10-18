@@ -2,6 +2,9 @@ import { EntityManager, In } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { ReleaseContribution, Track } from './entities/track.entity';
+import { creditEntries } from './music-entries';
+import { trackEntries } from './track-entries';
 import { releaseGroupDates, releaseTimes } from './release-dates';
 import { ReleaseArtistCreditEntry, ReleaseEntry, ReleaseGroupEntry } from './release.resource';
 
@@ -62,13 +65,56 @@ export async function releaseEntries(manager: EntityManager, releases: Release[]
   const times = await releaseTimes(manager, releases.map(({ id }) => id), now);
   const groupIds = [...new Set(releases.map(({ releaseGroupId }) => releaseGroupId))];
   const groups = await releaseGroupEntries(manager, await manager.find(ReleaseGroup, { where: { id: In(groupIds) }, relations: { editorialEntity: true } }), now, false);
-  return releases.map((release) => ({
+  const explicit = await explicitReleaseIds(manager, releases.map(({ id }) => id));
+  const plain = releases.map((release) => ({
     release,
     times: times.get(release.id)!,
+    isExplicit: explicit.has(release.id),
     group: groups.find(({ group }) => group.id === release.releaseGroupId)!,
-    // Tracks and the credits of a release arrive with the tracks of the catalog.
-    ...(withRelations ? { relations: notWithdrawn(release) ? { contributions: [], tracks: [] } : null } : {}),
   }));
+  if (!withRelations) return plain;
+
+  const ids = releases.filter(notWithdrawn).map(({ id }) => id);
+  if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
+  const contributions = await creditEntries(
+    manager,
+    'release',
+    await manager.find(ReleaseContribution, { where: { releaseId: In(ids) }, order: { position: 'ASC', id: 'ASC' } }),
+  );
+  const tracks = await trackEntries(
+    manager,
+    await manager.find(Track, { where: { releaseId: In(ids) }, order: { discNumber: 'ASC', trackNumber: 'ASC' } }),
+    now,
+    false,
+  );
+  return plain.map((entry) => {
+    const { release } = entry;
+    if (!ids.includes(release.id)) return { ...entry, relations: null };
+    return {
+      ...entry,
+      relations: {
+        contributions: contributions.filter(({ credit }) => (credit as ReleaseContribution).releaseId === release.id),
+        tracks: tracks.filter(({ track }) => track.releaseId === release.id),
+      },
+    };
+  });
+}
+
+/**
+ * The releases whose content is explicit: some track uses an explicit
+ * recording. Derived on each read; a withdrawn recording shows nothing of its
+ * content, so it does not count.
+ */
+async function explicitReleaseIds(manager: EntityManager, releaseIds: number[]): Promise<Set<number>> {
+  const rows: { releaseId: number }[] = await manager.query(
+    `SELECT DISTINCT track.release_id AS "releaseId"
+     FROM tracks track
+     JOIN recordings recording ON recording.id = track.recording_id
+     JOIN editorial_entities root ON root.id = recording.editorial_entity_id
+     WHERE track.release_id = ANY($1) AND recording.is_explicit AND root.publication_status = 'published'`,
+    [releaseIds],
+  );
+  return new Set(rows.map(({ releaseId }) => releaseId));
 }
 
 /** Presentation credits with their artists and identities, in the given order. */

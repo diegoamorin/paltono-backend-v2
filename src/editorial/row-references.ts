@@ -2,11 +2,11 @@ import { EntityManager } from 'typeorm';
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { eventIdOf, tourIdOf } from '../live-events/live-events';
 import { recordingIdOf } from '../music/recordings';
-import { releaseGroupIdOf } from '../music/releases';
+import { releaseGroupIdOf, releaseIdOf } from '../music/releases';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
-import { KeyRoot, RootReference, RowKey } from './operation-registry';
+import { OperationDefinition, RootReference, RowKey } from './operation-registry';
 
 /*
  * References inside a target key. A member names a dependent row by its
@@ -14,7 +14,10 @@ import { KeyRoot, RootReference, RowKey } from './operation-registry';
  * proposal that creates it: `{"change_id": …}`. A root is always named by its
  * editorial UUID, `{"entity_id": …}`, because its domain ids are not public:
  * the microchange's own root or, in a member its operation declares (`keyRoots`),
- * another root, which is checked like a root its value names.
+ * another root, which is checked like a root its value names. A member its
+ * operation declares in `keyRows` names a row of another relation of the same
+ * root, such as the track of a track credit, by its id or by the insertion
+ * that creates it.
  * A reference to something not created yet makes the microchange depend on
  * that creation. The submitted references never change: the server translates
  * them to the domain's keys each time it applies.
@@ -30,11 +33,15 @@ export interface ReferenceProblem {
 
 type ReferencingChange = Pick<ProposalChange, 'id' | 'proposalId' | 'entityId' | 'targetPath'> & { targetKey: object };
 
+/** What an operation declares about the members of its target key. */
+export type KeyMembers = Pick<OperationDefinition, 'keyRoots' | 'keyRows'>;
+
 /** The domain id of each root type a target key can name, once its creation is applied. */
 const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, entityId: string) => Promise<number | null>>> = {
   identity: identityIdOf,
   recording: recordingIdOf,
   release_group: releaseGroupIdOf,
+  release: releaseIdOf,
   tour: tourIdOf,
   event: eventIdOf,
 };
@@ -42,14 +49,15 @@ const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, ent
 /**
  * Checks the references of a valid target key and returns the microchanges of
  * the proposal they make it depend on. A row not created yet is an insertion
- * of the same relation on the same root; a root is the microchange's own, and
- * a reservation is named only inside the proposal that creates it.
+ * on the same root of the same relation, or of the one a `keyRows` member
+ * names; a root is the microchange's own, and a reservation is named only
+ * inside the proposal that creates it.
  */
 export async function checkReferences(
   manager: EntityManager,
   change: ReferencingChange,
   root: EditorialEntity,
-  keyRoots: Record<string, KeyRoot> = {},
+  { keyRoots = {}, keyRows = {} }: KeyMembers = {},
 ): Promise<{ problems: ReferenceProblem[]; dependsOn: string[] }> {
   const problems: ReferenceProblem[] = [];
   const dependsOn: string[] = [];
@@ -64,9 +72,10 @@ export async function checkReferences(
         insertion.id !== change.id &&
         insertion.operation === 'add_relation' &&
         insertion.entityId === change.entityId &&
-        insertion.targetPath === change.targetPath;
+        insertion.targetPath === (keyRows[name]?.targetPath ?? change.targetPath);
       if (!valid) {
-        problems.push({ code: 'invalid_reference', detail: `${at} must name an insertion of the same relation in this proposal`, member: at });
+        const relation = keyRows[name] ? `of ${keyRows[name].targetPath} on the same root` : 'of the same relation';
+        problems.push({ code: 'invalid_reference', detail: `${at} must name an insertion ${relation} in this proposal`, member: at });
       } else {
         dependsOn.push(insertion.id);
       }
@@ -89,7 +98,7 @@ export async function checkReferences(
 }
 
 /** The other roots the members of a valid target key name, as its operation declares them. */
-export function keyRootReferences(keyRoots: Record<string, KeyRoot> | undefined, targetKey: object | null): RootReference[] {
+export function keyRootReferences(keyRoots: KeyMembers['keyRoots'], targetKey: object | null): RootReference[] {
   if (!keyRoots || targetKey === null) return [];
   return Object.entries(keyRoots).flatMap(([name, { entityType }]) => {
     const member = (targetKey as Record<string, KeyMember | undefined>)[name];
@@ -153,13 +162,13 @@ export function normalizeReferences(value: unknown): unknown {
  * A valid target key translated to the domain's keys: an insertion's row by
  * the key its revision kept, a root by its domain id. `key` is null while
  * something it names is not created yet; `pendingInsertions` are the
- * insertions among those.
+ * insertions of the same relation among those, whose row the key selects.
  */
 export async function resolveKey(
   manager: EntityManager,
   root: EditorialEntity,
   targetKey: object,
-  keyRoots: Record<string, KeyRoot> = {},
+  { keyRoots = {}, keyRows = {} }: KeyMembers = {},
 ): Promise<{ key: RowKey | null; pendingInsertions: string[] }> {
   const key: RowKey = {};
   const pendingInsertions: string[] = [];
@@ -170,8 +179,8 @@ export async function resolveKey(
       resolved = member;
     } else if ('change_id' in member) {
       const revision = await manager.findOneBy(EntityRevision, { changeId: member.change_id.toLowerCase() });
-      resolved = ((revision?.resultKey as RowKey | null) ?? {})[name] ?? null;
-      if (resolved === null) pendingInsertions.push(member.change_id.toLowerCase());
+      resolved = ((revision?.resultKey as RowKey | null) ?? {})[keyRows[name]?.resultMember ?? name] ?? null;
+      if (resolved === null && !(name in keyRows)) pendingInsertions.push(member.change_id.toLowerCase());
     } else if (name in keyRoots) {
       resolved = await keyRoots[name].idOf(manager, member.entity_id.toLowerCase());
     } else {
@@ -197,9 +206,14 @@ export function normalizeKey(targetKey: unknown): unknown {
   );
 }
 
-/** Whether a valid target key names a root, as only a reservation's own creation can let it be changed. */
-export function namesRoot(targetKey: object | null): boolean {
-  return members(targetKey ?? {}).some(([, member]) => typeof member === 'object' && 'entity_id' in member);
+/**
+ * Whether a valid target key names the microchange's root, or a row an
+ * insertion of the proposal creates on it, as only a reservation's own
+ * creation can let it be changed. Another root a `keyRoots` member names does
+ * not count.
+ */
+export function namesRoot(targetKey: object | null, { keyRoots = {} }: KeyMembers = {}): boolean {
+  return members(targetKey ?? {}).some(([name, member]) => typeof member === 'object' && ('change_id' in member || !(name in keyRoots)));
 }
 
 function members(targetKey: object): [string, KeyMember][] {

@@ -2,6 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+// music.resource and release.resource import each other through track.resource; entering through release.resource keeps that cycle safe.
+import '../music/release.resource';
 import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN } from '../music/music.resource';
 import { COUNTRIES } from '../vocabularies/countries';
 import { Country } from '../vocabularies/entities/country.entity';

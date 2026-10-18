@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource, SelectQueryBuilder } from 'typeorm';
+import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
@@ -26,13 +27,14 @@ const SORT_COLUMNS: Record<string, string[]> = {
 export class RecordingsService {
   constructor(
     private readonly dataSource: DataSource,
+    private readonly clock: Clock,
     private readonly works: WorksService,
   ) {}
 
   async show(publicId: string): Promise<RecordingEntry> {
     const recording = await this.dataSource.manager.findOne(Recording, { where: { publicId }, relations: { editorialEntity: true } });
     if (!recording) throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'recording_not_found', detail: 'The recording does not exist' }]);
-    return (await recordingEntries(this.dataSource.manager, [recording]))[0];
+    return (await recordingEntries(this.dataSource.manager, [recording], this.clock.now()))[0];
   }
 
   /** Published recordings only: a withdrawn one is reached by its id. */
@@ -65,8 +67,20 @@ export class RecordingsService {
         { work },
       );
     }
-    // Artists are credited on tracks, which arrive with the editions of the catalog; until then no recording has one.
-    if (artist !== undefined) builder.andWhere('false');
+    // Artists are credited on the tracks of published releases that use the recording.
+    if (artist !== undefined) {
+      builder.andWhere(
+        `EXISTS (
+          SELECT 1 FROM tracks track
+          JOIN releases release ON release.id = track.release_id
+          JOIN editorial_entities release_root ON release_root.id = release.editorial_entity_id
+          JOIN track_artist_credits credit ON credit.track_id = track.id
+          JOIN artists credited ON credited.id = credit.artist_id
+          WHERE track.recording_id = recording.id AND release_root.publication_status = 'published' AND credited.public_id = :artist
+        )`,
+        { artist },
+      );
+    }
     if (year !== undefined) {
       if (!/^\d{1,4}$/.test(year)) throw badFilter('filter[year]', 'must be a year from 1 to 9999');
       builder.andWhere('recording.recording_year = :year', { year: Number(year) });
@@ -111,7 +125,7 @@ export class RecordingsService {
     }
     const { skip, take } = pageWindow(query);
     const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
-    return { entries: await recordingEntries(this.dataSource.manager, page), total };
+    return { entries: await recordingEntries(this.dataSource.manager, page, this.clock.now()), total };
   }
 }
 

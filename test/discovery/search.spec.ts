@@ -59,6 +59,15 @@ describe('global search (S1)', () => {
     await publishRoot('deluxe', 'release', 'releases', { releaseGroup: { entity_id: roots.bornPink }, title: 'BORN PINK (Pink Venom Edition)', editionName: 'Deluxe' });
     await publishRoot('shutDown', 'work', 'works', { title: 'Shut Down' });
     await publishRoot('shutDownRecording', 'recording', 'recordings', { title: 'Shut Down' });
+    await publish([
+      {
+        entityId: roots.deluxe,
+        operation: 'add_relation',
+        targetPath: 'tracks',
+        targetKey: { release_id: { entity_id: roots.deluxe } },
+        proposedValue: present({ recording: { entity_id: roots.shutDownRecording }, discNumber: 1, trackNumber: 1, title: 'Shut Down (Remix Ver.)' }),
+      },
+    ]);
     await publishRoot('tour', 'tour', 'tours', { title: 'BORN PINK World Tour', status: 'completed' });
     await publishRoot('event', 'event', 'events', { title: 'BORN PINK in Seoul', status: 'performed' });
 
@@ -99,6 +108,10 @@ describe('global search (S1)', () => {
     expect(await search('filter[q]=shut%20down&filter[type]=works')).toEqual([`works:${publicIds.shutDown}`]);
     expect((await search('filter[q]=shut%20down')).sort()).toEqual([`recordings:${publicIds.shutDownRecording}`, `works:${publicIds.shutDown}`].sort());
     expect(await search('filter[q]=blackpink&filter[type]=artists,tours')).toEqual([`artists:${publicIds.blackpinkArtist}`]);
+  });
+
+  it('finds a recording, never a track, by the title of one of its tracks', async () => {
+    expect(await search('filter[q]=remix%20ver')).toEqual([`recordings:${publicIds.shutDownRecording}`]);
   });
 
   it('excludes reservations and withdrawn entries', async () => {
