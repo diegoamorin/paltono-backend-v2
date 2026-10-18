@@ -62,7 +62,7 @@ const content =
 
 const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
 
-const creditAttributes = {
+export const creditAttributes = {
   creditedAs: ({ credit }: CreditEntry) => credit.creditedAs,
   position: ({ credit }: CreditEntry) => credit.position,
   details: ({ credit }: CreditEntry) => credit.details,
@@ -70,7 +70,7 @@ const creditAttributes = {
   sourceUrl: ({ credit }: CreditEntry) => credit.sourceUrl,
 };
 
-const creditRelationships = {
+export const creditRelationships = {
   identity: { schema: () => identitySchema, get: ({ identity }: CreditEntry) => identity },
   role: { schema: () => CONTRIBUTION_ROLES.schema, get: ({ role }: CreditEntry) => role },
 };
@@ -163,9 +163,9 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
 
 // Swagger descriptions of the resource objects.
 
-const WITHDRAWN = 'Ausente en una ficha retirada';
+export const WITHDRAWN = 'Ausente en una ficha retirada';
 
-class PartialDate {
+export class PartialDate {
   @ApiProperty({ example: 2021 })
   year: number;
 
@@ -176,17 +176,17 @@ class PartialDate {
   day: number | null;
 }
 
-class EntryMeta {
+export class EntryMeta {
   @ApiProperty({ format: 'uuid', description: 'UUID editorial con el que se proponen cambios a la ficha' })
   editorialEntityId: string;
 }
 
-class ToOneLinkage {
+export class ToOneLinkage {
   @ApiProperty({ type: ResourceIdentifier, nullable: true })
   data: ResourceIdentifier | null;
 }
 
-class ToManyLinkage {
+export class ToManyLinkage {
   @ApiProperty({ type: [ResourceIdentifier] })
   data: ResourceIdentifier[];
 }
