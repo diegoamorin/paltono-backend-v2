@@ -1,10 +1,13 @@
 import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
+import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Country } from '../vocabularies/entities/country.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
 import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
+import { ARTIST_CHANGES } from './artist-changes';
+import { MEMBERSHIP_CHANGES } from './membership-changes';
 import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
@@ -24,12 +27,24 @@ export interface PayloadProblem {
 }
 
 /** The entity behind each vocabulary a payload or a target key may refer to. */
-export const VOCABULARIES = { countries: Country, organization_types: OrganizationType, platforms: Platform } as const;
+export const VOCABULARIES = {
+  countries: Country,
+  organization_types: OrganizationType,
+  platforms: Platform,
+  contribution_roles: ContributionRole,
+} as const;
 
 /** A vocabulary entry a payload or a target key refers to, which must exist. */
 export interface VocabularyReference {
   vocabulary: keyof typeof VOCABULARIES;
   id: number;
+  path: string;
+}
+
+/** A root a payload names, `{"entity_id": …}`, at a JSON Pointer path inside the proposed envelope. */
+export interface RootReference {
+  entityId: string;
+  entityType: EditorialEntityType;
   path: string;
 }
 
@@ -81,6 +96,12 @@ export interface OperationDefinition {
    * when the value has none.
    */
   naturalKey?(value: unknown): object | undefined;
+  /**
+   * Other roots of the catalog a valid value names by their editorial UUID,
+   * such as the member of a membership. Each one is published, or a
+   * reservation this proposal creates, which the microchange then depends on.
+   */
+  rootReferences?(value: unknown): RootReference[];
   /** Vocabulary entries the target key refers to, with paths inside `targetKey`. */
   keyReferences?(targetKey: object): VocabularyReference[];
   /**
@@ -109,6 +130,8 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   IDENTITY_CREATION,
   ...IDENTITY_FIELD_CHANGES,
   ...IDENTITY_RELATION_CHANGES,
+  ...ARTIST_CHANGES,
+  ...MEMBERSHIP_CHANGES,
   withdrawalOf('identity'),
 ];
 

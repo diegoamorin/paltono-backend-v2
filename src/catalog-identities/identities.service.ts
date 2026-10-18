@@ -5,6 +5,8 @@ import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
 import { Country } from '../vocabularies/entities/country.entity';
+import { Artist, OrganizationMembership, OrganizationMembershipRole } from './entities/artist.entity';
+import { MembershipEntry } from './membership.resource';
 import { CATALOG_IDENTITY_TYPES, CatalogIdentity, Organization, Person } from './entities/catalog-identity.entity';
 import {
   CatalogIdentityAlias,
@@ -36,6 +38,44 @@ export class IdentitiesService {
   }
 
   /**
+   * The memberships of an identity as organization, as member or both. Those
+   * of a withdrawn organization are part of its withdrawn content and never
+   * listed; a withdrawn member shows its notice.
+   */
+  async memberships(publicId: string, query: CollectionQuery): Promise<{ entries: MembershipEntry[]; total: number }> {
+    const manager = this.dataSource.manager;
+    const identity = await manager.findOneBy(CatalogIdentity, { publicId });
+    if (!identity) {
+      throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'identity_not_found', detail: 'The identity does not exist' }]);
+    }
+    const { side } = query.filter;
+    if (side !== undefined) requireOneOf('filter[side]', side, ['organization', 'member']);
+    const builder = manager
+      .createQueryBuilder(OrganizationMembership, 'membership')
+      .innerJoin(CatalogIdentity, 'organization', 'organization.id = membership.organization_id')
+      .innerJoin('organization.editorialEntity', 'organization_root')
+      .where(`organization_root.publication_status = 'published'`);
+    const sides = {
+      organization: 'membership.organization_id = :id',
+      member: 'membership.member_identity_id = :id',
+    };
+    builder.andWhere(side === undefined ? `(${sides.organization} OR ${sides.member})` : sides[side as keyof typeof sides], { id: identity.id });
+    for (const { field, direction } of query.sort) {
+      if (field === 'joined') {
+        // Unknown dates last, and a less precise date before the more precise ones within it.
+        builder.addOrderBy('membership.joined_year', direction, direction === 'ASC' ? 'NULLS LAST' : 'NULLS FIRST');
+        builder.addOrderBy('membership.joined_month', direction, direction === 'ASC' ? 'NULLS FIRST' : 'NULLS LAST');
+        builder.addOrderBy('membership.joined_day', direction, direction === 'ASC' ? 'NULLS FIRST' : 'NULLS LAST');
+      } else {
+        builder.addOrderBy(field === 'createdAt' ? 'membership.created_at' : 'membership.id', direction);
+      }
+    }
+    const { skip, take } = pageWindow(query);
+    const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
+    return { entries: await loadMemberships(manager, page), total };
+  }
+
+  /**
    * Published identities only: a withdrawn entry is reached by its id, but a
    * list would sort and filter it by the content it no longer shows.
    */
@@ -60,8 +100,8 @@ export class IdentitiesService {
     }
     if (hasArtistProfile !== undefined) {
       requireOneOf('filter[hasArtistProfile]', hasArtistProfile, ['true', 'false']);
-      // Artist profiles arrive with the artists of the catalog; until then no identity has one.
-      if (hasArtistProfile === 'true') builder.andWhere('false');
+      const has = hasArtistProfile === 'true' ? 'EXISTS' : 'NOT EXISTS';
+      builder.andWhere(`${has} (SELECT 1 FROM artists artist WHERE artist.catalog_identity_id = identity.id)`);
     }
     if (nationality !== undefined) {
       builder.andWhere(
@@ -98,12 +138,31 @@ export class IdentitiesService {
   }
 }
 
+/** The given memberships with both identities and their roles, each role with its vocabulary entry. */
+async function loadMemberships(manager: EntityManager, memberships: OrganizationMembership[]): Promise<MembershipEntry[]> {
+  if (memberships.length === 0) return [];
+  const identityIds = [...new Set(memberships.flatMap(({ organizationId, memberIdentityId }) => [organizationId, memberIdentityId]))];
+  const identities = await loadEntries(manager, await manager.find(CatalogIdentity, { where: { id: In(identityIds) }, relations: { editorialEntity: true } }));
+  const roles = await manager.find(OrganizationMembershipRole, {
+    where: { organizationMembershipId: In(memberships.map(({ id }) => id)) },
+    relations: { role: { allowedScopes: true } },
+    order: { position: 'ASC', contributionRoleId: 'ASC' },
+  });
+  const entryOf = (id: number) => identities.find(({ identity }) => identity.id === id)!;
+  return memberships.map((membership) => ({
+    membership,
+    organization: entryOf(membership.organizationId),
+    member: entryOf(membership.memberIdentityId),
+    roles: roles.filter(({ organizationMembershipId }) => organizationMembershipId === membership.id),
+  }));
+}
+
 /** The given identities, with their editorial roots loaded, as entries with their subtypes and relations. */
-async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
+export async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
   // A withdrawn entry only shows its notice: its subtype and relations are not even read.
   const ids = identities.filter(({ editorialEntity }) => editorialEntity!.publicationStatus !== 'withdrawn').map(({ id }) => id);
   if (ids.length === 0) return identities.map((identity) => ({ identity, person: null, organization: null, relations: null }));
-  const [people, organizations, aliases, nationalities, assignments, platformLinks] = await Promise.all([
+  const [people, organizations, aliases, nationalities, assignments, platformLinks, artists] = await Promise.all([
     manager.findBy(Person, { catalogIdentityId: In(ids) }),
     manager.find(Organization, { where: { catalogIdentityId: In(ids) }, relations: { originCountry: true } }),
     manager.find(CatalogIdentityAlias, { where: { catalogIdentityId: In(ids) }, order: { sortOrder: 'ASC', id: 'ASC' } }),
@@ -114,6 +173,7 @@ async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]
       order: { organizationTypeId: 'ASC' },
     }),
     manager.find(CatalogIdentityPlatformLink, { where: { catalogIdentityId: In(ids) }, relations: { platform: true }, order: { id: 'ASC' } }),
+    manager.findBy(Artist, { catalogIdentityId: In(ids) }),
   ]);
   return identities.map((identity) => {
     if (!ids.includes(identity.id)) return { identity, person: null, organization: null, relations: null };
@@ -126,7 +186,11 @@ async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]
       originCountry: organization?.originCountry ?? null,
       organizationTypes: own(assignments, (row) => row.organizationId).map(({ organizationType }) => organizationType!),
       platformLinks: own(platformLinks, (row) => row.catalogIdentityId),
+      artist: null,
     };
-    return { identity, person: own(people, (row) => row.catalogIdentityId)[0] ?? null, organization, relations };
+    const entry: IdentityEntry = { identity, person: own(people, (row) => row.catalogIdentityId)[0] ?? null, organization, relations };
+    const artist = own(artists, (row) => row.catalogIdentityId)[0];
+    if (artist) relations.artist = { artist, identity: entry };
+    return entry;
   });
 }
