@@ -3,6 +3,7 @@ import { DataSource, EntityManager, In } from 'typeorm';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { containsPattern } from '../database/like-pattern';
 import { Country } from '../vocabularies/entities/country.entity';
 import { CATALOG_IDENTITY_TYPES, CatalogIdentity, Organization, Person } from './entities/catalog-identity.entity';
 import {
@@ -31,7 +32,7 @@ export class IdentitiesService {
     if (!identity) {
       throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'identity_not_found', detail: 'The identity does not exist' }]);
     }
-    return (await entries(manager, [identity]))[0];
+    return (await loadEntries(manager, [identity]))[0];
   }
 
   /**
@@ -45,13 +46,12 @@ export class IdentitiesService {
       .innerJoinAndSelect('identity.editorialEntity', 'root')
       .where(`root.publication_status = 'published'`);
     if (q !== undefined) {
-      const pattern = `%${q.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
       builder.andWhere(
         `(unaccent(lower(identity.display_name)) LIKE unaccent(lower(:pattern)) OR EXISTS (
           SELECT 1 FROM catalog_identity_aliases alias
           WHERE alias.catalog_identity_id = identity.id AND unaccent(lower(alias.alias)) LIKE unaccent(lower(:pattern))
         ))`,
-        { pattern },
+        { pattern: containsPattern(q) },
       );
     }
     if (type !== undefined) {
@@ -94,12 +94,12 @@ export class IdentitiesService {
     for (const { field, direction } of query.sort) builder.addOrderBy(SORT_COLUMNS[field], direction);
     const { skip, take } = pageWindow(query);
     const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
-    return { entries: await entries(this.dataSource.manager, page), total };
+    return { entries: await loadEntries(this.dataSource.manager, page), total };
   }
 }
 
 /** The given identities, with their editorial roots loaded, as entries with their subtypes and relations. */
-async function entries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
+async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
   // A withdrawn entry only shows its notice: its subtype and relations are not even read.
   const ids = identities.filter(({ editorialEntity }) => editorialEntity!.publicationStatus !== 'withdrawn').map(({ id }) => id);
   if (ids.length === 0) return identities.map((identity) => ({ identity, person: null, organization: null, relations: null }));
@@ -117,14 +117,16 @@ async function entries(manager: EntityManager, identities: CatalogIdentity[]): P
   ]);
   return identities.map((identity) => {
     if (!ids.includes(identity.id)) return { identity, person: null, organization: null, relations: null };
-    const organization = organizations.find(({ catalogIdentityId }) => catalogIdentityId === identity.id) ?? null;
+    /** The rows of this identity, whose id the given column holds. */
+    const own = <T>(rows: T[], ownerId: (row: T) => number) => rows.filter((row) => ownerId(row) === identity.id);
+    const organization = own(organizations, (row) => row.catalogIdentityId)[0] ?? null;
     const relations: IdentityRelations = {
-      aliases: aliases.filter(({ catalogIdentityId }) => catalogIdentityId === identity.id),
-      nationalities: nationalities.filter(({ personId }) => personId === identity.id).map(({ country }) => country as Country),
+      aliases: own(aliases, (row) => row.catalogIdentityId),
+      nationalities: own(nationalities, (row) => row.personId).map(({ country }) => country as Country),
       originCountry: organization?.originCountry ?? null,
-      organizationTypes: assignments.filter(({ organizationId }) => organizationId === identity.id).map(({ organizationType }) => organizationType!),
-      platformLinks: platformLinks.filter(({ catalogIdentityId }) => catalogIdentityId === identity.id),
+      organizationTypes: own(assignments, (row) => row.organizationId).map(({ organizationType }) => organizationType!),
+      platformLinks: own(platformLinks, (row) => row.catalogIdentityId),
     };
-    return { identity, person: people.find(({ catalogIdentityId }) => catalogIdentityId === identity.id) ?? null, organization, relations };
+    return { identity, person: own(people, (row) => row.catalogIdentityId)[0] ?? null, organization, relations };
   });
 }

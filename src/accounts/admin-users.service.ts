@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { pageWindow } from '../common/json-api/document';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { containsPattern } from '../database/like-pattern';
 import { accountNotFound } from './administration';
 import { USER_ROLES, USER_STATUSES, User } from './entities/user.entity';
 
@@ -24,7 +25,7 @@ export class AdminUsersService {
     const { q, role, status, emailVerified } = query.filter;
 
     if (q !== undefined) {
-      const pattern = `%${q.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+      const pattern = containsPattern(q);
       builder.andWhere('(user.username ILIKE :pattern OR user.email ILIKE :pattern OR user.display_name ILIKE :pattern)', {
         pattern,
       });

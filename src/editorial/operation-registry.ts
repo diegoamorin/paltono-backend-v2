@@ -1,5 +1,8 @@
 import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
+import { Country } from '../vocabularies/entities/country.entity';
+import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
+import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
 import { withdrawalOf } from './entity-withdrawal';
@@ -20,9 +23,12 @@ export interface PayloadProblem {
   detail: string;
 }
 
+/** The entity behind each vocabulary a payload or a target key may refer to. */
+export const VOCABULARIES = { countries: Country, organization_types: OrganizationType, platforms: Platform } as const;
+
 /** A vocabulary entry a payload or a target key refers to, which must exist. */
 export interface VocabularyReference {
-  vocabulary: 'countries' | 'organization_types' | 'platforms';
+  vocabulary: keyof typeof VOCABULARIES;
   id: number;
   path: string;
 }

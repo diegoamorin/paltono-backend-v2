@@ -328,15 +328,16 @@ const KEY_ONLY_ROW: ValueEnvelope = { exists: true, value: {} };
 // Not the registry's ABSENT: the registry imports this module.
 const ABSENT: ValueEnvelope = { exists: false };
 
-async function readAlias(manager: EntityManager, root: EditorialEntity, key: RowKey): Promise<ValueEnvelope> {
-  const identityId = await identityIdOf(manager, root.id);
-  return identityId === null ? ABSENT : envelope(await findAlias(manager, identityId, key.id));
+/** Reads the row of the root's identity that a key by generated id selects. */
+function readRow(find: (manager: EntityManager, catalogIdentityId: number, id: number) => Promise<AliasValue | PlatformLinkValue | null>) {
+  return async (manager: EntityManager, root: EditorialEntity, key: RowKey): Promise<ValueEnvelope> => {
+    const identityId = await identityIdOf(manager, root.id);
+    return identityId === null ? ABSENT : envelope(await find(manager, identityId, key.id));
+  };
 }
 
-async function readPlatformLink(manager: EntityManager, root: EditorialEntity, key: RowKey): Promise<ValueEnvelope> {
-  const identityId = await identityIdOf(manager, root.id);
-  return identityId === null ? ABSENT : envelope(await findPlatformLink(manager, identityId, key.id));
-}
+const readAlias = readRow(findAlias);
+const readPlatformLink = readRow(findPlatformLink);
 
 /** A relation that only an identity of the given type has. */
 function onlyFor(type: CatalogIdentityType, relation: string) {

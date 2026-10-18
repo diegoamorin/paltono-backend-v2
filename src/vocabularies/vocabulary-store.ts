@@ -5,6 +5,7 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, CollectionQuerySpec } from '../common/json-api/query';
 import { ResourceSchema } from '../common/json-api/resource-schema';
+import { containsPattern } from '../database/like-pattern';
 
 export interface VocabularyEntry {
   id: number;
@@ -144,7 +145,7 @@ export function isInUseViolation(error: unknown): boolean {
 /** Case- and accent-insensitive substring match on a column of the entry. */
 export function containsFilter(column: string): VocabularyFilter {
   return (builder, value) => {
-    const pattern = `%${value.replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+    const pattern = containsPattern(value);
     builder.andWhere(`unaccent(lower(entry.${column})) LIKE unaccent(lower(:contains_${column}))`, {
       [`contains_${column}`]: pattern,
     });

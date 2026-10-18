@@ -4,9 +4,6 @@ import { DataSource, EntityManager, Not } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
-import { Country } from '../vocabularies/entities/country.entity';
-import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
-import { Platform } from '../vocabularies/entities/platform.entity';
 import { withLinks } from './change-links.service';
 import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
 import { changeNotFound, invalid } from './editorial-access';
@@ -18,6 +15,7 @@ import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity
 import {
   ABSENT,
   OperationDefinition,
+  VOCABULARIES,
   VocabularyReference,
   findOperation,
   isRegistered,
@@ -465,9 +463,6 @@ async function vocabularyProblems(manager: EntityManager, references: Vocabulary
   }
   return problems;
 }
-
-/** The entity behind each vocabulary a payload may refer to. */
-const VOCABULARIES = { countries: Country, organization_types: OrganizationType, platforms: Platform } as const;
 
 function asBodyError({ code, detail, member }: ChangeProblem): JsonApiErrorInput {
   const pointer = member === 'entity' ? '/data/relationships/entity/data/id' : `/data/attributes/${member}`;
