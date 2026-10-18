@@ -3,16 +3,18 @@ import { CatalogIdentity } from '../catalog-identities/entities/catalog-identity
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { ContributionRoleScope } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution } from './entities/recording.entity';
+import { Release } from './entities/release.entity';
+import { ReleaseContribution } from './entities/track.entity';
 import { Credit, Work, WorkContribution } from './entities/work.entity';
 
 /*
- * The reads and writes of the credits of a work or a recording, which this
+ * The reads and writes of the credits of a work, a recording or a release, which this
  * module owns. The editorial flow calls them inside the transaction that
  * applies a relation change. Every read is scoped to one owner, so a key never
  * reaches the credit of another one.
  */
 
-export type CreditScope = 'work' | 'recording';
+export type CreditScope = 'work' | 'recording' | 'release';
 
 /** A credit as relation changes propose it and revisions record it; the identity by its editorial root. */
 export interface CreditValue {
@@ -25,12 +27,13 @@ export interface CreditValue {
   sourceUrl?: string | null;
 }
 
-/** The id of the work or recording that owns credits; a work's is a BIGINT as a string. */
+/** The id of the work, recording or release that owns credits; a work's is a BIGINT as a string. */
 export type OwnerId = string | number;
 
 const TABLES = {
   work: { entity: WorkContribution, owner: 'workId', root: Work },
   recording: { entity: RecordingContribution, owner: 'recordingId', root: Recording },
+  release: { entity: ReleaseContribution, owner: 'releaseId', root: Release },
 } as const;
 
 /** Whether a role may be credited in a scope; the composite foreign key enforces it too. */

@@ -69,8 +69,15 @@ export class ReleasesService {
         { pattern: containsPattern(q) },
       );
     }
-    // Credits of a release arrive with the tracks of the catalog; until then no release has one.
-    if (contributor !== undefined) builder.andWhere('false');
+    if (contributor !== undefined) {
+      builder.andWhere(
+        `EXISTS (
+          SELECT 1 FROM release_contributions credit JOIN catalog_identities credited ON credited.id = credit.catalog_identity_id
+          WHERE credit.release_id = release.id AND credited.public_id = :contributor
+        )`,
+        { contributor },
+      );
+    }
     if (availability !== undefined) {
       requireOneOf('filter[availability]', availability, RELEASE_AVAILABILITIES);
       builder.andWhere(`(${derived.availability}) = :availability`, { availability });

@@ -1,4 +1,8 @@
-import { EntityManager, In } from 'typeorm';
+import { EntityManager, In, SelectQueryBuilder } from 'typeorm';
+import { EditorialEntity } from '../editorial/entities/editorial-entity.entity';
+import { Release } from './entities/release.entity';
+import { Track } from './entities/track.entity';
+import { trackEntries } from './track-entries';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
@@ -33,7 +37,7 @@ export async function workEntries(manager: EntityManager, works: Work[]): Promis
   }));
 }
 
-export async function recordingEntries(manager: EntityManager, recordings: Recording[]): Promise<RecordingEntry[]> {
+export async function recordingEntries(manager: EntityManager, recordings: Recording[], now: Date): Promise<RecordingEntry[]> {
   const ids = recordings.filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return recordings.map((recording) => ({ recording, relations: null }));
   const credits = await manager.find(RecordingContribution, { where: { recordingId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });
@@ -47,6 +51,17 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
     manager,
     await manager.find(RecordingWork, { where: { recordingId: In(ids) }, order: { position: { direction: 'ASC', nulls: 'LAST' }, id: 'ASC' } }),
   );
+  const tracks = await trackEntries(
+    manager,
+    await publishedTracksOf(manager)
+      .andWhere('track.recording_id IN (:...ids)', { ids })
+      .orderBy('track.disc_number', 'ASC')
+      .addOrderBy('track.track_number', 'ASC')
+      .addOrderBy('track.id', 'ASC')
+      .getMany(),
+    now,
+    false,
+  );
   return recordings.map((recording) => {
     if (!ids.includes(recording.id)) return { recording, relations: null };
     const own = genres.filter(({ recordingId }) => recordingId === recording.id);
@@ -57,9 +72,19 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
         genres: own.map(({ genre }) => genre!),
         primaryGenreId: own.find(({ isPrimary }) => isPrimary)?.genreId ?? null,
         recordingWorks: recordingWorks.filter(({ row }) => row.recordingId === recording.id),
+        tracks: tracks.filter(({ track }) => track.recordingId === recording.id),
       },
     };
   });
+}
+
+/** The tracks of published releases: the tracks of a withdrawn release are part of its withdrawn content. */
+export function publishedTracksOf(manager: EntityManager): SelectQueryBuilder<Track> {
+  return manager
+    .createQueryBuilder(Track, 'track')
+    .innerJoin(Release, 'release', 'release.id = track.release_id')
+    .innerJoin(EditorialEntity, 'release_root', 'release_root.id = release.editorial_entity_id')
+    .where(`release_root.publication_status = 'published'`);
 }
 
 /** Credits with their identities and roles, in the given order. */

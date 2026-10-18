@@ -17,11 +17,13 @@ import {
   findCreatedRelease,
   findCreatedReleaseGroup,
   releaseFieldValue,
+  releaseIdOf,
   writeReleaseField,
   writeReleaseGroupField,
 } from '../music/releases';
-import { ENTITY_REFERENCE, SOURCE_URL } from './credit-changes';
+import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { RELEASE_CREDIT_CHANGES } from './release-credit-changes';
+import { RELEASE_TRACK_CHANGES } from './track-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { PARTIAL_DATE, daysInMonth } from './identity-creation';
@@ -34,7 +36,7 @@ import { DESCRIPTION, envelope } from './work-changes';
  * announcement. A release needs only its release group, published or created
  * by the same proposal; moving it to another group is a field change of the
  * release. Presentation credits of a release group are in
- * `release-credit-changes.ts`.
+ * `release-credit-changes.ts`; the tracks of a release, in `track-changes.ts`.
  */
 
 const ABSENT: ValueEnvelope = { exists: false };
@@ -273,4 +275,9 @@ const RELEASE_FIELD_CHANGES: OperationDefinition[] = (Object.keys(RELEASE_FIELDS
 
 export const RELEASE_GROUP_CHANGES: OperationDefinition[] = [RELEASE_GROUP_CREATION, ...RELEASE_GROUP_FIELD_CHANGES, ...RELEASE_CREDIT_CHANGES];
 
-export const RELEASE_CHANGES: OperationDefinition[] = [RELEASE_CREATION, ...RELEASE_FIELD_CHANGES];
+export const RELEASE_CHANGES: OperationDefinition[] = [
+  RELEASE_CREATION,
+  ...RELEASE_FIELD_CHANGES,
+  ...creditChanges({ entityType: 'release', targetPath: 'release_contributions', scope: 'release', ownerIdOf: releaseIdOf, noun: 'la edición' }),
+  ...RELEASE_TRACK_CHANGES,
+];
