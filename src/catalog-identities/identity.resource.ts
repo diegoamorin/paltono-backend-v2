@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { defineResource } from '../common/json-api/resource-schema';
+import { ArtistEntry, artistSchema } from './artist.resource';
+import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
 import { Country } from '../vocabularies/entities/country.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
@@ -17,6 +18,7 @@ export interface IdentityRelations {
   organizationTypes: OrganizationType[];
   /** With their platforms. */
   platformLinks: CatalogIdentityPlatformLink[];
+  artist: ArtistEntry | null;
 }
 
 /** A published identity with the row of its subtype and its relations, or a withdrawn one with none of them. */
@@ -44,12 +46,6 @@ export const identityPlatformLinkSchema = defineResource<CatalogIdentityPlatform
   relationships: { platform: { schema: () => PLATFORMS.schema, get: (link) => link.platform } },
 });
 
-/**
- * The artist profile of an identity. Profiles arrive with the artists of the
- * catalog; until then no identity has one, so the relationship is always empty.
- */
-const artistSchema = defineResource<{ publicId: string }>({ type: 'artists', id: (artist) => artist.publicId, attributes: {} });
-
 /** A relationship of the entry's relations, which a withdrawn entry leaves out like its content. */
 const related =
   (read: (relations: IdentityRelations) => unknown) =>
@@ -67,7 +63,7 @@ const content =
   (entry: IdentityEntry): unknown =>
     isWithdrawn(entry) ? undefined : read(entry);
 
-export const identitySchema = defineResource<IdentityEntry>({
+export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
   type: 'identities',
   id: ({ identity }) => identity.publicId,
   attributes: {
@@ -104,7 +100,7 @@ export const identitySchema = defineResource<IdentityEntry>({
     originCountry: { schema: () => COUNTRIES.schema, get: related(({ originCountry }) => originCountry) },
     organizationTypes: { schema: () => ORGANIZATION_TYPES.schema, get: related(({ organizationTypes }) => organizationTypes) },
     platformLinks: { schema: () => identityPlatformLinkSchema, get: related(({ platformLinks }) => platformLinks) },
-    artist: { schema: () => artistSchema, get: related(() => null) },
+    artist: { schema: () => artistSchema, get: related(({ artist }) => artist) },
   },
   meta: ({ identity }) => ({ editorialEntityId: identity.editorialEntityId }),
 });

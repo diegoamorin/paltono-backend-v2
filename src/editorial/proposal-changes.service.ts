@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { DataSource, EntityManager, Not } from 'typeorm';
+import { DataSource, EntityManager, In, Not } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
@@ -23,7 +23,7 @@ import {
   validatePayload,
   validateTargetKey,
 } from './operation-registry';
-import { checkReferences, namesRoot, normalizeKey, resolveKey } from './row-references';
+import { checkReferences, checkRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
 
 export interface NewChange {
   entityId: string;
@@ -70,7 +70,7 @@ export class ProposalChangesService {
         // targetKey and proposedValue are checked by changeProblems before anything is written.
         targetKey: normalizeKey(input.targetKey ?? null) as object | null,
         payloadSchemaVersion: input.payloadSchemaVersion ?? 1,
-        proposedValue: input.proposedValue as ValueEnvelope,
+        proposedValue: normalizeReferences(input.proposedValue) as ValueEnvelope,
         atomicGroupId: input.atomicGroupId ?? null,
         position: input.position ?? (await nextPosition(manager, proposalId)),
       };
@@ -102,6 +102,7 @@ export class ProposalChangesService {
         ...current,
         ...Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)),
       } as ProposalChange;
+      change.proposedValue = normalizeReferences(change.proposedValue) as ValueEnvelope;
       const entity = await manager.findOneBy(EditorialEntity, { id: change.entityId });
       const problems = await changeProblems(manager, proposal, change, entity);
       if (problems.length > 0) throw invalid(problems.map(asBodyError));
@@ -151,44 +152,38 @@ export class ProposalChangesService {
 }
 
 /**
- * Locks, in a consistent order, the roots the given microchanges target, and
- * shares the lock of the other roots their values refer to, so none of those
- * is withdrawn meanwhile. Returns the targeted roots.
+ * Locks, in a consistent order, the roots the given microchanges target and
+ * the other roots their values name, such as the member of a membership.
  */
 export async function lockTargetedRoots(manager: EntityManager, changes: ProposalChange[]): Promise<Map<string, EditorialEntity>> {
-  const targeted = new Set(changes.map(({ entityId }) => entityId));
-  const referenced = new Set<string>();
-  for (const change of changes) {
-    for (const { entityId } of await rootReferencesOf(manager, change)) if (!targeted.has(entityId)) referenced.add(entityId);
-  }
+  const targeted = [...new Set(changes.map(({ entityId }) => entityId))];
+  // A root's type never changes, so it is read before the locks to find the operations.
+  const types = new Map((await manager.findBy(EditorialEntity, { id: In(targeted) })).map(({ id, entityType }) => [id, entityType]));
+  const referenced = changes.flatMap((change) => {
+    const type = types.get(change.entityId);
+    const definition = type && findOperation(type, change.operation, change.targetPath, change.payloadSchemaVersion);
+    return rootReferencesOf(definition, change.proposedValue).map(({ entityId }) => entityId.toLowerCase());
+  });
+  const ids = [...new Set([...targeted, ...referenced])].sort();
   const roots = new Map<string, EditorialEntity>();
-  for (const id of [...targeted, ...referenced].sort()) {
-    const mode = targeted.has(id) ? 'pessimistic_write' : 'pessimistic_read';
-    const root = await manager.findOne(EditorialEntity, { where: { id }, lock: { mode } });
-    if (root && targeted.has(id)) roots.set(id, root);
+  for (const id of ids) {
+    const root = await manager.findOne(EditorialEntity, { where: { id }, lock: { mode: 'pessimistic_write' } });
+    if (root) roots.set(id, root);
   }
   return roots;
 }
 
-/** The other roots a microchange's value refers to, when its operation and value are valid. */
-async function rootReferencesOf(manager: EntityManager, change: Pick<ProposalChange, 'entityId' | 'operation' | 'targetPath' | 'payloadSchemaVersion' | 'proposedValue'>): Promise<RootReference[]> {
-  const root = await manager.findOneBy(EditorialEntity, { id: change.entityId });
-  const definition = root && findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
-  if (!definition?.rootReferences || validatePayload(definition, change.proposedValue).length > 0) return [];
-  return definition.rootReferences((change.proposedValue as { value: unknown }).value);
-}
-
 /**
- * Records the dependencies the references of a submitted microchange imply:
- * on the insertion that creates a row its key names, and on the creation of a
- * reservation its key or its value names. Its references were checked already.
+ * Records the dependencies the references of a submitted microchange's target
+ * key imply: on the insertion that creates a row it names, and on the creation
+ * of a reservation it names. Its references were checked already.
  */
 export async function recordImpliedDependencies(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<void> {
-  const dependsOn = change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root)).dependsOn;
-  for (const reference of await rootReferencesOf(manager, change)) {
-    const creation = await manager.findOneBy(ProposalChange, { proposalId: change.proposalId, entityId: reference.entityId, operation: 'create_entity' });
-    if (creation) dependsOn.push(creation.id);
-  }
+  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
+  const dependsOn = [
+    ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root)).dependsOn),
+    ...(await checkRootReferences(manager, change, rootReferencesOf(definition, change.proposedValue))).dependsOn,
+  ];
   for (const dependsOnChangeId of dependsOn) {
     await manager
       .createQueryBuilder()
@@ -274,7 +269,10 @@ async function changeProblems(
     if (targetProblems.length > 0) return targetProblems;
   }
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
-  if (problems.length === 0) problems.push(...(await rootReferenceProblems(manager, proposal, definition, change.proposedValue)));
+  // A decision finds a referenced root that is no longer published as a conflict instead.
+  if (problems.length === 0 && stage !== 'decision') {
+    problems.push(...(await checkRootReferences(manager, change, rootReferencesOf(definition, change.proposedValue))).problems);
+  }
   // A member of an atomic group is judged with the rest of its group, which only a decision applies.
   if (problems.length === 0 && definition.targetProblems && stage !== 'decision' && change.atomicGroupId === null) {
     problems.push(...(await definition.targetProblems(manager, entity, (change.proposedValue as { value: unknown }).value)));
@@ -396,6 +394,12 @@ async function relationChangeProblems(
   return [];
 }
 
+/** The other roots a microchange's value names, once the value is valid. */
+export function rootReferencesOf(definition: OperationDefinition | undefined, proposedValue: unknown): RootReference[] {
+  const { exists, value } = (proposedValue ?? {}) as { exists?: boolean; value?: unknown };
+  return definition?.rootReferences && exists ? definition.rootReferences(value) : [];
+}
+
 export function isRelationOperation(operation: string): boolean {
   return operation === 'add_relation' || operation === 'update_relation' || operation === 'remove_relation';
 }
@@ -469,36 +473,6 @@ async function payloadProblems(manager: EntityManager, definition: OperationDefi
   }));
   if (problems.length > 0) return problems;
   return vocabularyProblems(manager, definition.references((proposed as { value: unknown }).value), 'proposedValue');
-}
-
-/**
- * Each root a value refers to has the expected type and is published, or is a
- * reservation of the author that the same proposal creates. A relation never
- * points to a withdrawn entry.
- */
-async function rootReferenceProblems(
-  manager: EntityManager,
-  proposal: ChangeProposal,
-  definition: OperationDefinition,
-  proposed: unknown,
-): Promise<ChangeProblem[]> {
-  const problems: ChangeProblem[] = [];
-  for (const { entityType, entityId, path } of definition.rootReferences?.((proposed as { value: unknown }).value) ?? []) {
-    const member = `proposedValue${path}`;
-    const root = await manager.findOneBy(EditorialEntity, { id: entityId });
-    // A reservation is private to its creator, so for anyone else it does not exist.
-    if (!root || root.entityType !== entityType || (root.publicationStatus === 'reserved' && root.createdById !== proposal.authorId)) {
-      problems.push({ code: 'invalid_reference', detail: `${member} must name a ${entityType} root`, member });
-    } else if (root.publicationStatus === 'withdrawn') {
-      problems.push({ code: 'entity_withdrawn', detail: `${member} names a withdrawn entry, which accepts no new relation`, member });
-    } else if (
-      root.publicationStatus === 'reserved' &&
-      !(await manager.existsBy(ProposalChange, { proposalId: proposal.id, entityId: root.id, operation: 'create_entity' }))
-    ) {
-      problems.push({ code: 'invalid_reference', detail: `${member} names a reservation this proposal does not create`, member });
-    }
-  }
-  return problems;
 }
 
 /** Each vocabulary entry referred to must exist; `member` is where the paths of the references start. */

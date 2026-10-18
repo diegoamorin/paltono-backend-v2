@@ -7,6 +7,8 @@ import { OrganizationType } from '../vocabularies/entities/organization-type.ent
 import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
+import { ARTIST_CHANGES } from './artist-changes';
+import { MEMBERSHIP_CHANGES } from './membership-changes';
 import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
@@ -43,15 +45,10 @@ export interface VocabularyReference {
   path: string;
 }
 
-/**
- * Another root a payload refers to by its editorial id, `{"entity_id": …}`,
- * such as the identity a credit names. It must be published, or a
- * reservation the same proposal creates, which the microchange then depends
- * on; never a withdrawn entry.
- */
+/** A root a payload names, `{"entity_id": …}`, at a JSON Pointer path inside the proposed envelope. */
 export interface RootReference {
-  entityType: EditorialEntityType;
   entityId: string;
+  entityType: EditorialEntityType;
   path: string;
 }
 
@@ -97,14 +94,18 @@ export interface OperationDefinition {
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
-  /** Other roots a valid value refers to, with paths inside the envelope. */
-  rootReferences?(value: unknown): RootReference[];
   /**
    * For an insertion whose row will generate its key, the unique key of a
    * valid value, which tells two insertions of the same row apart. Undefined
    * when the value has none.
    */
   naturalKey?(value: unknown): object | undefined;
+  /**
+   * Other roots of the catalog a valid value names by their editorial UUID,
+   * such as the member of a membership. Each one is published, or a
+   * reservation this proposal creates, which the microchange then depends on.
+   */
+  rootReferences?(value: unknown): RootReference[];
   /** Vocabulary entries the target key refers to, with paths inside `targetKey`. */
   keyReferences?(targetKey: object): VocabularyReference[];
   /**
@@ -133,6 +134,8 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   IDENTITY_CREATION,
   ...IDENTITY_FIELD_CHANGES,
   ...IDENTITY_RELATION_CHANGES,
+  ...ARTIST_CHANGES,
+  ...MEMBERSHIP_CHANGES,
   withdrawalOf('identity'),
   ...WORK_CHANGES,
   withdrawalOf('work'),

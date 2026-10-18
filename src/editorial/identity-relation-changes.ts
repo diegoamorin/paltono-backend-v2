@@ -89,7 +89,7 @@ const ALIAS = {
 };
 
 /** A nationality or an organization type has no data beyond its key. */
-const KEY_ONLY = { type: 'object', additionalProperties: false, maxProperties: 0 };
+export const KEY_ONLY = { type: 'object', additionalProperties: false, maxProperties: 0 };
 
 // No play count: it is deferred beyond the MVP, so no write sets it.
 const PLATFORM_LINK = {
@@ -102,7 +102,7 @@ const PLATFORM_LINK = {
   },
 };
 
-const noRules = { check: () => [], references: () => [] } satisfies Pick<OperationDefinition, 'check' | 'references'>;
+export const noRules = { check: () => [], references: () => [] } satisfies Pick<OperationDefinition, 'check' | 'references'>;
 
 const aliasBase = {
   entityType: 'identity',
@@ -324,12 +324,12 @@ export const IDENTITY_RELATION_CHANGES: OperationDefinition[] = [
   REMOVE_PLATFORM_LINK,
 ];
 
-const KEY_ONLY_ROW: ValueEnvelope = { exists: true, value: {} };
+export const KEY_ONLY_ROW: ValueEnvelope = { exists: true, value: {} };
 // Not the registry's ABSENT: the registry imports this module.
 const ABSENT: ValueEnvelope = { exists: false };
 
 /** Reads the row of the root's identity that a key by generated id selects. */
-function readRow(find: (manager: EntityManager, catalogIdentityId: number, id: number) => Promise<AliasValue | PlatformLinkValue | null>) {
+export function readRow(find: (manager: EntityManager, catalogIdentityId: number, id: number) => Promise<object | null>) {
   return async (manager: EntityManager, root: EditorialEntity, key: RowKey): Promise<ValueEnvelope> => {
     const identityId = await identityIdOf(manager, root.id);
     return identityId === null ? ABSENT : envelope(await find(manager, identityId, key.id));
@@ -340,7 +340,7 @@ const readAlias = readRow(findAlias);
 const readPlatformLink = readRow(findPlatformLink);
 
 /** A relation that only an identity of the given type has. */
-function onlyFor(type: CatalogIdentityType, relation: string) {
+export function onlyFor(type: CatalogIdentityType, relation: string) {
   return async (manager: EntityManager, root: EditorialEntity): Promise<TargetProblem[]> => {
     const created = await findCreatedIdentity(manager, root.id);
     if (!created || created.identity.type === type) return [];
@@ -348,6 +348,6 @@ function onlyFor(type: CatalogIdentityType, relation: string) {
   };
 }
 
-function envelope(row: AliasValue | PlatformLinkValue | null): ValueEnvelope {
+export function envelope(row: object | null): ValueEnvelope {
   return row ? { exists: true, value: { ...row } } : ABSENT;
 }

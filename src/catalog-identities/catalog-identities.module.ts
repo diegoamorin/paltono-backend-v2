@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Artist, ArtistOrganizationAffiliation, OrganizationMembership, OrganizationMembershipRole } from './entities/artist.entity';
 import { CatalogIdentity, Organization, Person } from './entities/catalog-identity.entity';
 import {
   CatalogIdentityAlias,
@@ -7,6 +8,8 @@ import {
   OrganizationTypeAssignment,
   PersonNationality,
 } from './entities/identity-relation.entity';
+import { ArtistsController } from './artists.controller';
+import { ArtistsService } from './artists.service';
 import { IdentitiesController } from './identities.controller';
 import { IdentitiesService } from './identities.service';
 
@@ -25,9 +28,13 @@ import { IdentitiesService } from './identities.service';
       PersonNationality,
       OrganizationTypeAssignment,
       CatalogIdentityPlatformLink,
+      Artist,
+      OrganizationMembership,
+      OrganizationMembershipRole,
+      ArtistOrganizationAffiliation,
     ]),
   ],
-  controllers: [IdentitiesController],
-  providers: [IdentitiesService],
+  controllers: [IdentitiesController, ArtistsController],
+  providers: [IdentitiesService, ArtistsService],
 })
 export class CatalogIdentitiesModule {}

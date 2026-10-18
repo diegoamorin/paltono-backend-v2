@@ -312,8 +312,8 @@ describe('works in the editorial flow', () => {
       await withdraw(later);
       await withdraw(credited);
 
-      const refused = await apply(pending).expect(422);
-      expect(refused.body.errors[0].code).toBe('entity_withdrawn');
+      const refused = await apply(pending).expect(409);
+      expect(refused.body.errors[0].code).toBe('referenced_entity_unpublished');
       const shown = await getJsonApi(app, `/v1/works/${id}?include=contributions.identity`).expect(200);
       const identity = shown.body.included.find(({ type }: { type: string }) => type === 'identities');
       expect(identity.attributes).toEqual({ publicationStatus: 'withdrawn', withdrawnAt: expect.any(String) });
