@@ -2,6 +2,7 @@ import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Country } from '../vocabularies/entities/country.entity';
+import { Genre } from '../vocabularies/entities/genre.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
 import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
@@ -12,6 +13,8 @@ import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
+import { RECORDING_CHANGES } from './recording-changes';
+import { WORK_CHANGES } from './work-changes';
 
 /*
  * The registry of operations a microchange may carry (E1). A microchange names
@@ -31,6 +34,7 @@ export const VOCABULARIES = {
   countries: Country,
   organization_types: OrganizationType,
   platforms: Platform,
+  genres: Genre,
   contribution_roles: ContributionRole,
 } as const;
 
@@ -133,6 +137,10 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   ...ARTIST_CHANGES,
   ...MEMBERSHIP_CHANGES,
   withdrawalOf('identity'),
+  ...WORK_CHANGES,
+  withdrawalOf('work'),
+  ...RECORDING_CHANGES,
+  withdrawalOf('recording'),
 ];
 
 /** Creations start from absence, so their base is always the empty envelope. */

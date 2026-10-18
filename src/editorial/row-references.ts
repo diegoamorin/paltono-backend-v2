@@ -1,5 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { recordingIdOf } from '../music/recordings';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
@@ -28,6 +29,7 @@ type ReferencingChange = Pick<ProposalChange, 'id' | 'proposalId' | 'entityId' |
 /** The domain id of each root type a target key can name, once its creation is applied. */
 const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, entityId: string) => Promise<number | null>>> = {
   identity: identityIdOf,
+  recording: recordingIdOf,
 };
 
 /**

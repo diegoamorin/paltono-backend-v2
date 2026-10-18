@@ -138,6 +138,17 @@ export class IdentitiesService {
   }
 }
 
+/**
+ * The entries of the given identities by internal id, for other modules that
+ * relate to them: a withdrawn one shows only its notice there too.
+ */
+export async function identityEntriesById(manager: EntityManager, ids: number[]): Promise<Map<number, IdentityEntry>> {
+  if (ids.length === 0) return new Map();
+  const identities = await manager.find(CatalogIdentity, { where: { id: In([...new Set(ids)]) }, relations: { editorialEntity: true } });
+  const entries = await loadEntries(manager, identities);
+  return new Map(entries.map((entry) => [entry.identity.id, entry]));
+}
+
 /** The given memberships with both identities and their roles, each role with its vocabulary entry. */
 async function loadMemberships(manager: EntityManager, memberships: OrganizationMembership[]): Promise<MembershipEntry[]> {
   if (memberships.length === 0) return [];
