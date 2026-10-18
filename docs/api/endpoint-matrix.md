@@ -200,7 +200,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E20 | `POST /v1/proposal-changes/{id}/decisions` | Decidir un microcambio | Staff; el autor solo `withdraw_change` | `{action, reason?, confirmedVersion?}`. Acciones manuales: `apply`, `apply_rebased`, `reject`, `withdraw_change` **[P7]**. Si pertenece a un grupo atómico, la decisión se aplica al grupo y devuelve todas sus decisiones | ok val authz state conc tx spec |
 | E21 | `GET /v1/proposal-changes/{id}/decisions` | Historial de decisiones | Autor y personal | Incluye decisiones automáticas | ok authz |
 
-E19: `filter[status]=pending|conflicted` (defecto ambos), `filter[entityType]`, `filter[operation]`, `filter[author]`, `filter[entity]`; orden `createdAt` (defecto, más antiguo primero), `-createdAt`; `include=proposal,proposal.sources,entity`.
+E19: `filter[status]=pending|conflicted` (defecto ambos), `filter[entityType]`, `filter[operation]`, `filter[author]`, `filter[entity]`; orden `createdAt` (defecto, más antiguo primero), `-createdAt`; `include=proposal,proposal.sources,entity` **[P10]**.
 
 E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[entityType]`; orden `-submittedAt`, `-updatedAt` (borradores).
 
@@ -244,3 +244,4 @@ Aprobadas el 2026-10-17.
 | P7 | `mark_conflict`, `mark_satisfied` y `block_dependency` solo los registra el sistema | La especificación los define como automáticos; el personal resuelve con `apply_rebased`, `reject` o `withdraw_change` |
 | P8 | La proyección pública muestra el estado `open/closed` de la propuesta y `closedAt` | Indican si la revisión terminó, no su resultado: el resultado global derivado (total o parcial) y el estado de cada microcambio siguen ocultos. A19 ya filtra públicamente por ese estado |
 | P9 | E4 sirve el historial de una raíz reservada que ya tiene un envío, aunque E3 siga respondiendo 404 a esa reserva | El envío ya es público en E8 con el UUID de la raíz, y el historial debe verse antes de la publicación; el estado editorial de la reserva sigue siendo privado |
+| P10 | En la cola E19, `include=entity` muestra al personal el estado editorial de la raíz, también de una reserva cuya alta revisa | El personal necesita tipo, estado y versión para decidir un alta; fuera de la cola la reserva sigue siendo privada para su creador (E3) |
