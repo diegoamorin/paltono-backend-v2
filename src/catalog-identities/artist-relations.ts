@@ -66,8 +66,15 @@ export async function artistIdOf(manager: EntityManager, catalogIdentityId: numb
 /** What still refers to the artist profile of an identity, which keeps it from being removed. */
 export async function artistReferences(manager: EntityManager, catalogIdentityId: number): Promise<string[]> {
   const artistId = await artistIdOf(manager, catalogIdentityId);
-  if (artistId === null || !(await manager.existsBy(ArtistOrganizationAffiliation, { artistId }))) return [];
-  return ['El perfil artístico tiene afiliaciones; quítalas antes de quitar el perfil'];
+  if (artistId === null) return [];
+  const references: string[] = [];
+  if (await manager.existsBy(ArtistOrganizationAffiliation, { artistId })) {
+    references.push('El perfil artístico tiene afiliaciones; quítalas antes de quitar el perfil');
+  }
+  // Presentation credits belong to the music module, whose release groups own them.
+  const [{ credited }] = await manager.query('SELECT EXISTS (SELECT 1 FROM release_artist_credits WHERE artist_id = $1) AS credited', [artistId]);
+  if (credited) references.push('El perfil artístico tiene créditos de presentación en lanzamientos; quítalos antes de quitar el perfil');
+  return references;
 }
 
 export async function insertArtist(manager: EntityManager, catalogIdentityId: number, now: Date): Promise<void> {

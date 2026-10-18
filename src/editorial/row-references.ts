@@ -1,16 +1,19 @@
 import { EntityManager } from 'typeorm';
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { recordingIdOf } from '../music/recordings';
+import { releaseGroupIdOf } from '../music/releases';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
-import { RootReference, RowKey } from './operation-registry';
+import { KeyRoot, RootReference, RowKey } from './operation-registry';
 
 /*
  * References inside a target key. A member names a dependent row by its
  * integer primary key or, before the row exists, by the insertion of the same
  * proposal that creates it: `{"change_id": …}`. A root is always named by its
- * editorial UUID, `{"entity_id": …}`, because its domain ids are not public.
+ * editorial UUID, `{"entity_id": …}`, because its domain ids are not public:
+ * the microchange's own root or, in a member its operation declares (`keyRoots`),
+ * another root, which is checked like a root its value names.
  * A reference to something not created yet makes the microchange depend on
  * that creation. The submitted references never change: the server translates
  * them to the domain's keys each time it applies.
@@ -30,6 +33,7 @@ type ReferencingChange = Pick<ProposalChange, 'id' | 'proposalId' | 'entityId' |
 const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, entityId: string) => Promise<number | null>>> = {
   identity: identityIdOf,
   recording: recordingIdOf,
+  release_group: releaseGroupIdOf,
 };
 
 /**
@@ -42,12 +46,14 @@ export async function checkReferences(
   manager: EntityManager,
   change: ReferencingChange,
   root: EditorialEntity,
+  keyRoots: Record<string, KeyRoot> = {},
 ): Promise<{ problems: ReferenceProblem[]; dependsOn: string[] }> {
   const problems: ReferenceProblem[] = [];
   const dependsOn: string[] = [];
   for (const [name, member] of members(change.targetKey)) {
     const at = `targetKey/${name}`;
-    if (typeof member === 'number') continue;
+    // Another root: see `checkRootReferences`.
+    if (typeof member === 'number' || name in keyRoots) continue;
     if ('change_id' in member) {
       const insertion = await manager.findOneBy(ProposalChange, { id: member.change_id.toLowerCase(), proposalId: change.proposalId });
       const valid =
@@ -79,12 +85,22 @@ export async function checkReferences(
   return { problems, dependsOn };
 }
 
+/** The other roots the members of a valid target key name, as its operation declares them. */
+export function keyRootReferences(keyRoots: Record<string, KeyRoot> | undefined, targetKey: object | null): RootReference[] {
+  if (!keyRoots || targetKey === null) return [];
+  return Object.entries(keyRoots).flatMap(([name, { entityType }]) => {
+    const member = (targetKey as Record<string, KeyMember | undefined>)[name];
+    if (typeof member !== 'object' || member === null || !('entity_id' in member) || typeof member.entity_id !== 'string') return [];
+    return [{ entityId: member.entity_id.toLowerCase(), entityType, path: `/${name}/entity_id`, within: 'targetKey' as const }];
+  });
+}
+
 /**
- * Checks the roots a valid value names besides the microchange's own and
- * returns the creations of the proposal they make it depend on. Each one is a
- * root of the expected type, published or reserved and created by this same
- * proposal; a withdrawn root accepts no new relation. Paths are inside
- * `proposedValue`.
+ * Checks the roots a valid value or target key names besides the
+ * microchange's own and returns the creations of the proposal they make it
+ * depend on. Each one is a root of the expected type, published or reserved
+ * and created by this same proposal; a withdrawn root accepts no new relation.
+ * Paths are inside `proposedValue` or, when the reference says so, `targetKey`.
  */
 export async function checkRootReferences(
   manager: EntityManager,
@@ -93,9 +109,10 @@ export async function checkRootReferences(
 ): Promise<{ problems: ReferenceProblem[]; dependsOn: string[] }> {
   const problems: ReferenceProblem[] = [];
   const dependsOn: string[] = [];
-  for (const { entityId, entityType, path } of references) {
+  for (const reference of references) {
+    const { entityId, entityType, path } = reference;
     const id = entityId.toLowerCase();
-    const member = `proposedValue${path}`;
+    const member = `${reference.within ?? 'proposedValue'}${path}`;
     if (id === change.entityId) {
       problems.push({ code: 'invalid_reference', detail: `${member} must name another root than the microchange's`, member });
       continue;
@@ -139,6 +156,7 @@ export async function resolveKey(
   manager: EntityManager,
   root: EditorialEntity,
   targetKey: object,
+  keyRoots: Record<string, KeyRoot> = {},
 ): Promise<{ key: RowKey | null; pendingInsertions: string[] }> {
   const key: RowKey = {};
   const pendingInsertions: string[] = [];
@@ -151,6 +169,8 @@ export async function resolveKey(
       const revision = await manager.findOneBy(EntityRevision, { changeId: member.change_id.toLowerCase() });
       resolved = ((revision?.resultKey as RowKey | null) ?? {})[name] ?? null;
       if (resolved === null) pendingInsertions.push(member.change_id.toLowerCase());
+    } else if (name in keyRoots) {
+      resolved = await keyRoots[name].idOf(manager, member.entity_id.toLowerCase());
     } else {
       resolved = await ROOT_IDS[root.entityType]!(manager, member.entity_id.toLowerCase());
     }

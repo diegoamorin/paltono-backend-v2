@@ -14,6 +14,7 @@ import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 import { RECORDING_CHANGES } from './recording-changes';
+import { RELEASE_CHANGES, RELEASE_GROUP_CHANGES } from './release-changes';
 import { WORK_CHANGES } from './work-changes';
 
 /*
@@ -45,11 +46,22 @@ export interface VocabularyReference {
   path: string;
 }
 
-/** A root a payload names, `{"entity_id": …}`, at a JSON Pointer path inside the proposed envelope. */
+/**
+ * A root a payload names, `{"entity_id": …}`, at a JSON Pointer path inside
+ * the proposed envelope or, `within` the target key, inside `targetKey`.
+ */
 export interface RootReference {
   entityId: string;
   entityType: EditorialEntityType;
   path: string;
+  within?: 'proposedValue' | 'targetKey';
+}
+
+/** A member of a target key that names another root than the microchange's, by its editorial UUID. */
+export interface KeyRoot {
+  entityType: EditorialEntityType;
+  /** The domain id the member stands for in the row's key, or null while there is none. */
+  idOf(manager: EntityManager, editorialEntityId: string): Promise<number | null>;
 }
 
 /**
@@ -106,14 +118,21 @@ export interface OperationDefinition {
    * reservation this proposal creates, which the microchange then depends on.
    */
   rootReferences?(value: unknown): RootReference[];
+  /**
+   * Members of the target key that name another root of the catalog, such as
+   * the artist of a presentation credit, by name. Each one is checked like a
+   * root the value names: published, or a reservation this proposal creates.
+   */
+  keyRoots?: Record<string, KeyRoot>;
   /** Vocabulary entries the target key refers to, with paths inside `targetKey`. */
   keyReferences?(targetKey: object): VocabularyReference[];
   /**
    * Rules on the root's current data, such as a field its subtype lacks or an
    * interval with a field the change leaves as it is. Run when the change is
-   * added, submitted and applied, so they always see the latest data.
+   * added, submitted and applied, so they always see the latest data. The
+   * target key, when the operation has one, is valid.
    */
-  targetProblems?(manager: EntityManager, root: EditorialEntity, value: unknown): Promise<TargetProblem[]>;
+  targetProblems?(manager: EntityManager, root: EditorialEntity, value: unknown, targetKey: object | null): Promise<TargetProblem[]>;
   /**
    * The value the operation's target holds now, as the base a decision
    * observes. A relation reads the row its key selects or, for an insertion,
@@ -141,6 +160,10 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   withdrawalOf('work'),
   ...RECORDING_CHANGES,
   withdrawalOf('recording'),
+  ...RELEASE_GROUP_CHANGES,
+  withdrawalOf('release_group'),
+  ...RELEASE_CHANGES,
+  withdrawalOf('release'),
 ];
 
 /** Creations start from absence, so their base is always the empty envelope. */

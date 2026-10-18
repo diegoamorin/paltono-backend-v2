@@ -23,7 +23,7 @@ import {
   validatePayload,
   validateTargetKey,
 } from './operation-registry';
-import { checkReferences, checkRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
+import { checkReferences, checkRootReferences, keyRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
 
 export interface NewChange {
   entityId: string;
@@ -162,7 +162,7 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
   const referenced = changes.flatMap((change) => {
     const type = types.get(change.entityId);
     const definition = type && findOperation(type, change.operation, change.targetPath, change.payloadSchemaVersion);
-    return rootReferencesOf(definition, change.proposedValue).map(({ entityId }) => entityId.toLowerCase());
+    return rootReferencesOf(definition, change).map(({ entityId }) => entityId.toLowerCase());
   });
   const ids = [...new Set([...targeted, ...referenced])].sort();
   const roots = new Map<string, EditorialEntity>();
@@ -181,8 +181,8 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
 export async function recordImpliedDependencies(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<void> {
   const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
   const dependsOn = [
-    ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root)).dependsOn),
-    ...(await checkRootReferences(manager, change, rootReferencesOf(definition, change.proposedValue))).dependsOn,
+    ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root, definition?.keyRoots)).dependsOn),
+    ...(await checkRootReferences(manager, change, rootReferencesOf(definition, change))).dependsOn,
   ];
   for (const dependsOnChangeId of dependsOn) {
     await manager
@@ -214,7 +214,7 @@ export async function revalidateChange(
  */
 export async function finalStateProblems(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<JsonApiErrorInput[]> {
   const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
-  const problems = (await definition.targetProblems?.(manager, root, (change.proposedValue as { value: unknown }).value)) ?? [];
+  const problems = (await definition.targetProblems?.(manager, root, (change.proposedValue as { value: unknown }).value, change.targetKey)) ?? [];
   return problems.map(({ code, detail, member }) => ({ code, detail, meta: { changeId: change.id, member } }));
 }
 
@@ -271,11 +271,11 @@ async function changeProblems(
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
   // A decision finds a referenced root that is no longer published as a conflict instead.
   if (problems.length === 0 && stage !== 'decision') {
-    problems.push(...(await checkRootReferences(manager, change, rootReferencesOf(definition, change.proposedValue))).problems);
+    problems.push(...(await checkRootReferences(manager, change, rootReferencesOf(definition, change))).problems);
   }
   // A member of an atomic group is judged with the rest of its group, which only a decision applies.
   if (problems.length === 0 && definition.targetProblems && stage !== 'decision' && change.atomicGroupId === null) {
-    problems.push(...(await definition.targetProblems(manager, entity, (change.proposedValue as { value: unknown }).value)));
+    problems.push(...(await definition.targetProblems(manager, entity, (change.proposedValue as { value: unknown }).value, change.targetKey)));
   }
   return problems;
 }
@@ -345,7 +345,7 @@ async function targetKeyProblems(
     member: `targetKey${path}`,
   }));
   if (invalidKey.length > 0) return invalidKey;
-  const { problems } = await checkReferences(manager, { ...change, targetKey: change.targetKey! }, entity);
+  const { problems } = await checkReferences(manager, { ...change, targetKey: change.targetKey! }, entity, definition.keyRoots);
   return [...problems, ...(await vocabularyProblems(manager, definition.keyReferences?.(change.targetKey!) ?? [], 'targetKey'))];
 }
 
@@ -386,7 +386,7 @@ async function relationChangeProblems(
   }
   if (change.targetKey === null) return [];
   if (definition.operation !== 'add_relation' && stage !== 'decision') {
-    const { key } = await resolveKey(manager, entity, change.targetKey);
+    const { key } = await resolveKey(manager, entity, change.targetKey, definition.keyRoots);
     if (key && !(await definition.read(manager, entity, key, null)).exists) {
       return [{ code: 'relation_row_not_found', detail: `The root has no row of ${change.targetPath} with this key`, member: 'targetKey' }];
     }
@@ -394,10 +394,18 @@ async function relationChangeProblems(
   return [];
 }
 
-/** The other roots a microchange's value names, once the value is valid. */
-export function rootReferencesOf(definition: OperationDefinition | undefined, proposedValue: unknown): RootReference[] {
+/**
+ * The other roots a microchange's value and target key name, once they are
+ * valid. A removal points to nothing new, so the roots its key names need not
+ * be published any more.
+ */
+export function rootReferencesOf(
+  definition: OperationDefinition | undefined,
+  { operation, proposedValue, targetKey }: { operation: string; proposedValue: unknown; targetKey: object | null },
+): RootReference[] {
   const { exists, value } = (proposedValue ?? {}) as { exists?: boolean; value?: unknown };
-  return definition?.rootReferences && exists ? definition.rootReferences(value) : [];
+  const inValue = definition?.rootReferences && exists ? definition.rootReferences(value) : [];
+  return operation === 'remove_relation' ? inValue : [...inValue, ...keyRootReferences(definition?.keyRoots, targetKey)];
 }
 
 export function isRelationOperation(operation: string): boolean {
@@ -413,7 +421,7 @@ async function readBase(manager: EntityManager, entity: EditorialEntity, change:
   const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
   const value = (change.proposedValue as { value?: unknown }).value;
   if (change.targetKey === null) return definition.read(manager, entity, null, value);
-  const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey);
+  const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey, definition.keyRoots);
   if (key) return definition.read(manager, entity, key, value);
   if (pendingInsertions.length > 0) return (await manager.findOneByOrFail(ProposalChange, { id: pendingInsertions[0] })).proposedValue;
   return ABSENT;
