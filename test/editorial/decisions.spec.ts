@@ -110,6 +110,8 @@ describe('decisions', () => {
         type: 'identities',
         id: publicId,
         attributes: {
+          publicationStatus: 'published',
+          withdrawnAt: null,
           type: 'person',
           displayName: 'IU',
           imgProfile: null,

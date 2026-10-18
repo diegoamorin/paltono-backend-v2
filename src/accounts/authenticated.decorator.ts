@@ -21,9 +21,10 @@ import { Authentication, SessionsService } from './sessions.service';
  *   for public resources that show more to their author or to staff;
  * - `authenticated` (`Auth`): any account that can log in, verified or not;
  * - `verified` (`Ver`): an active account with a verified email, as contributing requires;
+ * - `staff` (`Staff`): `verified` with the moderator or administrator role;
  * - `admin` (`Admin`): `verified` with the administrator role.
  */
-export type AccessLevel = 'optional' | 'authenticated' | 'verified' | 'admin';
+export type AccessLevel = 'optional' | 'authenticated' | 'verified' | 'staff' | 'admin';
 
 const ACCESS_LEVEL = Symbol('ACCESS_LEVEL');
 
@@ -50,9 +51,14 @@ export class AccessGuard implements CanActivate {
         { code: 'unauthenticated', detail: 'A valid access token is required', source: { header: 'Authorization' } },
       ]);
     }
-    if ((level === 'verified' || level === 'admin') && !authentication.user.emailVerified) {
+    if (level !== 'optional' && level !== 'authenticated' && !authentication.user.emailVerified) {
       throw new JsonApiException(HttpStatus.FORBIDDEN, [
         { code: 'email_not_verified', detail: 'Verify your email before doing this' },
+      ]);
+    }
+    if (level === 'staff' && authentication.user.role !== 'moderator' && authentication.user.role !== 'admin') {
+      throw new JsonApiException(HttpStatus.FORBIDDEN, [
+        { code: 'staff_required', detail: 'Only moderators and administrators can do this' },
       ]);
     }
     if (level === 'admin' && authentication.user.role !== 'admin') {

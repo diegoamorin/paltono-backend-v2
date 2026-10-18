@@ -236,8 +236,14 @@ async function changeProblems(
   const keyProblems = await targetKeyProblems(manager, definition, change, entity);
   if (keyProblems.length > 0) return keyProblems;
 
+  const overlap = await withdrawalOverlap(manager, change);
+  if (overlap.length > 0) return overlap;
   const problems: ChangeProblem[] = [];
   if (definition.operation === 'create_entity') problems.push(...(await creationProblems(manager, change, entity)));
+  if (definition.operation === 'withdraw_entity') {
+    const targetProblems = withdrawalProblems(entity, stage);
+    if (targetProblems.length > 0) return targetProblems;
+  }
   if (definition.operation === 'set_fields') {
     const targetProblems = await fieldChangeProblems(manager, change, entity);
     if (targetProblems.length > 0) return targetProblems;
@@ -276,6 +282,30 @@ async function fieldChangeProblems(manager: EntityManager, change: ChangeFields,
 }
 
 /**
+ * A withdrawal targets a published root. A decision also finds it already
+ * withdrawn, which satisfies it.
+ */
+function withdrawalProblems(entity: EditorialEntity, stage: Stage): ChangeProblem[] {
+  if (entity.publicationStatus === 'published' || (stage === 'decision' && entity.publicationStatus === 'withdrawn')) return [];
+  return [{ code: 'entity_not_published', detail: 'Only a published root can be withdrawn', member: 'entity' }];
+}
+
+/**
+ * A withdrawal writes the whole root's editorial state, so it overlaps every
+ * other microchange of the proposal on the same root.
+ */
+async function withdrawalOverlap(manager: EntityManager, change: ChangeFields): Promise<ChangeProblem[]> {
+  const others = manager
+    .createQueryBuilder(ProposalChange, 'other')
+    .where('other.proposal_id = :proposalId', { proposalId: change.proposalId })
+    .andWhere('other.entity_id = :entityId', { entityId: change.entityId })
+    .andWhere('other.id <> :id', { id: change.id });
+  if (change.operation !== 'withdraw_entity') others.andWhere(`other.operation = 'withdraw_entity'`);
+  if (!(await others.getExists())) return [];
+  return [{ code: 'overlapping_change', detail: 'A withdrawal of a root cannot share a proposal with other microchanges on it', member: 'entity' }];
+}
+
+/**
  * A target key matches the operation's schema, or is null when the operation
  * selects no row, and its references and vocabulary entries exist.
  */
@@ -311,7 +341,8 @@ async function relationChangeProblems(
   entity: EditorialEntity,
   stage: Stage,
 ): Promise<ChangeProblem[]> {
-  if (entity.publicationStatus !== 'published' && !namesRoot(change.targetKey)) {
+  // A reservation's own creation may name it; a withdrawn root accepts no new relation at all.
+  if (entity.publicationStatus === 'withdrawn' || (entity.publicationStatus === 'reserved' && !namesRoot(change.targetKey))) {
     return [{ code: 'entity_not_published', detail: 'Only a published root can change its relations', member: 'entity' }];
   }
   const others = manager

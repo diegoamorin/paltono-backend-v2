@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { AccountLinkage, publicAccountSchema } from '../accounts/account.resource';
 import { defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
+import { editorialEntitySchema } from './editorial-entity.resource';
 import { ChangeProposal, PROPOSAL_STATUSES } from './entities/change-proposal.entity';
 import { CHANGE_OPERATIONS, CHANGE_STATUSES, ProposalChange } from './entities/proposal-change.entity';
 import { ProposalSource } from './entities/proposal-source.entity';
@@ -120,6 +121,21 @@ export const reviewableProposalSchema = defineResource<ChangeProposal>({
   relationships: proposalRelationships(reviewableChangeSchema),
 });
 
+/**
+ * A microchange in the moderation queue: the reviewable projection, with its
+ * proposal and the editorial state of its root, which only staff read there.
+ */
+export const queuedChangeSchema = defineResource<ProposalChange>({
+  type: 'proposal-changes',
+  id: (change) => change.id,
+  attributes: reviewableChangeSchema.attributes,
+  relationships: {
+    ...changeRelationships,
+    entity: { schema: () => editorialEntitySchema, get: (change: ProposalChange) => change.entity },
+    proposal: { schema: () => reviewableProposalSchema, get: (change: ProposalChange) => change.proposal },
+  },
+});
+
 class ProposalAttributes {
   @ApiProperty({ description: 'Puede estar vacía en un borrador; un envío siempre la tiene' })
   description: string;
@@ -230,6 +246,25 @@ class ChangeRelationships {
 
   @ApiProperty({ type: ProposalLinkages, description: 'Fuentes generales de la propuesta vinculadas a este microcambio' })
   sources: ProposalLinkages;
+}
+
+class QueuedChangeRelationships extends ChangeRelationships {
+  @ApiProperty({ type: EntityLinkage, description: 'Propuesta del microcambio' })
+  proposal: EntityLinkage;
+}
+
+export class QueuedChangeResource {
+  @ApiProperty({ enum: ['proposal-changes'] })
+  type: string;
+
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ type: ChangeAttributes })
+  attributes: ChangeAttributes;
+
+  @ApiProperty({ type: QueuedChangeRelationships })
+  relationships: QueuedChangeRelationships;
 }
 
 export class ProposalChangeResource {

@@ -2,6 +2,7 @@ import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
+import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
@@ -98,7 +99,12 @@ export interface OperationDefinition {
   apply(manager: EntityManager, root: EditorialEntity, value: unknown, now: Date, key: RowKey | null): Promise<AppliedOperation>;
 }
 
-export const OPERATIONS: readonly OperationDefinition[] = [IDENTITY_CREATION, ...IDENTITY_FIELD_CHANGES, ...IDENTITY_RELATION_CHANGES];
+export const OPERATIONS: readonly OperationDefinition[] = [
+  IDENTITY_CREATION,
+  ...IDENTITY_FIELD_CHANGES,
+  ...IDENTITY_RELATION_CHANGES,
+  withdrawalOf('identity'),
+];
 
 /** Creations start from absence, so their base is always the empty envelope. */
 export const ABSENT: ValueEnvelope = { exists: false };

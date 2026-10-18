@@ -9,6 +9,7 @@ import { JsonApiErrorInput, JsonApiException } from '../common/json-api/json-api
 import { CollectionQuery } from '../common/json-api/query';
 import { LoadedDecision } from './change-decision.resource';
 import { inDependencyOrder } from './dependency-graph';
+import { lockOwnDraft } from './drafts';
 import { ManualDecisionAction } from './dto/change-decision.dto';
 import { changeNotFound, invalid, isStaff, isUuid, lockContributor } from './editorial-access';
 import { ChangeDecision, DecisionAction } from './entities/change-decision.entity';
@@ -19,6 +20,7 @@ import { ChangeStatus, ProposalChange, ValueEnvelope } from './entities/proposal
 import { ChangeDependency } from './entities/proposal-links.entity';
 import { ABSENT, OperationDefinition, RowKey, findOperation } from './operation-registry';
 import { finalStateProblems, lockTargetedRoots, revalidateChange } from './proposal-changes.service';
+import { loadContents, submitDraft } from './proposals.service';
 import { resolveKey } from './row-references';
 
 export interface DecisionInput {
@@ -110,12 +112,8 @@ export class DecisionsService {
       checkInput(input);
 
       const members = await groupOf(manager, located);
-      // Applying a field can resolve competing microchanges of other submissions, so their proposals are locked too.
-      const competingProposalIds: string[] = [];
-      for (const member of members.filter(({ operation }) => operation === 'set_fields')) {
-        competingProposalIds.push(...(await findCompetingProposalIds(manager, member)));
-      }
-      const proposalIds = [...new Set([located.proposalId, ...competingProposalIds])].sort();
+      if (input.action === 'apply' || input.action === 'apply_rebased') checkWithdrawalPermission(actor, members);
+      const proposalIds = [...new Set([located.proposalId, ...(await findCompetingProposalIds(manager, members))])].sort();
       const proposals = new Map<string, ChangeProposal>();
       for (const id of proposalIds) {
         proposals.set(id, await manager.findOneOrFail(ChangeProposal, { where: { id }, lock: { mode: 'pessimistic_write' } }));
@@ -148,6 +146,51 @@ export class DecisionsService {
     });
     if (outcome.failure) throw outcome.failure;
     return outcome.decisions;
+  }
+
+  /**
+   * Direct publication by staff: submits their own draft and applies all its
+   * microchanges in one transaction, as a decision of its author, with the
+   * same history as any submission. All of it applies or nothing does: a
+   * microchange that cannot apply rolls back the submission too, leaving the
+   * draft as it was. Withdrawing a published root takes an administrator.
+   *
+   * Locks follow the order of decisions: the acting account, then the draft,
+   * which no decision locks, before the competing proposals in id order, the
+   * targeted roots and the microchanges.
+   */
+  async publish(user: User, proposalId: string): Promise<ChangeProposal> {
+    return this.dataSource.transaction(async (manager) => {
+      const draft = await lockOwnDraft(manager, user, proposalId);
+      const actor = await lockContributor(manager, user.id);
+      if (!isStaff(actor)) throw staffRequired('Only moderators and administrators publish directly');
+      const changes = await manager.find(ProposalChange, { where: { proposalId }, order: { position: 'ASC' } });
+      checkWithdrawalPermission(actor, changes);
+
+      const proposals = new Map<string, ChangeProposal>();
+      for (const id of [...new Set(await findCompetingProposalIds(manager, changes))].sort()) {
+        proposals.set(id, await manager.findOneOrFail(ChangeProposal, { where: { id }, lock: { mode: 'pessimistic_write' } }));
+      }
+      const now = this.clock.now();
+      await submitDraft(manager, draft, now);
+      proposals.set(proposalId, await manager.findOneByOrFail(ChangeProposal, { id: proposalId }));
+      const roots = await lockTargetedRoots(manager, changes);
+      const open = await manager.find(ProposalChange, { where: { proposalId }, order: { position: 'ASC' }, lock: { mode: 'pessimistic_write' } });
+      const context: DecisionContext = {
+        manager,
+        actor,
+        input: { action: 'apply' },
+        proposals,
+        versionsBefore: new Map([...roots].map(([id, root]) => [id, root.currentVersion])),
+        now,
+      };
+
+      const { failure } = await applyAll(context, open);
+      // Unlike a decision, nothing is kept: the automatic decisions roll back with the submission.
+      if (failure) throw failure;
+      await closeIfSettled(manager, proposalId, now);
+      return loadContents(manager, proposalId);
+    });
   }
 
   /** The decisions on a microchange, automatic ones included. Only its author and staff read them. */
@@ -186,7 +229,19 @@ function checkPermission(actor: User, change: ProposalChange, action: ManualDeci
       { code: 'not_change_author', detail: 'Only the author of the microchange and staff withdraw it' },
     ]);
   }
-  throw new JsonApiException(HttpStatus.FORBIDDEN, [{ code: 'staff_required', detail: 'Only moderators and administrators decide microchanges' }]);
+  throw staffRequired('Only moderators and administrators decide microchanges');
+}
+
+function staffRequired(detail: string): JsonApiException {
+  return new JsonApiException(HttpStatus.FORBIDDEN, [{ code: 'staff_required', detail }]);
+}
+
+/** Only an administrator applies the withdrawal of a published root; moderators may still reject it. */
+function checkWithdrawalPermission(actor: User, applying: ProposalChange[]): void {
+  if (actor.role === 'admin' || !applying.some(({ operation }) => operation === 'withdraw_entity')) return;
+  throw new JsonApiException(HttpStatus.FORBIDDEN, [
+    { code: 'administrator_required', detail: 'Only an administrator applies the withdrawal of an entry' },
+  ]);
 }
 
 /** The microchange and the other members of its atomic group, if it has one. */
@@ -422,6 +477,11 @@ async function applyOne(context: DecisionContext, change: ProposalChange, depend
   const { manager, actor, input, proposals, versionsBefore, now } = context;
   const observation = await observe(manager, change);
   const { root, definition, key, current } = observation;
+  if (root.publicationStatus === 'withdrawn' && change.operation !== 'withdraw_entity') {
+    throw new JsonApiException(HttpStatus.CONFLICT, [
+      { code: 'entity_withdrawn', detail: 'The root is withdrawn; its microchanges cannot apply, but can be rejected or withdrawn' },
+    ]);
+  }
   // The payload and its references are checked again on the state this transaction sees.
   const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');
   if (errors.length > 0) throw invalid(errors);
@@ -458,6 +518,7 @@ async function applyOne(context: DecisionContext, change: ProposalChange, depend
   const version = await applyChange(manager, definition, root, change, key, decision, now);
   await manager.update(ProposalChange, { id: change.id }, { status: 'applied', resolvedAt: now });
   if (change.operation === 'set_fields') await settleCompetingChanges(manager, change, version, proposals, now);
+  if (change.operation === 'withdraw_entity') await settleChangesOnWithdrawnRoot(manager, change, version, proposals, now);
   return { decision };
 }
 
@@ -525,18 +586,30 @@ async function blockOnBrokenPrerequisites(
   );
 }
 
-/** The open submissions with another open microchange on the same field of the same root. */
-async function findCompetingProposalIds(manager: EntityManager, change: ProposalChange): Promise<string[]> {
-  const rows: { proposalId: string }[] = await manager
+/**
+ * The open submissions whose microchanges applying the given ones can resolve,
+ * so their proposals are locked too: those on the same field of the same root
+ * as a field change, and those on any part of a root being withdrawn.
+ */
+async function findCompetingProposalIds(manager: EntityManager, applying: ProposalChange[]): Promise<string[]> {
+  const ids: string[] = [];
+  for (const change of applying.filter(({ operation }) => operation === 'set_fields' || operation === 'withdraw_entity')) {
+    ids.push(...(await competingProposalIdsOf(manager, change)));
+  }
+  return ids;
+}
+
+async function competingProposalIdsOf(manager: EntityManager, change: ProposalChange): Promise<string[]> {
+  const competitors = manager
     .createQueryBuilder(ProposalChange, 'change')
     .select('DISTINCT change.proposal_id', 'proposalId')
     .innerJoin('change.proposal', 'proposal')
     .where('change.entity_id = :entityId', { entityId: change.entityId })
-    .andWhere('change.target_path = :targetPath', { targetPath: change.targetPath })
     .andWhere('change.id <> :id', { id: change.id })
     .andWhere('change.status IN (:...statuses)', { statuses: OPEN_STATUSES })
-    .andWhere(`proposal.status = 'open'`)
-    .getRawMany();
+    .andWhere(`proposal.status = 'open'`);
+  if (change.operation !== 'withdraw_entity') competitors.andWhere('change.target_path = :targetPath', { targetPath: change.targetPath });
+  const rows: { proposalId: string }[] = await competitors.getRawMany();
   return rows.map(({ proposalId }) => proposalId);
 }
 
@@ -686,6 +759,34 @@ async function settleCompetingChanges(
     const reason = satisfied ? null : `La versión ${version} de la ficha cambió ${applied.targetPath}, la base de este microcambio`;
     await recordDecision(manager, decisionOf(competitor, { root, current }, satisfied ? 'mark_satisfied' : 'mark_conflict', resultingStatus, null, reason, now));
     if (satisfied) await closeIfSettled(manager, competitor.proposalId, now);
+  }
+}
+
+/**
+ * After a root is withdrawn, the open microchanges of the locked proposals on
+ * it wait in conflict, since none can apply while it stays withdrawn, and
+ * another request to withdraw it is satisfied. Automatic decisions are
+ * recorded only for new transitions.
+ */
+async function settleChangesOnWithdrawnRoot(
+  manager: EntityManager,
+  withdrawal: ProposalChange,
+  version: number,
+  proposals: Map<string, ChangeProposal>,
+  now: Date,
+): Promise<void> {
+  const changes = await manager.find(ProposalChange, {
+    where: { entityId: withdrawal.entityId, status: In(OPEN_STATUSES), proposalId: In([...proposals.keys()]), id: Not(withdrawal.id) },
+    order: { id: 'ASC' },
+    lock: { mode: 'pessimistic_write' },
+  });
+  for (const change of changes) {
+    const satisfied = change.operation === 'withdraw_entity';
+    if (!satisfied && change.status === 'conflicted') continue;
+    const reason = satisfied ? null : `La versión ${version} retiró la ficha; sus microcambios no se aplican mientras siga retirada`;
+    const action = satisfied ? 'mark_satisfied' : 'mark_conflict';
+    await recordDecision(manager, decisionOf(change, await observe(manager, change), action, satisfied ? 'satisfied' : 'conflicted', null, reason, now));
+    if (satisfied) await closeIfSettled(manager, change.proposalId, now);
   }
 }
 

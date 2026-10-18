@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { defineResource } from '../common/json-api/resource-schema';
 import { CATALOG_IDENTITY_TYPES, CatalogIdentity, Organization, PERSON_GENDERS, Person } from './entities/catalog-identity.entity';
 
-/** A published identity with the row of its subtype. */
+/** A published identity with the row of its subtype, or a withdrawn one with neither. */
 export interface IdentityEntry {
   identity: CatalogIdentity;
   person: Person | null;
@@ -12,15 +12,25 @@ export interface IdentityEntry {
 const partialDate = (year: number | null, month: number | null, day: number | null) =>
   year === null ? null : { year, month, day };
 
+const isWithdrawn = ({ identity }: IdentityEntry) => identity.editorialEntity!.publicationStatus === 'withdrawn';
+
+/** An attribute of the entry's content, which a withdrawn entry leaves out: it only shows the notice. */
+const content =
+  (read: (entry: IdentityEntry) => unknown) =>
+  (entry: IdentityEntry): unknown =>
+    isWithdrawn(entry) ? undefined : read(entry);
+
 export const identitySchema = defineResource<IdentityEntry>({
   type: 'identities',
   id: ({ identity }) => identity.publicId,
   attributes: {
-    type: ({ identity }) => identity.type,
-    displayName: ({ identity }) => identity.displayName,
-    imgProfile: ({ identity }) => identity.imgProfile,
-    bio: ({ identity }) => identity.bio,
-    person: ({ person }) =>
+    publicationStatus: ({ identity }) => identity.editorialEntity!.publicationStatus,
+    withdrawnAt: ({ identity }) => identity.editorialEntity!.withdrawnAt?.toISOString() ?? null,
+    type: content(({ identity }) => identity.type),
+    displayName: content(({ identity }) => identity.displayName),
+    imgProfile: content(({ identity }) => identity.imgProfile),
+    bio: content(({ identity }) => identity.bio),
+    person: content(({ person }) =>
       person && {
         givenName: person.givenName,
         familyName: person.familyName,
@@ -29,15 +39,17 @@ export const identitySchema = defineResource<IdentityEntry>({
         heightCm: person.heightCm,
         gender: person.gender,
       },
-    organization: ({ organization }) =>
+    ),
+    organization: content(({ organization }) =>
       organization && {
         legalName: organization.legalName,
         founding: partialDate(organization.foundingYear, organization.foundingMonth, organization.foundingDay),
         dissolution: partialDate(organization.dissolutionYear, organization.dissolutionMonth, organization.dissolutionDay),
         originCountryId: organization.originCountryId,
       },
-    createdAt: ({ identity }) => identity.createdAt.toISOString(),
-    updatedAt: ({ identity }) => identity.updatedAt.toISOString(),
+    ),
+    createdAt: content(({ identity }) => identity.createdAt.toISOString()),
+    updatedAt: content(({ identity }) => identity.updatedAt.toISOString()),
   },
   meta: ({ identity }) => ({ editorialEntityId: identity.editorialEntityId }),
 });
@@ -87,30 +99,38 @@ class OrganizationAttributes {
   originCountryId: number | null;
 }
 
+const WITHDRAWN = 'Ausente en una ficha retirada';
+
 class IdentityAttributes {
-  @ApiProperty({ enum: CATALOG_IDENTITY_TYPES })
-  type: string;
+  @ApiProperty({ enum: ['published', 'withdrawn'], description: 'Una ficha retirada solo muestra este aviso y `withdrawnAt`' })
+  publicationStatus: string;
 
-  @ApiProperty({ example: 'IU' })
-  displayName: string;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  withdrawnAt: string | null;
 
-  @ApiProperty({ type: String, nullable: true })
-  imgProfile: string | null;
+  @ApiProperty({ enum: CATALOG_IDENTITY_TYPES, required: false, description: WITHDRAWN })
+  type?: string;
 
-  @ApiProperty({ type: String, nullable: true })
-  bio: string | null;
+  @ApiProperty({ example: 'IU', required: false, description: WITHDRAWN })
+  displayName?: string;
 
-  @ApiProperty({ type: PersonAttributes, nullable: true, description: 'Solo en una persona' })
-  person: PersonAttributes | null;
+  @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
+  imgProfile?: string | null;
 
-  @ApiProperty({ type: OrganizationAttributes, nullable: true, description: 'Solo en una organización' })
-  organization: OrganizationAttributes | null;
+  @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
+  bio?: string | null;
 
-  @ApiProperty({ format: 'date-time', description: 'Fecha de publicación de la ficha' })
-  createdAt: string;
+  @ApiProperty({ type: PersonAttributes, nullable: true, required: false, description: `Solo en una persona. ${WITHDRAWN}` })
+  person?: PersonAttributes | null;
 
-  @ApiProperty({ format: 'date-time' })
-  updatedAt: string;
+  @ApiProperty({ type: OrganizationAttributes, nullable: true, required: false, description: `Solo en una organización. ${WITHDRAWN}` })
+  organization?: OrganizationAttributes | null;
+
+  @ApiProperty({ format: 'date-time', required: false, description: `Fecha de publicación de la ficha. ${WITHDRAWN}` })
+  createdAt?: string;
+
+  @ApiProperty({ format: 'date-time', required: false, description: WITHDRAWN })
+  updatedAt?: string;
 }
 
 class EntryMeta {

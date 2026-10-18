@@ -109,3 +109,42 @@ export class ChangeDecisionResource {
   @ApiProperty({ type: DecisionRelationships })
   relationships: DecisionRelationships;
 }
+
+class RevisionAttributes {
+  @ApiProperty({ description: 'Versión de la raíz que consumió el microcambio' })
+  version: number;
+
+  @ApiProperty({ type: Object, description: 'Valor que reemplazó', example: { exists: false } })
+  beforeValue: object;
+
+  @ApiProperty({ type: Object, description: 'Valor efectivo tras aplicarse' })
+  afterValue: object;
+
+  @ApiProperty({ type: Object, nullable: true, description: 'Clave de la fila generada o seleccionada' })
+  resultKey: object | null;
+
+  @ApiProperty({ format: 'date-time' })
+  appliedAt: string;
+}
+
+class RevisionRelationships {
+  @ApiProperty({ type: Linkage })
+  entity: Linkage;
+
+  @ApiProperty({ type: Linkage, description: 'Microcambio aplicado' })
+  change: Linkage;
+}
+
+export class EntityRevisionResource {
+  @ApiProperty({ enum: ['entity-revisions'] })
+  type: string;
+
+  @ApiProperty({ format: 'uuid' })
+  id: string;
+
+  @ApiProperty({ type: RevisionAttributes })
+  attributes: RevisionAttributes;
+
+  @ApiProperty({ type: RevisionRelationships })
+  relationships: RevisionRelationships;
+}

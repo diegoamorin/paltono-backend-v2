@@ -90,7 +90,7 @@ describe('microchanges and sources of a draft', () => {
 
     it.each([
       ['an unknown operation', { operation: 'drop_table' }, '/data/attributes/operation'],
-      ['an operation outside the registry', { operation: 'withdraw_entity' }, '/data/attributes/operation'],
+      ['a selector the operation does not register', { operation: 'withdraw_entity' }, '/data/attributes/targetPath'],
       ['a selector naming an arbitrary table', { targetPath: 'users' }, '/data/attributes/targetPath'],
       ['a selector with SQL', { targetPath: 'catalog_identities; DROP TABLE users' }, '/data/attributes/targetPath'],
       ['an unknown payload version', { payloadSchemaVersion: 2 }, '/data/attributes/payloadSchemaVersion'],

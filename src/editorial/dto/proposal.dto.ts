@@ -98,3 +98,17 @@ export class SubmissionDocument {
   @Type(() => SubmissionResource)
   data: SubmissionResource;
 }
+
+class PublicationResource {
+  @ApiProperty({ enum: ['publications'] })
+  @Equals('publications')
+  type: string;
+}
+
+export class PublicationDocument {
+  @ApiProperty({ type: PublicationResource })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => PublicationResource)
+  data: PublicationResource;
+}

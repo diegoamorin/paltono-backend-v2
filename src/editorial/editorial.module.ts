@@ -8,10 +8,12 @@ import { DecisionsService } from './decisions.service';
 import { EditorialEntitiesController } from './editorial-entities.controller';
 import { EditorialEntitiesService } from './editorial-entities.service';
 import { EditorialOperationsController } from './editorial-operations.controller';
+import { ModerationQueueController } from './moderation-queue.controller';
+import { ModerationQueueService } from './moderation-queue.service';
 import { ProposalChangesController, ProposalSourcesController } from './proposal-contents.controller';
 import { ProposalChangesService } from './proposal-changes.service';
 import { ProposalSourcesService } from './proposal-sources.service';
-import { ProposalsController } from './proposals.controller';
+import { AccountProposalsController, OwnProposalsController, ProposalsController } from './proposals.controller';
 import { ProposalsService } from './proposals.service';
 import { ChangeDecision } from './entities/change-decision.entity';
 import { ChangeProposal } from './entities/change-proposal.entity';
@@ -44,11 +46,14 @@ import { ProposalSource } from './entities/proposal-source.entity';
     EditorialOperationsController,
     EditorialEntitiesController,
     ProposalsController,
+    OwnProposalsController,
+    AccountProposalsController,
     ProposalChangesController,
     ProposalSourcesController,
     ChangeLinksController,
     DecisionsController,
+    ModerationQueueController,
   ],
-  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService, ChangeLinksService, DecisionsService],
+  providers: [EditorialEntitiesService, ProposalsService, ProposalChangesService, ProposalSourcesService, ChangeLinksService, DecisionsService, ModerationQueueService],
 })
 export class EditorialModule {}

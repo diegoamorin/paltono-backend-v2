@@ -12,6 +12,7 @@ import {
   ApiJsonApiQuery,
   ApiJsonApiResourceResponse,
 } from '../common/json-api/swagger';
+import { EntityRevisionResource, entityRevisionSchema } from './change-decision.resource';
 import { ReservationDocument } from './dto/editorial-entity.dto';
 import { editorialId, entityNotFound } from './editorial-access';
 import { EditorialEntitiesService } from './editorial-entities.service';
@@ -25,6 +26,8 @@ const HISTORY_QUERY = collectionQuery(publicProposalSchema, {
   sort: ['submittedAt'],
   defaultSort: '-submittedAt',
 });
+// Revisions read in version order only; the matrix lists no sort for them.
+const REVISIONS_QUERY = collectionQuery(entityRevisionSchema, { sort: [], defaultSort: 'id' });
 
 @ApiTags('editorial')
 @Controller('editorial-entities')
@@ -94,5 +97,27 @@ export class EditorialEntitiesController {
   ) {
     const { proposals, total } = await this.proposals.history(viewer?.user, editorialId(id, entityNotFound), query);
     return asProposedInformation(collectionDocument(publicProposalSchema, proposals, total, query));
+  }
+
+  @Get(':id/revisions')
+  @Authenticated('verified')
+  @ApiOperation({
+    summary: 'Revisiones aplicadas de una raíz',
+    description:
+      'Cada microcambio incorporado a la ficha, en orden de versión, con su versión, los valores anterior y resultante, la clave de la fila y la fecha. ' +
+      'Una revisión revela el resultado de su microcambio: el personal ve todas y cualquier otra cuenta solo las de sus propios ' +
+      'microcambios. Una reserva solo existe para su creador.',
+  })
+  @ApiParam({ name: 'id', description: 'UUID editorial' })
+  @ApiJsonApiQuery(REVISIONS_QUERY)
+  @ApiJsonApiCollectionResponse(EntityRevisionResource)
+  @ApiJsonApiErrorResponses(400, 404, 406)
+  async revisions(
+    @CurrentAuthentication() { user }: Authentication,
+    @Param('id') id: string,
+    @JsonApiQuery(REVISIONS_QUERY) query: CollectionQuery,
+  ) {
+    const { revisions, total } = await this.entities.revisions(user, editorialId(id, entityNotFound), query);
+    return collectionDocument(entityRevisionSchema, revisions, total, query);
   }
 }

@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { JsonApiErrorInput, JsonApiException } from '../common/json-api/json-api.exception';
+import { requireOneOf } from '../common/json-api/query';
 
 /*
  * Who may see and change editorial records. Drafts and reservations are private
@@ -62,4 +63,17 @@ export function requireMatchingId(bodyId: string, urlId: string): void {
 
 export function invalid(errors: JsonApiErrorInput[]): JsonApiException {
   return new JsonApiException(HttpStatus.UNPROCESSABLE_ENTITY, errors);
+}
+
+/** A list filter, such as `filter[status]=open,closed`: comma-separated values among the given ones, or 400. */
+export function listFilter<T extends string>(parameter: string, value: string, allowed: readonly T[]): T[] {
+  const values = value.split(',');
+  for (const each of values) requireOneOf(parameter, each, allowed);
+  return values as T[];
+}
+
+/** A filter on an editorial or account UUID, in lower case; anything else answers 400. */
+export function uuidFilter(parameter: string, value: string): string {
+  if (!isUuid(value)) throw new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} must be a UUID`, source: { parameter } }]);
+  return value.toLowerCase();
 }
