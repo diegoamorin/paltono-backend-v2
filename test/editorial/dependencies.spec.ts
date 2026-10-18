@@ -298,7 +298,10 @@ describe('dependencies, atomic groups and withdrawals', () => {
       await submitProposal(app, luis.accessToken, proposalId).expect(200);
 
       const failed = await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(422);
-      expect(failed.body.errors[0]).toEqual(expect.objectContaining({ code: 'inconsistent_value', meta: expect.objectContaining({ changeId: changeIds[1] }) }));
+      expect(failed.body.errors.map(({ code, meta }: { code: string; meta: { changeId: string } }) => [code, meta.changeId])).toEqual([
+        ['inconsistent_value', changeIds[0]],
+        ['inconsistent_value', changeIds[1]],
+      ]);
       expect(await statuses(luis, proposalId)).toEqual(['pending', 'pending']);
       const root = await getJsonApi(app, `/v1/editorial-entities/${entityId}`).expect(200);
       expect(root.body.data.attributes.currentVersion).toBe(1);
@@ -306,6 +309,93 @@ describe('dependencies, atomic groups and withdrawals', () => {
       const rejected = await decideChange(app, moderator.accessToken, changeIds[1], { action: 'reject', reason: 'Fechas incompatibles' }).expect(201);
       expect(rejected.body.data.map(({ attributes }: { attributes: { resultingStatus: string } }) => attributes.resultingStatus)).toEqual(['rejected', 'rejected']);
       expect(await statuses(luis, proposalId)).toEqual(['rejected', 'rejected']);
+    });
+
+    it('validates the state the whole group leaves, not each step on the way', async () => {
+      const entityId = await reserveIdentity(app, ana.accessToken);
+      const creation = await draftChanges(ana, [
+        { entityId, proposedValue: { exists: true, value: { type: 'organization', displayName: 'EDAM', organization: { founding: { year: 2015 }, dissolution: { year: 2020 } } } } },
+      ]);
+      await submitProposal(app, ana.accessToken, creation.proposalId).expect(200);
+      await decideChange(app, moderator.accessToken, creation.changeIds[0], { action: 'apply' }).expect(201);
+      const setDate = (targetPath: string, value: object): ChangeInput => ({
+        entityId,
+        operation: 'set_fields',
+        targetPath,
+        proposedValue: { exists: true, value },
+        atomicGroupId: GROUP,
+      });
+
+      // Moving the founding first would leave it after the dissolution for a moment.
+      const { proposalId, changeIds } = await submitChanges(luis, [
+        setDate('organizations.founding', { year: 2030 }),
+        setDate('organizations.dissolution', { year: 2035 }),
+      ]);
+      await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(201);
+
+      expect(await statuses(luis, proposalId)).toEqual(['applied', 'applied']);
+    });
+
+    it('follows the dependencies when the domain refuses a state on the way', async () => {
+      const entityId = await publishPerson();
+      const date = (targetPath: string, value: string, atomicGroupId: string): ChangeInput => ({
+        entityId,
+        operation: 'set_fields',
+        targetPath,
+        proposedValue: { exists: true, value },
+        atomicGroupId,
+      });
+      const death = await submitChanges(ana, [{ entityId, operation: 'set_fields', targetPath: 'people.death_date', proposedValue: { exists: true, value: '2000-01-01' } }]);
+      await decideChange(app, moderator.accessToken, death.changeIds[0], { action: 'apply' }).expect(201);
+      const later = (atomicGroupId: string) => [date('people.birth_date', '2005-01-01', atomicGroupId), date('people.death_date', '2060-01-01', atomicGroupId)];
+
+      // Moving the birth first would put it after the current death.
+      const unordered = await submitChanges(luis, later(GROUP));
+      const refused = await decideChange(app, moderator.accessToken, unordered.changeIds[0], { action: 'apply' }).expect(422);
+      expect(refused.body.errors[0]).toEqual(expect.objectContaining({ code: 'inconsistent_value', meta: { changeId: unordered.changeIds[0] } }));
+      expect(await statuses(luis, unordered.proposalId)).toEqual(['pending', 'pending']);
+
+      await decideChange(app, luis.accessToken, unordered.changeIds[0], { action: 'withdraw_change' }).expect(201);
+      const ordered = await submitChanges(luis, later('9d4f2c1e-8b7a-4e6d-a5c3-1f0e9d8c7b6a'), [[0, 1]]);
+      await decideChange(app, moderator.accessToken, ordered.changeIds[0], { action: 'apply' }).expect(201);
+      expect(await statuses(luis, ordered.proposalId)).toEqual(['applied', 'applied']);
+    });
+
+    it('reports every member in conflict, and applies over new bases on several roots once each version is confirmed', async () => {
+      const first = await publishPerson();
+      const second = await publishPerson();
+      const height = (entityId: string, value: number, atomicGroupId?: string): ChangeInput => ({
+        entityId,
+        operation: 'set_fields',
+        targetPath: 'people.height_cm',
+        proposedValue: { exists: true, value },
+        ...(atomicGroupId ? { atomicGroupId } : {}),
+      });
+      const { proposalId, changeIds } = await submitChanges(luis, [height(first, 165, GROUP), height(second, 166, GROUP)]);
+      const competing = await submitChanges(ana, [height(first, 170), height(second, 171)]);
+      await decideChange(app, moderator.accessToken, competing.changeIds[0], { action: 'apply' }).expect(201);
+      await decideChange(app, moderator.accessToken, competing.changeIds[1], { action: 'apply' }).expect(201);
+
+      const conflict = await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(409);
+
+      expect(conflict.body.errors).toEqual([
+        expect.objectContaining({ code: 'base_changed', meta: { changeId: changeIds[0], entityId: first, currentVersion: 2, currentValue: { exists: true, value: 170 } } }),
+        expect.objectContaining({ code: 'base_changed', meta: { changeId: changeIds[1], entityId: second, currentVersion: 2, currentValue: { exists: true, value: 171 } } }),
+      ]);
+      expect(await statuses(luis, proposalId)).toEqual(['conflicted', 'conflicted']);
+
+      // One version cannot confirm two roots.
+      const rebase = { action: 'apply_rebased', reason: 'Medidas oficiales' };
+      const ambiguous = await decideChange(app, moderator.accessToken, changeIds[0], { ...rebase, confirmedVersion: 2 }).expect(422);
+      expect(ambiguous.body.errors[0]).toEqual(
+        expect.objectContaining({ code: 'confirmed_versions_required', source: { pointer: '/data/attributes/confirmedVersions' } }),
+      );
+      const partial = await decideChange(app, moderator.accessToken, changeIds[0], { ...rebase, confirmedVersions: { [first]: 2 } }).expect(422);
+      expect(partial.body.errors[0].code).toBe('confirmed_versions_required');
+
+      const rebased = await decideChange(app, moderator.accessToken, changeIds[0], { ...rebase, confirmedVersions: { [first]: 2, [second]: 2 } }).expect(201);
+      expect(rebased.body.data.map(({ attributes }: { attributes: { action: string } }) => attributes.action)).toEqual(['apply_rebased', 'apply_rebased']);
+      expect(await statuses(luis, proposalId)).toEqual(['applied', 'applied']);
     });
 
     it('keeps the other members pending when one of them is in conflict', async () => {
@@ -380,9 +470,14 @@ describe('dependencies, atomic groups and withdrawals', () => {
   });
 
   describe('an applied dependency', () => {
-    it('unblocks only while its result still holds', async () => {
+    it('unblocks only while its result still holds, and otherwise blocks its dependents', async () => {
       const entityId = await publishPerson();
-      const { changeIds } = await submitChanges(luis, [addAlias(entityId, 'Lee Ji-eun'), addAlias(entityId, 'Dami', { sortOrder: 1 })], [[1, 0]]);
+      const { proposalId, changeIds } = await submitChanges(
+        luis,
+        [addAlias(entityId, 'Lee Ji-eun'), addAlias(entityId, 'Dami', { sortOrder: 1 }), addAlias(entityId, 'Jieun', { sortOrder: 2 })],
+        // The third alias depends on the second, which depends on the first.
+        [[1, 0], [2, 1]],
+      );
       const inserted = await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }, '?include=revision').expect(201);
       const { id } = inserted.body.included[0].attributes.resultKey;
       // Another submission removes the alias the dependency inserted.
@@ -391,17 +486,19 @@ describe('dependencies, atomic groups and withdrawals', () => {
       ]);
       await decideChange(app, moderator.accessToken, removal.changeIds[0], { action: 'apply' }).expect(201);
 
-      const conflict = await decideChange(app, moderator.accessToken, changeIds[1], { action: 'apply' }).expect(409);
-      expect(conflict.body.errors[0].code).toBe('base_changed');
-      expect((await decisionsOn(changeIds[1]))[0]).toEqual(
-        expect.objectContaining({ action: 'mark_conflict', reason: `La fila que escribió el microcambio ${changeIds[0]}, del que depende, ya no existe` }),
-      );
-      const rebased = await decideChange(app, moderator.accessToken, changeIds[1], {
-        action: 'apply_rebased',
-        confirmedVersion: 3,
-        reason: 'Aplicar igualmente',
-      }).expect(409);
-      expect(rebased.body.errors[0].code).toBe('constraint_violated');
+      const failed = await decideChange(app, moderator.accessToken, changeIds[1], { action: 'apply' }).expect(409);
+
+      expect(failed.body.errors[0]).toEqual(expect.objectContaining({ code: 'dependency_failed', meta: { changeId: changeIds[1], dependsOn: [changeIds[0]] } }));
+      expect(await decisionsOn(changeIds[1])).toEqual([
+        expect.objectContaining({
+          action: 'block_dependency',
+          resultingStatus: 'blocked',
+          reason: `La fila que escribió el microcambio ${changeIds[0]}, del que depende, ya no existe`,
+        }),
+      ]);
+      expect(await statuses(luis, proposalId)).toEqual(['applied', 'blocked', 'blocked']);
+      const { body } = await getJsonApi(app, `/v1/proposals/${proposalId}`).expect(200);
+      expect(body.data.attributes.status).toBe('closed');
     });
   });
 

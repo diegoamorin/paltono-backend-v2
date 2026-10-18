@@ -40,13 +40,16 @@ export class DecisionsController {
       '`apply` valida de nuevo el payload y lo incorpora a la ficha: al aplicar un alta se inserta la identidad, se publica la raíz ' +
       'y se escriben la decisión y la primera revisión, todo en una transacción. Un cambio de campo cuyo resultado ya existe se cierra como ' +
       '`satisfied` sin escritura ni versión nueva. Si la base relevante cambió, `apply` registra el conflicto (decisión automática con el ' +
-      'contexto observado) y responde 409 `base_changed` con la versión y el valor actuales; solo `apply_rebased`, con motivo y ' +
-      '`confirmedVersion` igual a la versión actual de la ficha, lo aplica sobre la base nueva, conservando la base y el valor del autor. ' +
+      'contexto observado) y responde 409 con un error `base_changed` por microcambio en conflicto, con su ficha, la versión y el valor ' +
+      'actuales; solo `apply_rebased`, con motivo y `confirmedVersion` igual a la versión actual de la ficha (o `confirmedVersions`, una ' +
+      'por ficha, si los conflictos son de varias), lo aplica sobre la base nueva, conservando la base y el valor del autor. ' +
       'Aplicar un campo resuelve los microcambios abiertos que compiten por él: quedan `satisfied` o `conflicted`. ' +
       '`reject` exige motivo; una reserva rechazada sigue sin ficha pública. ' +
-      'Aplicar exige que las dependencias estén aplicadas o satisfechas y que su resultado siga vigente. Si el microcambio pertenece a un ' +
-      'grupo atómico, la decisión se aplica a todos sus miembros abiertos: se aplican en orden de dependencias en una transacción, todos ' +
-      'o ninguno (un conflicto deja los demás pendientes), o se rechazan o retiran juntos. Rechazar o retirar propaga `blocked`, con ' +
+      'Aplicar exige que las dependencias estén aplicadas o satisfechas; si una aplicada perdió su resultado (su ficha ya no está ' +
+      'publicada o su fila ya no existe), el microcambio y su grupo quedan `blocked` y responde 409 `dependency_failed`. Si el ' +
+      'microcambio pertenece a un grupo atómico, la decisión se aplica a todos sus miembros abiertos: se aplican en orden de dependencias ' +
+      'en una transacción, todos o ninguno (un conflicto deja los demás pendientes), validando las reglas de cada ficha sobre el estado ' +
+      'final del grupo, o se rechazan o retiran juntos. Rechazar o retirar propaga `blocked`, con ' +
       'decisiones automáticas, a los dependientes y a sus grupos. Retirar no revierte lo aplicado. ' +
       'Un microcambio ya resuelto responde 409. La propuesta se cierra cuando todos sus microcambios quedan resueltos. ' +
       'Devuelve las decisiones del microcambio o de todo su grupo; `include=revision` añade la revisión con `resultKey.publicId` de la ficha creada.',

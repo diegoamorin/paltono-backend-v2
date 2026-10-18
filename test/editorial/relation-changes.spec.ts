@@ -267,7 +267,7 @@ describe('relation changes', () => {
 
       const conflict = await apply(luisSame.changeIds[0]).expect(409);
       expect(conflict.body.errors[0]).toEqual(
-        expect.objectContaining({ code: 'base_changed', meta: { currentVersion: 4, currentValue: { exists: true, value: alias('Lee Ji-eun', { sortOrder: 2 }) } } }),
+        expect.objectContaining({ code: 'base_changed', meta: { changeId: luisSame.changeIds[0], entityId, currentVersion: 4, currentValue: { exists: true, value: alias('Lee Ji-eun', { sortOrder: 2 }) } } }),
       );
       expect(await statuses(luis, luisSame.proposalId)).toEqual(['conflicted']);
       await apply(luisOther.changeIds[0]).expect(201);

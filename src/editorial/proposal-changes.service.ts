@@ -192,14 +192,27 @@ export async function revalidateChange(
 }
 
 /**
+ * The rules on the root's other data that an applied microchange breaks, such
+ * as a dissolution before the founding, on the state its whole atomic group
+ * left. Reported with the microchange each problem belongs to.
+ */
+export async function finalStateProblems(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<JsonApiErrorInput[]> {
+  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const problems = (await definition.targetProblems?.(manager, root, (change.proposedValue as { value: unknown }).value)) ?? [];
+  return problems.map(({ code, detail, member }) => ({ code, detail, meta: { changeId: change.id, member } }));
+}
+
+/**
  * When a microchange is checked. A decision finds a row gone or a constraint
- * broken as a conflict or a satisfied result, not as an invalid microchange.
+ * broken as a conflict or a satisfied result, not as an invalid microchange,
+ * and checks the rules on the root's other data only on the state its whole
+ * atomic group leaves: see `finalStateProblems`.
  */
 type Stage = 'draft' | 'submission' | 'decision';
 
 type ChangeFields = Pick<
   ProposalChange,
-  'id' | 'proposalId' | 'entityId' | 'targetPath' | 'targetKey' | 'payloadSchemaVersion' | 'proposedValue'
+  'id' | 'proposalId' | 'entityId' | 'targetPath' | 'targetKey' | 'payloadSchemaVersion' | 'proposedValue' | 'atomicGroupId'
 > & { operation: string };
 
 /**
@@ -234,7 +247,8 @@ async function changeProblems(
     if (targetProblems.length > 0) return targetProblems;
   }
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
-  if (problems.length === 0 && definition.targetProblems) {
+  // A member of an atomic group is judged with the rest of its group, which only a decision applies.
+  if (problems.length === 0 && definition.targetProblems && stage !== 'decision' && change.atomicGroupId === null) {
     problems.push(...(await definition.targetProblems(manager, entity, (change.proposedValue as { value: unknown }).value)));
   }
   return problems;

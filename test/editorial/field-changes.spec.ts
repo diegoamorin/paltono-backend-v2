@@ -199,7 +199,7 @@ describe('field changes', () => {
       const response = await decideChange(app, moderator.accessToken, late.changeIds[0], { action: 'apply' }).expect(409);
 
       expect(response.body.errors[0]).toEqual(
-        expect.objectContaining({ code: 'base_changed', meta: { currentVersion: 2, currentValue: { exists: true, value: 172 } } }),
+        expect.objectContaining({ code: 'base_changed', meta: expect.objectContaining({ currentVersion: 2, currentValue: { exists: true, value: 172 } }) }),
       );
       // The conflict is recorded although the request failed, with the context it observed.
       expect(await statuses(luis, late.proposalId)).toEqual(['conflicted']);
@@ -221,7 +221,7 @@ describe('field changes', () => {
 
       const response = await decideChange(app, moderator.accessToken, late.changeIds[0], { action: 'apply' }).expect(409);
 
-      expect(response.body.errors[0].meta).toEqual({ currentVersion: 3, currentValue: { exists: true, value: 162 } });
+      expect(response.body.errors[0].meta).toEqual({ changeId: late.changeIds[0], entityId, currentVersion: 3, currentValue: { exists: true, value: 162 } });
     });
 
     it('refuses a confirmation of a version that is no longer current', async () => {
@@ -237,7 +237,7 @@ describe('field changes', () => {
       const response = await decideChange(app, moderator.accessToken, second.changeIds[0], attributes).expect(409);
 
       expect(response.body.errors[0]).toEqual(
-        expect.objectContaining({ code: 'stale_confirmation', meta: { currentVersion: 3, currentValue: { exists: true, value: 172 } } }),
+        expect.objectContaining({ code: 'stale_confirmation', meta: { changeId: second.changeIds[0], entityId, currentVersion: 3, currentValue: { exists: true, value: 172 } } }),
       );
       expect((await identity(publicId)).person.heightCm).toBe(172);
       expect(await statuses(luis, second.proposalId)).toEqual(['conflicted']);

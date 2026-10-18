@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { Equals, IsDefined, IsIn, IsInt, IsString, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
+import { Equals, IsDefined, IsIn, IsInt, IsObject, IsString, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
 
 export const MANUAL_DECISION_ACTIONS = ['apply', 'apply_rebased', 'reject', 'withdraw_change'] as const;
 export type ManualDecisionAction = (typeof MANUAL_DECISION_ACTIONS)[number];
@@ -22,12 +22,27 @@ class DecisionAttributes {
   @ApiPropertyOptional({
     type: Number,
     minimum: 0,
-    description: 'Versión actual de la ficha que el personal confirma; obligatoria con `apply_rebased` y no admitida con otras acciones',
+    description:
+      'Versión actual de la ficha que el personal confirma con `apply_rebased`, cuando los microcambios en conflicto son de una sola ficha. ' +
+      'No se admite con otras acciones',
   })
   @ValidateIf((_, value) => value !== undefined && value !== null)
   @IsInt()
   @Min(0)
   confirmedVersion?: number | null;
+
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: { type: 'integer', minimum: 0 },
+    nullable: true,
+    example: { '0b7a6f0e-6f0d-4a59-8d0e-6e7d1c2b3a49': 4 },
+    description:
+      'Versión actual que el personal confirma de cada ficha, por su UUID editorial, con `apply_rebased`; ' +
+      'necesaria cuando un grupo atómico tiene microcambios en conflicto en varias fichas. No se admite con otras acciones',
+  })
+  @ValidateIf((_, value) => value !== undefined && value !== null)
+  @IsObject()
+  confirmedVersions?: Record<string, number> | null;
 
   @ApiPropertyOptional({ maxLength: REASON_MAX_LENGTH, description: 'Motivo de la decisión; obligatorio al rechazar y al aplicar sobre una base nueva' })
   @ValidateIf((_, value) => value !== undefined && value !== null)
