@@ -8,6 +8,8 @@ import { Genre } from '../vocabularies/entities/genre.entity';
 import { GENRES } from '../vocabularies/genres';
 import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingWork } from './entities/recording.entity';
 import { Credit, Work } from './entities/work.entity';
+import type { ReleaseEntry } from './release.resource';
+import { TrackEntry, trackSchema } from './track.resource';
 
 /*
  * The public resources of works and recordings. An entry reached as the
@@ -30,10 +32,12 @@ export interface RecordingEntry {
     genres: Genre[];
     primaryGenreId: number | null;
     recordingWorks: RecordingWorkEntry[];
+    /** Its appearances in published releases, without credits nor links. */
+    tracks: TrackEntry[];
   } | null;
 }
 
-export type CreditScope = 'work' | 'recording';
+export type CreditScope = 'work' | 'recording' | 'release';
 
 export interface CreditEntry {
   scope: CreditScope;
@@ -44,6 +48,7 @@ export interface CreditEntry {
   /** The credited work or recording, loaded where the credit is the primary data. */
   work?: WorkEntry;
   recording?: RecordingEntry;
+  release?: ReleaseEntry;
 }
 
 export interface RecordingWorkEntry {
@@ -127,14 +132,6 @@ export const workSchema: ResourceSchema<WorkEntry> = defineResource({
   meta: ({ work }) => ({ editorialEntityId: work.editorialEntityId }),
 });
 
-/** A track of an edition. Tracks arrive with the editions of the catalog; until then a recording appears in none. */
-export const trackSchema: ResourceSchema<{ id: number }> = defineResource({
-  type: 'tracks',
-  id: (track) => String(track.id),
-  attributes: {},
-  relationships: { recording: { schema: () => recordingSchema, get: () => undefined } },
-});
-
 const recordingContent = <V>(read: (entry: RecordingEntry) => V) => content<RecordingEntry>(({ recording }) => recording, read);
 
 export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
@@ -156,7 +153,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     contributions: { schema: () => recordingContributionSchema, get: ({ relations }) => relations?.contributions },
     genres: { schema: () => GENRES.schema, get: ({ relations }) => relations?.genres },
     recordingWorks: { schema: () => recordingWorkSchema, get: ({ relations }) => relations?.recordingWorks },
-    tracks: { schema: () => trackSchema, get: ({ relations }) => (relations ? [] : undefined) },
+    tracks: { schema: () => trackSchema, get: ({ relations }) => relations?.tracks },
   },
   meta: ({ recording }) => ({ editorialEntityId: recording.editorialEntityId }),
 });
@@ -334,10 +331,13 @@ class CreditRelationships {
 
   @ApiProperty({ type: ToOneLinkage, required: false, description: '`recordings`, en un crédito de grabación' })
   recording?: ToOneLinkage;
+
+  @ApiProperty({ type: ToOneLinkage, required: false, description: '`releases`, en un crédito de edición' })
+  release?: ToOneLinkage;
 }
 
 export class CreditResource {
-  @ApiProperty({ enum: ['work-contributions', 'recording-contributions'] })
+  @ApiProperty({ enum: ['work-contributions', 'recording-contributions', 'release-contributions'] })
   type: string;
 
   @ApiProperty({ description: 'PK entera del crédito, como cadena' })
@@ -348,14 +348,6 @@ export class CreditResource {
 
   @ApiProperty({ type: CreditRelationships })
   relationships: CreditRelationships;
-}
-
-export class TrackResource {
-  @ApiProperty({ enum: ['tracks'] })
-  type: string;
-
-  @ApiProperty({ description: 'PK entera de la pista, como cadena' })
-  id: string;
 }
 
 export const RELATION_TYPES = RECORDING_WORK_RELATION_TYPES;

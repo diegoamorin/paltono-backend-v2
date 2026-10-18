@@ -71,9 +71,14 @@ export async function artistReferences(manager: EntityManager, catalogIdentityId
   if (await manager.existsBy(ArtistOrganizationAffiliation, { artistId })) {
     references.push('El perfil artístico tiene afiliaciones; quítalas antes de quitar el perfil');
   }
-  // Presentation credits belong to the music module, whose release groups own them.
-  const [{ credited }] = await manager.query('SELECT EXISTS (SELECT 1 FROM release_artist_credits WHERE artist_id = $1) AS credited', [artistId]);
+  // Presentation credits belong to the music module, whose release groups and releases own them.
+  const [{ credited, onTracks }] = await manager.query(
+    `SELECT EXISTS (SELECT 1 FROM release_artist_credits WHERE artist_id = $1) AS credited,
+            EXISTS (SELECT 1 FROM track_artist_credits WHERE artist_id = $1) AS "onTracks"`,
+    [artistId],
+  );
   if (credited) references.push('El perfil artístico tiene créditos de presentación en lanzamientos; quítalos antes de quitar el perfil');
+  if (onTracks) references.push('El perfil artístico tiene créditos de presentación en pistas; quítalos antes de quitar el perfil');
   return references;
 }
 

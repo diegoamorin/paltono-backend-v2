@@ -50,11 +50,11 @@ const read = async (manager: EntityManager, _root: EditorialEntity, key: RowKey 
 };
 
 /** The identity a credit's key names has an artist profile, once it is created: a reservation's is checked after its creation applies. */
-async function artistProblems(manager: EntityManager, targetKey: object | null): Promise<TargetProblem[]> {
+export async function artistProblems(manager: EntityManager, targetKey: object | null): Promise<TargetProblem[]> {
   const identity = (targetKey as { artist_id: { entity_id: string } }).artist_id.entity_id;
   const identityId = await identityIdOf(manager, identity.toLowerCase());
   if (identityId === null || (await hasArtist(manager, identityId))) return [];
-  return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile presents a release group', member: 'targetKey/artist_id' }];
+  return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile receives a presentation credit', member: 'targetKey/artist_id' }];
 }
 
 const base = {

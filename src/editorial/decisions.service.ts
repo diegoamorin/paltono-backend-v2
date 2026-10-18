@@ -305,7 +305,7 @@ async function observe(manager: EntityManager, change: ProposalChange): Promise<
   const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
   const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
   const value = (change.proposedValue as { value?: unknown }).value;
-  const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey, definition.keyRoots)).key;
+  const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey, definition)).key;
   const current = change.targetKey !== null && key === null ? ABSENT : await definition.read(manager, root, key, value);
   return { root, definition, key, current };
 }

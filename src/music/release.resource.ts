@@ -11,8 +11,8 @@ import {
   WITHDRAWN,
   creditAttributes,
   creditRelationships,
-  trackSchema,
 } from './music.resource';
+import { TrackEntry, trackSchema } from './track.resource';
 import { RELEASE_AVAILABILITIES, ReleaseGroupDates, ReleaseTimes } from './release-dates';
 
 /*
@@ -37,9 +37,11 @@ export interface ReleaseEntry {
   /** With its editorial root. */
   release: Release;
   times: ReleaseTimes;
+  /** Derived from the recordings of its tracks, never stored. */
+  isExplicit: boolean;
   /** Its release group, without relations. */
   group: ReleaseGroupEntry;
-  relations?: { contributions: CreditEntry[]; tracks: { id: number }[] } | null;
+  relations?: { contributions: CreditEntry[]; tracks: TrackEntry[] } | null;
 }
 
 export interface ReleaseArtistCreditEntry {
@@ -73,7 +75,7 @@ export const releaseContributionSchema: ResourceSchema<CreditEntry> = defineReso
   type: 'release-contributions',
   id: ({ credit }) => String(credit.id),
   attributes: creditAttributes,
-  relationships: creditRelationships,
+  relationships: { ...creditRelationships, release: { schema: () => releaseSchema, get: ({ release }) => release } },
 });
 
 const groupContent = <V>(read: (entry: ReleaseGroupEntry) => V) => content<ReleaseGroupEntry>(({ group }) => group, read);
@@ -120,6 +122,7 @@ export const releaseSchema: ResourceSchema<ReleaseEntry> = defineResource({
     releaseInstant: releaseContent(({ times }) => times.instant?.toISOString() ?? null),
     availability: releaseContent(({ times }) => times.availability),
     isCancelled: releaseContent(({ release }) => release.isCancelled),
+    isExplicit: releaseContent(({ isExplicit }) => isExplicit),
     coverArtUrl: releaseContent(({ release }) => release.coverArtUrl),
     createdAt: releaseContent(({ release }) => release.createdAt.toISOString()),
     updatedAt: releaseContent(({ release }) => release.updatedAt.toISOString()),
@@ -251,6 +254,9 @@ class ReleaseAttributes {
 
   @ApiProperty({ required: false, description: WITHDRAWN })
   isCancelled?: boolean;
+
+  @ApiProperty({ required: false, description: `Derivado: alguna de sus pistas usa una grabación explícita. ${WITHDRAWN}` })
+  isExplicit?: boolean;
 
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   coverArtUrl?: string | null;

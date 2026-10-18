@@ -9,10 +9,21 @@ import {
   ApiJsonApiQuery,
   ApiJsonApiResourceResponse,
 } from '../common/json-api/swagger';
-import { RecordingResource, TrackResource, recordingSchema, trackSchema } from './music.resource';
+import { RecordingResource, recordingSchema } from './music.resource';
 import { RecordingsService } from './recordings.service';
 
-const INCLUDE = ['contributions', 'contributions.identity', 'contributions.role', 'genres', 'recordingWorks', 'recordingWorks.work', 'tracks'];
+// The matrix also lists `tracks.release.releaseGroup`, a third level that `include` never reaches; the linkage of each
+// included release names its release group.
+const INCLUDE = [
+  'contributions',
+  'contributions.identity',
+  'contributions.role',
+  'genres',
+  'recordingWorks',
+  'recordingWorks.work',
+  'tracks',
+  'tracks.release',
+];
 
 /** What lists of recordings accept, besides their filters. */
 export const RECORDINGS_OPTIONS: CollectionQueryOptions = { include: INCLUDE, sort: ['title', 'recordingDate', 'createdAt'], defaultSort: 'title' };
@@ -23,8 +34,6 @@ const RECORDINGS_QUERY = collectionQuery(recordingSchema, {
   ...RECORDINGS_OPTIONS,
   filters: ['q', 'isrc', 'genre', 'contributor', 'work', 'artist', 'year', 'isExplicit'],
 });
-
-const TRACKS_QUERY = collectionQuery(trackSchema, { include: ['recording'], sort: ['discNumber', 'trackNumber'], defaultSort: 'discNumber,trackNumber' });
 
 @ApiTags('music')
 @Controller('recordings')
@@ -63,19 +72,5 @@ export class RecordingsController {
   @ApiJsonApiErrorResponses(400, 404, 406)
   async show(@Param('id') id: string, @JsonApiQuery(RECORDING_QUERY) query: ResourceQuery) {
     return resourceDocument(recordingSchema, await this.recordings.show(id), query);
-  }
-
-  @Get(':id/tracks')
-  @ApiOperation({
-    summary: 'Apariciones de una grabación',
-    description: 'Pistas de ediciones que usan la grabación, por disco y número. Las pistas llegan con las ediciones del catálogo.',
-  })
-  @ApiParam({ name: 'id', description: 'public_id de la grabación' })
-  @ApiJsonApiQuery(TRACKS_QUERY)
-  @ApiJsonApiCollectionResponse(TrackResource)
-  @ApiJsonApiErrorResponses(400, 404, 406)
-  async tracks(@Param('id') id: string, @JsonApiQuery(TRACKS_QUERY) query: CollectionQuery) {
-    await this.recordings.show(id);
-    return collectionDocument(trackSchema, [], 0, query);
   }
 }

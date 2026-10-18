@@ -124,13 +124,14 @@ export class ProposalChangesService {
       if (change.atomicGroupId !== current.atomicGroupId && (await hasDependencyCycle(manager, proposalId))) {
         throw invalid([dependencyCycle('/data/attributes/atomicGroupId')]);
       }
-      // Changes to the row an insertion will create start from the value it proposes.
+      // Changes to the row an insertion will create start from the value it proposes; rows of other relations it parents do not.
       if (change.operation === 'add_relation') {
         await manager
           .createQueryBuilder()
           .update(ProposalChange)
           .set({ baseValue: change.proposedValue })
           .where('proposal_id = :proposalId', { proposalId })
+          .andWhere('target_path = :targetPath', { targetPath: change.targetPath })
           .andWhere(`jsonb_path_exists(target_key, '$.* ? (@.change_id == $id)', jsonb_build_object('id', :changeId::text))`, { changeId })
           .execute();
       }
@@ -181,7 +182,7 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
 export async function recordImpliedDependencies(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<void> {
   const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
   const dependsOn = [
-    ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root, definition?.keyRoots)).dependsOn),
+    ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root, definition)).dependsOn),
     ...(await checkRootReferences(manager, change, rootReferencesOf(definition, change))).dependsOn,
   ];
   for (const dependsOnChangeId of dependsOn) {
@@ -345,7 +346,7 @@ async function targetKeyProblems(
     member: `targetKey${path}`,
   }));
   if (invalidKey.length > 0) return invalidKey;
-  const { problems } = await checkReferences(manager, { ...change, targetKey: change.targetKey! }, entity, definition.keyRoots);
+  const { problems } = await checkReferences(manager, { ...change, targetKey: change.targetKey! }, entity, definition);
   return [...problems, ...(await vocabularyProblems(manager, definition.keyReferences?.(change.targetKey!) ?? [], 'targetKey'))];
 }
 
@@ -362,7 +363,7 @@ async function relationChangeProblems(
   stage: Stage,
 ): Promise<ChangeProblem[]> {
   // A reservation's own creation may name it; a withdrawn root accepts no new relation at all.
-  if (entity.publicationStatus === 'withdrawn' || (entity.publicationStatus === 'reserved' && !namesRoot(change.targetKey))) {
+  if (entity.publicationStatus === 'withdrawn' || (entity.publicationStatus === 'reserved' && !namesRoot(change.targetKey, definition))) {
     return [{ code: 'entity_not_published', detail: 'Only a published root can change its relations', member: 'entity' }];
   }
   const others = manager
@@ -371,11 +372,12 @@ async function relationChangeProblems(
     .andWhere('other.entity_id = :entityId', { entityId: entity.id })
     .andWhere('other.target_path = :targetPath', { targetPath: change.targetPath })
     .andWhere('other.id <> :id', { id: change.id });
-  // An insertion whose row has no key yet is told apart by the unique key of its value.
-  const naturalKey = change.targetKey === null ? definition.naturalKey?.((change.proposedValue as { value?: unknown }).value) : undefined;
+  // An insertion whose row has no key yet is told apart by the unique key of its value, within the parent its key names, if any.
+  const naturalKey = definition.operation === 'add_relation' ? definition.naturalKey?.((change.proposedValue as { value?: unknown }).value) : undefined;
   if (change.targetKey !== null) {
     others.andWhere('other.target_key = :targetKey::jsonb', { targetKey: JSON.stringify(change.targetKey) });
-  } else if (naturalKey) {
+  }
+  if (naturalKey) {
     others
       .andWhere(`other.operation = 'add_relation'`)
       .andWhere(`other.proposed_value -> 'value' @> :naturalKey::jsonb`, { naturalKey: JSON.stringify(naturalKey) });
@@ -386,7 +388,7 @@ async function relationChangeProblems(
   }
   if (change.targetKey === null) return [];
   if (definition.operation !== 'add_relation' && stage !== 'decision') {
-    const { key } = await resolveKey(manager, entity, change.targetKey, definition.keyRoots);
+    const { key } = await resolveKey(manager, entity, change.targetKey, definition);
     if (key && !(await definition.read(manager, entity, key, null)).exists) {
       return [{ code: 'relation_row_not_found', detail: `The root has no row of ${change.targetPath} with this key`, member: 'targetKey' }];
     }
@@ -421,7 +423,7 @@ async function readBase(manager: EntityManager, entity: EditorialEntity, change:
   const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
   const value = (change.proposedValue as { value?: unknown }).value;
   if (change.targetKey === null) return definition.read(manager, entity, null, value);
-  const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey, definition.keyRoots);
+  const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey, definition);
   if (key) return definition.read(manager, entity, key, value);
   if (pendingInsertions.length > 0) return (await manager.findOneByOrFail(ProposalChange, { id: pendingInsertions[0] })).proposedValue;
   return ABSENT;
