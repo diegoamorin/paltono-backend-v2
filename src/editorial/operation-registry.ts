@@ -22,7 +22,7 @@ export interface PayloadProblem {
 
 /** A vocabulary entry a payload or a target key refers to, which must exist. */
 export interface VocabularyReference {
-  vocabulary: 'countries';
+  vocabulary: 'countries' | 'organization_types' | 'platforms';
   id: number;
   path: string;
 }

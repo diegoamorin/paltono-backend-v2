@@ -1,13 +1,60 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { defineResource } from '../common/json-api/resource-schema';
+import { ResourceIdentifier } from '../common/json-api/swagger';
+import { Country } from '../vocabularies/entities/country.entity';
+import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
+import { COUNTRIES } from '../vocabularies/countries';
+import { ORGANIZATION_TYPES } from '../vocabularies/organization-types';
+import { PLATFORMS } from '../vocabularies/platforms';
 import { CATALOG_IDENTITY_TYPES, CatalogIdentity, Organization, PERSON_GENDERS, Person } from './entities/catalog-identity.entity';
+import { CatalogIdentityAlias, CatalogIdentityPlatformLink } from './entities/identity-relation.entity';
 
-/** A published identity with the row of its subtype, or a withdrawn one with neither. */
+/** What a published identity relates to; a withdrawn one shows none of it. */
+export interface IdentityRelations {
+  aliases: CatalogIdentityAlias[];
+  nationalities: Country[];
+  originCountry: Country | null;
+  organizationTypes: OrganizationType[];
+  /** With their platforms. */
+  platformLinks: CatalogIdentityPlatformLink[];
+}
+
+/** A published identity with the row of its subtype and its relations, or a withdrawn one with none of them. */
 export interface IdentityEntry {
   identity: CatalogIdentity;
   person: Person | null;
   organization: Organization | null;
+  relations: IdentityRelations | null;
 }
+
+export const identityAliasSchema = defineResource<CatalogIdentityAlias>({
+  type: 'identity-aliases',
+  id: (alias) => String(alias.id),
+  attributes: { alias: (alias) => alias.alias, isPrimary: (alias) => alias.isPrimary, sortOrder: (alias) => alias.sortOrder },
+});
+
+export const identityPlatformLinkSchema = defineResource<CatalogIdentityPlatformLink>({
+  type: 'identity-platform-links',
+  id: (link) => String(link.id),
+  attributes: {
+    url: (link) => link.url,
+    createdAt: (link) => link.createdAt.toISOString(),
+    updatedAt: (link) => link.updatedAt.toISOString(),
+  },
+  relationships: { platform: { schema: () => PLATFORMS.schema, get: (link) => link.platform } },
+});
+
+/**
+ * The artist profile of an identity. Profiles arrive with the artists of the
+ * catalog; until then no identity has one, so the relationship is always empty.
+ */
+const artistSchema = defineResource<{ publicId: string }>({ type: 'artists', id: (artist) => artist.publicId, attributes: {} });
+
+/** A relationship of the entry's relations, which a withdrawn entry leaves out like its content. */
+const related =
+  (read: (relations: IdentityRelations) => unknown) =>
+  ({ relations }: IdentityEntry): unknown =>
+    relations === null ? undefined : read(relations);
 
 const partialDate = (year: number | null, month: number | null, day: number | null) =>
   year === null ? null : { year, month, day };
@@ -50,6 +97,14 @@ export const identitySchema = defineResource<IdentityEntry>({
     ),
     createdAt: content(({ identity }) => identity.createdAt.toISOString()),
     updatedAt: content(({ identity }) => identity.updatedAt.toISOString()),
+  },
+  relationships: {
+    aliases: { schema: () => identityAliasSchema, get: related(({ aliases }) => aliases) },
+    nationalities: { schema: () => COUNTRIES.schema, get: related(({ nationalities }) => nationalities) },
+    originCountry: { schema: () => COUNTRIES.schema, get: related(({ originCountry }) => originCountry) },
+    organizationTypes: { schema: () => ORGANIZATION_TYPES.schema, get: related(({ organizationTypes }) => organizationTypes) },
+    platformLinks: { schema: () => identityPlatformLinkSchema, get: related(({ platformLinks }) => platformLinks) },
+    artist: { schema: () => artistSchema, get: related(() => null) },
   },
   meta: ({ identity }) => ({ editorialEntityId: identity.editorialEntityId }),
 });
@@ -138,6 +193,36 @@ class EntryMeta {
   editorialEntityId: string;
 }
 
+class ToOneLinkage {
+  @ApiProperty({ type: ResourceIdentifier, nullable: true })
+  data: ResourceIdentifier | null;
+}
+
+class ToManyLinkage {
+  @ApiProperty({ type: [ResourceIdentifier] })
+  data: ResourceIdentifier[];
+}
+
+class IdentityRelationships {
+  @ApiProperty({ type: ToManyLinkage, description: '`identity-aliases`, por `sortOrder`' })
+  aliases: ToManyLinkage;
+
+  @ApiProperty({ type: ToManyLinkage, description: '`countries` de las nacionalidades documentadas; vacía en una organización' })
+  nationalities: ToManyLinkage;
+
+  @ApiProperty({ type: ToOneLinkage, description: '`countries`: país de origen de una organización; null en una persona' })
+  originCountry: ToOneLinkage;
+
+  @ApiProperty({ type: ToManyLinkage, description: '`organization-types`; vacía en una persona' })
+  organizationTypes: ToManyLinkage;
+
+  @ApiProperty({ type: ToManyLinkage, description: '`identity-platform-links`, cada uno con su `platform`' })
+  platformLinks: ToManyLinkage;
+
+  @ApiProperty({ type: ToOneLinkage, description: '`artists`: perfil artístico de la identidad, o null' })
+  artist: ToOneLinkage;
+}
+
 export class IdentityResource {
   @ApiProperty({ enum: ['identities'] })
   type: string;
@@ -147,6 +232,9 @@ export class IdentityResource {
 
   @ApiProperty({ type: IdentityAttributes })
   attributes: IdentityAttributes;
+
+  @ApiProperty({ type: IdentityRelationships, required: false, description: WITHDRAWN })
+  relationships?: IdentityRelationships;
 
   @ApiProperty({ type: EntryMeta })
   meta: EntryMeta;

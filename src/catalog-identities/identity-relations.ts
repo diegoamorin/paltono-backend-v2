@@ -1,6 +1,6 @@
 import { EntityManager, Not } from 'typeorm';
 import { CatalogIdentity } from './entities/catalog-identity.entity';
-import { CatalogIdentityAlias, PersonNationality } from './entities/identity-relation.entity';
+import { CatalogIdentityAlias, CatalogIdentityPlatformLink, OrganizationTypeAssignment, PersonNationality } from './entities/identity-relation.entity';
 
 /*
  * The reads and writes of an identity's dependent rows, which this module
@@ -14,6 +14,12 @@ export interface AliasValue {
   alias: string;
   isPrimary: boolean;
   sortOrder: number;
+}
+
+/** A platform link as relation changes propose it and revisions record it; its play count is never written. */
+export interface PlatformLinkValue {
+  platformId: number;
+  url: string;
 }
 
 /** The internal id of the identity of an editorial root, or null while it is only reserved. */
@@ -75,6 +81,67 @@ export async function insertNationality(manager: EntityManager, personId: number
 export async function deleteNationality(manager: EntityManager, personId: number, countryId: number, now: Date): Promise<void> {
   await manager.delete(PersonNationality, { personId, countryId });
   await touchIdentity(manager, personId, now);
+}
+
+export function hasOrganizationType(manager: EntityManager, organizationId: number, organizationTypeId: number): Promise<boolean> {
+  return manager.existsBy(OrganizationTypeAssignment, { organizationId, organizationTypeId });
+}
+
+export async function insertOrganizationType(manager: EntityManager, organizationId: number, organizationTypeId: number, now: Date): Promise<void> {
+  await manager.insert(OrganizationTypeAssignment, { organizationId, organizationTypeId });
+  await touchIdentity(manager, organizationId, now);
+}
+
+export async function deleteOrganizationType(manager: EntityManager, organizationId: number, organizationTypeId: number, now: Date): Promise<void> {
+  await manager.delete(OrganizationTypeAssignment, { organizationId, organizationTypeId });
+  await touchIdentity(manager, organizationId, now);
+}
+
+export async function findPlatformLink(manager: EntityManager, catalogIdentityId: number, id: number): Promise<PlatformLinkValue | null> {
+  return platformLinkValue(await manager.findOneBy(CatalogIdentityPlatformLink, { catalogIdentityId, id }));
+}
+
+/** The link of an identity to the given URL on the given platform, which their uniqueness makes unambiguous. */
+export async function findPlatformLinkByUrl(manager: EntityManager, catalogIdentityId: number, value: PlatformLinkValue): Promise<PlatformLinkValue | null> {
+  return platformLinkValue(await manager.findOneBy(CatalogIdentityPlatformLink, { catalogIdentityId, ...value }));
+}
+
+/** What a platform link of an identity would break, besides the row it replaces: the uniqueness of its platform and URL. */
+export async function platformLinkClashes(
+  manager: EntityManager,
+  catalogIdentityId: number,
+  value: PlatformLinkValue,
+  replacedId: number | null,
+): Promise<string[]> {
+  const others = replacedId === null ? {} : { id: Not(replacedId) };
+  if (!(await manager.existsBy(CatalogIdentityPlatformLink, { catalogIdentityId, ...value, ...others }))) return [];
+  return ['La identidad ya tiene este enlace en esa plataforma'];
+}
+
+export async function insertPlatformLink(manager: EntityManager, catalogIdentityId: number, value: PlatformLinkValue, now: Date): Promise<number> {
+  const { identifiers } = await manager.insert(CatalogIdentityPlatformLink, { catalogIdentityId, ...value, createdAt: now, updatedAt: now });
+  await touchIdentity(manager, catalogIdentityId, now);
+  return identifiers[0].id as number;
+}
+
+export async function updatePlatformLink(
+  manager: EntityManager,
+  catalogIdentityId: number,
+  id: number,
+  value: PlatformLinkValue,
+  now: Date,
+): Promise<void> {
+  await manager.update(CatalogIdentityPlatformLink, { catalogIdentityId, id }, { ...value, updatedAt: now });
+  await touchIdentity(manager, catalogIdentityId, now);
+}
+
+export async function deletePlatformLink(manager: EntityManager, catalogIdentityId: number, id: number, now: Date): Promise<void> {
+  await manager.delete(CatalogIdentityPlatformLink, { catalogIdentityId, id });
+  await touchIdentity(manager, catalogIdentityId, now);
+}
+
+function platformLinkValue(row: CatalogIdentityPlatformLink | null): PlatformLinkValue | null {
+  return row && { platformId: row.platformId, url: row.url };
 }
 
 function aliasValue(row: CatalogIdentityAlias | null): AliasValue | null {

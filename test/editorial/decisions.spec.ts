@@ -121,6 +121,14 @@ describe('decisions', () => {
           createdAt: '2026-01-01T00:01:00.000Z',
           updatedAt: '2026-01-01T00:01:00.000Z',
         },
+        relationships: {
+          aliases: { data: [] },
+          nationalities: { data: [] },
+          originCountry: { data: null },
+          organizationTypes: { data: [] },
+          platformLinks: { data: [] },
+          artist: { data: null },
+        },
         meta: { editorialEntityId: entityId },
       });
       const root = await getJsonApi(app, `/v1/editorial-entities/${entityId}`).expect(200);
