@@ -55,7 +55,8 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ ...APP_OPTIONS, logger: false });
   configureApp(app, config);
-  await app.init();
+  // Listening once lets supertest reuse this port; otherwise it opens one per request and Windows runs out (ENOBUFS).
+  await app.listen(0, '127.0.0.1');
 
   const reset = async () => {
     await truncateAllTables(app.get(DataSource));
