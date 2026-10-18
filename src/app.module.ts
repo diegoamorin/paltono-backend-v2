@@ -7,8 +7,10 @@ import { JsonApiModule } from './common/json-api/json-api.module';
 import { MailModule } from './common/mail/mail.module';
 import { APP_CONFIG, AppConfig } from './config/app-config';
 import { databaseOptions } from './database/database-options';
+import { DiscoveryModule } from './discovery/search';
 import { EditorialModule } from './editorial/editorial.module';
 import { HealthModule } from './health/health.module';
+import { LiveEventsModule } from './live-events/live-events.module';
 import { MusicModule } from './music/music.module';
 import { VocabulariesModule } from './vocabularies/vocabularies.module';
 
@@ -28,7 +30,9 @@ export class AppModule {
         VocabulariesModule,
         CatalogIdentitiesModule,
         MusicModule,
+        LiveEventsModule,
         EditorialModule,
+        DiscoveryModule,
       ],
       providers: [{ provide: APP_CONFIG, useValue: config }],
       exports: [APP_CONFIG],

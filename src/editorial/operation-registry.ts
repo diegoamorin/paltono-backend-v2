@@ -13,6 +13,7 @@ import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
+import { EVENT_CHANGES, TOUR_CHANGES } from './live-event-changes';
 import { RECORDING_CHANGES } from './recording-changes';
 import { RELEASE_CHANGES, RELEASE_GROUP_CHANGES } from './release-changes';
 import { WORK_CHANGES } from './work-changes';
@@ -164,6 +165,10 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   withdrawalOf('release_group'),
   ...RELEASE_CHANGES,
   withdrawalOf('release'),
+  ...TOUR_CHANGES,
+  withdrawalOf('tour'),
+  ...EVENT_CHANGES,
+  withdrawalOf('event'),
 ];
 
 /** Creations start from absence, so their base is always the empty envelope. */

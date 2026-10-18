@@ -1,5 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { eventIdOf, tourIdOf } from '../live-events/live-events';
 import { recordingIdOf } from '../music/recordings';
 import { releaseGroupIdOf } from '../music/releases';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
@@ -34,6 +35,8 @@ const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, ent
   identity: identityIdOf,
   recording: recordingIdOf,
   release_group: releaseGroupIdOf,
+  tour: tourIdOf,
+  event: eventIdOf,
 };
 
 /**

@@ -74,7 +74,7 @@ export class ArtistsService {
 }
 
 /** The given artists, with their identities and editorial roots loaded, as entries with their affiliations. */
-async function loadArtistEntries(manager: EntityManager, artists: Artist[]): Promise<ArtistEntry[]> {
+export async function loadArtistEntries(manager: EntityManager, artists: Artist[]): Promise<ArtistEntry[]> {
   const identities = await loadEntries(manager, artists.map(({ identity }) => identity!));
   // A withdrawn identity shows only its notice, so its profile's affiliations are not even read.
   const shown = artists.filter(({ identity }) => identity!.editorialEntity!.publicationStatus !== 'withdrawn').map(({ id }) => id);
