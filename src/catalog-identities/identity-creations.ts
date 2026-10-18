@@ -126,7 +126,7 @@ const PUBLIC_ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 const PUBLIC_ID_LENGTH = 21;
 
 /** A random, URL-safe identifier of 21 characters (126 bits), as `public_id` columns hold. */
-function newPublicId(): string {
+export function newPublicId(): string {
   // 64 symbols, so each byte's low six bits pick one without bias.
   return [...randomBytes(PUBLIC_ID_LENGTH)].map((byte) => PUBLIC_ID_ALPHABET[byte & 63]).join('');
 }

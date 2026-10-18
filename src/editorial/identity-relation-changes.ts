@@ -37,10 +37,10 @@ import type { OperationDefinition, RowKey, TargetProblem } from './operation-reg
  * list; see `row-references.ts` for the references a key may hold instead.
  */
 
-const INT4 = 2_147_483_647;
-const UUID = { type: 'string', pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' };
+export const INT4 = 2_147_483_647;
+export const UUID = { type: 'string', pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' };
 
-const reference = (member: 'change_id' | 'entity_id', description: string) => ({
+export const reference = (member: 'change_id' | 'entity_id', description: string) => ({
   type: 'object',
   additionalProperties: false,
   required: [member],
@@ -55,7 +55,7 @@ const ROW_ID = {
   ],
 };
 
-const ROW_KEY = { type: 'object', additionalProperties: false, required: ['id'], properties: { id: ROW_ID } };
+export const ROW_KEY = { type: 'object', additionalProperties: false, required: ['id'], properties: { id: ROW_ID } };
 
 const NATIONALITY_KEY = {
   type: 'object',

@@ -48,7 +48,7 @@ describe('editorial entities', () => {
       });
     });
 
-    it.each(['work', 'users', ''])('refuses entity types without a registered creation (%j)', async (entityType) => {
+    it.each(['tour', 'users', ''])('refuses entity types without a registered creation (%j)', async (entityType) => {
       const response = await reserveEntity(app, diego.accessToken, entityType).expect(422);
 
       expect(response.body.errors).toEqual([expect.objectContaining({ source: { pointer: '/data/attributes/entityType' } })]);

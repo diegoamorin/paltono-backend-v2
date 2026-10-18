@@ -58,6 +58,11 @@ export interface ResourceQueryOptions {
 }
 
 export interface CollectionQueryOptions extends ResourceQueryOptions {
+  /**
+   * Other types the collection mixes with the schema's, as a heterogeneous
+   * document does. An include path must exist on one of them at least.
+   */
+  alsoOf?: AnyResourceSchema[];
   /** Fields a client may sort by. `id` is always allowed and appended as tiebreaker. */
   sort: string[];
   /** Sort applied when the request has none, in `sort` syntax, such as `-createdAt`. */
@@ -66,12 +71,14 @@ export interface CollectionQueryOptions extends ResourceQueryOptions {
 }
 
 export function resourceQuery(schema: AnyResourceSchema, options: ResourceQueryOptions = {}): ResourceQuerySpec {
-  const include = allowedIncludes(schema, options.include ?? []);
-  return { kind: 'resource', schema, include, fields: fieldsByType(schema, include) };
+  const include = allowedIncludes([schema], options.include ?? []);
+  return { kind: 'resource', schema, include, fields: fieldsByType([schema], include) };
 }
 
 export function collectionQuery(schema: AnyResourceSchema, options: CollectionQueryOptions): CollectionQuerySpec {
-  const base = resourceQuery(schema, options);
+  const schemas = [schema, ...(options.alsoOf ?? [])];
+  const include = allowedIncludes(schemas, options.include ?? []);
+  const base = { schema, include, fields: fieldsByType(schemas, include) };
   const sort = new Set([...options.sort, TIEBREAKER_SORT_FIELD]);
   const defaultSort = parseSort(options.defaultSort, sort);
   if (!defaultSort) throw new Error(`Default sort "${options.defaultSort}" uses a field outside the allowed sort`);
@@ -171,20 +178,31 @@ function parsePage(parameter: string, member: string, value: string, page: { num
   }
 }
 
-function allowedIncludes(schema: AnyResourceSchema, paths: string[]): Set<string> {
+function allowedIncludes(schemas: AnyResourceSchema[], paths: string[]): Set<string> {
   const allowed = new Set<string>();
   for (const path of paths) {
     const segments = path.split('.');
     if (segments.length > MAX_INCLUDE_DEPTH) throw new Error(`Include path "${path}" is deeper than ${MAX_INCLUDE_DEPTH} levels`);
-    resolvePath(schema, segments);
+    if (resolvedPaths(schemas, segments).length === 0) resolvePath(schemas[0], segments);
     for (const prefix of prefixes(path)) allowed.add(prefix);
   }
   return allowed;
 }
 
-function fieldsByType(schema: AnyResourceSchema, include: ReadonlySet<string>): Map<string, Set<string>> {
-  const schemas = [schema, ...[...include].map((path) => resolvePath(schema, path.split('.')))];
-  return new Map(schemas.map((each) => [each.type, new Set(fieldNames(each))]));
+function fieldsByType(schemas: AnyResourceSchema[], include: ReadonlySet<string>): Map<string, Set<string>> {
+  const all = [...schemas, ...[...include].flatMap((path) => resolvedPaths(schemas, path.split('.')))];
+  return new Map(all.map((each) => [each.type, new Set(fieldNames(each))]));
+}
+
+/** The schemas at the end of a relationship path from each of the given ones that has it. */
+function resolvedPaths(schemas: AnyResourceSchema[], segments: string[]): AnyResourceSchema[] {
+  return schemas.flatMap((schema) => {
+    try {
+      return [resolvePath(schema, segments)];
+    } catch {
+      return [];
+    }
+  });
 }
 
 /** The schema at the end of a relationship path; throws if the path does not exist. */

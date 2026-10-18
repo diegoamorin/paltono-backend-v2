@@ -9,6 +9,7 @@ import { APP_CONFIG, AppConfig } from './config/app-config';
 import { databaseOptions } from './database/database-options';
 import { EditorialModule } from './editorial/editorial.module';
 import { HealthModule } from './health/health.module';
+import { MusicModule } from './music/music.module';
 import { VocabulariesModule } from './vocabularies/vocabularies.module';
 
 @Global()
@@ -26,6 +27,7 @@ export class AppModule {
         AccountsModule,
         VocabulariesModule,
         CatalogIdentitiesModule,
+        MusicModule,
         EditorialModule,
       ],
       providers: [{ provide: APP_CONFIG, useValue: config }],

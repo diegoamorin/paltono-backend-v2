@@ -98,6 +98,17 @@ export class IdentitiesService {
   }
 }
 
+/**
+ * The entries of the given identities by internal id, for other modules that
+ * relate to them: a withdrawn one shows only its notice there too.
+ */
+export async function identityEntriesById(manager: EntityManager, ids: number[]): Promise<Map<number, IdentityEntry>> {
+  if (ids.length === 0) return new Map();
+  const identities = await manager.find(CatalogIdentity, { where: { id: In([...new Set(ids)]) }, relations: { editorialEntity: true } });
+  const entries = await loadEntries(manager, identities);
+  return new Map(entries.map((entry) => [entry.identity.id, entry]));
+}
+
 /** The given identities, with their editorial roots loaded, as entries with their subtypes and relations. */
 async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
   // A withdrawn entry only shows its notice: its subtype and relations are not even read.

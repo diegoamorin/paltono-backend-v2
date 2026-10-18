@@ -1,6 +1,8 @@
 import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
+import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Country } from '../vocabularies/entities/country.entity';
+import { Genre } from '../vocabularies/entities/genre.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
 import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
@@ -9,6 +11,8 @@ import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION } from './identity-creation';
 import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
+import { RECORDING_CHANGES } from './recording-changes';
+import { WORK_CHANGES } from './work-changes';
 
 /*
  * The registry of operations a microchange may carry (E1). A microchange names
@@ -24,12 +28,30 @@ export interface PayloadProblem {
 }
 
 /** The entity behind each vocabulary a payload or a target key may refer to. */
-export const VOCABULARIES = { countries: Country, organization_types: OrganizationType, platforms: Platform } as const;
+export const VOCABULARIES = {
+  countries: Country,
+  organization_types: OrganizationType,
+  platforms: Platform,
+  genres: Genre,
+  contribution_roles: ContributionRole,
+} as const;
 
 /** A vocabulary entry a payload or a target key refers to, which must exist. */
 export interface VocabularyReference {
   vocabulary: keyof typeof VOCABULARIES;
   id: number;
+  path: string;
+}
+
+/**
+ * Another root a payload refers to by its editorial id, `{"entity_id": …}`,
+ * such as the identity a credit names. It must be published, or a
+ * reservation the same proposal creates, which the microchange then depends
+ * on; never a withdrawn entry.
+ */
+export interface RootReference {
+  entityType: EditorialEntityType;
+  entityId: string;
   path: string;
 }
 
@@ -75,6 +97,8 @@ export interface OperationDefinition {
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
+  /** Other roots a valid value refers to, with paths inside the envelope. */
+  rootReferences?(value: unknown): RootReference[];
   /**
    * For an insertion whose row will generate its key, the unique key of a
    * valid value, which tells two insertions of the same row apart. Undefined
@@ -110,6 +134,10 @@ export const OPERATIONS: readonly OperationDefinition[] = [
   ...IDENTITY_FIELD_CHANGES,
   ...IDENTITY_RELATION_CHANGES,
   withdrawalOf('identity'),
+  ...WORK_CHANGES,
+  withdrawalOf('work'),
+  ...RECORDING_CHANGES,
+  withdrawalOf('recording'),
 ];
 
 /** Creations start from absence, so their base is always the empty envelope. */

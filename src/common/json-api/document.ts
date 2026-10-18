@@ -58,6 +58,27 @@ export function collectionDocument<T>(
   return withIncluded(document, schema, models, query);
 }
 
+/**
+ * Builds the document for one page of a heterogeneous collection, each
+ * resource with its own schema, with pagination links and `meta.total`.
+ */
+export function mixedCollectionDocument(
+  resources: { schema: AnyResourceSchema; model: unknown }[],
+  total: number,
+  query: CollectionQuery,
+): JsonApiDocument<ResourceObject[]> {
+  const data = resources.map(({ schema, model }) => toResourceObject(schema, model, query.fields));
+  let document: JsonApiDocument<ResourceObject[]> = { jsonapi: JSON_API_VERSION, data, links: paginationLinks(total, query), meta: { total } };
+  const included = new Map<string, ResourceObject>();
+  for (const schema of new Set(resources.map(({ schema }) => schema))) {
+    const models = resources.filter((resource) => resource.schema === schema).map(({ model }) => model);
+    document = withIncluded(document, schema, models, query);
+    for (const object of document.included ?? []) included.set(key(object.type, object.id), object);
+  }
+  for (const object of data) included.delete(key(object.type, object.id));
+  return query.include.length === 0 ? document : { ...document, included: [...included.values()] };
+}
+
 /** Converts a page request into the rows to skip and take. */
 export function pageWindow(query: CollectionQuery): { skip: number; take: number } {
   return { skip: (query.page.number - 1) * query.page.size, take: query.page.size };
@@ -115,7 +136,9 @@ function withIncluded<D extends JsonApiDocument<ResourceObject | ResourceObject[
 function walk(schema: AnyResourceSchema, models: unknown[], segments: string[]): [AnyResourceSchema, unknown][] {
   let current: [AnyResourceSchema, unknown[]] = [schema, models];
   for (const segment of segments) {
-    const relationship = current[0].relationships![segment];
+    // In a heterogeneous collection, a path may exist on some of its types only.
+    const relationship = current[0].relationships?.[segment];
+    if (!relationship) return [];
     const related = current[1].flatMap((model) => relationship.get(model) ?? []);
     current = [relationship.schema(), related];
   }
