@@ -1,0 +1,2 @@
+# `pnpm openapi:export` writes LF; the test that keeps openapi.json current compares it byte for byte.
+openapi.json text eol=lf

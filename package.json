@@ -21,7 +21,8 @@
     "db:reset": "ts-node --transpile-only src/console/db-reset.ts",
     "db:seed": "ts-node --transpile-only src/console/db-seed.ts",
     "db:test:prepare": "ts-node --transpile-only src/console/db-test-prepare.ts",
-    "admin:bootstrap": "ts-node --transpile-only src/console/admin-bootstrap.ts"
+    "admin:bootstrap": "ts-node --transpile-only src/console/admin-bootstrap.ts",
+    "openapi:export": "ts-node --transpile-only src/console/openapi-export.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",

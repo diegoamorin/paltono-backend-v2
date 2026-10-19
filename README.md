@@ -22,12 +22,14 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm db:reset` | Vacía todos los registros conservando las tablas; solo con `NODE_ENV=development` |
 | `pnpm db:seed` | Puebla una base vacía (tras `db:reset`) con cuentas de prueba de cada rol y estado y el catálogo K-pop (identidades, obras, grabaciones, lanzamientos con sus ediciones, tours y conciertos), creado mediante propuestas con fuentes reales que revisa o publica `seed_moderadora`, más propuestas en todos los estados de microcambio y una ficha retirada; solo con `NODE_ENV=development`. Todas las cuentas del seed usan la contraseña `paltono-seed-2026` |
 | `pnpm admin:bootstrap -- --username <u> --reason <texto>` | Promueve a administrador la primera cuenta activa y verificada mientras no exista ninguno (ADR 0003); queda auditado sin administrador actuante |
+| `pnpm openapi:export [ruta]` | Escribe en `openapi.json` (o en la ruta dada) el documento OpenAPI que sirve `/docs-json`, sin levantar el servidor ni conectar a la base |
 | `pnpm db:test:prepare` | Crea si falta y recrea la base de pruebas (la misma que usa `pnpm test`); rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
 
 ## Endpoints de operación
 
 - `GET /health`: JSON simple con la comprobación de la base de datos, para Railway.
 - `GET /docs` y `GET /docs-json`: Swagger UI y OpenAPI. Activos en desarrollo; en producción solo con `SWAGGER_ENABLED=true`, `SWAGGER_USER` y `SWAGGER_PASSWORD` (autenticación básica).
+- `openapi.json`: el mismo documento OpenAPI, versionado como contrato para los frontends. Tras cambiar un controlador o un DTO, regenéralo con `pnpm openapi:export` y haz commit; `pnpm test` falla mientras no coincida con la API.
 
 ## Infraestructura JSON:API
 
