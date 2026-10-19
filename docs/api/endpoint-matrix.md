@@ -118,6 +118,8 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 |---|---|---|---|
 | `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
 | `artists` | `q`, `identityType`, `affiliatedWith` (organización), `affiliationStatus` | `displayName` (defecto), `-createdAt` | `identity`, `identity.aliases`, `affiliations`, `affiliations.organization` |
+| `organization-memberships` (C3) | `side=organization|member` (sin él, ambos lados) | `joined` (defecto, fechas desconocidas al final), `-createdAt` | `organization`, `member`, `roles`, `roles.role` |
+| `work-contributions`, `recording-contributions`, `release-contributions` (C4, documento heterogéneo) | `scope=work|recording|release`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `release`, `role` |
 
 ## 5. Catálogo: música (módulo `music`)
 
@@ -141,7 +143,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
 | `works` | `q` (título), `slug`, `iswc`, `contributor` (identidad), `role` | `title` (defecto), `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `recordingWorks`, `recordingWorks.recording` |
-| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de pista), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release`, `tracks.release.releaseGroup` |
+| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de pista), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release` |
 | `release-groups` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `releases`, `repackageOf` |
 | `releases` | `q`, `releaseGroup`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `releaseGroup`, `releaseGroup.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
 | `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks`, `platformLinks.platform` |
@@ -211,7 +213,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 | # | Método y ruta | Contenido | Pruebas |
 |---|---|---|---|
-| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas | ok val |
+| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; sin `filter[type]` se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad y aparecería dos veces; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas | ok val |
 
 `discovery` solo lee, a través de los servicios públicos de lectura de cada módulo, para no acoplarse a sus tablas.
 
