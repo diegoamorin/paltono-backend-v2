@@ -1,6 +1,4 @@
 import { In } from 'typeorm';
-// Before music.resource, which imports it back through track.resource.
-import './release.resource';
 import { SearchSource, inOrder, publishedRoot } from '../common/search/search-source';
 import { Recording } from './entities/recording.entity';
 import { ReleaseGroup } from './entities/release.entity';

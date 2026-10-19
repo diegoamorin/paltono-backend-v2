@@ -2,9 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { PLATFORMS } from '../vocabularies/platforms';
-import { Track,TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
-import { RecordingEntry, ToManyLinkage, ToOneLinkage, recordingSchema } from './music.resource';
+import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
+import { RecordingEntry, recordingSchema } from './music.resource';
 import { ReleaseEntry, releaseSchema } from './release.resource';
+import { ToManyLinkage, ToOneLinkage, isWithdrawn } from './resource-primitives';
 
 /*
  * The public resources of tracks, their presentation credits and platform
@@ -25,8 +26,6 @@ export interface TrackArtistCreditEntry {
   credit: TrackArtistCredit;
   artist: ArtistEntry;
 }
-
-const isWithdrawn = (root: { editorialEntity?: { publicationStatus: string } }) => root.editorialEntity!.publicationStatus === 'withdrawn';
 
 export const trackArtistCreditSchema: ResourceSchema<TrackArtistCreditEntry> = defineResource({
   type: 'track-artist-credits',
@@ -81,16 +80,16 @@ class TrackAttributes {
 }
 
 class TrackRelationships {
-  @ApiProperty({ type: () => ToOneLinkage, description: '`releases`: su edición' })
+  @ApiProperty({ type: ToOneLinkage, description: '`releases`: su edición' })
   release: ToOneLinkage;
 
-  @ApiProperty({ type: () => ToOneLinkage, description: '`recordings`' })
+  @ApiProperty({ type: ToOneLinkage, description: '`recordings`' })
   recording: ToOneLinkage;
 
-  @ApiProperty({ type: () => ToManyLinkage, required: false, description: '`track-artist-credits`, por `position`' })
+  @ApiProperty({ type: ToManyLinkage, required: false, description: '`track-artist-credits`, por `position`' })
   artistCredits?: ToManyLinkage;
 
-  @ApiProperty({ type: () => ToManyLinkage, required: false, description: '`track-platform-links`' })
+  @ApiProperty({ type: ToManyLinkage, required: false, description: '`track-platform-links`' })
   platformLinks?: ToManyLinkage;
 }
 

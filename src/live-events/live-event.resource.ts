@@ -2,9 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
-// music.resource and release.resource import each other through track.resource; entering through release.resource keeps that cycle safe.
-import '../music/release.resource';
-import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN } from '../music/music.resource';
+import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN, content, isWithdrawn, partialDate } from '../music/resource-primitives';
 import { COUNTRIES } from '../vocabularies/countries';
 import { Country } from '../vocabularies/entities/country.entity';
 import {
@@ -67,17 +65,6 @@ export interface OrganizerEntry {
   row: TourOrganizer | EventOrganizer;
   identity: IdentityEntry;
 }
-
-type Root = { editorialEntity?: { publicationStatus: string; withdrawnAt: Date | null } };
-const isWithdrawn = (root: Root) => root.editorialEntity!.publicationStatus === 'withdrawn';
-
-/** An attribute of an entry's content, which a withdrawn entry leaves out: it only shows the notice. */
-const content =
-  <T>(root: (entry: T) => Root, read: (entry: T) => unknown) =>
-  (entry: T): unknown =>
-    isWithdrawn(root(entry)) ? undefined : read(entry);
-
-const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
 
 const liveArtistAttributes = {
   role: ({ row }: LiveArtistEntry) => row.role,

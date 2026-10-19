@@ -1,14 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
-import { ResourceIdentifier } from '../common/json-api/swagger';
-import { CONTRIBUTION_ROLES } from '../vocabularies/contribution-roles';
-import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Genre } from '../vocabularies/entities/genre.entity';
 import { GENRES } from '../vocabularies/genres';
 import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingWork } from './entities/recording.entity';
-import { Credit, Work } from './entities/work.entity';
-import type { ReleaseEntry } from './release.resource';
+import { Work } from './entities/work.entity';
+import {
+  CreditEntry,
+  EntryMeta,
+  PartialDate,
+  ToManyLinkage,
+  ToOneLinkage,
+  WITHDRAWN,
+  content,
+  creditAttributes,
+  creditRelationships,
+  partialDate,
+} from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 
 /*
@@ -37,48 +44,11 @@ export interface RecordingEntry {
   } | null;
 }
 
-export type CreditScope = 'work' | 'recording' | 'release';
-
-export interface CreditEntry {
-  scope: CreditScope;
-  credit: Credit;
-  identity: IdentityEntry;
-  /** With its scopes. */
-  role: ContributionRole;
-  /** The credited work or recording, loaded where the credit is the primary data. */
-  work?: WorkEntry;
-  recording?: RecordingEntry;
-  release?: ReleaseEntry;
-}
-
 export interface RecordingWorkEntry {
   row: RecordingWork;
   work: WorkEntry;
   recording: RecordingEntry;
 }
-
-const isWithdrawn = (root: { editorialEntity?: { publicationStatus: string } }) => root.editorialEntity!.publicationStatus === 'withdrawn';
-
-/** An attribute of an entry's content, which a withdrawn entry leaves out: it only shows the notice. */
-const content =
-  <T>(root: (entry: T) => Work | Recording, read: (entry: T) => unknown) =>
-  (entry: T): unknown =>
-    isWithdrawn(root(entry)) ? undefined : read(entry);
-
-const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
-
-export const creditAttributes = {
-  creditedAs: ({ credit }: CreditEntry) => credit.creditedAs,
-  position: ({ credit }: CreditEntry) => credit.position,
-  details: ({ credit }: CreditEntry) => credit.details,
-  sourceText: ({ credit }: CreditEntry) => credit.sourceText,
-  sourceUrl: ({ credit }: CreditEntry) => credit.sourceUrl,
-};
-
-export const creditRelationships = {
-  identity: { schema: () => identitySchema, get: ({ identity }: CreditEntry) => identity },
-  role: { schema: () => CONTRIBUTION_ROLES.schema, get: ({ role }: CreditEntry) => role },
-};
 
 export const workContributionSchema: ResourceSchema<CreditEntry> = defineResource({
   type: 'work-contributions',
@@ -159,34 +129,6 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
 });
 
 // Swagger descriptions of the resource objects.
-
-export const WITHDRAWN = 'Ausente en una ficha retirada';
-
-export class PartialDate {
-  @ApiProperty({ example: 2021 })
-  year: number;
-
-  @ApiProperty({ type: Number, nullable: true, example: 5 })
-  month: number | null;
-
-  @ApiProperty({ type: Number, nullable: true, example: null })
-  day: number | null;
-}
-
-export class EntryMeta {
-  @ApiProperty({ format: 'uuid', description: 'UUID editorial con el que se proponen cambios a la ficha' })
-  editorialEntityId: string;
-}
-
-export class ToOneLinkage {
-  @ApiProperty({ type: ResourceIdentifier, nullable: true })
-  data: ResourceIdentifier | null;
-}
-
-export class ToManyLinkage {
-  @ApiProperty({ type: [ResourceIdentifier] })
-  data: ResourceIdentifier[];
-}
 
 class WorkAttributes {
   @ApiProperty({ enum: ['published', 'withdrawn'], description: 'Una ficha retirada solo muestra este aviso y `withdrawnAt`' })

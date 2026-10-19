@@ -7,7 +7,8 @@ import { identityEntriesById } from '../catalog-identities/identities.service';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
 import { Credit, Work, WorkContribution } from './entities/work.entity';
-import { CreditEntry, CreditScope, RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
+import { RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
+import { CreditEntry, CreditScope } from './resource-primitives';
 
 /*
  * Loads works and recordings as entries with their relations. The targets of

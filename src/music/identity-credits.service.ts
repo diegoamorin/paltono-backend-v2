@@ -11,7 +11,7 @@ import { Release } from './entities/release.entity';
 import { ReleaseContribution } from './entities/track.entity';
 import { Clock } from '../common/clock/clock';
 import { creditEntries } from './music-entries';
-import { CreditEntry, CreditScope } from './music.resource';
+import { CreditEntry, CreditScope } from './resource-primitives';
 import { releaseEntries } from './release-entries';
 
 /** The scopes a credit filter accepts: those of credits, not of membership roles. */
