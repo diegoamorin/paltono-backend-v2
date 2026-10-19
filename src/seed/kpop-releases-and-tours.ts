@@ -311,10 +311,39 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         aliases: ['보아', '권보아'],
       },
       { key: 'sean-garrett', displayName: 'Sean Garrett', artist: true },
+      { key: 'yirayah-garcia', displayName: 'Yirayah Garcia' },
+      { key: 'clubba-langg', displayName: 'Clubba Langg' },
+      { key: 'brian-kennedy', displayName: 'Brian Kennedy' },
+      { key: 'dwanna-orange', displayName: 'Dwanna Orange' },
+      { key: 'julian-lowe', displayName: 'Julian Lowe' },
+      { key: 'isaiah-freeman', displayName: 'Isaiah Freeman' },
+    ],
+    organizations: [{ key: 'davenport-and-spencer', displayName: 'Davenport & Spencer', types: ['production-team'] }],
+    // Writers and producers of the bonus tracks of the Deluxe edition, per its track listing.
+    works: [
+      {
+        key: 'energetic',
+        title: 'Energetic',
+        credits: [
+          { identity: 'sean-garrett', role: 'songwriter' },
+          { identity: 'yirayah-garcia', role: 'songwriter' },
+        ],
+      },
+      {
+        key: 'control',
+        title: 'Control',
+        credits: [
+          { identity: 'brian-kennedy', role: 'songwriter' },
+          { identity: 'dwanna-orange', role: 'songwriter' },
+          { identity: 'julian-lowe', role: 'songwriter' },
+          { identity: 'isaiah-freeman', role: 'songwriter' },
+        ],
+      },
+      { key: 'crazy-about', title: 'Crazy About', credits: [{ identity: 'sean-garrett', role: 'songwriter' }] },
     ],
     recordings: [
       recording('boa/i-did-it-for-love', 'I Did It for Love'),
-      recording('boa/energetic', 'Energetic'),
+      recording('boa/energetic', 'Energetic', [{ work: 'energetic', relationType: 'performance' }]),
       recording('boa/did-ya', 'Did Ya'),
       recording('boa/look-whos-talking', "Look Who's Talking"),
       recording('boa/eat-you-up', 'Eat You Up'),
@@ -324,6 +353,21 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       recording('boa/girls-on-top', 'Girls on Top'),
       recording('boa/dress-off', 'Dress Off'),
       recording('boa/hypnotic-dancefloor', 'Hypnotic Dancefloor'),
+      {
+        ...recording('boa/energetic-radio-edit', 'Energetic (Radio Edit)', [{ work: 'energetic', relationType: 'performance' }]),
+        credits: [
+          { identity: 'sean-garrett', role: 'producer' },
+          { identity: 'clubba-langg', role: 'producer' },
+        ],
+      },
+      { ...recording('boa/control', 'Control', [{ work: 'control', relationType: 'performance' }]), credits: [{ identity: 'brian-kennedy', role: 'producer' }] },
+      {
+        ...recording('boa/crazy-about', 'Crazy About', [{ work: 'crazy-about', relationType: 'performance' }]),
+        credits: [
+          { identity: 'sean-garrett', role: 'producer' },
+          { identity: 'davenport-and-spencer', role: 'producer' },
+        ],
+      },
     ],
     releaseGroups: [
       {
@@ -356,15 +400,40 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
               ).map((track, index) => ({ ...track, number: index + 2 })),
             ],
           },
-          // Released digitally on iTunes with three bonus tracks; the order of its tracklist is left out.
-          { editionName: 'Deluxe', releaseDate: day(2009, 8, 31) },
+          {
+            editionName: 'Deluxe',
+            releaseDate: day(2009, 8, 31),
+            // Released digitally on iTunes: the three bonus tracks first, then the album with the original «Energetic» moved to the end.
+            tracks: [
+              ...tracks('boa/energetic-radio-edit', 'boa/control', 'boa/crazy-about'),
+              {
+                recording: 'boa/i-did-it-for-love',
+                artists: [
+                  { artist: 'boa', rank: 'main' },
+                  { artist: 'sean-garrett', rank: 'featured' },
+                ],
+              },
+              ...tracks(
+                'boa/did-ya',
+                'boa/look-whos-talking',
+                'boa/eat-you-up',
+                'boa/obsessed',
+                'boa/touched',
+                'boa/scream',
+                'boa/girls-on-top',
+                'boa/dress-off',
+                'boa/hypnotic-dancefloor',
+                'boa/energetic',
+              ),
+            ],
+          },
         ],
       },
     ],
   },
   {
     author: 'editor',
-    description: 'Alta del noveno sencillo japonés de BTS y de su tracklist original con «Bird», cancelado antes de salir',
+    description: 'Alta de Fake Love/Airplane pt.2, noveno sencillo japonés de BTS',
     sources: [
       wiki('Airplane_Pt._2'),
       'https://www.soompi.com/article/1231319wpp/big-hit-entertainment-announces-final-decision-regarding-release-btss-collaboration-akb48-producer',
@@ -375,10 +444,46 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         title: 'Fake Love/Airplane pt.2',
         type: 'single',
         artists: ['bts'],
+        // Big Hit dropped «Bird» from it before release; the single itself came out.
+        releases: [{ releaseDate: day(2018, 11, 7) }],
+      },
+    ],
+  },
+  {
+    author: 'editor',
+    description: 'Alta del sencillo japonés «OH YEAH feat BOM (from 2NE1)» de GD & TOP, anunciado para el 9 de noviembre de 2011 y cancelado por Avex',
+    sources: [
+      'https://view.asiae.co.kr/article/2011091409293391480',
+      'https://view.asiae.co.kr/article/2011100714312022002',
+      'https://www.soompi.com/article/367537wpp/gdtops-album-release-cancelled-in-japan',
+    ],
+    people: [{ key: 'park-bom', displayName: 'Park Bom', artist: true, aliases: ['박봄', 'Bom'] }],
+    recordings: [
+      { ...recording('gd-top/oh-yeah-japanese', 'OH YEAH feat BOM (from 2NE1)'), description: 'Versión en japonés de «Oh Yeah».' },
+      { ...recording('gd-top/high-high-japanese', 'HIGH HIGH'), description: 'Versión en japonés de «High High».' },
+    ],
+    releaseGroups: [
+      {
+        key: 'oh-yeah-japanese-single',
+        title: 'OH YEAH feat BOM (from 2NE1)',
+        type: 'single',
+        artists: ['gd-top'],
         releases: [
-          { releaseDate: day(2018, 11, 7) },
-          // Announced for November with «Bird»; Big Hit dropped the track on 16 September 2018 and changed the tracklist.
-          { editionName: 'Original Tracklist', releaseDate: { year: 2018, month: 11 }, isCancelled: true },
+          {
+            releaseDate: day(2011, 11, 9),
+            // Avex halted it in October 2011, after G-Dragon was charged with smoking marijuana.
+            isCancelled: true,
+            tracks: [
+              {
+                recording: 'gd-top/oh-yeah-japanese',
+                artists: [
+                  { artist: 'gd-top', rank: 'main' },
+                  { artist: 'park-bom', rank: 'featured', creditedAs: 'BOM' },
+                ],
+              },
+              ...tracks('gd-top/high-high-japanese'),
+            ],
+          },
         ],
       },
     ],
