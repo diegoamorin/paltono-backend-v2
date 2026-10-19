@@ -126,6 +126,15 @@ describe('Swagger and the OpenAPI document', () => {
       expect(document.paths['/v1/identities/{id}'].get.security).toBeUndefined();
       expect(document.paths['/v1/identities/{id}'].get.tags).toEqual(['catalog-identities']);
     });
+
+    it('documents global search as a collection of resources of several types', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+
+      const data = document.paths['/v1/search'].get.responses['200'].content['application/vnd.api+json'].schema.properties.data;
+      expect(data.items.oneOf.map(({ $ref }: { $ref: string }) => $ref.split('/').pop()).sort()).toEqual(
+        ['ArtistResource', 'EventResource', 'IdentityResource', 'RecordingResource', 'ReleaseGroupResource', 'TourResource', 'WorkResource'].sort(),
+      );
+    });
   });
 
   describe('in production', () => {

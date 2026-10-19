@@ -7,7 +7,7 @@ import { JsonApiModule } from './common/json-api/json-api.module';
 import { MailModule } from './common/mail/mail.module';
 import { APP_CONFIG, AppConfig } from './config/app-config';
 import { databaseOptions } from './database/database-options';
-import { DiscoveryModule } from './discovery/search';
+import { DiscoveryModule } from './discovery/discovery.module';
 import { EditorialModule } from './editorial/editorial.module';
 import { HealthModule } from './health/health.module';
 import { LiveEventsModule } from './live-events/live-events.module';
