@@ -1,12 +1,15 @@
+import { Client } from 'pg';
 import { DataSource } from 'typeorm';
 import { databaseOptions } from './database-options';
+import { testDatabaseUrl } from './test-database-url';
 
 /**
- * Returns `DATABASE_URL_TEST` once it is safe to destroy: it must name a
- * database ending in `_test` and must not be the database in `DATABASE_URL`.
+ * Returns the test database URL (see `testDatabaseUrl`) once it is safe to
+ * destroy: it must name a database ending in `_test` and must not be the
+ * database in `DATABASE_URL`.
  */
 export function requireTestDatabaseUrl(env: NodeJS.ProcessEnv): string {
-  const url = env.DATABASE_URL_TEST;
+  const url = testDatabaseUrl(env);
   if (!url) throw new Error('Refusing to touch the database: DATABASE_URL_TEST is not set');
 
   const target = parseDatabaseTarget(url);
@@ -19,9 +22,11 @@ export function requireTestDatabaseUrl(env: NodeJS.ProcessEnv): string {
   return url;
 }
 
-/** Drops everything in the test database and recreates it with the migrations. */
+/** Creates the test database if missing, drops everything in it and recreates it with the migrations. */
 export async function prepareTestDatabase(env: NodeJS.ProcessEnv): Promise<void> {
-  const dataSource = new DataSource(databaseOptions(requireTestDatabaseUrl(env)));
+  const url = requireTestDatabaseUrl(env);
+  await createDatabaseIfMissing(url);
+  const dataSource = new DataSource(databaseOptions(url));
   await dataSource.initialize();
   try {
     await dataSource.query('DROP SCHEMA IF EXISTS public CASCADE');
@@ -31,6 +36,27 @@ export async function prepareTestDatabase(env: NodeJS.ProcessEnv): Promise<void>
     await dataSource.destroy();
   }
 }
+
+/** Creates the database a URL names, connecting to the server's `postgres` database. */
+async function createDatabaseIfMissing(url: string): Promise<void> {
+  const { database } = parseDatabaseTarget(url);
+  const server = new URL(url);
+  server.pathname = '/postgres';
+  const client = new Client({ connectionString: server.toString() });
+  await client.connect();
+  try {
+    const { rowCount } = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [database]);
+    if (rowCount) return;
+    await client.query(`CREATE DATABASE ${client.escapeIdentifier(database)}`);
+  } catch (error) {
+    // Another run created it first.
+    if ((error as { code?: string }).code !== DUPLICATE_DATABASE) throw error;
+  } finally {
+    await client.end();
+  }
+}
+
+const DUPLICATE_DATABASE = '42P04';
 
 interface DatabaseTarget {
   host: string;

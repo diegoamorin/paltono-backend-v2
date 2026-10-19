@@ -1,13 +1,13 @@
 import { SEED_PASSWORD } from '../../src/seed/seed-accounts';
 import { accessTokenFor } from '../support/accounts';
-import { CommandResult, queryTestDatabase, runPnpm } from '../support/console';
+import { CommandResult, queryTestDatabase, runPnpm, testDatabaseUrl } from '../support/console';
 import { getJsonApi } from '../support/editorial';
 import { TestApp, createTestApp } from '../support/test-app';
 
 jest.setTimeout(600_000);
 
 /** Points the development commands at the test database. */
-const asDevelopment = () => ({ NODE_ENV: 'development', DATABASE_URL: process.env.DATABASE_URL_TEST! });
+const asDevelopment = () => ({ NODE_ENV: 'development', DATABASE_URL: testDatabaseUrl() });
 
 const accountCount = async () => Number((await queryTestDatabase<{ n: string }>('SELECT count(*) AS n FROM users'))[0].n);
 

@@ -6,7 +6,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 
 1. Node 24 y pnpm 10; PostgreSQL local (no hace falta Docker).
 2. `pnpm install`
-3. Copiar `.env.example` a `.env` y ajustar `DATABASE_URL` y `DATABASE_URL_TEST`. Crear ambas bases; la de pruebas debe terminar en `_test` y ser distinta de la de desarrollo.
+3. Copiar `.env.example` a `.env` y ajustar `DATABASE_URL` y `DATABASE_URL_TEST`. Crear la base de desarrollo; la de pruebas se crea sola en el mismo servidor si no existe, y su nombre debe terminar en `_test` y ser distinto del de desarrollo. En un worktree de git enlazado, las pruebas insertan el nombre del worktree antes de `_test` (`paltono_test` pasa a `paltono_<worktree>_test`), así que cada checkout usa su propia base sin editar el `.env`; el checkout principal usa `DATABASE_URL_TEST` tal cual.
 4. `pnpm migration:run` y `pnpm start:dev`.
 
 ## Comandos
@@ -16,13 +16,13 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm start:dev` | API en modo observación |
 | `pnpm build` / `pnpm start` | Compila a `dist/` y la ejecuta |
 | `pnpm typecheck` | Comprobación de tipos |
-| `pnpm test` | Pruebas HTTP y de consola con Jest y Supertest contra `DATABASE_URL_TEST`, que se recrea con las migraciones antes de cada ejecución |
+| `pnpm test` | Pruebas HTTP y de consola con Jest y Supertest contra la base de pruebas (`DATABASE_URL_TEST`, con el sufijo del worktree en un worktree enlazado), que se crea si falta y se recrea con las migraciones antes de cada ejecución |
 | `pnpm migration:run` / `migration:revert` | Aplica o revierte migraciones sobre `DATABASE_URL` |
 | `pnpm migration:generate src/database/migrations/<Nombre>` | Genera una migración a partir de las entidades |
 | `pnpm db:reset` | Vacía todos los registros conservando las tablas; solo con `NODE_ENV=development` |
 | `pnpm db:seed` | Puebla una base vacía (tras `db:reset`) con cuentas de prueba de cada rol y estado y el catálogo K-pop (identidades, obras, grabaciones, lanzamientos con sus ediciones, tours y conciertos), creado mediante propuestas con fuentes reales que revisa o publica `seed_moderadora`, más propuestas en todos los estados de microcambio y una ficha retirada; solo con `NODE_ENV=development`. Todas las cuentas del seed usan la contraseña `paltono-seed-2026` |
 | `pnpm admin:bootstrap -- --username <u> --reason <texto>` | Promueve a administrador la primera cuenta activa y verificada mientras no exista ninguno (ADR 0003); queda auditado sin administrador actuante |
-| `pnpm db:test:prepare` | Recrea la base de pruebas; rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
+| `pnpm db:test:prepare` | Crea si falta y recrea la base de pruebas (la misma que usa `pnpm test`); rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
 
 ## Endpoints de operación
 

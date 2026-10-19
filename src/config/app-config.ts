@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { testDatabaseUrl } from '../database/test-database-url';
 
 export type Environment = 'development' | 'test' | 'production';
 
@@ -63,8 +64,8 @@ export function loadEnvFile(path = resolve(process.cwd(), '.env')): void {
 
 /**
  * Builds the configuration from environment variables and fails fast on anything
- * missing. In `test` the database is always `DATABASE_URL_TEST`, so tests can
- * never touch another database.
+ * missing. In `test` the database is always the test database (`DATABASE_URL_TEST`,
+ * suffixed in a linked worktree), so tests can never touch another database.
  */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const environment = loadEnvironment(env);
@@ -74,7 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   return {
     environment,
     port: Number(env.PORT ?? 3000),
-    databaseUrl,
+    databaseUrl: environment === 'test' ? testDatabaseUrl(env)! : databaseUrl,
     swagger: swaggerConfig(environment, env),
     auth: authConfig(environment, env),
     mail: mailConfig(environment, env),

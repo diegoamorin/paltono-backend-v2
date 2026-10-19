@@ -1,8 +1,15 @@
-import { otherDatabaseUrl, queryTestDatabase, runPnpm } from '../support/console';
+import { testDatabaseUrl as effectiveTestDatabaseUrl } from '../../src/database/test-database-url';
+import {
+  databaseExists,
+  databaseName,
+  otherDatabaseUrl,
+  queryDatabase,
+  queryTestDatabase,
+  runPnpm,
+  testDatabaseUrl,
+} from '../support/console';
 
 jest.setTimeout(120_000);
-
-const testDatabaseUrl = () => process.env.DATABASE_URL_TEST!;
 
 /** Points the development commands at the test database. */
 const asDevelopment = () => ({ NODE_ENV: 'development', DATABASE_URL: testDatabaseUrl() });
@@ -52,6 +59,43 @@ describe('pnpm db:test:prepare', () => {
     expect(result).toMatchObject({ status: 0 });
     expect(await queryTestDatabase("SELECT to_regclass('leftover') AS leftover")).toEqual([{ leftover: null }]);
     expect(await migrationNames()).toContain('EnableSearchExtensions1792195200000');
+  });
+
+  describe('when the test database does not exist', () => {
+    // The command adds this checkout's worktree suffix, if any, to the configured name.
+    const configured = otherDatabaseUrl('paltono_missing_test');
+    const effective = effectiveTestDatabaseUrl({ DATABASE_URL_TEST: configured })!;
+    const missingDevelopment = 'paltono_missing_dev';
+
+    afterEach(async () => {
+      for (const database of [databaseName(effective), missingDevelopment]) {
+        await queryTestDatabase(`DROP DATABASE IF EXISTS "${database}"`);
+      }
+    });
+
+    it('creates it on the same server and migrates it', async () => {
+      const result = await runPnpm(['db:test:prepare'], { DATABASE_URL_TEST: configured });
+
+      expect(result).toMatchObject({ status: 0 });
+      const migrations = await queryDatabase<{ name: string }>(effective, 'SELECT name FROM migrations');
+      expect(migrations.map((row) => row.name)).toContain('EnableSearchExtensions1792195200000');
+    });
+
+    it('refuses a name not ending in _test before creating anything', async () => {
+      const result = await runPnpm(['db:test:prepare'], { DATABASE_URL_TEST: otherDatabaseUrl(missingDevelopment) });
+
+      expect(result.status).not.toBe(0);
+      expect(result.output).toMatch(/must end in _test/);
+      expect(await databaseExists(missingDevelopment)).toBe(false);
+    });
+
+    it('refuses the development database before creating anything', async () => {
+      const result = await runPnpm(['db:test:prepare'], { DATABASE_URL_TEST: configured, DATABASE_URL: effective });
+
+      expect(result.status).not.toBe(0);
+      expect(result.output).toMatch(/points to DATABASE_URL/);
+      expect(await databaseExists(databaseName(effective))).toBe(false);
+    });
   });
 
   it('refuses a database whose name does not end in _test', async () => {

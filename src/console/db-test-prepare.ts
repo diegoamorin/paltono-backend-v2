@@ -3,7 +3,7 @@ import { loadEnvFile } from '../config/app-config';
 import { prepareTestDatabase } from '../database/test-database';
 import { runCommand } from './run-command';
 
-// `pnpm db:test:prepare`: recreates DATABASE_URL_TEST from the migrations.
+// `pnpm db:test:prepare`: creates the test database if missing and recreates it from the migrations.
 loadEnvFile();
 
 runCommand(async () => {

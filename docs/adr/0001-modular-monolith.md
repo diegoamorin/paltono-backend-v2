@@ -10,6 +10,6 @@ La cobertura de la API se define por casos de uso y relaciones del ER, incluyend
 
 El contrato HTTP seguirá [JSON:API](0004-json-api-contract.md), conservando los permisos y las transacciones editoriales.
 
-Se usan NestJS 11, Node 24 LTS fijado en `engines`, Jest con Supertest y `@nestjs/swagger`. Las pruebas de integración y HTTP se ejecutan contra PostgreSQL local, en una base de pruebas dedicada que se recrea con las migraciones y se configura con `DATABASE_URL_TEST`; los comandos destructivos de prueba rechazan cualquier otra base. No se requiere Docker en local; el CI usará un servicio PostgreSQL.
+Se usan NestJS 11, Node 24 LTS fijado en `engines`, Jest con Supertest y `@nestjs/swagger`. Las pruebas de integración y HTTP se ejecutan contra PostgreSQL local, en una base de pruebas dedicada que se crea si falta, se recrea con las migraciones y se configura con `DATABASE_URL_TEST` (en un worktree de git enlazado, con el nombre del worktree insertado antes de `_test`, para que cada checkout tenga su propia base); los comandos destructivos de prueba rechazan cualquier otra base. No se requiere Docker en local; el CI usará un servicio PostgreSQL.
 
 `kpop.paltono.com` y el futuro `paltono.com` comparten base de datos, API y catálogo. El MVP solo publica el frontend K-pop y no modela a qué vertical pertenece una ficha; esa clasificación se diseñará explícitamente cuando se lance el frontend general, sin inferirla de géneros o países.
