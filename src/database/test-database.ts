@@ -1,7 +1,7 @@
 import { Client } from 'pg';
 import { DataSource } from 'typeorm';
 import { databaseOptions } from './database-options';
-import { testDatabaseUrl } from './test-database-url';
+import { databaseName, testDatabaseUrl } from './test-database-url';
 
 /**
  * Returns the test database URL (see `testDatabaseUrl`) once it is safe to
@@ -69,7 +69,7 @@ function parseDatabaseTarget(url: string): DatabaseTarget {
   return {
     host: parsed.hostname.toLowerCase(),
     port: parsed.port || '5432',
-    database: decodeURIComponent(parsed.pathname.replace(/^\//, '')),
+    database: databaseName(url),
   };
 }
 

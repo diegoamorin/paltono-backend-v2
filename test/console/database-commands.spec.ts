@@ -1,18 +1,17 @@
-import { testDatabaseUrl as effectiveTestDatabaseUrl } from '../../src/database/test-database-url';
+import { databaseName, testDatabaseUrl } from '../../src/database/test-database-url';
 import {
+  currentTestDatabaseUrl,
   databaseExists,
-  databaseName,
   otherDatabaseUrl,
   queryDatabase,
   queryTestDatabase,
   runPnpm,
-  testDatabaseUrl,
 } from '../support/console';
 
 jest.setTimeout(120_000);
 
 /** Points the development commands at the test database. */
-const asDevelopment = () => ({ NODE_ENV: 'development', DATABASE_URL: testDatabaseUrl() });
+const asDevelopment = () => ({ NODE_ENV: 'development', DATABASE_URL: currentTestDatabaseUrl() });
 
 const migrationNames = async () =>
   (await queryTestDatabase<{ name: string }>('SELECT name FROM migrations ORDER BY id')).map((row) => row.name);
@@ -64,7 +63,7 @@ describe('pnpm db:test:prepare', () => {
   describe('when the test database does not exist', () => {
     // The command adds this checkout's worktree suffix, if any, to the configured name.
     const configured = otherDatabaseUrl('paltono_missing_test');
-    const effective = effectiveTestDatabaseUrl({ DATABASE_URL_TEST: configured })!;
+    const effective = testDatabaseUrl({ DATABASE_URL_TEST: configured })!;
     const missingDevelopment = 'paltono_missing_dev';
 
     afterEach(async () => {
@@ -106,7 +105,7 @@ describe('pnpm db:test:prepare', () => {
   });
 
   it('refuses the development database even when its name ends in _test', async () => {
-    const result = await runPnpm(['db:test:prepare'], { DATABASE_URL: testDatabaseUrl() });
+    const result = await runPnpm(['db:test:prepare'], { DATABASE_URL: currentTestDatabaseUrl() });
 
     expect(result.status).not.toBe(0);
     expect(result.output).toMatch(/points to DATABASE_URL/);

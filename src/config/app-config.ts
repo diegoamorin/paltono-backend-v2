@@ -70,12 +70,13 @@ export function loadEnvFile(path = resolve(process.cwd(), '.env')): void {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const environment = loadEnvironment(env);
 
-  const databaseUrl = required(env, environment === 'test' ? 'DATABASE_URL_TEST' : 'DATABASE_URL');
-
   return {
     environment,
     port: Number(env.PORT ?? 3000),
-    databaseUrl: environment === 'test' ? testDatabaseUrl(env)! : databaseUrl,
+    databaseUrl:
+      environment === 'test'
+        ? testDatabaseUrl({ DATABASE_URL_TEST: required(env, 'DATABASE_URL_TEST') })!
+        : required(env, 'DATABASE_URL'),
     swagger: swaggerConfig(environment, env),
     auth: authConfig(environment, env),
     mail: mailConfig(environment, env),

@@ -20,21 +20,21 @@ export function runPnpm(args: string[], env: NodeJS.ProcessEnv = {}): Promise<Co
 }
 
 /** The test database this run uses: `DATABASE_URL_TEST`, suffixed in a linked worktree. */
-export function testDatabaseUrl(): string {
+export function currentTestDatabaseUrl(): string {
   return requireTestDatabaseUrl(process.env);
 }
 
 /** Runs SQL against the test database, for console tests that observe its contents. */
-export function queryTestDatabase<T = Record<string, unknown>>(sql: string): Promise<T[]> {
-  return queryDatabase<T>(testDatabaseUrl(), sql);
+export function queryTestDatabase<T = Record<string, unknown>>(sql: string, values: unknown[] = []): Promise<T[]> {
+  return queryDatabase<T>(currentTestDatabaseUrl(), sql, values);
 }
 
 /** Runs SQL against any database. */
-export async function queryDatabase<T = Record<string, unknown>>(url: string, sql: string): Promise<T[]> {
+export async function queryDatabase<T = Record<string, unknown>>(url: string, sql: string, values: unknown[] = []): Promise<T[]> {
   const client = new Client({ connectionString: url });
   await client.connect();
   try {
-    return (await client.query(sql)).rows as T[];
+    return (await client.query(sql, values)).rows as T[];
   } finally {
     await client.end();
   }
@@ -42,20 +42,16 @@ export async function queryDatabase<T = Record<string, unknown>>(url: string, sq
 
 /** A database URL on the same server as the test database, naming another database. */
 export function otherDatabaseUrl(database: string): string {
-  const url = new URL(testDatabaseUrl());
+  const url = new URL(currentTestDatabaseUrl());
   url.pathname = `/${database}`;
   return url.toString();
-}
-
-/** The database a URL names. */
-export function databaseName(url: string): string {
-  return decodeURIComponent(new URL(url).pathname.replace(/^\//, ''));
 }
 
 /** Whether a database exists on the test database's server. */
 export async function databaseExists(database: string): Promise<boolean> {
   const rows = await queryTestDatabase<{ exists: boolean }>(
-    `SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = '${database}') AS exists`,
+    'SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = $1) AS exists',
+    [database],
   );
   return rows[0].exists;
 }

@@ -15,16 +15,21 @@ export function testDatabaseUrl(env: NodeJS.ProcessEnv, cwd = process.cwd()): st
   const worktree = url && linkedWorktreeName(cwd);
   if (!worktree) return url;
 
-  const parsed = new URL(url);
-  const database = decodeURIComponent(parsed.pathname.replace(/^\//, ''));
+  const database = databaseName(url);
   if (!database.endsWith('_test')) return url;
 
   const base = database.slice(0, -'_test'.length);
   const suffix = `_${fitWorktreeName(worktree, MAX_IDENTIFIER_BYTES - Buffer.byteLength(`${base}__test`))}_test`;
   if (database.endsWith(suffix)) return url;
 
+  const parsed = new URL(url);
   parsed.pathname = `/${encodeURIComponent(base + suffix)}`;
   return parsed.toString();
+}
+
+/** The database a PostgreSQL URL names. */
+export function databaseName(url: string): string {
+  return decodeURIComponent(new URL(url).pathname.replace(/^\//, ''));
 }
 
 /** PostgreSQL silently truncates longer names, which would drop the `_test` ending. */
