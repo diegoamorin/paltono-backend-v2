@@ -20,7 +20,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm migration:run` / `migration:revert` | Aplica o revierte migraciones sobre `DATABASE_URL` |
 | `pnpm migration:generate src/database/migrations/<Nombre>` | Genera una migración a partir de las entidades |
 | `pnpm db:reset` | Vacía todos los registros conservando las tablas; solo con `NODE_ENV=development` |
-| `pnpm db:seed` | Puebla una base vacía (tras `db:reset`) con cuentas de prueba de cada rol y estado y el catálogo K-pop, creado mediante propuestas con fuentes reales que revisa o publica `seed_moderadora`; solo con `NODE_ENV=development`. Todas las cuentas del seed usan la contraseña `paltono-seed-2026` |
+| `pnpm db:seed` | Puebla una base vacía (tras `db:reset`) con cuentas de prueba de cada rol y estado y el catálogo K-pop (identidades, obras, grabaciones, lanzamientos con sus ediciones, tours y conciertos), creado mediante propuestas con fuentes reales que revisa o publica `seed_moderadora`, más propuestas en todos los estados de microcambio y una ficha retirada; solo con `NODE_ENV=development`. Todas las cuentas del seed usan la contraseña `paltono-seed-2026` |
 | `pnpm admin:bootstrap -- --username <u> --reason <texto>` | Promueve a administrador la primera cuenta activa y verificada mientras no exista ninguno (ADR 0003); queda auditado sin administrador actuante |
 | `pnpm db:test:prepare` | Recrea la base de pruebas; rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
 

@@ -104,35 +104,37 @@ describe('pnpm db:seed', () => {
       );
     });
 
-    it('completes the editorial flow: every microchange applied, with its decision, revision and real sources', async () => {
-      expect(await queryTestDatabase('SELECT status, count(*)::int AS n FROM proposal_changes GROUP BY status')).toEqual([
-        { status: 'applied', n: expect.any(Number) },
-      ]);
-      expect(await queryTestDatabase(`SELECT DISTINCT publication_status FROM editorial_entities`)).toEqual([
-        { publication_status: 'published' },
-      ]);
-      expect(await queryTestDatabase(`SELECT DISTINCT status FROM change_proposals`)).toEqual([{ status: 'closed' }]);
+    it('completes the editorial flow: microchanges in every status, each applied one with its decision and revision, all with real sources', async () => {
+      const statuses = await queryTestDatabase<{ status: string }>('SELECT DISTINCT status::text FROM proposal_changes ORDER BY 1');
+      expect(statuses.map(({ status }) => status)).toEqual(['applied', 'blocked', 'conflicted', 'pending', 'rejected', 'satisfied', 'withdrawn']);
+      // The rejected duplicate stays a reservation; an administrator withdrew a concert published twice.
+      const publication = await queryTestDatabase<{ status: string }>('SELECT DISTINCT publication_status::text AS status FROM editorial_entities ORDER BY 1');
+      expect(publication.map(({ status }) => status)).toEqual(['published', 'reserved', 'withdrawn']);
       const [counts] = await queryTestDatabase<Record<string, number>>(`
-        SELECT (SELECT count(*)::int FROM proposal_changes) AS changes,
-               (SELECT count(*)::int FROM change_decisions WHERE action = 'apply') AS decisions,
+        SELECT (SELECT count(*)::int FROM proposal_changes WHERE status = 'applied') AS applied,
+               (SELECT count(*)::int FROM change_decisions WHERE action IN ('apply', 'apply_rebased')) AS decisions,
                (SELECT count(*)::int FROM entity_revisions) AS revisions,
+               (SELECT count(*)::int FROM proposal_changes c
+                 WHERE c.status <> 'pending' AND NOT EXISTS (SELECT 1 FROM change_decisions d WHERE d.change_id = c.id)) AS undecided,
                (SELECT count(*)::int FROM change_proposals p
                  WHERE NOT EXISTS (SELECT 1 FROM proposal_sources s WHERE s.proposal_id = p.id)) AS unsourced,
                (SELECT count(*)::int FROM proposal_sources WHERE url IS NULL OR url !~ '^https://') AS non_web_sources
       `);
       expect(counts).toEqual({
-        changes: counts.decisions,
+        applied: counts.decisions,
         decisions: counts.revisions,
         revisions: expect.any(Number),
+        undecided: 0,
         unsourced: 0,
         non_web_sources: 0,
       });
-      expect(counts.changes).toBeGreaterThan(300);
-      // Contributors submit for review and the moderator publishes directly; the suspended and deleted accounts contributed before.
+      expect(counts.applied).toBeGreaterThan(600);
+      // Contributors submit for review and staff publish directly; the suspended and deleted accounts contributed before.
       const authors = await queryTestDatabase<{ username: string }>(
         'SELECT DISTINCT u.username FROM change_proposals p JOIN users u ON u.id = p.author_id ORDER BY 1',
       );
       expect(authors.map(({ username }) => username)).toEqual([
+        'seed_admin',
         'seed_colaborador',
         'seed_editora',
         'seed_eliminada',
@@ -140,7 +142,89 @@ describe('pnpm db:seed', () => {
         'seed_suspendida',
       ]);
       const moderator = await accessTokenFor(app.server, 'seed_moderadora', SEED_PASSWORD);
-      expect((await getJsonApi(app, '/v1/moderation/changes', moderator).expect(200)).body.data).toEqual([]);
+      const queue = (await getJsonApi(app, '/v1/moderation/changes', moderator).expect(200)).body.data;
+      expect(queue.map(({ attributes }: Resource) => attributes.status).sort()).toEqual(['conflicted', 'pending']);
+    });
+
+    it('creates releases with several editions, tracks and credits, repackages, announcements and cancelled editions', async () => {
+      const group = async (title: string) => {
+        const response = await getJsonApi(app, `/v1/release-groups?filter[q]=${encodeURIComponent(title)}&include=releases`).expect(200);
+        const found = response.body.data.find(({ attributes }: Resource) => attributes.title === title);
+        if (!found) throw new Error(`No release group is titled ${title}`);
+        const releases = response.body.included.filter(
+          ({ type, id }: Resource) => type === 'releases' && (found.relationships!.releases.data as { id: string }[]).some((each) => each.id === id),
+        );
+        return { group: found as Resource, releases: releases as Resource[] };
+      };
+      const edition = (releases: Resource[], name: string | null) => releases.find(({ attributes }) => attributes.editionName === name)!;
+      const trackTitles = async (release: Resource) =>
+        (await getJsonApi(app, `/v1/releases/${release.id}/tracks?page[size]=100`).expect(200)).body.data.map(
+          ({ attributes }: Resource) => attributes.displayTitle,
+        );
+
+      const ruby = await group('Ruby');
+      expect(ruby.releases.map(({ attributes }) => attributes.editionName).sort()).toEqual(['Clean', 'The Complete Collection', null].sort());
+      expect(await trackTitles(edition(ruby.releases, null))).toHaveLength(15);
+      expect(await trackTitles(edition(ruby.releases, 'Clean'))).not.toContain('F.T.S.');
+      expect(await trackTitles(edition(ruby.releases, 'The Complete Collection'))).toHaveLength(21);
+      const handlebars = await getJsonApi(app, `/v1/releases/${edition(ruby.releases, null).id}/tracks?include=artistCredits&page[size]=100`).expect(200);
+      expect(handlebars.body.included.filter(({ type, attributes }: Resource) => type === 'track-artist-credits' && attributes.rank === 'featured')).toHaveLength(6);
+
+      const cupid = await group('Cupid');
+      expect(await trackTitles(edition(cupid.releases, 'Sped Up'))).toEqual(['Cupid (Twin Ver.) (Sped Up)']);
+      expect((await group('BoA')).releases.map(({ attributes }) => attributes.editionName)).toContain('Deluxe');
+      expect((await group('Twicecoaster: Lane 1')).releases.map(({ attributes }) => attributes.editionName)).toContain('Thailand Edition');
+
+      const bornPink = edition((await group('Born Pink')).releases, null);
+      const credits = await getJsonApi(app, `/v1/releases/${bornPink.id}?include=contributions.identity`).expect(200);
+      expect(credits.body.included.filter(({ type }: Resource) => type === 'identities').map(({ attributes }: Resource) => attributes.displayName)).toEqual(['Teddy']);
+      expect(await trackTitles(bornPink)).toContain('Shut Down');
+
+      const lane2 = await group('Twicecoaster: Lane 2');
+      const original = await getJsonApi(app, `/v1/release-groups/${lane2.group.id}?include=repackageOf`).expect(200);
+      expect(original.body.included.map(({ attributes }: Resource) => attributes.title)).toEqual(['Twicecoaster: Lane 1']);
+
+      // The announced time and zone give the instant a countdown goes to while it is still to come.
+      const toUs = edition((await group('To Us')).releases, null);
+      expect(toUs.attributes).toMatchObject({ releaseTime: '18:00', timezone: 'Asia/Seoul', releaseInstant: '2026-11-02T09:00:00.000Z' });
+      expect(edition((await group('Perfect Storm')).releases, null).attributes).toMatchObject({ releaseTime: null, releaseInstant: null });
+
+      const cancelled = edition((await group('Fake Love/Airplane pt.2')).releases, 'Original Tracklist');
+      expect(cancelled.attributes).toMatchObject({ isCancelled: true, availability: 'cancelled', releaseInstant: null });
+    });
+
+    it('creates tours and concerts with their artists, organizers and links, and a schedule that changed', async () => {
+      const tour = async (title: string) => {
+        const response = await getJsonApi(app, `/v1/tours?filter[q]=${encodeURIComponent(title)}&include=organizers.identity,links,events,artists`).expect(200);
+        const found = response.body.data.find(({ attributes }: Resource) => attributes.title === title);
+        if (!found) throw new Error(`No tour is titled ${title}`);
+        return { tour: found as Resource, included: response.body.included as Resource[] };
+      };
+
+      const bornPink = await tour('Born Pink World Tour');
+      expect(bornPink.tour.attributes.status).toBe('completed');
+      const organizers = bornPink.included.filter(({ type }) => type === 'identities').map(({ attributes }) => attributes.displayName);
+      expect(organizers.sort()).toEqual(['Live Nation Entertainment', 'YG Entertainment']);
+      expect(bornPink.included.filter(({ type }) => type === 'tour-links').map(({ attributes }) => attributes.url)).toEqual(['https://www.blackpinkmusic.com/']);
+      const concerts = bornPink.included.filter(({ type }) => type === 'events').map(({ attributes }) => [attributes.city, attributes.status]);
+      expect(concerts).toContainEqual(['Auckland', 'cancelled']);
+      expect(concerts.filter(([, status]) => status === 'performed')).toHaveLength(4);
+
+      // Created as scheduled and cancelled by a later proposal, which keeps the date.
+      const mapOfTheSoul = await tour('Map of the Soul Tour');
+      expect(mapOfTheSoul.tour.attributes).toMatchObject({ status: 'cancelled', startDate: { year: 2020, month: 4, day: 11 } });
+      expect(new Set(mapOfTheSoul.included.filter(({ type }) => type === 'events').map(({ attributes }) => attributes.status))).toEqual(new Set(['cancelled']));
+
+      // The withdrawn copy of a concert is not listed among the tour's concerts.
+      const stealTheWind = await tour('Steal the Wind');
+      expect(stealTheWind.included.filter(({ type }) => type === 'events')).toHaveLength(3);
+    });
+
+    it('creates no likes', async () => {
+      const [{ n }] = await queryTestDatabase<{ n: number }>(
+        `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE '%like%'`,
+      );
+      expect(n).toBe(0);
     });
 
     it('creates groups with their members, roles, former members and subunits', async () => {

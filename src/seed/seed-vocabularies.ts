@@ -45,6 +45,7 @@ const ORGANIZATION_TYPES = {
   group: { name: 'Grupo musical', description: 'Grupo de artistas que actúa bajo un nombre común' },
   subunit: { name: 'Subunidad', description: 'Grupo formado por parte de los miembros de otro grupo' },
   'production-team': { name: 'Equipo de producción', description: 'Equipo que compone y produce para otros artistas' },
+  promoter: { name: 'Promotora de conciertos', description: 'Empresa que organiza y promociona conciertos y tours' },
 } as const;
 export type OrganizationTypeSlug = keyof typeof ORGANIZATION_TYPES;
 

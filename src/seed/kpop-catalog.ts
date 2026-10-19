@@ -16,7 +16,7 @@ export interface SeedSubmission extends Submission {
 }
 
 /** An English Wikipedia article, by its title already encoded for a URL. */
-const wiki = (title: string) => `https://en.wikipedia.org/wiki/${title}`;
+export const wiki = (title: string) => `https://en.wikipedia.org/wiki/${title}`;
 
 const YOUTUBE = (handle: string) => ({ youtube: `https://www.youtube.com/@${handle}` });
 
