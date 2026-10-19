@@ -228,6 +228,29 @@ export function requireOneOf(parameter: string, value: string, allowed: readonly
   }
 }
 
+/** The period a date filter value names, YYYY, YYYY-MM or YYYY-MM-DD, as the ISO dates it spans; otherwise 400. */
+export function period(parameter: string, value: string): { first: string; last: string } {
+  const named = namedPeriod(value);
+  if (!named) throw badParameter(parameter, 'must be a date as YYYY, YYYY-MM or YYYY-MM-DD');
+  return named;
+}
+
+function namedPeriod(value: string): { first: string; last: string } | undefined {
+  const match = /^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/.exec(value);
+  if (!match) return undefined;
+  const [, year, month, day] = match;
+  const y = Number(year);
+  const m = month === undefined ? undefined : Number(month);
+  const d = day === undefined ? undefined : Number(day);
+  if (y < 1 || (m !== undefined && (m < 1 || m > 12))) return undefined;
+  const lastDay = (mm: number) => new Date(Date.UTC(y, mm, 0)).getUTCDate();
+  if (m !== undefined && d !== undefined && (d < 1 || d > lastDay(m))) return undefined;
+  const iso = (mm: number, dd: number) => `${year}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+  if (m === undefined) return { first: iso(1, 1), last: iso(12, 31) };
+  if (d === undefined) return { first: iso(m, 1), last: iso(m, lastDay(m)) };
+  return { first: iso(m, d), last: iso(m, d) };
+}
+
 function badParameter(parameter: string, detail: string): JsonApiException {
   return new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} ${detail}`, source: { parameter } }]);
 }

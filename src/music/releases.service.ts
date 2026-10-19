@@ -3,12 +3,12 @@ import { DataSource, SelectQueryBuilder } from 'typeorm';
 import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { CollectionQuery, period, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
 import { Release } from './entities/release.entity';
 import { RELEASE_AVAILABILITIES, releaseSql } from './release-dates';
 import { releaseEntries } from './release-entries';
-import { ReleaseGroupsService, period } from './release-groups.service';
+import { ReleaseGroupsService } from './release-groups.service';
 import { ReleaseEntry } from './release.resource';
 
 const NOW = 'CAST(:now AS timestamptz)';

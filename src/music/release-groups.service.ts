@@ -4,10 +4,10 @@ import { Artist } from '../catalog-identities/entities/artist.entity';
 import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { CollectionQuery, period, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
 import { RELEASE_GROUP_TYPES, ReleaseGroup } from './entities/release.entity';
-import { filterPeriod, releaseGroupSql } from './release-dates';
+import { releaseGroupSql } from './release-dates';
 import { releaseGroupEntries } from './release-entries';
 import { ReleaseGroupEntry } from './release.resource';
 
@@ -105,15 +105,6 @@ export class ReleaseGroupsService {
     const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
     return { entries: await releaseGroupEntries(this.dataSource.manager, page, now), total };
   }
-}
-
-/** The period a date filter names, or 400. */
-export function period(parameter: string, value: string): { first: string; last: string } {
-  const named = filterPeriod(value);
-  if (!named) {
-    throw new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} must be a date as YYYY, YYYY-MM or YYYY-MM-DD`, source: { parameter } }]);
-  }
-  return named;
 }
 
 function filterByType(builder: SelectQueryBuilder<ReleaseGroup>, type: string | undefined): void {

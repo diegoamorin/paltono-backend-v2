@@ -126,23 +126,3 @@ export async function releaseGroupDates(manager: EntityManager, ids: number[], n
 }
 
 const partialDate = ({ year, month, day }: { year: number; month: number | null; day: number | null }): PartialDate => ({ year, month, day });
-
-/**
- * The period a `releasedFrom`/`releasedTo` filter value names, YYYY, YYYY-MM
- * or YYYY-MM-DD, as ISO dates; undefined when it is none of them.
- */
-export function filterPeriod(value: string): { first: string; last: string } | undefined {
-  const match = /^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/.exec(value);
-  if (!match) return undefined;
-  const [, year, month, day] = match;
-  const y = Number(year);
-  const m = month === undefined ? undefined : Number(month);
-  const d = day === undefined ? undefined : Number(day);
-  if (y < 1 || (m !== undefined && (m < 1 || m > 12))) return undefined;
-  const lastDay = (mm: number) => new Date(Date.UTC(y, mm, 0)).getUTCDate();
-  if (m !== undefined && d !== undefined && (d < 1 || d > lastDay(m))) return undefined;
-  const iso = (mm: number, dd: number) => `${year}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
-  if (m === undefined) return { first: iso(1, 1), last: iso(12, 31) };
-  if (d === undefined) return { first: iso(m, 1), last: iso(m, lastDay(m)) };
-  return { first: iso(m, d), last: iso(m, d) };
-}
