@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventArtist, EventLink, EventOrganizer, LiveEvent, Tour, TourArtist, TourLink, TourOrganizer } from './entities/live-event.entity';
+import { ArtistLiveEventsController } from './artist-live-events.controller';
+import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
-import { ArtistLiveEventsController, EventsController, IdentityLiveEventsController, ToursController } from './live-events.controllers';
+import { IdentityLiveEventsController } from './identity-live-events.controller';
+import { ToursController } from './tours.controller';
 import { ToursService } from './tours.service';
 
 /**

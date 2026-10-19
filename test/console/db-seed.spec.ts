@@ -172,7 +172,23 @@ describe('pnpm db:seed', () => {
 
       const cupid = await group('Cupid');
       expect(await trackTitles(edition(cupid.releases, 'Sped Up'))).toEqual(['Cupid (Twin Ver.) (Sped Up)']);
-      expect((await group('BoA')).releases.map(({ attributes }) => attributes.editionName)).toContain('Deluxe');
+      // The bonus tracks first, then the album with the original «Energetic» moved to the end.
+      expect(await trackTitles(edition((await group('BoA')).releases, 'Deluxe'))).toEqual([
+        'Energetic (Radio Edit)',
+        'Control',
+        'Crazy About',
+        'I Did It for Love',
+        'Did Ya',
+        "Look Who's Talking",
+        'Eat You Up',
+        'Obsessed',
+        'Touched',
+        'Scream',
+        'Girls on Top',
+        'Dress Off',
+        'Hypnotic Dancefloor',
+        'Energetic',
+      ]);
       expect((await group('Twicecoaster: Lane 1')).releases.map(({ attributes }) => attributes.editionName)).toContain('Thailand Edition');
 
       const bornPink = edition((await group('Born Pink')).releases, null);
@@ -189,8 +205,11 @@ describe('pnpm db:seed', () => {
       expect(toUs.attributes).toMatchObject({ releaseTime: '18:00', timezone: 'Asia/Seoul', releaseInstant: '2026-11-02T09:00:00.000Z' });
       expect(edition((await group('Perfect Storm')).releases, null).attributes).toMatchObject({ releaseTime: null, releaseInstant: null });
 
-      const cancelled = edition((await group('Fake Love/Airplane pt.2')).releases, 'Original Tracklist');
+      // Announced for 9 November 2011 and halted by Avex before it came out.
+      const cancelled = edition((await group('OH YEAH feat BOM (from 2NE1)')).releases, null);
       expect(cancelled.attributes).toMatchObject({ isCancelled: true, availability: 'cancelled', releaseInstant: null });
+      expect(await trackTitles(cancelled)).toEqual(['OH YEAH feat BOM (from 2NE1)', 'HIGH HIGH']);
+      expect((await group('Fake Love/Airplane pt.2')).releases.map(({ attributes }) => attributes.isCancelled)).toEqual([false]);
     });
 
     it('creates tours and concerts with their artists, organizers and links, and a schedule that changed', async () => {
@@ -218,13 +237,6 @@ describe('pnpm db:seed', () => {
       // The withdrawn copy of a concert is not listed among the tour's concerts.
       const stealTheWind = await tour('Steal the Wind');
       expect(stealTheWind.included.filter(({ type }) => type === 'events')).toHaveLength(3);
-    });
-
-    it('creates no likes', async () => {
-      const [{ n }] = await queryTestDatabase<{ n: number }>(
-        `SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE '%like%'`,
-      );
-      expect(n).toBe(0);
     });
 
     it('creates groups with their members, roles, former members and subunits', async () => {

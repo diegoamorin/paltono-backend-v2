@@ -9,9 +9,12 @@ import {
   ToManyLinkage,
   ToOneLinkage,
   WITHDRAWN,
+  content,
   creditAttributes,
   creditRelationships,
-} from './music.resource';
+  isWithdrawn,
+  partialDate,
+} from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 import { RELEASE_AVAILABILITIES, ReleaseGroupDates, ReleaseTimes } from './release-dates';
 
@@ -49,17 +52,6 @@ export interface ReleaseArtistCreditEntry {
   group: ReleaseGroup;
   artist: ArtistEntry;
 }
-
-type Root = { editorialEntity?: { publicationStatus: string; withdrawnAt: Date | null } };
-const isWithdrawn = (root: Root) => root.editorialEntity!.publicationStatus === 'withdrawn';
-
-/** An attribute of an entry's content, which a withdrawn entry leaves out: it only shows the notice. */
-const content =
-  <T>(root: (entry: T) => Root, read: (entry: T) => unknown) =>
-  (entry: T): unknown =>
-    isWithdrawn(root(entry)) ? undefined : read(entry);
-
-const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
 
 export const releaseArtistCreditSchema: ResourceSchema<ReleaseArtistCreditEntry> = defineResource({
   type: 'release-artist-credits',

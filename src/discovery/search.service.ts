@@ -1,18 +1,14 @@
-import { Controller, Get, HttpStatus, Injectable, Module } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ARTIST_SEARCH, IDENTITY_SEARCH } from '../catalog-identities/identity-search';
 import { Clock } from '../common/clock/clock';
-import { mixedCollectionDocument, pageWindow } from '../common/json-api/document';
+import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { JsonApiQuery } from '../common/json-api/json-api-query.decorator';
-import { CollectionQuery, collectionQuery } from '../common/json-api/query';
-import { ApiJsonApiCollectionResponse, ApiJsonApiErrorResponses, ApiJsonApiQuery } from '../common/json-api/swagger';
+import { CollectionQuery } from '../common/json-api/query';
 import { SearchSource } from '../common/search/search-source';
 import { containsPattern } from '../database/like-pattern';
 import { EVENT_SEARCH, TOUR_SEARCH } from '../live-events/live-event-search';
 import { RECORDING_SEARCH, RELEASE_GROUP_SEARCH, WORK_SEARCH } from '../music/music-search';
-import { IdentityResource } from '../catalog-identities/identity.resource';
 
 /*
  * Global search (S1): one heterogeneous list of published entries of the
@@ -23,7 +19,7 @@ import { IdentityResource } from '../catalog-identities/identity.resource';
  * Discovery only reads through the search sources of each module.
  */
 
-const SOURCES: SearchSource[] = [IDENTITY_SEARCH, ARTIST_SEARCH, WORK_SEARCH, RECORDING_SEARCH, RELEASE_GROUP_SEARCH, EVENT_SEARCH, TOUR_SEARCH];
+export const SOURCES: SearchSource[] = [IDENTITY_SEARCH, ARTIST_SEARCH, WORK_SEARCH, RECORDING_SEARCH, RELEASE_GROUP_SEARCH, EVENT_SEARCH, TOUR_SEARCH];
 
 /**
  * The types searched without `filter[type]`. An artist profile is part of its
@@ -34,13 +30,6 @@ const DEFAULT_TYPES = SOURCES.map(({ type }) => type).filter((type) => type !== 
 
 /** The least word similarity a name needs to match a text it does not contain. */
 const MIN_SIMILARITY = 0.5;
-
-const SEARCH_QUERY = collectionQuery(IDENTITY_SEARCH.schema, {
-  alsoOf: SOURCES.slice(1).map(({ schema }) => schema),
-  sort: ['relevance'],
-  defaultSort: '-relevance',
-  filters: ['q', 'type'],
-});
 
 @Injectable()
 export class SearchService {
@@ -101,33 +90,3 @@ export class SearchService {
 function badParameter(parameter: string, detail: string): JsonApiException {
   return new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail, source: { parameter } }]);
 }
-
-@ApiTags('discovery')
-@Controller('search')
-export class SearchController {
-  constructor(private readonly search: SearchService) {}
-
-  @Get()
-  @ApiOperation({
-    summary: 'Búsqueda global',
-    description:
-      'Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por ' +
-      'relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera ' +
-      'errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. ' +
-      '`filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, ' +
-      '`events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su ' +
-      'identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. ' +
-      'Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.',
-  })
-  @ApiJsonApiQuery(SEARCH_QUERY)
-  @ApiJsonApiCollectionResponse(IdentityResource)
-  @ApiJsonApiErrorResponses(400, 406)
-  async list(@JsonApiQuery(SEARCH_QUERY) query: CollectionQuery) {
-    const { results, total } = await this.search.search(query);
-    return mixedCollectionDocument(results, total, query);
-  }
-}
-
-/** Global search across the catalog; it owns no tables. */
-@Module({ controllers: [SearchController], providers: [SearchService] })
-export class DiscoveryModule {}

@@ -12,8 +12,7 @@ import {
 import { RecordingResource, recordingSchema } from './music.resource';
 import { RecordingsService } from './recordings.service';
 
-// The matrix also lists `tracks.release.releaseGroup`, a third level that `include` never reaches; the linkage of each
-// included release names its release group.
+// `include` stops at two levels: the linkage of each included release names its release group.
 const INCLUDE = [
   'contributions',
   'contributions.identity',

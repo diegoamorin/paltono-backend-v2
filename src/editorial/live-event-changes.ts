@@ -67,7 +67,10 @@ import { DESCRIPTION, envelope } from './work-changes';
 const ABSENT: ValueEnvelope = { exists: false };
 const noReferences = { references: () => [] } satisfies Pick<OperationDefinition, 'references'>;
 
-const TITLE = { type: 'string', minLength: 1, maxLength: 512, pattern: '\\S' };
+/** A text that is not blank, up to `maxLength`; `nullable` also accepts null. */
+const text = (maxLength: number, nullable = false) => ({ type: nullable ? ['string', 'null'] : 'string', minLength: 1, maxLength, pattern: '\\S' });
+
+const TITLE = text(512);
 const IMAGE_URL = SOURCE_URL;
 const TOUR_STATUS = { enum: TOUR_STATUSES, description: 'Estado de negocio, separado del de publicación; `scheduled` exige al menos el año de inicio' };
 const EVENT_STATUS = {
@@ -76,8 +79,8 @@ const EVENT_STATUS = {
 };
 const START_TIME = { type: ['string', 'null'], pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', description: 'Hora local, HH:MM; exige fecha completa y zona' };
 const TIMEZONE = { type: ['string', 'null'], maxLength: 64, description: 'Zona IANA, como Asia/Seoul; puede conocerse sin hora y nunca se deduce del país' };
-const CITY = { type: ['string', 'null'], minLength: 1, maxLength: 200, pattern: '\\S' };
-const VENUE_NAME = { type: ['string', 'null'], minLength: 1, maxLength: 300, pattern: '\\S' };
+const CITY = text(200, true);
+const VENUE_NAME = text(300, true);
 const TOUR_REFERENCE = { anyOf: [ENTITY_REFERENCE('Raíz editorial del tour: publicado, o creado en la misma propuesta'), { type: 'null' }] };
 
 const TOUR = {

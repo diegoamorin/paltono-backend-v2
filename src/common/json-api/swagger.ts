@@ -178,10 +178,12 @@ export function ApiJsonApiRelationshipResponse(status = 200) {
   );
 }
 
-/** Documents a response holding one page of resources. */
-export function ApiJsonApiCollectionResponse(resource: Type) {
+/** Documents a response holding one page of resources: of one type, or of any of several when given a list. */
+export function ApiJsonApiCollectionResponse(resource: Type | Type[]) {
+  const resources = Array.isArray(resource) ? resource : [resource];
+  const item = Array.isArray(resource) ? { oneOf: resources.map((each) => ({ $ref: getSchemaPath(each) })) } : { $ref: getSchemaPath(resource) };
   return applyDecorators(
-    ApiExtraModels(resource, JsonApiVersion, JsonApiPaginationLinks, JsonApiCollectionMeta),
+    ApiExtraModels(...resources, JsonApiVersion, JsonApiPaginationLinks, JsonApiCollectionMeta),
     ApiResponse({
       status: 200,
       description: STATUS_CODES[200],
@@ -192,7 +194,7 @@ export function ApiJsonApiCollectionResponse(resource: Type) {
             required: ['data', 'links', 'meta'],
             properties: {
               jsonapi: { $ref: getSchemaPath(JsonApiVersion) },
-              data: { type: 'array', items: { $ref: getSchemaPath(resource) } },
+              data: { type: 'array', items: item },
               included,
               links: { $ref: getSchemaPath(JsonApiPaginationLinks) },
               meta: { $ref: getSchemaPath(JsonApiCollectionMeta) },
