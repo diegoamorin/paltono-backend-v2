@@ -22162,7 +22162,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "One coherent allow-listed operation owned by one editorial root. UNIQUE(proposal_id,id), UNIQUE(id,entity_id), UNIQUE(proposal_id,position). Immutable submitted payload; status/resolved_at maintained only through change_decisions. target_path/target_key are typed domain selectors, never arbitrary SQL/table access. JSONB envelopes distinguish absence from null; references to reserved roots or newly inserted child rows use stable editorial/change UUIDs and explicit dependencies. atomic_group_id groups changes within this proposal; all members apply or resolve together. Dependencies inside a group may be satisfied within its transaction. No overlapping writes within one submitted proposal. Only published roots accept new edits; original creation proposal may contain dependent additions while root is reserved. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
+					"documentation": "One coherent allow-listed operation owned by one editorial root. UNIQUE(proposal_id,id), UNIQUE(id,entity_id), UNIQUE(proposal_id,position). Immutable submitted payload; status/resolved_at maintained only through change_decisions. target_path/target_key are typed domain selectors, never arbitrary SQL/table access. JSONB envelopes distinguish absence from null; references to reserved roots or newly inserted child rows use stable editorial/change UUIDs and explicit dependencies. atomic_group_id groups changes within this proposal; all members apply or resolve together. Dependencies inside a group may be satisfied within its transaction. No overlapping writes within one submitted proposal. Only published roots accept new edits; original creation proposal may contain dependent additions while root is reserved. A draft change on an outdated payload_schema_version is rewritten to the current version when translatable, otherwise its author removes or redoes it before submission. A submitted change keeps its original version and payload: deciding translates it in memory, and an untranslatable one is closed by an automatic mark_obsolete decision. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -22264,7 +22264,7 @@
 								"$ref": "5250d6cd46b7454594fe3de5a57865dc"
 							},
 							"name": "payload_schema_version",
-							"documentation": "DEFAULT 1; CHECK > 0. Versioned allow-listed operation schema.",
+							"documentation": "No DEFAULT; CHECK > 0. Versioned allow-listed operation schema; the server stores the registry's current version when a draft change omits it. A published version's shape never changes: a different shape is a new version. Fixed once submitted; a draft may be rewritten to the current version.",
 							"type": "SMALLINT"
 						},
 						{
@@ -22295,7 +22295,7 @@
 								"$ref": "5250d6cd46b7454594fe3de5a57865dc"
 							},
 							"name": "status",
-							"documentation": "pending | conflicted | applied | rejected | satisfied | blocked | withdrawn; DEFAULT pending. blocked means terminal dependency failure, not a temporary wait.",
+							"documentation": "pending | conflicted | applied | rejected | satisfied | blocked | withdrawn; DEFAULT pending. blocked means terminal dependency failure or an untranslatable obsolete payload_schema_version, not a temporary wait.",
 							"type": "enum"
 						},
 						{
@@ -22548,7 +22548,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Append-only decision history, never overwrite original proposal values. UNIQUE(id,change_id). Actions and status transitions restricted by docs/editorial-contributions.md. actor_id may be NULL only for automatic mark_conflict, mark_satisfied or block_dependency decisions; automatic decisions cannot approve. Applying requires an active moderator/admin, withdrawal of published content requires active admin, and withdraw_change permits author or staff. Reasons mandatory for conflict, rejection, rebased application and dependency failure. Store actual observed target/version; application and revision are one transaction. Author and staff may read; not part of public proposal projection. All FKs ON DELETE RESTRICT. Decisions are allowed only on submitted open proposals, never private drafts. Draft edits/deletion do not produce moderation decisions.",
+					"documentation": "Append-only decision history, never overwrite original proposal values. UNIQUE(id,change_id). Actions and status transitions restricted by docs/editorial-contributions.md. actor_id may be NULL only for automatic mark_conflict, mark_satisfied, block_dependency or mark_obsolete decisions; mark_obsolete results in blocked; automatic decisions cannot approve. Applying requires an active moderator/admin, withdrawal of published content requires active admin, and withdraw_change permits author or staff. Reasons mandatory for conflict, rejection, rebased application, dependency failure and obsolete payload version. Store actual observed target/version; application and revision are one transaction. Author and staff may read; not part of public proposal projection. All FKs ON DELETE RESTRICT. Decisions are allowed only on submitted open proposals, never private drafts. Draft edits/deletion do not produce moderation decisions.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -22590,7 +22590,7 @@
 								"$ref": "12dda4696ea44355bad0bbe199258e2d"
 							},
 							"name": "action",
-							"documentation": "apply | apply_rebased | reject | mark_conflict | mark_satisfied | block_dependency | withdraw_change",
+							"documentation": "apply | apply_rebased | reject | mark_conflict | mark_satisfied | block_dependency | mark_obsolete | withdraw_change",
 							"type": "enum"
 						},
 						{
@@ -22620,7 +22620,7 @@
 								"$ref": "12dda4696ea44355bad0bbe199258e2d"
 							},
 							"name": "reason",
-							"documentation": "Internal rationale; mandatory on conflict/reject/apply_rebased/block_dependency.",
+							"documentation": "Internal rationale; mandatory on conflict/reject/apply_rebased/block_dependency/mark_obsolete.",
 							"type": "TEXT",
 							"nullable": true
 						},
@@ -22662,7 +22662,7 @@
 						"$ref": "dc6874edb22f477fb2927a700c06cfbe"
 					},
 					"name": "entity_revisions",
-					"documentation": "Append-only applied changes only; no row for rejected, conflicted or satisfied proposals. UNIQUE(entity_id,version), UNIQUE(change_id), UNIQUE(decision_id). FK (change_id,entity_id) -> proposal_changes(id,entity_id); FK (decision_id,change_id) -> change_decisions(id,change_id). Decision action must be apply/apply_rebased and result applied. version=observed_version+1 under root lock; entity.current_version equals latest committed version. before_value is actual old value, including rebase; after_value is actual resolved applied value. One revision per microchange; grouped revisions become visible together. All FKs ON DELETE RESTRICT.",
+					"documentation": "Append-only applied changes only; no row for rejected, conflicted or satisfied proposals. UNIQUE(entity_id,version), UNIQUE(change_id), UNIQUE(decision_id). FK (change_id,entity_id) -> proposal_changes(id,entity_id); FK (decision_id,change_id) -> change_decisions(id,change_id). Decision action must be apply/apply_rebased and result applied. version=observed_version+1 under root lock; entity.current_version equals latest committed version. before_value is actual old value, including rebase; after_value is actual resolved applied value. One revision per microchange; grouped revisions become visible together. before_value/after_value follow the payload_schema_version of their microchange, reached through change_id. A revision is a record, never re-executed: a correction is a new microchange on the current state. All FKs ON DELETE RESTRICT.",
 					"columns": [
 						{
 							"_type": "ERDColumn",

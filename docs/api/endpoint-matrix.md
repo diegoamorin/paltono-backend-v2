@@ -171,7 +171,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 
 | # | Método y ruta | Caso de uso | Acceso | Notas | Pruebas |
 |---|---|---|---|---|---|
-| E1 | `GET /v1/editorial-operations` | Registro de selectores permitidos | Pub | Por tipo de raíz: operaciones, `target_path`, forma de `target_key` y JSON Schema del payload por `payload_schema_version` | ok |
+| E1 | `GET /v1/editorial-operations` | Registro de selectores permitidos | Pub | Por tipo de raíz: operaciones, `target_path`, forma de `target_key` y JSON Schema del payload por `payload_schema_version`, con `status` `current` (la más alta del selector) u `obsolete`. Las versiones obsoletas se siguen listando para leer el historial; no se aceptan en microcambios nuevos | ok |
 | E2 | `POST /v1/editorial-entities` | Reservar una raíz para un alta | Ver | `{entityType}`; queda `reserved`, versión 0 | ok val authz |
 | E3 | `GET /v1/editorial-entities/{id}` | Estado editorial de una raíz | Pub; reserva solo su creador | tipo, estado, versión, fechas | ok authz |
 | E4 | `GET /v1/editorial-entities/{id}/proposals` | Historial público de envíos | Pub | Proyección pública. Sirve también el historial de una raíz reservada en cuanto tiene un envío; una reserva sin envíos solo existe para su creador **[P9]** | ok authz spec |
@@ -182,17 +182,17 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | # | Método y ruta | Caso de uso | Acceso | Notas | Pruebas |
 |---|---|---|---|---|---|
 | E6 | `POST /v1/proposals` | Crear borrador | Ver | `{description, previousProposal?}` | ok val authz |
-| E7 | `GET /v1/me/proposals` | Mis propuestas, incluidos borradores | Ver | Con estados de microcambio | ok authz |
-| E8 | `GET /v1/proposals/{id}` | Ver propuesta | Pub (proyección); autor y personal con estados; borrador solo autor | | ok authz spec |
+| E7 | `GET /v1/me/proposals` | Mis propuestas, incluidos borradores | Ver | Con estados de microcambio; en borradores marca los microcambios en una versión del payload obsoleta | ok authz |
+| E8 | `GET /v1/proposals/{id}` | Ver propuesta | Pub (proyección); autor y personal con estados; borrador solo autor | Como E7, el autor ve marcados los microcambios obsoletos de su borrador | ok authz spec |
 | E9 | `PATCH /v1/proposals/{id}` | Editar borrador | Own | Solo `draft`; enviado responde 409 | ok val authz state |
 | E10 | `DELETE /v1/proposals/{id}` | Descartar borrador | Own | Solo `draft`; no es una decisión de moderación | ok authz state |
-| E11 | `POST /v1/proposals/{id}/changes` | Añadir microcambio | Own | operación, raíz, selector, payload, grupo atómico, posición; valida contra E1 | ok val authz state |
-| E12 | `PATCH`/`DELETE /v1/proposals/{id}/changes/{changeId}` | Editar o quitar microcambio del borrador | Own | | ok val authz state |
+| E11 | `POST /v1/proposals/{id}/changes` | Añadir microcambio | Own | operación, raíz, selector, payload, grupo atómico, posición; valida contra E1. Sin `payloadSchemaVersion` guarda la vigente; una anterior responde 422 `obsolete_payload_schema_version` | ok val authz state |
+| E12 | `PATCH`/`DELETE /v1/proposals/{id}/changes/{changeId}` | Editar o quitar microcambio del borrador | Own | Editar con una versión anterior responde 422 `obsolete_payload_schema_version`; un microcambio obsoleto se quita o se rehace en la vigente | ok val authz state |
 | E13 | `GET /v1/proposals/{id}/changes` | Listar microcambios | Como E8 | | ok authz |
 | E14 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/dependencies` | Declarar dependencias | Own | Rechaza ciclos, también al colapsar grupos atómicos | ok val state spec |
 | E15 | `POST /v1/proposals/{id}/sources`, `PATCH`/`DELETE …/sources/{sourceId}` | Fuentes generales | Own | URL HTTP(S), cita o ambas | ok val state |
 | E16 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/sources` | Vincular fuentes a un microcambio | Own | Fuente de otra propuesta responde 422 | ok val spec |
-| E17 | `POST /v1/proposals/{id}/submission` | Enviar | Own | Exige descripción, un microcambio, una fuente, tipos y dependencias válidos; congela el contenido | ok val state conc tx spec |
+| E17 | `POST /v1/proposals/{id}/submission` | Enviar | Own | Exige descripción, un microcambio, una fuente, tipos y dependencias válidos; congela el contenido. Un microcambio en una versión obsoleta responde 422 `obsolete_payload_schema_version` con `meta.changeId` | ok val state conc tx spec |
 | E18 | `POST /v1/proposals/{id}/publication` | Publicación directa del personal | Staff, autor del borrador | Envía y aplica en una transacción; retirar una ficha publicada exige Admin | ok authz tx spec |
 
 ### Moderación y decisiones
@@ -244,7 +244,7 @@ Aprobadas el 2026-10-17.
 | P4 | Una cuenta sin verificar puede pedir cambio de correo | Permite corregir un correo mal escrito, parte de "gestionar ese acceso" |
 | P5 | Los administradores ven el correo de las cuentas en U1/U2 | Necesario para soporte y bajas solicitadas fuera de la API; nadie más lo ve |
 | P6 | Las revisiones aplicadas solo las ven el personal y, para sus propios microcambios, el autor | La §5 de la especificación excluye del historial público los datos de revisión que revelan el resultado individual; una revisión vinculada a su microcambio lo revela directamente |
-| P7 | `mark_conflict`, `mark_satisfied` y `block_dependency` solo los registra el sistema | La especificación los define como automáticos; el personal resuelve con `apply_rebased`, `reject` o `withdraw_change` |
+| P7 | `mark_conflict`, `mark_satisfied`, `block_dependency` y `mark_obsolete` solo los registra el sistema | La especificación los define como automáticos; el personal resuelve con `apply_rebased`, `reject` o `withdraw_change` |
 | P8 | La proyección pública muestra el estado `open/closed` de la propuesta y `closedAt` | Indican si la revisión terminó, no su resultado: el resultado global derivado (total o parcial) y el estado de cada microcambio siguen ocultos. A19 ya filtra públicamente por ese estado |
 | P9 | E4 sirve el historial de una raíz reservada que ya tiene un envío, aunque E3 siga respondiendo 404 a esa reserva | El envío ya es público en E8 con el UUID de la raíz, y el historial debe verse antes de la publicación; el estado editorial de la reserva sigue siendo privado |
 | P10 | En la cola E19, `include=entity` muestra al personal el estado editorial de la raíz, también de una reserva cuya alta revisa | El personal necesita tipo, estado y versión para decidir un alta; fuera de la cola la reserva sigue siendo privada para su creador (E3) |

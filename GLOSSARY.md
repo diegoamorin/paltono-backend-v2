@@ -50,6 +50,14 @@ _Avoid_: Borrador enviado que todavía se puede editar.
 Operación individual de una propuesta sobre una ficha o una de sus relaciones. Su resultado puede resolverse de forma independiente salvo que pertenezca a un grupo atómico.
 _Avoid_: Propuesta para referirse a una sola operación dentro de ella.
 
+**Versión del payload (payload schema version)**:
+Forma publicada de los datos de un tipo de microcambio. Una vez publicada no cambia nunca; una forma o un significado distintos son una versión nueva.
+_Avoid_: Versión a secas, ni versión de la ficha, que cuenta los microcambios aplicados a una ficha.
+
+**Microcambio obsoleto (obsolete change)**:
+Microcambio escrito en una versión del payload que ya no puede aplicarse. Se cierra sin aplicarse y sus dependientes y su grupo atómico quedan bloqueados.
+_Avoid_: Conflicto, porque lo que cambió es la forma de sus datos y no la información sobre la que se basaba.
+
 **Fuente (source)**:
 Referencia que respalda una propuesta, mediante una dirección web, una referencia bibliográfica o ambas. Puede vincularse también a microcambios concretos.
 _Avoid_: Evidencia verificada como sinónimo de fuente aportada.

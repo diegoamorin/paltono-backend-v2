@@ -57,11 +57,11 @@ Todos los IDs de las tablas nuevas son UUID salvo las referencias a `users.id`, 
 
 Restricciones que la implementación SQL debe materializar, además de los indicadores PK/FK/UNIQUE del diagrama:
 
-- `proposal_changes`: UNIQUE `(proposal_id,id)`, `(id,entity_id)` y `(proposal_id,position)`; versiones no negativas y orden no negativo.
+- `proposal_changes`: UNIQUE `(proposal_id,id)`, `(id,entity_id)` y `(proposal_id,position)`; versiones no negativas y orden no negativo. `payload_schema_version` es positiva y no tiene valor por defecto.
 - `change_dependencies`: dos FKs compuestas desde `(proposal_id,change_id)` y `(proposal_id,depends_on_change_id)` a `proposal_changes(proposal_id,id)`. Prohibir autorreferencia y ciclos; comprobar también que colapsar los grupos atómicos no produzca ciclos.
 - `proposal_sources`: UNIQUE `(proposal_id,id)`; exigir al menos una URL o referencia no vacía por fila. Una URL proporcionada no puede estar vacía ni usar otro protocolo.
 - `change_sources`: FKs compuestas `(proposal_id,change_id)` y `(proposal_id,source_id)` a las claves anteriores. Impiden usar una fuente de otra propuesta.
-- `change_decisions`: UNIQUE `(id,change_id)`.
+- `change_decisions`: UNIQUE `(id,change_id)`. `mark_obsolete` produce `blocked`, admite `actor_id` NULL y exige motivo.
 - `entity_revisions`: UNIQUE `(entity_id,version)`, `change_id` y `decision_id`; FK directa de `entity_id` a la raíz y FKs compuestas `(change_id,entity_id)` y `(decision_id,change_id)` a `proposal_changes(id,entity_id)` y `change_decisions(id,change_id)`. La decisión debe corresponder a una aplicación efectiva.
 - `editorial_entities`: FK compuesta `(creation_change_id,id)` a `proposal_changes(id,entity_id)`; `creation_change_id` único. Debe ser una operación `create_entity` aplicada, cuyo autor coincide con `created_by`.
 - `user_role_changes`: `previous_role <> new_role`, ambos dentro de los roles de `users`. `changed_by` admite NULL exclusivamente bajo las condiciones transaccionales del bootstrap inicial; en ese caso `new_role=admin` y el motivo no está vacío. La nulabilidad no autoriza promociones anónimas por HTTP.
@@ -97,6 +97,8 @@ Operaciones admitidas:
 
 Los JSONB utilizan una envoltura `{"exists": true, "value": ...}`; `{"exists": false}` indica ausencia. Así se distingue un valor NULL de una fila inexistente. Una alta parte de ausencia; una eliminación propone ausencia. Para retirada, el objetivo es el estado editorial, no borrar la fila. La forma interna de `value` depende de `payload_schema_version` y del selector permitido.
 
+Una versión del payload publicada no cambia nunca; una forma o un significado distintos son una versión nueva ([ADR 0006](adr/0006-payload-schema-versions.md)). La versión vigente de un selector es la más alta registrada. Si el cliente omite la versión al añadir un microcambio, el servidor guarda la vigente; una versión anterior se rechaza con `obsolete_payload_schema_version`, también al editar un borrador. Un microcambio de un borrador que quedó en una versión anterior es un microcambio obsoleto: se muestra a su autor con su valor original y marcado como obsoleto, y el borrador no puede enviarse hasta quitarlo o rehacerlo en la versión vigente. Quitarlo sigue las reglas de dependencias y de grupos atómicos. Cuando exista un traductor desde esa versión, los borradores se reescribirán a la vigente en lugar de quedar obsoletos.
+
 Las referencias propuestas a nuevas raíces usan `{"entity_id":"<UUID editorial>"}`. Para una fila dependiente todavía no creada, la clave puede usar `{"change_id":"<UUID de inserción>"}`. Ambas referencias deben tener una dependencia explícita hacia su creación, verificable al enviar. El servidor las traduce a las PK del dominio al aplicar; `entity_revisions.result_key` conserva el resultado y `after_value` el valor efectivo. No modificar los UUID ni las referencias del envío original. Los payloads no pueden modificar roles, autoría, versiones, decisiones ni metadatos administrativos.
 
 `atomic_group_id` agrupa operaciones del mismo envío. Aplicar un grupo completo en una transacción o no aplicar ninguna. Dentro del grupo se ejecuta en orden de dependencias y se validan las invariantes finales antes del commit. Los grupos también se resuelven juntos al rechazar, retirar o declarar no aplicables sus miembros; una aplicación que contenga operaciones ya satisfechas puede cerrar esas operaciones sin una revisión adicional. Un conflicto que impide el grupo mantiene los demás miembros pendientes.
@@ -112,14 +114,16 @@ No es necesario agrupar toda una propuesta: una identidad puede aprobarse antes 
 | `applied` | Incorporado al dominio; tiene una revisión. |
 | `rejected` | Descartado mediante decisión. |
 | `satisfied` | Su resultado ya existe; no genera escritura ni revisión. |
-| `blocked` | No aplicable por fallo definitivo de una dependencia. |
+| `blocked` | No aplicable por fallo definitivo de una dependencia o por estar en una versión del payload obsoleta. |
 | `withdrawn` | Retirado de la revisión por el autor o el personal. |
 
 Solo `pending/conflicted` son estados no terminales; `resolved_at` es NULL exactamente en esos estados. Rechazar o retirar una dependencia propaga `blocked` a sus dependientes pendientes, con decisiones registradas; esperar una dependencia conserva `pending`. Una operación `satisfied` sirve como prerrequisito únicamente si puede resolverse su identidad de destino de forma inequívoca. No fusionar altas por coincidencia de título/nombre.
 
-`change_decisions.action` registra `apply`, `apply_rebased`, `reject`, `mark_conflict`, `mark_satisfied`, `block_dependency` o `withdraw_change`, junto al estado anterior/resultante. `apply` exige base compatible y produce `applied`; `apply_rebased` exige confirmación explícita del personal sobre una base distinta y también produce `applied`. Las demás acciones producen su estado homónimo. Todas actúan sobre estados no terminales; no se reabren decisiones terminales ni se revierten aplicaciones editando su historial. Una corrección posterior es una nueva propuesta.
+`change_decisions.action` registra `apply`, `apply_rebased`, `reject`, `mark_conflict`, `mark_satisfied`, `block_dependency`, `mark_obsolete` o `withdraw_change`, junto al estado anterior/resultante. `apply` exige base compatible y produce `applied`; `apply_rebased` exige confirmación explícita del personal sobre una base distinta y también produce `applied`; `mark_obsolete` produce `blocked`. Las demás acciones producen su estado homónimo. Todas actúan sobre estados no terminales; no se reabren decisiones terminales ni se revierten aplicaciones editando su historial. Una corrección posterior es una nueva propuesta.
 
-`actor_id` es obligatorio para aplicar, rechazar o retirar. Puede ser NULL para marcar automáticamente conflictos, resultados satisfechos o dependencias fallidas; nunca representa una aprobación automática. El autor solo puede retirar sus microcambios no resueltos. Conflictos, rechazos, aplicación sobre una base nueva y fallos de dependencia requieren motivo. Las decisiones automáticas también conservan el contexto observado.
+`actor_id` es obligatorio para aplicar, rechazar o retirar. Puede ser NULL para marcar automáticamente conflictos, resultados satisfechos, dependencias fallidas o microcambios obsoletos; nunca representa una aprobación automática. El autor solo puede retirar sus microcambios no resueltos. Conflictos, rechazos, aplicación sobre una base nueva, fallos de dependencia y versiones obsoletas requieren motivo. Las decisiones automáticas también conservan el contexto observado.
+
+Un envío nunca se reescribe a otra versión del payload. Cuando el sistema intenta decidir o recalcular un microcambio enviado cuya versión es obsoleta, registra `mark_obsolete` en lugar de aplicarlo; sus dependientes pendientes y los demás miembros de su grupo atómico reciben `block_dependency`, cada uno con su decisión, como ante un prerrequisito rechazado. La propuesta sigue `open/closed` según sus microcambios. Cuando exista un traductor desde esa versión, el microcambio se traducirá en memoria al decidir, al detectar conflictos y al comparar competidores, y solo quedará obsoleto lo que no pueda traducirse sin inventar datos.
 
 Solo las propuestas enviadas y abiertas reciben decisiones. Editar o descartar un borrador privado no constituye una decisión de moderación ni permite al personal consultar su contenido.
 
@@ -143,6 +147,8 @@ Una propuesta enviada está `open` mientras exista un cambio `pending/conflicted
 Las fuentes son generales y obligatorias por propuesta; el vínculo por microcambio es opcional. La cadena revisión → microcambio → propuesta → fuentes conserva procedencia. Los campos musicales existentes `source_text/source_url` mantienen su propósito: no copiar automáticamente una fuente general a todos los créditos ni eliminarlos al introducir el historial editorial.
 
 El público ve todos los envíos, incluidos los que tengan cambios rechazados o pendientes, con autor, fecha, descripción, valores propuestos y fuentes. Rotularlos como **información propuesta**, separada de la ficha vigente. Excluir de esa proyección `proposal_changes.status/resolved_at`, decisiones, motivos internos, resultado global derivado y datos de revisión que revelen directamente el resultado individual. Es una proyección permitida en el servidor, no solo columnas ocultas en el frontend. La comparación con la ficha actual puede permitir inferir algún resultado; el requisito es no publicar el detalle de las decisiones. El estado `open/closed` de la propuesta y su fecha de cierre sí son públicos: indican si la revisión terminó, no su resultado.
+
+El historial muestra cada valor (propuesto, base, anterior y resultante) en la versión del payload con que se escribió, sin migrarlo. Las revisiones son solo registro: nunca se vuelven a ejecutar ni se revierten reaplicando `before_value`. El registro de operaciones sigue publicando las versiones obsoletas con sus schemas para poder leer esos valores.
 
 Un envío sobre una raíz reservada aparece en su historial público desde que se envía, antes de publicarse la ficha. Lo que se publica es la información propuesta: el estado editorial de la reserva sigue siendo privado para su creador, y ninguna ficha ni relación del catálogo puede apuntar a una reserva. La regla de que nunca hay referencias públicas a reservas se refiere a esas relaciones del catálogo, no al historial de envíos.
 
@@ -182,6 +188,10 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Dos ediciones sin nombre en el mismo lanzamiento | La segunda se rechaza por la unicidad de `(release_group_id, edition_name)`. |
 | Repackage que crearía un ciclo o apunta a sí mismo | Rechazo bajo bloqueo, sin escritura ni revisión. |
 | Mover una edición a otro lanzamiento mientras otra propuesta cambia esa edición | Se aplica como `set_fields` de la edición; la segunda queda en conflicto si su base cambió. |
+| Borrador con un microcambio en una versión del payload obsoleta | El autor lo ve marcado como obsoleto con su valor original; enviar se rechaza con `obsolete_payload_schema_version` e indica el microcambio; quitarlo respeta dependencias y grupos. |
+| Envío obsoleto con un dependiente y un grupo atómico | Decisión automática `mark_obsolete` con motivo y `blocked`; dependiente y miembros del grupo bloqueados con su propia decisión; ninguna escritura ni revisión. |
+| Cliente añade un microcambio con una versión anterior o sin versión | Versión anterior: 422 `obsolete_payload_schema_version`. Sin versión: se guarda la vigente. |
+| Se modifica el schema de una versión publicada | La prueba de schemas congelados falla en CI; añadir una versión nueva no la hace fallar. |
 | Autor cambia de username y otra cuenta toma el anterior | Las contribuciones existentes muestran el username vigente del autor original; sus IDs, contenido e historial no cambian ni se transfieren a la otra cuenta. |
 
 No hay backend ni base de datos ejecutable en este repositorio. Estos casos son criterios de aceptación del diseño, no pruebas de integración ya superadas. Si se implementa sobre datos existentes, habrá que crear raíces y revisiones iniciales con procedencia real o migración explícita; no atribuir autores o fuentes inventados.
