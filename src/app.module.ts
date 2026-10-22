@@ -10,6 +10,7 @@ import { databaseOptions } from './database/database-options';
 import { DiscoveryModule } from './discovery/discovery.module';
 import { EditorialModule } from './editorial/editorial.module';
 import { HealthModule } from './health/health.module';
+import { ImagesModule } from './images/images.module';
 import { LiveEventsModule } from './live-events/live-events.module';
 import { MusicModule } from './music/music.module';
 import { VocabulariesModule } from './vocabularies/vocabularies.module';
@@ -32,6 +33,7 @@ export class AppModule {
         MusicModule,
         LiveEventsModule,
         EditorialModule,
+        ImagesModule,
         DiscoveryModule,
       ],
       providers: [{ provide: APP_CONFIG, useValue: config }],

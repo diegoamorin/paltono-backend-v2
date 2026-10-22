@@ -11,6 +11,19 @@ export function sendJsonApi(response: Response, body: unknown): Response {
   return response.setHeader('Content-Type', JSON_API_MEDIA_TYPE).send(Buffer.from(JSON.stringify(body)));
 }
 
+export const MULTIPART_MEDIA_TYPE = 'multipart/form-data';
+
+/**
+ * Routes that receive a file instead of a JSON:API document: their body is
+ * `multipart/form-data` and their response is still JSON:API.
+ */
+export const MULTIPART_PATHS: readonly string[] = ['/v1/images'];
+
+/** True when the `Content-Type` is `multipart/form-data`, whatever its boundary. */
+export function isMultipartContentType(header: string | undefined): boolean {
+  return !!header && parse(header).type === MULTIPART_MEDIA_TYPE;
+}
+
 /** Media type parameters a JSON:API request may carry; no extensions are supported. */
 const ALLOWED_PARAMETERS = new Set(['profile']);
 

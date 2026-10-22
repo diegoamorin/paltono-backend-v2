@@ -36,6 +36,19 @@ export interface MailConfig {
   from: string;
 }
 
+/** Where uploaded images are stored (ADR 0005). */
+export type ImageStorageConfig = {
+  /** A folder that the backend itself serves under `/images`. */
+  kind: 'local';
+  directory: string;
+};
+
+export interface ImagesConfig {
+  /** Public base of uploaded images, ending in `/`: an image's URL is this base plus its storage key. */
+  publicBaseUrl: string;
+  storage: ImageStorageConfig;
+}
+
 export interface AppConfig {
   environment: Environment;
   port: number;
@@ -43,6 +56,7 @@ export interface AppConfig {
   swagger: SwaggerConfig;
   auth: AuthConfig;
   mail: MailConfig;
+  images: ImagesConfig;
   /** Base URL of each frontend. */
   frontends: Record<Frontend, string>;
 }
@@ -69,10 +83,11 @@ export function loadEnvFile(path = resolve(process.cwd(), '.env')): void {
  */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const environment = loadEnvironment(env);
+  const port = Number(env.PORT ?? 3000);
 
   return {
     environment,
-    port: Number(env.PORT ?? 3000),
+    port,
     databaseUrl:
       environment === 'test'
         ? testDatabaseUrl({ DATABASE_URL_TEST: required(env, 'DATABASE_URL_TEST') })!
@@ -80,6 +95,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     swagger: swaggerConfig(environment, env),
     auth: authConfig(environment, env),
     mail: mailConfig(environment, env),
+    images: imagesConfig(environment, env, port),
     frontends: {
       kpop: requiredInProduction(environment, env, 'FRONTEND_URL_KPOP', 'http://localhost:5173'),
       main: requiredInProduction(environment, env, 'FRONTEND_URL_MAIN', 'http://localhost:5174'),
@@ -104,6 +120,19 @@ function mailConfig(environment: Environment, env: NodeJS.ProcessEnv): MailConfi
     resendApiKey: environment === 'production' ? required(env, 'RESEND_API_KEY') : env.RESEND_API_KEY || undefined,
     // Resend's test sender outside production; the verified paltono.com domain in production.
     from: requiredInProduction(environment, env, 'MAIL_FROM', 'Paltono <onboarding@resend.dev>'),
+  };
+}
+
+/** The folder of locally stored images when `IMAGE_STORAGE_DIRECTORY` is unset; ignored by git. */
+export const DEFAULT_IMAGE_STORAGE_DIRECTORY = 'storage/images';
+
+function imagesConfig(environment: Environment, env: NodeJS.ProcessEnv, port: number): ImagesConfig {
+  const base = requiredInProduction(environment, env, 'IMAGE_PUBLIC_BASE_URL', `http://localhost:${port}/images/`);
+  if (!/^https?:\/\/[^/]/.test(base)) throw new Error(`IMAGE_PUBLIC_BASE_URL must be an http(s) URL; got "${base}"`);
+
+  return {
+    publicBaseUrl: base.endsWith('/') ? base : `${base}/`,
+    storage: { kind: 'local', directory: resolve(env.IMAGE_STORAGE_DIRECTORY || DEFAULT_IMAGE_STORAGE_DIRECTORY) },
   };
 }
 

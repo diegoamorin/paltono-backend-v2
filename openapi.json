@@ -15517,6 +15517,183 @@
         ]
       }
     },
+    "/v1/images": {
+      "post": {
+        "description": "Recibe la imagen como `multipart/form-data` en el campo `file` y devuelve su URL pública, para ponerla en un borrador; no la asocia a ningún borrador. El tipo se detecta por el contenido (JPEG, PNG o WebP), con un máximo de 3 MB y de 4000 px por lado. Se aplica la orientación EXIF, se quitan los metadatos y se recomprime sin pérdida visible conservando el formato. Una cuenta `user` puede subir 4 cada 15 días; al excederlo responde 429 con `meta.availableAt`, la fecha en que vuelve a haber cupo. El personal no tiene cupo. Un rechazo no consume cupo.",
+        "operationId": "ImagesController_upload",
+        "parameters": [
+          {
+            "name": "fields[image-uploads]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de image-uploads separados por comas: purpose, url, bytes, createdAt, uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[users]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de users separados por comas: username, displayName, avatarUrl, bio, role, status, createdAt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG o WebP, detectado por su contenido; como máximo 3 MB y 4000 px por lado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImageUploadResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Subir una imagen de catálogo",
+        "tags": [
+          "images"
+        ]
+      }
+    },
     "/v1/search": {
       "get": {
         "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.",
@@ -20907,6 +21084,80 @@
           },
           "relationships": {
             "$ref": "#/components/schemas/QueuedChangeRelationships"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "relationships"
+        ]
+      },
+      "ImageUploadAttributes": {
+        "type": "object",
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "catalog",
+              "avatar"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL pública de la imagen, para usarla en un borrador"
+          },
+          "bytes": {
+            "type": "number",
+            "description": "Peso de la imagen guardada, después de procesarla"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "purpose",
+          "url",
+          "bytes",
+          "createdAt"
+        ]
+      },
+      "ImageUploadRelationships": {
+        "type": "object",
+        "properties": {
+          "uploadedBy": {
+            "description": "Cuenta que subió la imagen",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccountLinkage"
+              }
+            ]
+          }
+        },
+        "required": [
+          "uploadedBy"
+        ]
+      },
+      "ImageUploadResource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "image-uploads"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/ImageUploadAttributes"
+          },
+          "relationships": {
+            "$ref": "#/components/schemas/ImageUploadRelationships"
           }
         },
         "required": [
