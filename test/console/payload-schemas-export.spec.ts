@@ -56,4 +56,14 @@ describe('pnpm payload-schemas:export', () => {
     expect(exported.output).toContain(CREATION);
     expect(await readFile(file, 'utf8')).toBe(tampered);
   });
+
+  it('regenerates the schemas of a version already written when asked to explicitly', async () => {
+    const committed = await read(COMMITTED);
+    await writeFile(file, JSON.stringify({ ...committed, [CREATION]: { ...committed[CREATION], targetKeySchema: { type: 'object' } } }));
+
+    const exported = await runPnpm(['payload-schemas:export', '--regenerate', file]);
+
+    expect(exported).toMatchObject({ status: 0 });
+    expect(await readFile(file, 'utf8')).toBe(await readFile(COMMITTED, 'utf8'));
+  });
 });
