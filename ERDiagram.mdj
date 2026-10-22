@@ -22641,8 +22641,9 @@
 								"$ref": "12dda4696ea44355bad0bbe199258e2d"
 							},
 							"name": "observed_value",
-							"documentation": "Actual envelope observed; preserves current base used to resolve a conflict.",
-							"type": "JSONB"
+							"documentation": "Actual envelope observed; preserves current base used to resolve a conflict. NULL only for an automatic mark_obsolete or block_dependency on a microchange whose obsolete payload_schema_version can no longer be read: nothing was observed.",
+							"type": "JSONB",
+							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",

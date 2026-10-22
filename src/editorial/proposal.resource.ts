@@ -80,6 +80,7 @@ export const reviewableChangeSchema = defineResource<ProposalChange>({
     ...proposedAttributes,
     status: (change) => change.status,
     resolvedAt: (change) => change.resolvedAt?.toISOString() ?? null,
+    payloadSchemaStatus: (change) => change.payloadSchemaStatus,
   },
   relationships: changeRelationships,
 });
@@ -230,6 +231,14 @@ class ChangeAttributes {
 
   @ApiProperty({ type: String, format: 'date-time', nullable: true, required: false, description: 'Solo para su autor y el personal' })
   resolvedAt?: string | null;
+
+  @ApiProperty({
+    enum: ['current', 'obsolete'],
+    required: false,
+    description:
+      'Solo para su autor y el personal. obsolete: su versión del payload ya no es la vigente (E1); en un borrador hay que quitarlo o rehacerlo antes de enviar',
+  })
+  payloadSchemaStatus?: string;
 }
 
 class EntityLinkage {

@@ -18,7 +18,7 @@ import { EditorialEntity } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ChangeStatus, ProposalChange, ValueEnvelope } from './entities/proposal-change.entity';
 import { ChangeDependency } from './entities/proposal-links.entity';
-import { ABSENT, OperationDefinition, RowKey, findOperation } from './operation-registry';
+import { ABSENT, OperationDefinition, RowKey, currentDefinitionOf, currentOperation, currentVersionOf, isObsolete } from './operation-registry';
 import { finalStateProblems, lockTargetedRoots, revalidateChange, rootReferencesOf } from './proposal-changes.service';
 import { loadContents, submitDraft } from './proposals.service';
 import { resolveKey } from './row-references';
@@ -109,7 +109,6 @@ export class DecisionsService {
       const actor = await lockContributor(manager, user.id);
       const located = await findSubmittedChange(manager, changeId);
       checkPermission(actor, located, input.action);
-      checkInput(input);
 
       const members = await groupOf(manager, located);
       if (input.action === 'apply' || input.action === 'apply_rebased') checkWithdrawalPermission(actor, members);
@@ -140,7 +139,15 @@ export class DecisionsService {
         now: this.clock.now(),
       };
 
-      const outcome = input.action === 'reject' || input.action === 'withdraw_change' ? await closeTogether(context, open) : await applyAll(context, open);
+      // An obsolete version can be neither read nor applied, whatever the action asked and however it asked it (ADR 0006).
+      const obsolete = open.filter((member) => isObsolete(roots.get(member.entityId)!.entityType, member));
+      let outcome: Outcome;
+      if (obsolete.length > 0) {
+        outcome = await refuseObsolete(manager, obsolete, context.now);
+      } else {
+        checkInput(input);
+        outcome = input.action === 'reject' || input.action === 'withdraw_change' ? await closeTogether(context, open) : await applyAll(context, open);
+      }
       await closeIfSettled(manager, change.proposalId, context.now);
       return outcome;
     });
@@ -303,16 +310,26 @@ function confirmedVersionsRequired(detail: string): JsonApiException {
 /** Reads a microchange's target as it is now. A row or root its key names that is not created yet holds nothing. */
 async function observe(manager: EntityManager, change: ProposalChange): Promise<Observation> {
   const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
-  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const definition = currentOperation(root.entityType, change)!;
   const value = (change.proposedValue as { value?: unknown }).value;
   const key = change.targetKey === null ? null : (await resolveKey(manager, root, change.targetKey, definition)).key;
   const current = change.targetKey !== null && key === null ? ABSENT : await definition.read(manager, root, key, value);
   return { root, definition, key, current };
 }
 
+/**
+ * Reads a microchange's target as it is now, if its version can still be
+ * read: an obsolete one observes nothing, so only the root's version is kept.
+ */
+async function observeIfReadable(manager: EntityManager, change: ProposalChange): Promise<{ root: EditorialEntity; current: ValueEnvelope | null }> {
+  const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
+  if (isObsolete(root.entityType, change)) return { root, current: null };
+  return observe(manager, change);
+}
+
 function decisionOf(
   change: ProposalChange,
-  { root, current }: Pick<Observation, 'root' | 'current'>,
+  { root, current }: { root: EditorialEntity; current: ValueEnvelope | null },
   action: DecisionAction,
   resultingStatus: ChangeStatus,
   actorId: number | null,
@@ -383,10 +400,69 @@ async function blockDependents(manager: EntityManager, failed: ProposalChange[],
     }
     const changes = await openChanges(manager, [...blocked.keys()]);
     for (const change of changes) {
-      await recordDecision(manager, decisionOf(change, await observe(manager, change), 'block_dependency', 'blocked', null, blocked.get(change.id)!, now));
+      const observation = await observeIfReadable(manager, change);
+      await recordDecision(manager, decisionOf(change, observation, 'block_dependency', 'blocked', null, blocked.get(change.id)!, now));
     }
     frontier = changes.map((change) => ({ ...change, status: 'blocked' as const }));
   }
+}
+
+/**
+ * Closes open microchanges on an obsolete payload schema version with
+ * automatic `mark_obsolete` decisions, then blocks the open members of their
+ * atomic groups and what depends on them, as a failed prerequisite does.
+ * Their proposals are locked already.
+ */
+async function closeObsolete(manager: EntityManager, obsolete: ProposalChange[], now: Date): Promise<void> {
+  const closed: ProposalChange[] = [];
+  for (const change of obsolete) {
+    const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
+    const currentVersion = currentVersionOf({ entityType: root.entityType, operation: change.operation, targetPath: change.targetPath });
+    const reason = `La versión ${change.payloadSchemaVersion} del payload de ${change.targetPath} es obsoleta y no tiene traducción a la vigente, la ${currentVersion}`;
+    await recordDecision(manager, decisionOf(change, { root, current: null }, 'mark_obsolete', 'blocked', null, reason, now));
+    closed.push({ ...change, status: 'blocked' });
+  }
+  for (const change of obsolete.filter(({ atomicGroupId }) => atomicGroupId !== null)) {
+    const mates = await manager.find(ProposalChange, {
+      where: { proposalId: change.proposalId, atomicGroupId: change.atomicGroupId!, status: In(OPEN_STATUSES) },
+      order: { id: 'ASC' },
+      lock: { mode: 'pessimistic_write' },
+    });
+    for (const mate of mates) {
+      const reason = `El microcambio ${change.id}, de su grupo atómico, quedó blocked`;
+      await recordDecision(manager, decisionOf(mate, await observeIfReadable(manager, mate), 'block_dependency', 'blocked', null, reason, now));
+      closed.push({ ...mate, status: 'blocked' });
+    }
+  }
+  await blockDependents(manager, closed, now);
+}
+
+/**
+ * Closes the obsolete ones among the open microchanges on a root that a
+ * recalculation found, and their proposals once settled. Returns the others
+ * still open: closing the obsolete ones may have blocked some of them.
+ */
+async function settleObsolete(manager: EntityManager, root: EditorialEntity, changes: ProposalChange[], now: Date): Promise<ProposalChange[]> {
+  const obsolete = changes.filter((change) => isObsolete(root.entityType, change));
+  await closeObsolete(manager, obsolete, now);
+  for (const { proposalId } of obsolete) await closeIfSettled(manager, proposalId, now);
+  return openChanges(manager, changes.filter((change) => !obsolete.includes(change)).map(({ id }) => id));
+}
+
+/** Closes the obsolete members a decision found instead of deciding them, and answers 409 with each one. */
+async function refuseObsolete(manager: EntityManager, obsolete: ProposalChange[], now: Date): Promise<Outcome> {
+  await closeObsolete(manager, obsolete, now);
+  return {
+    decisions: [],
+    failure: new JsonApiException(
+      HttpStatus.CONFLICT,
+      obsolete.map((change) => ({
+        code: 'obsolete_payload_schema_version',
+        detail: `Version ${change.payloadSchemaVersion} of ${change.targetPath} is obsolete and has no translation; the microchange was closed as blocked`,
+        meta: { changeId: change.id },
+      })),
+    ),
+  };
 }
 
 async function openChanges(manager: EntityManager, ids: string[]): Promise<ProposalChange[]> {
@@ -660,8 +736,8 @@ async function brokenPostconditions(manager: EntityManager, dependsOn: string[])
     }
     if (prerequisite.operation === 'add_relation' || prerequisite.operation === 'update_relation') {
       const revision = await manager.findOneByOrFail(EntityRevision, { changeId: prerequisite.id });
-      // A removal of the same relation reads its row by key, whatever value an insertion proposed.
-      const removal = findOperation(root.entityType, 'remove_relation', prerequisite.targetPath, prerequisite.payloadSchemaVersion);
+      // A removal of the same relation reads its row by key, whatever value an insertion proposed, in whichever version it was written.
+      const removal = currentDefinitionOf({ entityType: root.entityType, operation: 'remove_relation', targetPath: prerequisite.targetPath });
       if (removal && !(await removal.read(manager, root, revision.resultKey as RowKey, null)).exists) {
         broken.push({ id: prerequisite.id, reason: `La fila que escribió el microcambio ${prerequisite.id}, del que depende, ya no existe` });
       }
@@ -717,7 +793,8 @@ async function applyChange(
     version,
     changeId: change.id,
     decisionId: decision.id,
-    beforeValue: decision.observedValue,
+    // Only a microchange on an obsolete version observes nothing, and it never applies.
+    beforeValue: decision.observedValue!,
     afterValue: applied.afterValue,
     resultKey: applied.resultKey,
     appliedAt: now,
@@ -762,10 +839,11 @@ async function settleCompetingChanges(
   });
   if (competitors.length === 0) return;
   const root = await manager.findOneByOrFail(EditorialEntity, { id: applied.entityId });
-  const definition = findOperation(root.entityType, applied.operation, applied.targetPath, applied.payloadSchemaVersion)!;
+  const definition = currentOperation(root.entityType, applied)!;
   const current = await definition.read(manager, root, null, undefined);
 
-  for (const competitor of competitors) {
+  // A value in an obsolete version is never compared with one in the current version.
+  for (const competitor of await settleObsolete(manager, root, competitors, now)) {
     const satisfied = isDeepStrictEqual(current, competitor.proposedValue);
     if (!satisfied && competitor.status === 'conflicted') continue;
     const resultingStatus = satisfied ? 'satisfied' : 'conflicted';
@@ -793,7 +871,8 @@ async function settleChangesOnWithdrawnRoot(
     order: { id: 'ASC' },
     lock: { mode: 'pessimistic_write' },
   });
-  for (const change of changes) {
+  const root = await manager.findOneByOrFail(EditorialEntity, { id: withdrawal.entityId });
+  for (const change of await settleObsolete(manager, root, changes, now)) {
     const satisfied = change.operation === 'withdraw_entity';
     if (!satisfied && change.status === 'conflicted') continue;
     const reason = satisfied ? null : `La versión ${version} retiró la ficha; sus microcambios no se aplican mientras siga retirada`;

@@ -1,0 +1,6893 @@
+{
+  "event.add_relation.event_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "position"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "main",
+                "support",
+                "guest"
+              ],
+              "description": "main, support o guest"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre anunciado literal; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "artist_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "event.add_relation.event_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "url",
+            "purpose",
+            "position"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "purpose": {
+              "enum": [
+                "official",
+                "tickets"
+              ],
+              "description": "official o tickets: una página externa, nunca una venta propia"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.add_relation.event_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000,
+              "description": "Qué organiza, como promotora local"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "event.create_entity.events.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "status"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "announced",
+                "scheduled",
+                "postponed",
+                "cancelled",
+                "performed"
+              ],
+              "description": "Estado de negocio, separado del de publicación; `scheduled` exige fecha completa y `postponed`, ninguna fecha ni hora"
+            },
+            "tour": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "entity_id"
+                  ],
+                  "properties": {
+                    "entity_id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                    }
+                  },
+                  "description": "Raíz editorial del tour: publicado, o creado en la misma propuesta"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "startDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "startTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local, HH:MM; exige fecha completa y zona"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; puede conocerse sin hora y nunca se deduce del país"
+            },
+            "countryId": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "id del país en /v1/countries"
+            },
+            "city": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "venueName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 300,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "imageUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.remove_relation.event_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "artist_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "event.remove_relation.event_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "event.remove_relation.event_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "event.set_fields.events.description.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.set_fields.events.image_url.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.set_fields.events.location.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "countryId",
+            "city",
+            "venueName"
+          ],
+          "properties": {
+            "countryId": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "id del país en /v1/countries"
+            },
+            "city": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "venueName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 300,
+              "pattern": "\\S"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.set_fields.events.schedule.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "startDate",
+            "startTime",
+            "timezone"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "announced",
+                "scheduled",
+                "postponed",
+                "cancelled",
+                "performed"
+              ],
+              "description": "Estado de negocio, separado del de publicación; `scheduled` exige fecha completa y `postponed`, ninguna fecha ni hora"
+            },
+            "startDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "startTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local, HH:MM; exige fecha completa y zona"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; puede conocerse sin hora y nunca se deduce del país"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.set_fields.events.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.set_fields.events.tour.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del tour: publicado, o creado en la misma propuesta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "event.update_relation.event_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "position"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "main",
+                "support",
+                "guest"
+              ],
+              "description": "main, support o guest"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre anunciado literal; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "artist_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "event.update_relation.event_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "url",
+            "purpose",
+            "position"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "purpose": {
+              "enum": [
+                "official",
+                "tickets"
+              ],
+              "description": "official o tickets: una página externa, nunca una venta propia"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "event.update_relation.event_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000,
+              "description": "Qué organiza, como promotora local"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el concierto: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "event.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.add_relation.artist_organization_affiliations.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization",
+            "relationshipType",
+            "startedAt",
+            "endedAt",
+            "status",
+            "description"
+          ],
+          "properties": {
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la organización: otra identidad de tipo organization"
+            },
+            "relationshipType": {
+              "enum": [
+                "agency",
+                "label",
+                "management"
+              ]
+            },
+            "startedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "endedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Un fin conocido exige former; current exige fin desconocido"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.add_relation.artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "maxProperties": 0
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad: la del microcambio"
+        }
+      }
+    }
+  },
+  "identity.add_relation.catalog_identity_aliases.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alias",
+            "isPrimary",
+            "sortOrder"
+          ],
+          "properties": {
+            "alias": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "isPrimary": {
+              "type": "boolean"
+            },
+            "sortOrder": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.add_relation.catalog_identity_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "platformId",
+            "url"
+          ],
+          "properties": {
+            "platformId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/platforms de una plataforma que admite identidades"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.add_relation.organization_memberships.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "member",
+            "joined",
+            "left",
+            "status",
+            "description",
+            "sourceText",
+            "sourceUrl",
+            "roles"
+          ],
+          "properties": {
+            "member": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del miembro: una persona u otra organización, sin perfil artístico obligatorio"
+            },
+            "joined": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "left": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Una salida conocida exige former; current exige salida desconocida"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "roles": {
+              "type": "array",
+              "maxItems": 50,
+              "description": "Roles del miembro, por posición; cada rol de /v1/contribution-roles con el ámbito membership, una vez",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "contributionRoleId",
+                  "position",
+                  "details"
+                ],
+                "properties": {
+                  "contributionRoleId": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32767
+                  },
+                  "details": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.add_relation.organization_type_assignments.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "maxProperties": 0
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "organization_type_id"
+      ],
+      "properties": {
+        "organization_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la organización: la del microcambio"
+        },
+        "organization_type_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del tipo en /v1/organization-types"
+        }
+      }
+    }
+  },
+  "identity.add_relation.person_nationalities.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "maxProperties": 0
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "person_id",
+        "country_id"
+      ],
+      "properties": {
+        "person_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona: la del microcambio"
+        },
+        "country_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del país en /v1/countries"
+        }
+      }
+    }
+  },
+  "identity.create_entity.catalog_identities.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "displayName"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "person",
+                "organization"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "imgProfile": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "bio": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "person": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "givenName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "familyName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "birthDate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "deathDate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "heightCm": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "maximum": 300
+                },
+                "gender": {
+                  "enum": [
+                    "male",
+                    "female",
+                    "other",
+                    null
+                  ]
+                }
+              }
+            },
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "legalName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "founding": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "dissolution": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "originCountryId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "id del país en /v1/countries"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "person"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "person"
+                ],
+                "properties": {
+                  "organization": false
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "organization"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "organization"
+                ],
+                "properties": {
+                  "person": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.remove_relation.artist_organization_affiliations.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.remove_relation.artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad: la del microcambio"
+        }
+      }
+    }
+  },
+  "identity.remove_relation.catalog_identity_aliases.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.remove_relation.catalog_identity_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.remove_relation.organization_memberships.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.remove_relation.organization_type_assignments.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organization_id",
+        "organization_type_id"
+      ],
+      "properties": {
+        "organization_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la organización: la del microcambio"
+        },
+        "organization_type_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del tipo en /v1/organization-types"
+        }
+      }
+    }
+  },
+  "identity.remove_relation.person_nationalities.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "person_id",
+        "country_id"
+      ],
+      "properties": {
+        "person_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona: la del microcambio"
+        },
+        "country_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del país en /v1/countries"
+        }
+      }
+    }
+  },
+  "identity.set_fields.catalog_identities.bio.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.catalog_identities.display_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.catalog_identities.img_profile.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.organizations.dissolution.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "year"
+              ],
+              "properties": {
+                "year": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "dependentRequired": {
+                "day": [
+                  "month"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.organizations.founding.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "year"
+              ],
+              "properties": {
+                "year": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "dependentRequired": {
+                "day": [
+                  "month"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.organizations.legal_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.organizations.origin_country_id.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "id del país en /v1/countries"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.birth_date.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.death_date.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.family_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.gender.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "enum": [
+            "male",
+            "female",
+            "other",
+            null
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.given_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.height_cm.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 300
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.update_relation.artist_organization_affiliations.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization",
+            "relationshipType",
+            "startedAt",
+            "endedAt",
+            "status",
+            "description"
+          ],
+          "properties": {
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la organización: otra identidad de tipo organization"
+            },
+            "relationshipType": {
+              "enum": [
+                "agency",
+                "label",
+                "management"
+              ]
+            },
+            "startedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "endedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Un fin conocido exige former; current exige fin desconocido"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.update_relation.catalog_identity_aliases.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alias",
+            "isPrimary",
+            "sortOrder"
+          ],
+          "properties": {
+            "alias": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "isPrimary": {
+              "type": "boolean"
+            },
+            "sortOrder": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.update_relation.catalog_identity_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "platformId",
+            "url"
+          ],
+          "properties": {
+            "platformId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/platforms de una plataforma que admite identidades"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.update_relation.organization_memberships.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "member",
+            "joined",
+            "left",
+            "status",
+            "description",
+            "sourceText",
+            "sourceUrl",
+            "roles"
+          ],
+          "properties": {
+            "member": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del miembro: una persona u otra organización, sin perfil artístico obligatorio"
+            },
+            "joined": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "left": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Una salida conocida exige former; current exige salida desconocida"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "roles": {
+              "type": "array",
+              "maxItems": 50,
+              "description": "Roles del miembro, por posición; cada rol de /v1/contribution-roles con el ámbito membership, una vez",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "contributionRoleId",
+                  "position",
+                  "details"
+                ],
+                "properties": {
+                  "contributionRoleId": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 32767
+                  },
+                  "details": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.add_relation.recording_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.add_relation.recording_genres.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "isPrimary"
+          ],
+          "properties": {
+            "isPrimary": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "genre_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "genre_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del género en /v1/genres"
+        }
+      }
+    }
+  },
+  "recording.add_relation.recording_works.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "work",
+            "relationType"
+          ],
+          "properties": {
+            "work": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la obra: publicada, o creada en la misma propuesta"
+            },
+            "relationType": {
+              "enum": [
+                "performance",
+                "interpolation",
+                "sample"
+              ],
+              "description": "`performance` interpreta la obra, `interpolation` recrea material y `sample` incorpora material grabado"
+            },
+            "position": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 32767,
+              "description": "Orden de la obra en un medley, o null"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.create_entity.recordings.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "isExplicit": {
+              "type": "boolean",
+              "description": "Contenido explícito; una versión limpia es otra grabación"
+            },
+            "isrc": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$",
+              "description": "ISRC canónico, sin guiones"
+            },
+            "recordingDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.remove_relation.recording_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "recording.remove_relation.recording_genres.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "genre_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "genre_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del género en /v1/genres"
+        }
+      }
+    }
+  },
+  "recording.remove_relation.recording_works.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "recording.set_fields.recordings.description.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.set_fields.recordings.is_explicit.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "boolean",
+          "description": "Contenido explícito; una versión limpia es otra grabación"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.set_fields.recordings.isrc.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$",
+          "description": "ISRC canónico, sin guiones"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.set_fields.recordings.recording_date.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "year"
+              ],
+              "properties": {
+                "year": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "dependentRequired": {
+                "day": [
+                  "month"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.set_fields.recordings.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "recording.update_relation.recording_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "recording.update_relation.recording_genres.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "isPrimary"
+          ],
+          "properties": {
+            "isPrimary": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "genre_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "genre_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id del género en /v1/genres"
+        }
+      }
+    }
+  },
+  "recording.update_relation.recording_works.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "work",
+            "relationType"
+          ],
+          "properties": {
+            "work": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la obra: publicada, o creada en la misma propuesta"
+            },
+            "relationType": {
+              "enum": [
+                "performance",
+                "interpolation",
+                "sample"
+              ],
+              "description": "`performance` interpreta la obra, `interpolation` recrea material y `sample` incorpora material grabado"
+            },
+            "position": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 32767,
+              "description": "Orden de la obra en un medley, o null"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "recording.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.add_relation.release_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.add_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y pista"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release.add_relation.track_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "platformId",
+            "url"
+          ],
+          "properties": {
+            "platformId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/platforms de una plataforma que admite pistas"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        }
+      }
+    }
+  },
+  "release.add_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recording",
+            "discNumber",
+            "trackNumber"
+          ],
+          "properties": {
+            "recording": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
+            },
+            "discNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "trackNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id"
+      ],
+      "properties": {
+        "release_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la edición: la del microcambio"
+        }
+      }
+    }
+  },
+  "release.create_entity.releases.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releaseGroup"
+          ],
+          "properties": {
+            "releaseGroup": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del lanzamiento: publicado, o creado en la misma propuesta"
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "null muestra el título del lanzamiento"
+            },
+            "editionName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
+            },
+            "releaseDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "releaseTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local anunciada, HH:MM"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
+            },
+            "coverArtUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "isCancelled": {
+              "type": "boolean",
+              "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.remove_relation.release_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.remove_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release.remove_relation.track_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.remove_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.set_fields.releases.cover_art_url.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.set_fields.releases.edition_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S",
+          "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.set_fields.releases.is_cancelled.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "boolean",
+          "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.set_fields.releases.release_date.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releaseDate",
+            "releaseTime",
+            "timezone"
+          ],
+          "properties": {
+            "releaseDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "releaseTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local anunciada, HH:MM"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.set_fields.releases.release_group.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial del lanzamiento de destino"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.set_fields.releases.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S",
+          "description": "null muestra el título del lanzamiento"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release.update_relation.release_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.update_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y pista"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release.update_relation.track_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "platformId",
+            "url"
+          ],
+          "properties": {
+            "platformId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/platforms de una plataforma que admite pistas"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.update_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recording",
+            "discNumber",
+            "trackNumber"
+          ],
+          "properties": {
+            "recording": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
+            },
+            "discNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "trackNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "release.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.add_relation.release_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_group_id",
+        "artist_id"
+      ],
+      "properties": {
+        "release_group_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial del lanzamiento: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release_group.create_entity.release_groups.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "type"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S"
+            },
+            "type": {
+              "enum": [
+                "album",
+                "ep",
+                "single",
+                "compilation"
+              ],
+              "description": "Como lo anunció su artista o agencia; nunca se calcula por número de pistas"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "repackageOf": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "entity_id"
+                  ],
+                  "properties": {
+                    "entity_id": {
+                      "type": "string",
+                      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                    }
+                  },
+                  "description": "Raíz editorial del lanzamiento original: publicado y distinto de este, sin ciclos"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.remove_relation.release_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_group_id",
+        "artist_id"
+      ],
+      "properties": {
+        "release_group_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial del lanzamiento: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release_group.set_fields.release_groups.description.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.set_fields.release_groups.repackage_of.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del lanzamiento original: publicado y distinto de este, sin ciclos"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.set_fields.release_groups.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.set_fields.release_groups.type.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "enum": [
+            "album",
+            "ep",
+            "single",
+            "compilation"
+          ],
+          "description": "Como lo anunció su artista o agencia; nunca se calcula por número de pistas"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "release_group.update_relation.release_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_group_id",
+        "artist_id"
+      ],
+      "properties": {
+        "release_group_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial del lanzamiento: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "release_group.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.add_relation.tour_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "position"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "main",
+                "support",
+                "guest"
+              ],
+              "description": "main, support o guest"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre anunciado literal; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "artist_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "tour.add_relation.tour_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "url",
+            "purpose",
+            "position"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "purpose": {
+              "enum": [
+                "official",
+                "tickets"
+              ],
+              "description": "official o tickets: una página externa, nunca una venta propia"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            },
+            "countryId": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "id del país de la página en /v1/countries; null para la general"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.add_relation.tour_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000,
+              "description": "Qué organiza, como promotora local"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "tour.create_entity.tours.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "status"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S"
+            },
+            "status": {
+              "enum": [
+                "announced",
+                "scheduled",
+                "in_progress",
+                "postponed",
+                "cancelled",
+                "completed"
+              ],
+              "description": "Estado de negocio, separado del de publicación; `scheduled` exige al menos el año de inicio"
+            },
+            "startDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "imageUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.remove_relation.tour_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "artist_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "tour.remove_relation.tour_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "tour.remove_relation.tour_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "tour.set_fields.tours.description.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.set_fields.tours.image_url.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.set_fields.tours.schedule.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "startDate",
+            "endDate"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "announced",
+                "scheduled",
+                "in_progress",
+                "postponed",
+                "cancelled",
+                "completed"
+              ],
+              "description": "Estado de negocio, separado del de publicación; `scheduled` exige al menos el año de inicio"
+            },
+            "startDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.set_fields.tours.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "tour.update_relation.tour_artists.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "role",
+            "position"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "main",
+                "support",
+                "guest"
+              ],
+              "description": "main, support o guest"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre anunciado literal; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "artist_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "tour.update_relation.tour_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "label",
+            "url",
+            "purpose",
+            "position"
+          ],
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            },
+            "purpose": {
+              "enum": [
+                "official",
+                "tickets"
+              ],
+              "description": "official o tickets: una página externa, nunca una venta propia"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767
+            },
+            "countryId": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "id del país de la página en /v1/countries; null para la general"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "tour.update_relation.tour_organizers.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position"
+          ],
+          "properties": {
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000,
+              "description": "Qué organiza, como promotora local"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tour_id",
+        "catalog_identity_id"
+      ],
+      "properties": {
+        "tour_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de el tour: la del microcambio"
+        },
+        "catalog_identity_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la persona u organización organizadora: publicada, o creada en la misma propuesta"
+        }
+      }
+    }
+  },
+  "tour.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.add_relation.work_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.create_entity.works.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300,
+              "pattern": "\\S"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "iswc": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^T[0-9]{10}$",
+              "description": "ISWC canónico: T y diez dígitos, sin puntuación"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.remove_relation.work_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "work.set_fields.works.description.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 10000
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.set_fields.works.iswc.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^T[0-9]{10}$",
+          "description": "ISWC canónico: T y diez dígitos, sin puntuación"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.set_fields.works.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "work.update_relation.work_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "work.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  }
+}

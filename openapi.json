@@ -11366,14 +11366,14 @@
     },
     "/v1/editorial-operations": {
       "get": {
-        "description": "Por tipo de raíz: operaciones, selector `targetPath`, forma de `targetKey` y JSON Schema del payload por versión. Un microcambio solo puede usar una entrada de este registro.",
+        "description": "Por tipo de raíz: operaciones, selector `targetPath`, forma de `targetKey` y JSON Schema del payload por versión. Un microcambio solo puede usar la versión vigente (`status: current`) de una entrada de este registro; las versiones obsoletas se siguen listando para leer el historial.",
         "operationId": "EditorialOperationsController_list",
         "parameters": [
           {
             "name": "fields[editorial-operations]",
             "required": false,
             "in": "query",
-            "description": "Campos de editorial-operations separados por comas: entityType, operation, targetPath, targetKey, payloadSchemaVersion, baseValue, payloadSchema, description",
+            "description": "Campos de editorial-operations separados por comas: entityType, operation, targetPath, targetKey, payloadSchemaVersion, status, baseValue, payloadSchema, description",
             "schema": {
               "type": "string"
             }
@@ -12105,7 +12105,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -12282,7 +12282,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -12427,7 +12427,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -12700,7 +12700,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -12897,7 +12897,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -13085,7 +13085,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -13450,7 +13450,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -13609,7 +13609,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -13761,7 +13761,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources",
             "schema": {
               "type": "string"
             }
@@ -15316,7 +15316,7 @@
             "name": "fields[proposal-changes]",
             "required": false,
             "in": "query",
-            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, entity, dependencies, sources, proposal",
+            "description": "Campos de proposal-changes separados por comas: operation, targetPath, targetKey, payloadSchemaVersion, baseVersion, baseValue, proposedValue, atomicGroupId, position, createdAt, status, resolvedAt, payloadSchemaStatus, entity, dependencies, sources, proposal",
             "schema": {
               "type": "string"
             }
@@ -19625,6 +19625,14 @@
             "type": "number",
             "example": 1
           },
+          "status": {
+            "type": "string",
+            "enum": [
+              "current",
+              "obsolete"
+            ],
+            "description": "current: la versión más alta del selector, la única que aceptan los microcambios nuevos. obsolete: se sigue publicando para leer el historial"
+          },
           "baseValue": {
             "type": "object",
             "nullable": true,
@@ -19647,6 +19655,7 @@
           "targetPath",
           "targetKey",
           "payloadSchemaVersion",
+          "status",
           "baseValue",
           "payloadSchema",
           "description"
@@ -20256,6 +20265,14 @@
             "format": "date-time",
             "nullable": true,
             "description": "Solo para su autor y el personal"
+          },
+          "payloadSchemaStatus": {
+            "type": "string",
+            "enum": [
+              "current",
+              "obsolete"
+            ],
+            "description": "Solo para su autor y el personal. obsolete: su versión del payload ya no es la vigente (E1); en un borrador hay que quitarlo o rehacerlo antes de enviar"
           }
         },
         "required": [
@@ -20370,7 +20387,7 @@
           "payloadSchemaVersion": {
             "type": "number",
             "example": 1,
-            "default": 1
+            "description": "Versión del payload; sin ella, la vigente del selector en E1. Una versión obsoleta responde 422 `obsolete_payload_schema_version`"
           },
           "atomicGroupId": {
             "type": "string",
@@ -20433,7 +20450,7 @@
           "payloadSchemaVersion": {
             "type": "number",
             "example": 1,
-            "default": 1
+            "description": "Versión del payload; sin ella, la vigente del selector en E1. Una versión obsoleta responde 422 `obsolete_payload_schema_version`"
           },
           "atomicGroupId": {
             "type": "string",
@@ -20672,6 +20689,7 @@
               "mark_conflict",
               "mark_satisfied",
               "block_dependency",
+              "mark_obsolete",
               "withdraw_change"
             ]
           },
@@ -20710,7 +20728,8 @@
           },
           "observedValue": {
             "type": "object",
-            "description": "Valor que tenía el objetivo al decidir",
+            "nullable": true,
+            "description": "Valor que tenía el objetivo al decidir; null si el microcambio estaba en una versión del payload obsoleta, que ya no puede leerse",
             "example": {
               "exists": false
             }

@@ -71,7 +71,7 @@ export class ProposalChange {
   @Column({ name: 'proposed_value', type: 'jsonb' })
   proposedValue: ValueEnvelope;
 
-  @Column({ name: 'payload_schema_version', type: 'smallint', default: 1 })
+  @Column({ name: 'payload_schema_version', type: 'smallint' })
   payloadSchemaVersion: number;
 
   @Column({ name: 'atomic_group_id', type: 'uuid', nullable: true })
@@ -94,4 +94,7 @@ export class ProposalChange {
 
   /** The general sources of the proposal linked to it, when loaded; not a column. */
   sourceIds?: string[];
+
+  /** Whether its payload schema version is still the current one, when loaded; not a column. */
+  payloadSchemaStatus?: 'current' | 'obsolete';
 }

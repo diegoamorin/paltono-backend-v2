@@ -7,7 +7,9 @@ import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
 import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
 import { changeNotFound, invalid } from './editorial-access';
 import { lockOwnDraft, touchDraft } from './drafts';
+import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
+import { isObsolete } from './operation-registry';
 import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity';
 import { ProposalSource } from './entities/proposal-source.entity';
 
@@ -98,14 +100,20 @@ async function sourcesOf(manager: EntityManager, changeId: string): Promise<stri
   return sources.map(({ sourceId }) => sourceId);
 }
 
-/** Microchanges with the ids of the microchanges they depend on and of their linked sources. */
+/**
+ * Microchanges with the ids of the microchanges they depend on and of their
+ * linked sources, and whether their payload schema version is still current.
+ */
 export async function withLinks(manager: EntityManager, changes: ProposalChange[]): Promise<ProposalChange[]> {
   const ids = changes.map(({ id }) => id);
   const dependencies = ids.length > 0 ? await manager.find(ChangeDependency, { where: { changeId: In(ids) }, order: { dependsOnChangeId: 'ASC' } }) : [];
   const sources = ids.length > 0 ? await manager.find(ChangeSource, { where: { changeId: In(ids) }, order: { sourceId: 'ASC' } }) : [];
+  const entityIds = [...new Set(changes.map(({ entityId }) => entityId))];
+  const types = new Map((entityIds.length > 0 ? await manager.findBy(EditorialEntity, { id: In(entityIds) }) : []).map(({ id, entityType }) => [id, entityType]));
   for (const change of changes) {
     change.dependsOnIds = dependencies.filter(({ changeId }) => changeId === change.id).map(({ dependsOnChangeId }) => dependsOnChangeId);
     change.sourceIds = sources.filter(({ changeId }) => changeId === change.id).map(({ sourceId }) => sourceId);
+    change.payloadSchemaStatus = isObsolete(types.get(change.entityId)!, change) ? 'obsolete' : 'current';
   }
   return changes;
 }

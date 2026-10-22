@@ -29,7 +29,16 @@ const ProposedValue = (required: boolean) =>
     IsObject(),
   );
 
-const PayloadSchemaVersion = () => applyDecorators(ApiPropertyOptional({ example: 1, default: 1 }), ifPresent(), IsInt(), Min(1));
+const PayloadSchemaVersion = () =>
+  applyDecorators(
+    ApiPropertyOptional({
+      example: 1,
+      description: 'Versión del payload; sin ella, la vigente del selector en E1. Una versión obsoleta responde 422 `obsolete_payload_schema_version`',
+    }),
+    ifPresent(),
+    IsInt(),
+    Min(1),
+  );
 
 const AtomicGroupId = () =>
   applyDecorators(

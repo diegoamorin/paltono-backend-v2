@@ -29,7 +29,7 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
     `);
     await queryRunner.query(`
       CREATE TYPE change_decision_action AS ENUM (
-        'apply', 'apply_rebased', 'reject', 'mark_conflict', 'mark_satisfied', 'block_dependency', 'withdraw_change'
+        'apply', 'apply_rebased', 'reject', 'mark_conflict', 'mark_satisfied', 'block_dependency', 'mark_obsolete', 'withdraw_change'
       )
     `);
 
@@ -100,7 +100,7 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         base_version bigint NOT NULL,
         base_value jsonb NOT NULL,
         proposed_value jsonb NOT NULL,
-        payload_schema_version smallint NOT NULL DEFAULT 1,
+        payload_schema_version smallint NOT NULL,
         atomic_group_id uuid,
         position integer NOT NULL,
         status proposal_change_status NOT NULL DEFAULT 'pending',
@@ -189,13 +189,17 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         resulting_status proposal_change_status NOT NULL,
         reason text,
         observed_version bigint NOT NULL,
-        observed_value jsonb NOT NULL,
+        observed_value jsonb,
         decided_at timestamptz NOT NULL,
         CONSTRAINT change_decisions_id_change_id_key UNIQUE (id, change_id),
         CONSTRAINT change_decisions_change_id_fkey FOREIGN KEY (change_id) REFERENCES proposal_changes (id) ON DELETE RESTRICT,
         CONSTRAINT change_decisions_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE RESTRICT,
         CONSTRAINT change_decisions_observed_version_nonnegative CHECK (observed_version >= 0),
-        CONSTRAINT change_decisions_observed_value_envelope CHECK (jsonb_typeof(observed_value -> 'exists') = 'boolean'),
+        -- Only an automatic decision on a microchange whose obsolete payload schema version cannot be read observes nothing.
+        CONSTRAINT change_decisions_observed_value_envelope CHECK (
+          (observed_value IS NOT NULL AND jsonb_typeof(observed_value -> 'exists') = 'boolean')
+          OR (observed_value IS NULL AND actor_id IS NULL AND action IN ('mark_obsolete', 'block_dependency'))
+        ),
         -- Decisions act on open states and each action has its own outcome.
         CONSTRAINT change_decisions_previous_status_open CHECK (previous_status IN ('pending', 'conflicted')),
         CONSTRAINT change_decisions_outcome CHECK (
@@ -203,15 +207,15 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
           OR (action = 'reject' AND resulting_status = 'rejected')
           OR (action = 'mark_conflict' AND resulting_status = 'conflicted')
           OR (action = 'mark_satisfied' AND resulting_status = 'satisfied')
-          OR (action = 'block_dependency' AND resulting_status = 'blocked')
+          OR (action IN ('block_dependency', 'mark_obsolete') AND resulting_status = 'blocked')
           OR (action = 'withdraw_change' AND resulting_status = 'withdrawn')
         ),
         -- Only the system's automatic marks go without an actor; nothing is approved automatically.
         CONSTRAINT change_decisions_actor CHECK (
-          actor_id IS NOT NULL OR action IN ('mark_conflict', 'mark_satisfied', 'block_dependency')
+          actor_id IS NOT NULL OR action IN ('mark_conflict', 'mark_satisfied', 'block_dependency', 'mark_obsolete')
         ),
         CONSTRAINT change_decisions_reason CHECK (
-          action NOT IN ('mark_conflict', 'reject', 'apply_rebased', 'block_dependency')
+          action NOT IN ('mark_conflict', 'reject', 'apply_rebased', 'block_dependency', 'mark_obsolete')
           OR (reason IS NOT NULL AND btrim(reason) <> '')
         )
       )

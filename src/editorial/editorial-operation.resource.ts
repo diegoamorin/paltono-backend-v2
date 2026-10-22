@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { defineResource } from '../common/json-api/resource-schema';
 import { EDITORIAL_ENTITY_TYPES } from './entities/editorial-entity.entity';
 import { CHANGE_OPERATIONS } from './entities/proposal-change.entity';
-import { ABSENT, OperationDefinition, operationId, payloadSchema } from './operation-registry';
+import { ABSENT, PublishedOperation, operationId, payloadSchema, versionStatus } from './operation-registry';
 
 /** An entry of the registry of operations, with the JSON Schema its payloads must match. */
-export const operationSchema = defineResource<OperationDefinition>({
+export const operationSchema = defineResource<PublishedOperation>({
   type: 'editorial-operations',
   id: operationId,
   attributes: {
@@ -14,6 +14,7 @@ export const operationSchema = defineResource<OperationDefinition>({
     targetPath: (definition) => definition.targetPath,
     targetKey: (definition) => definition.targetKeySchema,
     payloadSchemaVersion: (definition) => definition.payloadSchemaVersion,
+    status: versionStatus,
     // A creation starts from absence; any other operation from its target's value when the microchange is added.
     baseValue: (definition) => (definition.operation === 'create_entity' ? ABSENT : null),
     payloadSchema,
@@ -36,6 +37,13 @@ class OperationAttributes {
 
   @ApiProperty({ example: 1 })
   payloadSchemaVersion: number;
+
+  @ApiProperty({
+    enum: ['current', 'obsolete'],
+    description:
+      'current: la versión más alta del selector, la única que aceptan los microcambios nuevos. obsolete: se sigue publicando para leer el historial',
+  })
+  status: string;
 
   @ApiProperty({
     type: Object,

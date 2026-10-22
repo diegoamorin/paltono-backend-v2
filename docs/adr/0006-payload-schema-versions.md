@@ -10,7 +10,7 @@ Ante un cambio de tablas se elige, por este orden:
 
 El estado de una versión se deduce y no se escribe a mano: la más alta de un selector es la vigente; una anterior con traductor es traducible y una sin traductor es obsoleta. Una versión obsoleta conserva en el registro su descripción y sus schemas, sin código para aplicarla, y E1 la sigue publicando para que el historial pueda mostrarse.
 
-Hoy solo existe el peldaño 3: el traductor y la traducción en memoria se construyen la primera vez que haga falta el peldaño 2. Una prueba congela los schemas publicados contra un archivo versionado y falla si cambia una entrada existente; ese fallo es el aviso de que hay que elegir peldaño. Un barrido que cierre de una vez los envíos obsoletos al desplegar la versión nueva es opcional.
+Hoy solo existe el peldaño 3: el traductor y la traducción en memoria se construyen la primera vez que haga falta el peldaño 2. Una prueba congela los schemas publicados contra `payload-schemas.json` y falla si cambia o desaparece una entrada existente, o si falta una versión nueva; `pnpm payload-schemas:export` añade las nuevas y se niega a reescribir las publicadas. Ese fallo es el aviso de que hay que elegir peldaño. Un barrido que cierre de una vez los envíos obsoletos al desplegar la versión nueva es opcional.
 
 ## Considered Options
 

@@ -62,6 +62,7 @@ describe('microchanges and sources of a draft', () => {
             createdAt: '2026-01-01T00:00:00.000Z',
             status: 'pending',
             resolvedAt: null,
+            payloadSchemaStatus: 'current',
           },
           relationships: {
             entity: { data: { type: 'editorial-entities', id: entityId } },

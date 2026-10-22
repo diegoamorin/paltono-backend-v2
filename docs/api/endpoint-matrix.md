@@ -200,7 +200,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | # | Método y ruta | Caso de uso | Acceso | Notas | Pruebas |
 |---|---|---|---|---|---|
 | E19 | `GET /v1/moderation/changes` | Cola de moderación | Staff | | ok authz val |
-| E20 | `POST /v1/proposal-changes/{id}/decisions` | Decidir un microcambio | Staff; el autor solo `withdraw_change` | `{action, reason?, confirmedVersion?}`. Acciones manuales: `apply`, `apply_rebased`, `reject`, `withdraw_change` **[P7]**. Si pertenece a un grupo atómico, la decisión se aplica al grupo y devuelve todas sus decisiones | ok val authz state conc tx spec |
+| E20 | `POST /v1/proposal-changes/{id}/decisions` | Decidir un microcambio | Staff; el autor solo `withdraw_change` | `{action, reason?, confirmedVersion?}`. Acciones manuales: `apply`, `apply_rebased`, `reject`, `withdraw_change` **[P7]**. Si pertenece a un grupo atómico, la decisión se aplica al grupo y devuelve todas sus decisiones. Sobre un microcambio en una versión del payload obsoleta, cualquier acción registra `mark_obsolete` y bloquea su grupo y sus dependientes; responde 409 `obsolete_payload_schema_version` | ok val authz state conc tx spec |
 | E21 | `GET /v1/proposal-changes/{id}/decisions` | Historial de decisiones | Autor y personal | Incluye decisiones automáticas | ok authz |
 
 E19: `filter[status]=pending|conflicted` (defecto ambos), `filter[entityType]`, `filter[operation]`, `filter[author]`, `filter[entity]`; orden `createdAt` (defecto, más antiguo primero), `-createdAt`; `include=proposal,proposal.sources,entity` **[P10]**.
@@ -227,6 +227,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 | O4 | `pnpm db:seed` | Seed K-pop mediante el flujo editorial; solo desarrollo | ok |
 | O5 | `pnpm db:reset` | Vacía todos los registros, conserva tablas; solo desarrollo | ok |
 | O6 | `pnpm migration:run`, `migration:revert`, `migration:generate` | Migraciones TypeORM | ok |
+| O7 | `pnpm payload-schemas:export` | Añade a `payload-schemas.json` las versiones del payload recién publicadas; falla sin escribir si una ya publicada cambió o desapareció ([ADR 0006](../adr/0006-payload-schema-versions.md)). Una prueba compara el archivo con el registro | ok |
 
 ## Fuera del MVP
 

@@ -1,2 +1,4 @@
 # `pnpm openapi:export` writes LF; the test that keeps openapi.json current compares it byte for byte.
 openapi.json text eol=lf
+# Likewise `pnpm payload-schemas:export` and payload-schemas.json.
+payload-schemas.json text eol=lf

@@ -68,8 +68,13 @@ class DecisionAttributes {
   @ApiProperty({ description: 'Versión de la raíz al decidir' })
   observedVersion: number;
 
-  @ApiProperty({ type: Object, description: 'Valor que tenía el objetivo al decidir', example: { exists: false } })
-  observedValue: object;
+  @ApiProperty({
+    type: Object,
+    nullable: true,
+    description: 'Valor que tenía el objetivo al decidir; null si el microcambio estaba en una versión del payload obsoleta, que ya no puede leerse',
+    example: { exists: false },
+  })
+  observedValue: object | null;
 
   @ApiProperty({ format: 'date-time' })
   decidedAt: string;

@@ -18,7 +18,9 @@ import {
   RootReference,
   VOCABULARIES,
   VocabularyReference,
-  findOperation,
+  currentOperation,
+  currentVersionOf,
+  resolveOperation,
   isRegistered,
   validatePayload,
   validateTargetKey,
@@ -69,7 +71,10 @@ export class ProposalChangesService {
         targetPath: input.targetPath,
         // targetKey and proposedValue are checked by changeProblems before anything is written.
         targetKey: normalizeKey(input.targetKey ?? null) as object | null,
-        payloadSchemaVersion: input.payloadSchemaVersion ?? 1,
+        // Without a version, the selector's current one; an unregistered selector has none, and changeProblems reports it.
+        payloadSchemaVersion:
+          input.payloadSchemaVersion ??
+          (entity ? currentVersionOf({ entityType: entity.entityType, operation: input.operation as ChangeOperation, targetPath: input.targetPath }) : undefined),
         proposedValue: normalizeReferences(input.proposedValue) as ValueEnvelope,
         atomicGroupId: input.atomicGroupId ?? null,
         position: input.position ?? (await nextPosition(manager, proposalId)),
@@ -81,6 +86,8 @@ export class ProposalChangesService {
       const now = this.clock.now();
       await manager.insert(ProposalChange, {
         ...change,
+        // changeProblems found its selector registered, so it has a version.
+        payloadSchemaVersion: change.payloadSchemaVersion!,
         operation: change.operation as ChangeOperation,
         // The target as the author sees it now. Creations start from absence at version 0, the only base a reservation has.
         baseVersion: entity!.currentVersion,
@@ -162,7 +169,7 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
   const types = new Map((await manager.findBy(EditorialEntity, { id: In(targeted) })).map(({ id, entityType }) => [id, entityType]));
   const referenced = changes.flatMap((change) => {
     const type = types.get(change.entityId);
-    const definition = type && findOperation(type, change.operation, change.targetPath, change.payloadSchemaVersion);
+    const definition = type && currentOperation(type, change);
     return rootReferencesOf(definition, change).map(({ entityId }) => entityId.toLowerCase());
   });
   const ids = [...new Set([...targeted, ...referenced])].sort();
@@ -180,7 +187,7 @@ export async function lockTargetedRoots(manager: EntityManager, changes: Proposa
  * of a reservation it names. Its references were checked already.
  */
 export async function recordImpliedDependencies(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<void> {
-  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
+  const definition = currentOperation(root.entityType, change);
   const dependsOn = [
     ...(change.targetKey === null ? [] : (await checkReferences(manager, { ...change, targetKey: change.targetKey }, root, definition)).dependsOn),
     ...(await checkRootReferences(manager, change, rootReferencesOf(definition, change))).dependsOn,
@@ -214,7 +221,7 @@ export async function revalidateChange(
  * left. Reported with the microchange each problem belongs to.
  */
 export async function finalStateProblems(manager: EntityManager, change: ProposalChange, root: EditorialEntity): Promise<JsonApiErrorInput[]> {
-  const definition = findOperation(root.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const definition = currentOperation(root.entityType, change)!;
   const problems = (await definition.targetProblems?.(manager, root, (change.proposedValue as { value: unknown }).value, change.targetKey)) ?? [];
   return problems.map(({ code, detail, member }) => ({ code, detail, meta: { changeId: change.id, member } }));
 }
@@ -227,10 +234,11 @@ export async function finalStateProblems(manager: EntityManager, change: Proposa
  */
 type Stage = 'draft' | 'submission' | 'decision';
 
-type ChangeFields = Pick<
-  ProposalChange,
-  'id' | 'proposalId' | 'entityId' | 'targetPath' | 'targetKey' | 'payloadSchemaVersion' | 'proposedValue' | 'atomicGroupId'
-> & { operation: string };
+/** A microchange as checked; a new one has no version when its selector has none, which makes it unregistered. */
+type ChangeFields = Pick<ProposalChange, 'id' | 'proposalId' | 'entityId' | 'targetPath' | 'targetKey' | 'proposedValue' | 'atomicGroupId'> & {
+  operation: string;
+  payloadSchemaVersion: number | undefined;
+};
 
 /**
  * The rules of a microchange of a draft: an operation of the registry for its
@@ -248,8 +256,10 @@ async function changeProblems(
   if (!entity || (entity.publicationStatus === 'reserved' && entity.createdById !== proposal.authorId)) {
     return [{ code: 'editorial_entity_not_found', detail: 'The editorial entity does not exist', member: 'entity' }];
   }
-  const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion);
-  if (!definition) return [unregistered(entity, change)];
+  const resolution = resolveOperation(entity.entityType, change);
+  if (resolution.status === 'unregistered') return [unregistered(entity, change)];
+  if (resolution.status === 'obsolete') return [obsolete(change, resolution.currentVersion)];
+  const { definition } = resolution;
   const keyProblems = await targetKeyProblems(manager, definition, change, entity);
   if (keyProblems.length > 0) return keyProblems;
 
@@ -420,7 +430,7 @@ export function isRelationOperation(operation: string): boolean {
  * row at all.
  */
 async function readBase(manager: EntityManager, entity: EditorialEntity, change: ChangeFields): Promise<ValueEnvelope> {
-  const definition = findOperation(entity.entityType, change.operation, change.targetPath, change.payloadSchemaVersion)!;
+  const definition = currentOperation(entity.entityType, change)!;
   const value = (change.proposedValue as { value?: unknown }).value;
   if (change.targetKey === null) return definition.read(manager, entity, null, value);
   const { key, pendingInsertions } = await resolveKey(manager, entity, change.targetKey, definition);
@@ -441,6 +451,15 @@ function unregistered(entity: EditorialEntity, change: ChangeFields): ChangeProb
     return problem('targetPath', change.targetPath);
   }
   return problem('payloadSchemaVersion', change.payloadSchemaVersion);
+}
+
+/** A version a higher one replaced, which no upcast translates yet (ADR 0006). */
+function obsolete(change: ChangeFields, currentVersion: number): ChangeProblem {
+  return {
+    code: 'obsolete_payload_schema_version',
+    detail: `Version ${change.payloadSchemaVersion} of ${change.targetPath} is obsolete; remove the microchange or redo it in version ${currentVersion}`,
+    member: 'payloadSchemaVersion',
+  };
 }
 
 /** A creation targets a reservation, once per proposal, and only the proposal that first submits it. */
