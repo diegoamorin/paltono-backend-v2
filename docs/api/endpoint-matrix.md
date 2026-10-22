@@ -1,6 +1,6 @@
 # Matriz de endpoints del MVP
 
-Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.mdj`, [la especificación editorial](../editorial-contributions.md) y los ADR [0001](../adr/0001-modular-monolith.md)–[0005](../adr/0005-media-urls-for-mvp.md). Nada de esto está implementado todavía. Las decisiones propias de esta matriz están marcadas **[P#]** y reunidas al final.
+Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.mdj`, [la especificación editorial](../editorial-contributions.md) y los ADR [0001](../adr/0001-modular-monolith.md)–[0005](../adr/0005-image-uploads-to-r2.md). Nada de esto está implementado todavía. Las decisiones propias de esta matriz están marcadas **[P#]** y reunidas al final.
 
 ## Convenciones comunes
 
