@@ -56,7 +56,8 @@ export class ImageUploadsService {
       const url = this.publicBaseUrl + key;
       await manager.insert(ImageUpload, { id, uploadedById: uploader.id, purpose, url, bytes: image.bytes.length, createdAt: now });
       await use?.(manager, uploader, url);
-      // Stored last: a failure rolls the record back, and nothing is left behind.
+      // Stored last, so a failure before or while storing rolls the record back and
+      // stores nothing. A failure to commit after storing leaves the file orphaned.
       await this.storage.put(key, image.bytes, image.contentType);
       return manager.findOneOrFail(ImageUpload, { where: { id }, relations: { uploadedBy: true } });
     });
