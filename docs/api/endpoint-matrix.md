@@ -194,6 +194,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E16 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/sources` | Vincular fuentes a un microcambio | Own | Fuente de otra propuesta responde 422 | ok val spec |
 | E17 | `POST /v1/proposals/{id}/submission` | Enviar | Own | Exige descripción, un microcambio, una fuente, tipos y dependencias válidos; congela el contenido. Un microcambio en una versión obsoleta responde 422 `obsolete_payload_schema_version` con `meta.changeId` | ok val state conc tx spec |
 | E18 | `POST /v1/proposals/{id}/publication` | Publicación directa del personal | Staff, autor del borrador | Envía y aplica en una transacción; retirar una ficha publicada exige Admin | ok authz tx spec |
+| E19 | `POST /v1/images` | Subir una imagen de catálogo | Ver | `multipart/form-data`, campo `file`; devuelve `image-uploads` con la URL para el borrador (ADR 0005). JPEG, PNG o WebP por contenido, 3 MB (413) y 4000 px por lado (422). Cupo de 4 cada 15 días para `user`, sin cupo para el personal: 429 `upload_quota_exceeded` con `meta.availableAt`. Un rechazo no consume cupo | ok val authz rate |
 
 ### Moderación y decisiones
 
