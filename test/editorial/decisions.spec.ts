@@ -116,7 +116,7 @@ describe('decisions', () => {
           displayName: 'IU',
           imgProfile: null,
           bio: 'Cantante y actriz surcoreana.',
-          person: { givenName: 'Ji-eun', familyName: 'Lee', birthDate: '1993-05-16', birthCountryId: null, deathDate: null, heightCm: 162, gender: 'female' },
+          person: { givenName: 'Ji-eun', familyName: 'Lee', birthDate: '1993-05-16', birthCountryId: null, deathDate: null, heightCm: 162, gender: 'female', imgFullBody: null },
           organization: null,
           createdAt: '2026-01-01T00:01:00.000Z',
           updatedAt: '2026-01-01T00:01:00.000Z',
