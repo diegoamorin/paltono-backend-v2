@@ -286,7 +286,7 @@ describe('pnpm db:seed', () => {
       expect(purposes).toEqual(['catalog']);
     });
 
-    it('gives some idols a full-body photo uploaded for the catalog, taller than wide', async () => {
+    it('gives some idols a full-body image uploaded for the catalog, taller than wide', async () => {
       const fullBody = async (name: string) =>
         (await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200)).body.data.attributes.person.imgFullBody as string | null;
 

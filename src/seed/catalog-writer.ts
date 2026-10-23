@@ -50,7 +50,7 @@ export interface PersonSpec extends IdentitySpec {
   deathDate?: string;
   gender?: 'male' | 'female';
   nationalities?: CountryCode[];
-  /** Gets a placeholder full-body photo. */
+  /** Gets a placeholder full-body image. */
   fullBody?: boolean;
 }
 

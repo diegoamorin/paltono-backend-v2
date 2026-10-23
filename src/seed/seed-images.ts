@@ -30,7 +30,7 @@ export class SeedImages {
     return this.upload(key, { width: SIDE, height: SIDE });
   }
 
-  /** Uploads a portrait of solid colour for a person's full-body photo, and returns its public URL. */
+  /** Uploads a portrait of solid colour for a person's full-body image, and returns its public URL. */
   fullBodyPlaceholder(key: string): Promise<string> {
     return this.upload(`${key}/full-body`, FULL_BODY);
   }

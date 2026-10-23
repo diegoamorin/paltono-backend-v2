@@ -4,8 +4,8 @@ import { ChangeInput, WIKIPEDIA, addChange, addSource, createDraft, getJsonApi, 
 import { uploadedImageUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
-/** The full-body photo of a person: optional, independent of the height. The image URL rule is in image-urls.spec.ts. */
-describe('the full-body photo of a person', () => {
+/** The full-body image of a person: optional, independent of the height. The image URL rule is in image-urls.spec.ts. */
+describe('the full-body image of a person', () => {
   let app: TestApp;
   let admin: Account;
 
@@ -54,7 +54,7 @@ describe('the full-body photo of a person', () => {
 
   it('changes and removes with set_fields, without a height', async () => {
     const { entityId, publicId } = await publishIdentity({ type: 'person', displayName: 'Rosé', person: {} });
-    const setPhoto = (value: string | null): ChangeInput => ({
+    const setImage = (value: string | null): ChangeInput => ({
       entityId,
       operation: 'set_fields',
       targetPath: 'people.img_full_body',
@@ -62,10 +62,10 @@ describe('the full-body photo of a person', () => {
     });
     const url = await uploadedImageUrl(app, admin.accessToken);
 
-    await publish([setPhoto(url)]);
+    await publish([setImage(url)]);
     expect((await attributes(publicId)).person).toEqual(expect.objectContaining({ imgFullBody: url, heightCm: null }));
 
-    await publish([setPhoto(null)]);
+    await publish([setImage(null)]);
     expect((await attributes(publicId)).person.imgFullBody).toBeNull();
   });
 

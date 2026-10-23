@@ -95,7 +95,7 @@ export class Person {
   @Column({ type: 'enum', enum: PERSON_GENDERS, enumName: 'person_gender', nullable: true })
   gender: PersonGender | null;
 
-  /** A standing photo from head to feet, which the frontend scales with the height; independent of it. */
+  /** A standing image from head to feet, which the frontend scales with the height; independent of it. */
   @Column({ name: 'img_full_body', type: 'varchar', length: 2048, nullable: true })
   imgFullBody: string | null;
 }
