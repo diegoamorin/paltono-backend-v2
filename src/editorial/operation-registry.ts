@@ -1,5 +1,6 @@
 import Ajv2020, { ErrorObject, ValidateFunction } from 'ajv/dist/2020';
 import { EntityManager } from 'typeorm';
+import { ImageUrlReference } from '../images/catalog-image-urls';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Country } from '../vocabularies/entities/country.entity';
 import { Genre } from '../vocabularies/entities/genre.entity';
@@ -119,6 +120,8 @@ export interface OperationDefinition {
   /** Rules beyond the JSON Schema, run once the value matches it. */
   check(value: unknown): PayloadProblem[];
   references(value: unknown): VocabularyReference[];
+  /** Image URLs a valid value proposes, each of which must be a catalog upload (ADR 0005). */
+  imageUrls?(value: unknown): ImageUrlReference[];
   /**
    * For an insertion whose row will generate its key, the unique key of a
    * valid value, which tells two insertions of the same row apart. Undefined

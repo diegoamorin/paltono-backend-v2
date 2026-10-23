@@ -364,7 +364,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             }
           }
         }
@@ -568,7 +569,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -1393,7 +1395,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "roles": {
               "type": "array",
@@ -1575,7 +1578,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "bio": {
               "type": [
@@ -1611,6 +1615,14 @@
                   ],
                   "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                 },
+                "birthCountryId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "id del país en /v1/countries"
+                },
                 "deathDate": {
                   "type": [
                     "string",
@@ -1633,6 +1645,15 @@
                     "other",
                     null
                   ]
+                },
+                "imgFullBody": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 2048,
+                  "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+                  "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
                 }
               }
             },
@@ -2160,7 +2181,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -2298,6 +2320,31 @@
     "targetKeySchema": null
   },
   "identity.set_fields.organizations.origin_country_id.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "id del país en /v1/countries"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.birth_country_id.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -2465,6 +2512,32 @@
           ],
           "minimum": 1,
           "maximum": 300
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.img_full_body.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -2865,7 +2938,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "roles": {
               "type": "array",
@@ -4305,7 +4379,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "isCancelled": {
               "type": "boolean",
@@ -4540,7 +4615,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -5884,7 +5960,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             }
           }
         }
@@ -6088,7 +6165,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },

@@ -14,6 +14,34 @@ _Avoid_: Usuario para referirse a una persona del catálogo.
 Unidad de información editorial correspondiente a una identidad, obra, grabación, lanzamiento, evento o tour. Puede reunir datos y relaciones cuya modificación se revisa conjuntamente o por partes.
 _Avoid_: Página como sinónimo de la información del catálogo.
 
+**País (country)**:
+Estado soberano vigente en el que se ubica algo del catálogo. Los estados ya extintos no son países del catálogo: un lugar se registra con el país actual al que pertenece.
+_Avoid_: Región, territorio histórico.
+
+**Nacionalidad (nationality)**:
+País del que una persona es nacional. Una persona puede tener varias, o ninguna conocida.
+_Avoid_: País de nacimiento, origen.
+
+**País de nacimiento (birth country)**:
+País donde nació una persona. Es uno solo y no implica una nacionalidad.
+_Avoid_: Nacionalidad, origen.
+
+**País de origen (origin country)**:
+País donde surgió una organización.
+_Avoid_: Nacionalidad, sede.
+
+**Foto de cuerpo completo (full-body image)**:
+Imagen de una persona de pie, de la cabeza a los pies, pensada para mostrarla a escala junto a otras. Es distinta de la imagen de perfil.
+_Avoid_: Foto de perfil, avatar.
+
+**Subida de imagen (image upload)**:
+Imagen que una cuenta entregó a la plataforma para usarla en una ficha o como avatar. Existe desde que se sube, aunque ninguna ficha la use todavía.
+_Avoid_: Adjunto, archivo.
+
+**Cupo de subidas (upload quota)**:
+Número de subidas de imagen que una cuenta puede hacer en los últimos 15 días. El de catálogo y el de avatar son independientes, y el personal no tiene cupo de catálogo.
+_Avoid_: Rate limit, para no confundirlo con los límites por frecuencia de peticiones.
+
 ### Música
 
 **Lanzamiento (release group)**:

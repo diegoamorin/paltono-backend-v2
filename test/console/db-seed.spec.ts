@@ -1,7 +1,12 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import sharp from 'sharp';
 import { SEED_PASSWORD } from '../../src/seed/seed-accounts';
 import { accessTokenFor } from '../support/accounts';
 import { CommandResult, currentTestDatabaseUrl, queryTestDatabase, runPnpm } from '../support/console';
 import { getJsonApi } from '../support/editorial';
+import { TEST_IMAGE_BASE_URL, fetchImage } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
 jest.setTimeout(600_000);
@@ -72,9 +77,17 @@ describe('pnpm db:seed', () => {
   });
 
   describe('after db:reset', () => {
+    // The seed's uploads land in a folder that the test app then serves, as the development backend would.
+    const imageDirectory = mkdtempSync(join(tmpdir(), 'paltono-seed-images-'));
+    const imageEnv = { IMAGE_STORAGE_DIRECTORY: imageDirectory, IMAGE_PUBLIC_BASE_URL: TEST_IMAGE_BASE_URL };
+
     beforeAll(async () => {
-      seed = await runPnpm(['db:seed'], asDevelopment());
-      app = await createTestApp();
+      seed = await runPnpm(['db:seed'], { ...asDevelopment(), ...imageEnv });
+      app = await createTestApp({ env: imageEnv });
+    });
+
+    afterAll(() => {
+      rmSync(imageDirectory, { recursive: true, force: true });
     });
 
     it('completes', () => {
@@ -257,6 +270,43 @@ describe('pnpm db:seed', () => {
         ]),
       );
       expect(await members(await identityNamed('TWICE'))).toContainEqual({ member: 'MISAMO', status: 'current', roles: [] });
+    });
+
+    it('gives identities a profile image uploaded for the catalog and served by the backend', async () => {
+      for (const name of ['BLACKPINK', 'Jennie']) {
+        const { body } = await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200);
+        const url: string = body.data.attributes.imgProfile;
+        expect(url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
+        const image = await fetchImage(app, url).expect(200);
+        expect(await sharp(image.body).metadata()).toEqual(expect.objectContaining({ format: 'png', width: 400, height: 400 }));
+      }
+      const [{ purposes }] = await queryTestDatabase<{ purposes: string[] }>(
+        'SELECT array_agg(DISTINCT purpose::text) AS purposes FROM image_uploads',
+      );
+      expect(purposes).toEqual(['catalog']);
+    });
+
+    it('gives some idols a full-body image uploaded for the catalog, taller than wide', async () => {
+      const fullBody = async (name: string) =>
+        (await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200)).body.data.attributes.person.imgFullBody as string | null;
+
+      for (const name of ['Jisoo', 'Jennie', 'Rosé', 'Lisa']) {
+        const url = await fullBody(name);
+        expect(url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
+        const { width, height } = await sharp((await fetchImage(app, url!).expect(200)).body).metadata();
+        expect(height).toBeGreaterThan(width!);
+      }
+      expect(await fullBody('Nayeon')).toBeNull();
+    });
+
+    it('gives some idols a birth country apart from their nationalities', async () => {
+      const response = await getJsonApi(app, `/v1/identities/${await identityNamed('Mina')}?include=birthCountry,nationalities`).expect(200);
+
+      const country = (data: { id: string }) => response.body.included.find(({ type, id }: Resource) => type === 'countries' && id === data.id).attributes.code;
+      expect(country(response.body.data.relationships.birthCountry.data)).toBe('US');
+      expect(response.body.data.relationships.nationalities.data.map(country)).toEqual(['JP']);
+      const bornInAustralia = await getJsonApi(app, '/v1/identities?filter[birthCountry]=AU').expect(200);
+      expect(bornInAustralia.body.data.map(({ attributes }: Resource) => attributes.displayName)).toEqual(['Danielle', 'Hanni']);
     });
 
     it('creates artists affiliated with their agencies', async () => {

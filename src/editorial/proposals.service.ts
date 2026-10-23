@@ -7,6 +7,7 @@ import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { CatalogImageUrls } from '../images/catalog-image-urls';
 import { entityNotFound, invalid, isStaff, listFilter, lockContributor, proposalNotFound, uuidFilter } from './editorial-access';
 import { withLinks } from './change-links.service';
 import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
@@ -43,6 +44,7 @@ export class ProposalsService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly clock: Clock,
+    private readonly images: CatalogImageUrls,
   ) {}
 
   create(user: User, input: ProposalInput): Promise<ChangeProposal> {
@@ -103,7 +105,7 @@ export class ProposalsService {
    */
   submit(user: User, id: string): Promise<ChangeProposal> {
     return this.dataSource.transaction(async (manager) => {
-      await submitDraft(manager, await lockOwnDraft(manager, user, id), this.clock.now());
+      await submitDraft(manager, await lockOwnDraft(manager, user, id), this.clock.now(), this.images);
       return loadContents(manager, id);
     });
   }
@@ -194,7 +196,7 @@ function filterProposals(proposals: SelectQueryBuilder<ChangeProposal>, query: C
  * the dependencies its references imply and freezes it. The targeted roots
  * stay locked until the transaction ends.
  */
-export async function submitDraft(manager: EntityManager, proposal: ChangeProposal, now: Date): Promise<void> {
+export async function submitDraft(manager: EntityManager, proposal: ChangeProposal, now: Date, images: CatalogImageUrls): Promise<void> {
   const { id } = proposal;
   const changes = await manager.find(ProposalChange, { where: { proposalId: id }, order: { position: 'ASC' } });
   const sources = await manager.countBy(ProposalSource, { proposalId: id });
@@ -208,7 +210,7 @@ export async function submitDraft(manager: EntityManager, proposal: ChangePropos
   // Locked, so no other submission can claim the same reservations meanwhile.
   const roots = await lockTargetedRoots(manager, changes);
   for (const change of changes) {
-    errors.push(...(await revalidateChange(manager, proposal, change, roots.get(change.entityId))));
+    errors.push(...(await revalidateChange(manager, proposal, change, roots.get(change.entityId), { stage: 'submission', images })));
   }
   if (errors.length > 0) throw invalid(errors);
 

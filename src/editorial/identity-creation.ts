@@ -1,4 +1,5 @@
 import { IdentityCreationValue as IdentityCreation, PartialDateValue as PartialDate, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { OperationDefinition, PayloadProblem } from './operation-registry';
 
 /*
@@ -29,7 +30,7 @@ export const PARTIAL_DATE = {
 };
 
 export const DISPLAY_NAME = { type: 'string', minLength: 1, maxLength: 200, pattern: '\\S' };
-export const IMG_PROFILE = { type: ['string', 'null'], maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' };
+export const IMG_PROFILE = CATALOG_IMAGE_URL;
 export const BIO = { type: ['string', 'null'], maxLength: 10000 };
 export const HEIGHT_CM = { type: ['integer', 'null'], minimum: 1, maximum: 300 };
 export const GENDER = { enum: ['male', 'female', 'other', null] };
@@ -51,9 +52,11 @@ const IDENTITY = {
         givenName: NAME,
         familyName: NAME,
         birthDate: COMPLETE_DATE,
+        birthCountryId: COUNTRY_ID,
         deathDate: COMPLETE_DATE,
         heightCm: HEIGHT_CM,
         gender: GENDER,
+        imgFullBody: CATALOG_IMAGE_URL,
       },
     },
     organization: {
@@ -92,8 +95,16 @@ export const IDENTITY_CREATION: OperationDefinition = {
   targetKeySchema: null,
   check: (value) => checkIdentity(value as IdentityCreation),
   references: (value) => {
-    const countryId = (value as IdentityCreation).organization?.originCountryId;
-    return countryId == null ? [] : [{ vocabulary: 'countries', id: countryId, path: '/value/organization/originCountryId' }];
+    const { person, organization } = value as IdentityCreation;
+    const countries = [
+      { id: person?.birthCountryId, path: '/value/person/birthCountryId' },
+      { id: organization?.originCountryId, path: '/value/organization/originCountryId' },
+    ];
+    return countries.flatMap(({ id, path }) => (id == null ? [] : [{ vocabulary: 'countries' as const, id, path }]));
+  },
+  imageUrls: (value) => {
+    const { imgProfile, person } = value as IdentityCreation;
+    return [...imageUrlAt(imgProfile, '/value/imgProfile'), ...imageUrlAt(person?.imgFullBody, '/value/person/imgFullBody')];
   },
   read: async (manager, root) => {
     const created = await findCreatedIdentity(manager, root.id);

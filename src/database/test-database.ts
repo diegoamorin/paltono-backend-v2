@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 import { DataSource } from 'typeorm';
 import { databaseOptions } from './database-options';
+import { recreateSchema } from './recreate-schema';
 import { databaseName, testDatabaseUrl } from './test-database-url';
 
 /**
@@ -29,9 +30,7 @@ export async function prepareTestDatabase(env: NodeJS.ProcessEnv): Promise<void>
   const dataSource = new DataSource(databaseOptions(url));
   await dataSource.initialize();
   try {
-    await dataSource.query('DROP SCHEMA IF EXISTS public CASCADE');
-    await dataSource.query('CREATE SCHEMA public');
-    await dataSource.runMigrations({ transaction: 'each' });
+    await recreateSchema(dataSource);
   } finally {
     await dataSource.destroy();
   }

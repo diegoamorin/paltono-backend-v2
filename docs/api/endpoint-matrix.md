@@ -1,6 +1,6 @@
 # Matriz de endpoints del MVP
 
-Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.mdj`, [la especificación editorial](../editorial-contributions.md) y los ADR [0001](../adr/0001-modular-monolith.md)–[0005](../adr/0005-media-urls-for-mvp.md). Nada de esto está implementado todavía. Las decisiones propias de esta matriz están marcadas **[P#]** y reunidas al final.
+Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.mdj`, [la especificación editorial](../editorial-contributions.md) y los ADR [0001](../adr/0001-modular-monolith.md)–[0005](../adr/0005-image-uploads-to-r2.md). Nada de esto está implementado todavía. Las decisiones propias de esta matriz están marcadas **[P#]** y reunidas al final.
 
 ## Convenciones comunes
 
@@ -64,8 +64,9 @@ Cada controlador usa `@ApiTags` por módulo; cada operación `@ApiOperation`, `@
 | A12 | `POST /v1/me/email-change-requests` | Pedir cambio de correo | Auth **[P4]** | `{currentPassword, newEmail, frontend}`. Envía token al correo nuevo | ok val rate state |
 | A13 | `POST /v1/email-changes` | Confirmar cambio de correo | Pub | `{token}`. Revalida unicidad bajo bloqueo; invalida otros tokens de cambio | ok state conc |
 | A14 | `GET /v1/me` | Cuenta propia | Auth | Incluye correo, verificación, rol, estado, `usernameChangedAt` y próxima fecha de cambio | ok authn |
-| A15 | `PATCH /v1/me` | Editar perfil | Ver | displayName, avatarUrl, bio, username (cada 7 días; un no-op no reinicia el plazo) | ok val state conc |
-| A16 | `POST /v1/account-deletions` | Baja voluntaria | Ver | `{password}`. Aplica la limpieza de datos y respeta al último administrador | ok val state tx |
+| A15 | `PATCH /v1/me` | Editar perfil | Ver | displayName, bio, username (cada 7 días; un no-op no reinicia el plazo). `avatarUrl` solo admite `null`, que quita el avatar y borra su archivo; una URL responde 422 | ok val state conc |
+| A20 | `PUT /v1/me/avatar` | Subir el avatar propio | Ver | `multipart/form-data`, campo `file`, con la validación y el procesamiento de E22. Registra una subida `avatar`, la aplica de inmediato como `avatarUrl` (sin flujo editorial, ADR 0005) y borra del almacenamiento el avatar anterior. Devuelve la cuenta propia. Cupo de 1 cada 15 días para todos los roles, aparte del de catálogo: 429 `upload_quota_exceeded` con `meta.availableAt` | ok val authz rate tx |
+| A16 | `POST /v1/account-deletions` | Baja voluntaria | Ver | `{password}`. Aplica la limpieza de datos, borra del almacenamiento el archivo del avatar (las subidas de catálogo se conservan) y respeta al último administrador | ok val state tx |
 | A17 | `GET /v1/users/{id}` | Perfil público | Pub | username, displayName, avatar, bio, rol, fecha de registro, indicador de suspensión; eliminada solo muestra el username | ok authz |
 | A18 | `GET /v1/users?filter[username]=` | Buscar perfil por username | Pub | 0 o 1 resultado; no hay listado público de cuentas | ok val |
 | A19 | `GET /v1/users/{id}/proposals` | Envíos públicos de una cuenta | Pub | Proyección pública (ver E-proyección) | ok authz |
@@ -116,7 +117,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
-| `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
+| `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `birthCountry`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `birthCountry`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
 | `artists` | `q`, `identityType`, `affiliatedWith` (organización), `affiliationStatus` | `displayName` (defecto), `-createdAt` | `identity`, `identity.aliases`, `affiliations`, `affiliations.organization` |
 | `organization-memberships` (C3) | `side=organization|member` (sin él, ambos lados) | `joined` (defecto, fechas desconocidas al final), `-createdAt` | `organization`, `member`, `roles`, `roles.role` |
 | `work-contributions`, `recording-contributions`, `release-contributions` (C4, documento heterogéneo) | `scope=work|recording|release`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `release`, `role` |
@@ -194,6 +195,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E16 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/sources` | Vincular fuentes a un microcambio | Own | Fuente de otra propuesta responde 422 | ok val spec |
 | E17 | `POST /v1/proposals/{id}/submission` | Enviar | Own | Exige descripción, un microcambio, una fuente, tipos y dependencias válidos; congela el contenido. Un microcambio en una versión obsoleta responde 422 `obsolete_payload_schema_version` con `meta.changeId` | ok val state conc tx spec |
 | E18 | `POST /v1/proposals/{id}/publication` | Publicación directa del personal | Staff, autor del borrador | Envía y aplica en una transacción; retirar una ficha publicada exige Admin | ok authz tx spec |
+| E22 | `POST /v1/images` | Subir una imagen de catálogo | Ver | `multipart/form-data`, campo `file`; devuelve `image-uploads` con la URL para el borrador (ADR 0005). JPEG, PNG o WebP por contenido, 3 MB (413) y 4000 px por lado (422). Cupo de 4 cada 15 días para `user`, sin cupo para el personal: 429 `upload_quota_exceeded` con `meta.availableAt`. Un rechazo no consume cupo | ok val authz rate |
 
 ### Moderación y decisiones
 
@@ -231,7 +233,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 ## Fuera del MVP
 
-OAuth (`user_identities`), likes (`recording_likes`), subida de archivos, `play_count`, verticales por frontend, suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
+OAuth (`user_identities`), likes (`recording_likes`), `play_count`, verticales por frontend, suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
 
 ## Decisiones de esta matriz
 

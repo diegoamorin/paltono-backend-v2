@@ -5,6 +5,7 @@ import { EventStatus, LiveArtistRole, TourStatus } from '../live-events/entities
 import { ReleaseGroupType } from '../music/entities/release.entity';
 import { TrackArtistRank } from '../music/entities/track.entity';
 import { EditorialSeeder, SeedChange } from './editorial-seeder';
+import { SeedImages } from './seed-images';
 import { CountryCode, GenreSlug, OrganizationTypeSlug, PlatformSlug, RoleSlug, SeedVocabularies } from './seed-vocabularies';
 
 /*
@@ -44,9 +45,13 @@ export interface PersonSpec extends IdentitySpec {
   givenName?: string;
   familyName?: string;
   birthDate?: string;
+  /** The present-day country of the birthplace, independent of the nationalities. */
+  birthCountry?: CountryCode;
   deathDate?: string;
   gender?: 'male' | 'female';
   nationalities?: CountryCode[];
+  /** Gets a placeholder full-body image. */
+  fullBody?: boolean;
 }
 
 export interface MemberSpec {
@@ -212,6 +217,7 @@ export class CatalogWriter {
   constructor(
     private readonly seeder: EditorialSeeder,
     private readonly vocabularies: SeedVocabularies,
+    private readonly images: SeedImages,
   ) {}
 
   /**
@@ -274,13 +280,16 @@ export class CatalogWriter {
       value: {
         type: 'person',
         displayName: spec.displayName,
+        imgProfile: await this.images.placeholder(spec.key),
         bio: spec.bio ?? null,
         person: {
           givenName: spec.givenName ?? null,
           familyName: spec.familyName ?? null,
           birthDate: spec.birthDate ?? null,
+          birthCountryId: spec.birthCountry ? this.vocabularies.countries[spec.birthCountry] : null,
           deathDate: spec.deathDate ?? null,
           gender: spec.gender ?? null,
+          imgFullBody: spec.fullBody ? await this.images.fullBodyPlaceholder(spec.key) : null,
         },
       },
     });
@@ -305,6 +314,7 @@ export class CatalogWriter {
       value: {
         type: 'organization',
         displayName: spec.displayName,
+        imgProfile: await this.images.placeholder(spec.key),
         bio: spec.bio ?? null,
         organization: {
           founding: spec.founding ?? null,

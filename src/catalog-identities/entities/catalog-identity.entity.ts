@@ -56,8 +56,10 @@ export class CatalogIdentity {
 }
 
 @Entity('people')
+@Index('people_birth_country_id_idx', ['birthCountryId'])
 @Check('people_height_cm_range', `height_cm BETWEEN 1 AND 300`)
 @Check('people_lifespan', `death_date >= birth_date`)
+@Check('people_img_full_body_format', `img_full_body IS NULL OR img_full_body ~* '^https?://[^\\s]+$'`)
 export class Person {
   @PrimaryColumn({ name: 'catalog_identity_id', type: 'integer' })
   catalogIdentityId: number;
@@ -76,6 +78,14 @@ export class Person {
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate: string | null;
 
+  /** The present-day country of the birthplace, independent of the nationalities. */
+  @Column({ name: 'birth_country_id', type: 'integer', nullable: true })
+  birthCountryId: number | null;
+
+  @ManyToOne(() => Country, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'birth_country_id', foreignKeyConstraintName: 'people_birth_country_id_fkey' })
+  birthCountry?: Country | null;
+
   @Column({ name: 'death_date', type: 'date', nullable: true })
   deathDate: string | null;
 
@@ -84,6 +94,10 @@ export class Person {
 
   @Column({ type: 'enum', enum: PERSON_GENDERS, enumName: 'person_gender', nullable: true })
   gender: PersonGender | null;
+
+  /** A standing image from head to feet, which the frontend scales with the height; independent of it. */
+  @Column({ name: 'img_full_body', type: 'varchar', length: 2048, nullable: true })
+  imgFullBody: string | null;
 }
 
 export const partialDateCheck = (prefix: string) =>

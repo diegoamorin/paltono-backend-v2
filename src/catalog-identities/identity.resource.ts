@@ -14,6 +14,7 @@ import { CatalogIdentityAlias, CatalogIdentityPlatformLink } from './entities/id
 export interface IdentityRelations {
   aliases: CatalogIdentityAlias[];
   nationalities: Country[];
+  birthCountry: Country | null;
   originCountry: Country | null;
   organizationTypes: OrganizationType[];
   /** With their platforms. */
@@ -78,9 +79,11 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
         givenName: person.givenName,
         familyName: person.familyName,
         birthDate: person.birthDate,
+        birthCountryId: person.birthCountryId,
         deathDate: person.deathDate,
         heightCm: person.heightCm,
         gender: person.gender,
+        imgFullBody: person.imgFullBody,
       },
     ),
     organization: content(({ organization }) =>
@@ -97,6 +100,7 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
   relationships: {
     aliases: { schema: () => identityAliasSchema, get: related(({ aliases }) => aliases) },
     nationalities: { schema: () => COUNTRIES.schema, get: related(({ nationalities }) => nationalities) },
+    birthCountry: { schema: () => COUNTRIES.schema, get: related(({ birthCountry }) => birthCountry) },
     originCountry: { schema: () => COUNTRIES.schema, get: related(({ originCountry }) => originCountry) },
     organizationTypes: { schema: () => ORGANIZATION_TYPES.schema, get: related(({ organizationTypes }) => organizationTypes) },
     platformLinks: { schema: () => identityPlatformLinkSchema, get: related(({ platformLinks }) => platformLinks) },
@@ -126,6 +130,9 @@ class PersonAttributes {
   @ApiProperty({ type: String, format: 'date', nullable: true })
   birthDate: string | null;
 
+  @ApiProperty({ type: Number, nullable: true, description: 'id del país de nacimiento en /v1/countries' })
+  birthCountryId: number | null;
+
   @ApiProperty({ type: String, format: 'date', nullable: true })
   deathDate: string | null;
 
@@ -134,6 +141,13 @@ class PersonAttributes {
 
   @ApiProperty({ enum: PERSON_GENDERS, nullable: true })
   gender: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`',
+  })
+  imgFullBody: string | null;
 }
 
 class OrganizationAttributes {
@@ -205,6 +219,9 @@ class IdentityRelationships {
 
   @ApiProperty({ type: ToManyLinkage, description: '`countries` de las nacionalidades documentadas; vacía en una organización' })
   nationalities: ToManyLinkage;
+
+  @ApiProperty({ type: ToOneLinkage, description: '`countries`: país de nacimiento de una persona; null en una organización' })
+  birthCountry: ToOneLinkage;
 
   @ApiProperty({ type: ToOneLinkage, description: '`countries`: país de origen de una organización; null en una persona' })
   originCountry: ToOneLinkage;

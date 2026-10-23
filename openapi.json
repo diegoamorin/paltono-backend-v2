@@ -1036,7 +1036,7 @@
         ]
       },
       "patch": {
-        "description": "Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar o la biografía. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op no reinicia el plazo.",
+        "description": "Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar, y su archivo, o la biografía. `avatarUrl` no admite una URL: el avatar se sube con `PUT /v1/me/avatar`. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op no reinicia el plazo.",
         "operationId": "MeController_update",
         "parameters": [
           {
@@ -2465,7 +2465,7 @@
     },
     "/v1/account-deletions": {
       "post": {
-        "description": "Exige la contraseña. Borra el correo, que queda libre, el avatar, la biografía y la contraseña; el username queda reservado y pasa a ser el nombre visible. Revoca todas las sesiones, invalida los tokens pendientes, borra la cookie de renovación y queda auditada con la propia cuenta como autora. El último administrador activo y verificado no puede darse de baja.",
+        "description": "Exige la contraseña. Borra el correo, que queda libre, el avatar y su archivo, la biografía y la contraseña; las imágenes de catálogo que subió se conservan. El username queda reservado y pasa a ser el nombre visible. Revoca todas las sesiones, invalida los tokens pendientes, borra la cookie de renovación y queda auditada con la propia cuenta como autora. El último administrador activo y verificado no puede darse de baja.",
         "operationId": "AccountDeletionsController_delete",
         "parameters": [],
         "requestBody": {
@@ -5416,14 +5416,14 @@
     },
     "/v1/identities": {
       "get": {
-        "description": "Personas y organizaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el nombre visible y los alias, sin distinguir mayúsculas ni acentos; `filter[type]` admite `person` y `organization`; `filter[hasArtistProfile]`, `true` o `false`; `filter[nationality]` y `filter[originCountry]` toman el código de dos letras de un país, y `filter[organizationType]`, el slug de un tipo de organización. Orden `displayName` (por defecto) o `-createdAt`.",
+        "description": "Personas y organizaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el nombre visible y los alias, sin distinguir mayúsculas ni acentos; `filter[type]` admite `person` y `organization`; `filter[hasArtistProfile]`, `true` o `false`; `filter[nationality]`, `filter[birthCountry]` y `filter[originCountry]` toman el código de dos letras de un país, y `filter[organizationType]`, el slug de un tipo de organización. Orden `displayName` (por defecto) o `-createdAt`.",
         "operationId": "IdentitiesController_list",
         "parameters": [
           {
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5486,7 +5486,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: aliases, nationalities, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
+            "description": "Relaciones separadas por comas: aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
             "schema": {
               "type": "string"
             }
@@ -5544,6 +5544,14 @@
           },
           {
             "name": "filter[nationality]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[birthCountry]",
             "required": false,
             "in": "query",
             "schema": {
@@ -5661,7 +5669,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5824,7 +5832,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5887,7 +5895,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: aliases, nationalities, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
+            "description": "Relaciones separadas por comas: aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
             "schema": {
               "type": "string"
             }
@@ -5980,7 +5988,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6166,7 +6174,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6295,7 +6303,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6507,7 +6515,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6654,7 +6662,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6862,7 +6870,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -7125,7 +7133,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -7864,7 +7872,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -8242,7 +8250,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -8471,7 +8479,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9486,7 +9494,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9748,7 +9756,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9895,7 +9903,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10125,7 +10133,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10299,7 +10307,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10563,7 +10571,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10778,7 +10786,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10995,7 +11003,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -11210,7 +11218,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -15517,6 +15525,342 @@
         ]
       }
     },
+    "/v1/images": {
+      "post": {
+        "description": "Recibe la imagen como `multipart/form-data` en el campo `file` y devuelve su URL pública, para ponerla en un borrador; no la asocia a ningún borrador. El tipo se detecta por el contenido (JPEG, PNG o WebP), con un máximo de 3 MB y de 4000 px por lado. Se aplica la orientación EXIF, se quitan los metadatos y se recomprime sin pérdida visible conservando el formato. Una cuenta `user` puede subir 4 cada 15 días; al excederlo responde 429 con `meta.availableAt`, la fecha en que vuelve a haber cupo. El personal no tiene cupo. Un rechazo no consume cupo.",
+        "operationId": "ImagesController_upload",
+        "parameters": [
+          {
+            "name": "fields[image-uploads]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de image-uploads separados por comas: purpose, url, bytes, createdAt, uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[users]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de users separados por comas: username, displayName, avatarUrl, bio, role, status, createdAt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG o WebP, detectado por su contenido; como máximo 3 MB y 4000 px por lado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImageUploadResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Subir una imagen de catálogo",
+        "tags": [
+          "images"
+        ]
+      }
+    },
+    "/v1/me/avatar": {
+      "put": {
+        "description": "Recibe la imagen como `multipart/form-data` en el campo `file`, con la misma validación y procesamiento que `POST /v1/images`, y la pone de inmediato como `avatarUrl` de la cuenta, sin revisión editorial. El avatar anterior se borra del almacenamiento. Cada cuenta, de cualquier rol, puede cambiar su avatar una vez cada 15 días, aparte del cupo de catálogo; al excederlo responde 429 con `meta.availableAt`, la fecha en que vuelve a haber cupo. Un rechazo no consume cupo. Devuelve la cuenta propia.",
+        "operationId": "AvatarsController_replace",
+        "parameters": [
+          {
+            "name": "fields[users]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de users separados por comas: username, email, displayName, avatarUrl, bio, emailVerified, role, status, createdAt, usernameChangedAt, usernameChangeAvailableAt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG o WebP, detectado por su contenido; como máximo 3 MB y 4000 px por lado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OwnAccountResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Subir el avatar propio",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/v1/search": {
       "get": {
         "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.",
@@ -15526,7 +15870,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -16464,8 +16808,7 @@
           "avatarUrl": {
             "type": "string",
             "nullable": true,
-            "maxLength": 2048,
-            "description": "URL HTTP(S) de la imagen"
+            "description": "Solo admite `null`, que quita el avatar y borra su archivo. El avatar se sube con `PUT /v1/me/avatar`."
           },
           "bio": {
             "type": "string",
@@ -17912,6 +18255,11 @@
             "format": "date",
             "nullable": true
           },
+          "birthCountryId": {
+            "type": "number",
+            "nullable": true,
+            "description": "id del país de nacimiento en /v1/countries"
+          },
           "deathDate": {
             "type": "string",
             "format": "date",
@@ -17929,15 +18277,22 @@
               "other"
             ],
             "nullable": true
+          },
+          "imgFullBody": {
+            "type": "string",
+            "nullable": true,
+            "description": "Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`"
           }
         },
         "required": [
           "givenName",
           "familyName",
           "birthDate",
+          "birthCountryId",
           "deathDate",
           "heightCm",
-          "gender"
+          "gender",
+          "imgFullBody"
         ]
       },
       "PartialDate": {
@@ -18128,6 +18483,14 @@
               }
             ]
           },
+          "birthCountry": {
+            "description": "`countries`: país de nacimiento de una persona; null en una organización",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToOneLinkage"
+              }
+            ]
+          },
           "originCountry": {
             "description": "`countries`: país de origen de una organización; null en una persona",
             "allOf": [
@@ -18164,6 +18527,7 @@
         "required": [
           "aliases",
           "nationalities",
+          "birthCountry",
           "originCountry",
           "organizationTypes",
           "platformLinks",
@@ -20907,6 +21271,80 @@
           },
           "relationships": {
             "$ref": "#/components/schemas/QueuedChangeRelationships"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "relationships"
+        ]
+      },
+      "ImageUploadAttributes": {
+        "type": "object",
+        "properties": {
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "catalog",
+              "avatar"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL pública de la imagen, para usarla en un borrador"
+          },
+          "bytes": {
+            "type": "number",
+            "description": "Peso de la imagen guardada, después de procesarla"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "purpose",
+          "url",
+          "bytes",
+          "createdAt"
+        ]
+      },
+      "ImageUploadRelationships": {
+        "type": "object",
+        "properties": {
+          "uploadedBy": {
+            "description": "Cuenta que subió la imagen",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AccountLinkage"
+              }
+            ]
+          }
+        },
+        "required": [
+          "uploadedBy"
+        ]
+      },
+      "ImageUploadResource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "image-uploads"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/ImageUploadAttributes"
+          },
+          "relationships": {
+            "$ref": "#/components/schemas/ImageUploadRelationships"
           }
         },
         "required": [

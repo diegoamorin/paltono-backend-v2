@@ -49,6 +49,50 @@ describe('pnpm db:reset', () => {
   });
 });
 
+describe('pnpm db:rebuild', () => {
+  jest.setTimeout(600_000);
+
+  const columnExists = async (table: string, column: string) =>
+    (
+      await queryTestDatabase(
+        "SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2",
+        [table, column],
+      )
+    ).length > 0;
+  const accountCount = async () => Number((await queryTestDatabase<{ n: string }>('SELECT count(*) AS n FROM users'))[0].n);
+
+  afterAll(async () => {
+    // Leave the other specs an empty database, as they expect.
+    await runPnpm(['db:reset'], asDevelopment());
+  });
+
+  it('migrates and seeds the database again, even when the existing migrations changed since they ran', async () => {
+    const applied = await migrationNames();
+    // As if a migration that already ran had since been edited to add this column.
+    await queryTestDatabase('ALTER TABLE users DROP COLUMN avatar_url');
+    await queryTestDatabase('CREATE TABLE IF NOT EXISTS rebuild_probe (id int)');
+
+    const result = await runPnpm(['db:rebuild'], asDevelopment());
+
+    expect(result).toMatchObject({ status: 0 });
+    expect(await columnExists('users', 'avatar_url')).toBe(true);
+    expect(await queryTestDatabase("SELECT to_regclass('rebuild_probe') AS probe")).toEqual([{ probe: null }]);
+    expect(await migrationNames()).toEqual(applied);
+    expect(await accountCount()).toBeGreaterThan(0);
+  });
+
+  it.each(['production', 'test'])('refuses to run when NODE_ENV is %s', async (environment) => {
+    await queryTestDatabase('CREATE TABLE IF NOT EXISTS rebuild_probe (id int)');
+
+    const result = await runPnpm(['db:rebuild'], { ...asDevelopment(), NODE_ENV: environment });
+
+    expect(result.status).not.toBe(0);
+    expect(result.output).toMatch(/only in development/);
+    expect(await queryTestDatabase("SELECT to_regclass('rebuild_probe')::text AS probe")).toEqual([{ probe: 'rebuild_probe' }]);
+    await queryTestDatabase('DROP TABLE rebuild_probe');
+  });
+});
+
 describe('pnpm db:test:prepare', () => {
   it('recreates the test database from the migrations', async () => {
     await queryTestDatabase('CREATE TABLE leftover (id int)');

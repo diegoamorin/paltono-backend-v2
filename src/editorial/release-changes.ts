@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { RELEASE_GROUP_TYPES } from '../music/entities/release.entity';
 import { PartialDateValue } from '../music/recordings';
 import {
@@ -21,7 +22,7 @@ import {
   writeReleaseField,
   writeReleaseGroupField,
 } from '../music/releases';
-import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
+import { ENTITY_REFERENCE, creditChanges } from './credit-changes';
 import { RELEASE_CREDIT_CHANGES } from './release-credit-changes';
 import { RELEASE_TRACK_CHANGES } from './track-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
@@ -84,7 +85,7 @@ const RELEASE = {
     releaseDate: PARTIAL_DATE,
     releaseTime: RELEASE_TIME,
     timezone: TIMEZONE,
-    coverArtUrl: SOURCE_URL,
+    coverArtUrl: CATALOG_IMAGE_URL,
     isCancelled: IS_CANCELLED,
   },
 };
@@ -206,6 +207,7 @@ const RELEASE_CREATION: OperationDefinition = {
   targetKeySchema: null,
   check: (value) => checkReleaseDate(value as ReleaseValue, '/value'),
   ...noReferences,
+  imageUrls: (value) => imageUrlAt((value as ReleaseValue).coverArtUrl, '/value/coverArtUrl'),
   rootReferences: (value) => named('release_group', (value as ReleaseValue).releaseGroup, '/value/releaseGroup/entity_id'),
   read: async (manager, root) => {
     const created = await findCreatedRelease(manager, root.id);
@@ -233,7 +235,10 @@ const RELEASE_FIELD_RULES: Record<ReleaseFieldPath, { description: string; schem
     description: 'Fecha parcial de salida con su hora local y zona IANA, que cambian juntas. Un retraso se registra cambiándolas.',
     schema: RELEASE_DATE,
   },
-  'releases.cover_art_url': { description: 'URL HTTP(S) de la portada, o null si se desconoce.', schema: SOURCE_URL },
+  'releases.cover_art_url': {
+    description: 'Portada: la URL de una imagen subida para el catálogo con POST /v1/images, o null si se desconoce.',
+    schema: CATALOG_IMAGE_URL,
+  },
   'releases.is_cancelled': { description: 'Si la edición está cancelada.', schema: IS_CANCELLED },
 };
 
@@ -256,6 +261,7 @@ const RELEASE_FIELD_CHANGES: OperationDefinition[] = (Object.keys(RELEASE_FIELDS
   targetKeySchema: null,
   check: (value) => (path === 'releases.release_date' ? checkReleaseDate(value as ReleaseDateValue, '/value') : []),
   ...noReferences,
+  ...(path === 'releases.cover_art_url' ? { imageUrls: (value: unknown) => imageUrlAt(value, '/value') } : {}),
   ...(path === 'releases.release_group'
     ? { rootReferences: (value: unknown) => named('release_group', value as RootReference, '/value/entity_id') }
     : {}),

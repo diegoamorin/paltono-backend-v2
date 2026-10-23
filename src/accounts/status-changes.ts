@@ -30,7 +30,9 @@ export interface StatusChangeRequest {
  * the status the account has under lock. A suspension ends every session at
  * once and has no end of its own; only a suspended account can be deleted this
  * way, at its holder's request; `deleted` is terminal. Neither a suspension nor
- * a deletion may take away the last operational administrator.
+ * a deletion may take away the last operational administrator. The returned
+ * change links the account as it was before it; a deletion clears its avatar,
+ * whose file the caller removes once the change is committed.
  */
 export async function changeStatus(manager: EntityManager, request: StatusChangeRequest): Promise<UserStatusChange> {
   const { actor, user } = await lockAdministeredAccount(manager, request.actorId, request.userUuid);
@@ -71,9 +73,15 @@ export async function changeStatus(manager: EntityManager, request: StatusChange
 /**
  * Deletes an active account at its own request, once it gives its password. The
  * account is its own actor in the audit, with no reason. It may not take away
- * the last operational administrator.
+ * the last operational administrator. Returns the avatar URL it cleared, whose
+ * file the caller removes once the deletion is committed.
  */
-export async function deleteOwnAccount(manager: EntityManager, userId: number, password: string, now: Date): Promise<void> {
+export async function deleteOwnAccount(
+  manager: EntityManager,
+  userId: number,
+  password: string,
+  now: Date,
+): Promise<string | null> {
   // The slow password check comes before the administration lock, so it does not hold up other changes.
   await requirePassword(manager, userId, password, 'password');
   await lockAdministration(manager);
@@ -91,6 +99,7 @@ export async function deleteOwnAccount(manager: EntityManager, userId: number, p
     reason: null,
     changedAt: now,
   });
+  return user.avatarUrl;
 }
 
 /**

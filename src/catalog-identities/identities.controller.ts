@@ -13,7 +13,7 @@ import { IdentitiesService } from './identities.service';
 import { IdentityResource, identitySchema } from './identity.resource';
 import { MembershipResource, membershipSchema } from './membership.resource';
 
-const INCLUDE = ['aliases', 'nationalities', 'originCountry', 'organizationTypes', 'platformLinks', 'platformLinks.platform', 'artist'];
+const INCLUDE = ['aliases', 'nationalities', 'birthCountry', 'originCountry', 'organizationTypes', 'platformLinks', 'platformLinks.platform', 'artist'];
 
 const IDENTITY_QUERY = resourceQuery(identitySchema, { include: INCLUDE });
 
@@ -21,7 +21,7 @@ const IDENTITIES_QUERY = collectionQuery(identitySchema, {
   include: INCLUDE,
   sort: ['displayName', 'createdAt'],
   defaultSort: 'displayName',
-  filters: ['q', 'type', 'hasArtistProfile', 'nationality', 'originCountry', 'organizationType'],
+  filters: ['q', 'type', 'hasArtistProfile', 'nationality', 'birthCountry', 'originCountry', 'organizationType'],
 });
 
 const MEMBERSHIPS_QUERY = collectionQuery(membershipSchema, {
@@ -42,7 +42,7 @@ export class IdentitiesController {
     description:
       'Personas y organizaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el nombre visible ' +
       'y los alias, sin distinguir mayúsculas ni acentos; `filter[type]` admite `person` y `organization`; `filter[hasArtistProfile]`, ' +
-      '`true` o `false`; `filter[nationality]` y `filter[originCountry]` toman el código de dos letras de un país, y ' +
+      '`true` o `false`; `filter[nationality]`, `filter[birthCountry]` y `filter[originCountry]` toman el código de dos letras de un país, y ' +
       '`filter[organizationType]`, el slug de un tipo de organización. Orden `displayName` (por defecto) o `-createdAt`.',
   })
   @ApiJsonApiQuery(IDENTITIES_QUERY)

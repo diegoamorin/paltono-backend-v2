@@ -7,6 +7,7 @@ import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiErrorInput, JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery } from '../common/json-api/query';
+import { CatalogImageUrls } from '../images/catalog-image-urls';
 import { LoadedDecision } from './change-decision.resource';
 import { inDependencyOrder } from './dependency-graph';
 import { lockOwnDraft } from './drafts';
@@ -85,6 +86,7 @@ export class DecisionsService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly clock: Clock,
+    private readonly images: CatalogImageUrls,
   ) {}
 
   /**
@@ -179,7 +181,7 @@ export class DecisionsService {
         proposals.set(id, await manager.findOneOrFail(ChangeProposal, { where: { id }, lock: { mode: 'pessimistic_write' } }));
       }
       const now = this.clock.now();
-      await submitDraft(manager, draft, now);
+      await submitDraft(manager, draft, now, this.images);
       proposals.set(proposalId, await manager.findOneByOrFail(ChangeProposal, { id: proposalId }));
       const roots = await lockTargetedRoots(manager, changes);
       const open = await manager.find(ProposalChange, { where: { proposalId }, order: { position: 'ASC' }, lock: { mode: 'pessimistic_write' } });
@@ -572,7 +574,7 @@ async function applyOne(context: DecisionContext, change: ProposalChange, depend
     }
   }
   // The payload and its references are checked again on the state this transaction sees.
-  const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, 'decision');
+  const errors = await revalidateChange(manager, proposals.get(change.proposalId)!, change, root, { stage: 'decision' });
   if (errors.length > 0) throw invalid(errors);
   if (change.targetKey !== null && key === null) {
     throw new JsonApiException(HttpStatus.CONFLICT, [
