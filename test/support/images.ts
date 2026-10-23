@@ -16,6 +16,21 @@ export function uploadImage(app: TestApp, accessToken: string, bytes: Buffer, fi
     .attach('file', bytes, filename);
 }
 
+/** PUT /v1/me/avatar, sending `bytes` as the multipart `file` field. */
+export function uploadAvatar(app: TestApp, accessToken: string, bytes: Buffer, filename = 'avatar.png') {
+  return request(app.server)
+    .put('/v1/me/avatar')
+    .set('Accept', JSON_API)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .attach('file', bytes, filename);
+}
+
+/** Uploads a small PNG as the account's avatar and returns its public URL. */
+export async function uploadedAvatarUrl(app: TestApp, accessToken: string): Promise<string> {
+  const response = await uploadAvatar(app, accessToken, await pngImage()).expect(200);
+  return response.body.data.attributes.avatarUrl;
+}
+
 /** Uploads a small PNG and returns its public URL. */
 export async function uploadedImageUrl(app: TestApp, accessToken: string): Promise<string> {
   const response = await uploadImage(app, accessToken, await pngImage()).expect(201);

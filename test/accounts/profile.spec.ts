@@ -1,5 +1,6 @@
 import { accessTokenFor, deleteAccount, getMe, login, register, updateProfile } from '../support/accounts';
 import { Account, registerVerified } from '../support/administration';
+import { fetchImage, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 
@@ -20,10 +21,9 @@ describe('PATCH /v1/me', () => {
     await app.close();
   });
 
-  it('edits the display name, avatar and bio and returns the own account', async () => {
+  it('edits the display name and bio and returns the own account', async () => {
     const response = await updateProfile(app.server, diego.accessToken, diego.uuid, {
       displayName: '  디에고 Ñandú  ',
-      avatarUrl: 'https://cdn.example.com/diego.png',
       bio: 'Fan de BLACKPINK',
     }).expect(200);
 
@@ -36,7 +36,7 @@ describe('PATCH /v1/me', () => {
           username: 'diego_papi',
           email: 'diego_papi@example.com',
           displayName: '디에고 Ñandú',
-          avatarUrl: 'https://cdn.example.com/diego.png',
+          avatarUrl: null,
           bio: 'Fan de BLACKPINK',
         }),
       }),
@@ -46,18 +46,37 @@ describe('PATCH /v1/me', () => {
   });
 
   it('keeps absent attributes and clears the avatar and the bio with null or an empty bio', async () => {
-    await updateProfile(app.server, diego.accessToken, diego.uuid, {
-      avatarUrl: 'http://cdn.example.com/diego.png',
-      bio: 'Fan',
-    }).expect(200);
+    const avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
+    await updateProfile(app.server, diego.accessToken, diego.uuid, { bio: 'Fan' }).expect(200);
+
+    const untouched = await updateProfile(app.server, diego.accessToken, diego.uuid, {}).expect(200);
+    expect(untouched.body.data.attributes).toEqual(expect.objectContaining({ avatarUrl, bio: 'Fan' }));
 
     const cleared = await updateProfile(app.server, diego.accessToken, diego.uuid, { avatarUrl: null, bio: '  ' }).expect(200);
     expect(cleared.body.data.attributes).toEqual(
       expect.objectContaining({ displayName: 'Diego 🎤', avatarUrl: null, bio: null }),
     );
+  });
 
-    const untouched = await updateProfile(app.server, diego.accessToken, diego.uuid, {}).expect(200);
-    expect(untouched.body.data.attributes).toEqual(cleared.body.data.attributes);
+  it('stops serving the avatar it clears', async () => {
+    const avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
+
+    await updateProfile(app.server, diego.accessToken, diego.uuid, { avatarUrl: null }).expect(200);
+
+    await fetchImage(app, avatarUrl).expect(404);
+  });
+
+  it('refuses an avatar URL, even one uploaded, since avatars are uploaded with PUT /v1/me/avatar', async () => {
+    const avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
+    const catalogImage = await uploadedImageUrl(app, diego.accessToken);
+
+    for (const url of ['https://cdn.example.com/diego.png', avatarUrl, catalogImage]) {
+      const response = await updateProfile(app.server, diego.accessToken, diego.uuid, { avatarUrl: url }).expect(422);
+      expect(response.body.errors).toEqual([expect.objectContaining({ source: { pointer: '/data/attributes/avatarUrl' } })]);
+    }
+    const me = await getMe(app.server, diego.accessToken).expect(200);
+    expect(me.body.data.attributes.avatarUrl).toBe(avatarUrl);
+    await fetchImage(app, avatarUrl).expect(200);
   });
 
   it('validates the attributes', async () => {
@@ -77,7 +96,7 @@ describe('PATCH /v1/me', () => {
     ]);
   });
 
-  it('refuses a null display name or an avatar that is not HTTP(S)', async () => {
+  it('refuses a null display name or any avatar but null', async () => {
     for (const attributes of [{ displayName: null }, { avatarUrl: 'ftp://cdn.example.com/a.png' }]) {
       await updateProfile(app.server, diego.accessToken, diego.uuid, attributes).expect(422);
     }

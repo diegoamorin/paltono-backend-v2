@@ -14,11 +14,13 @@ import {
 import {
   Account,
   changeRole,
+  changeStatus,
   getAccount,
   listStatusChanges,
   registerFirstAdmin,
   registerVerified,
 } from '../support/administration';
+import { fetchImage, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const MINUTE = 60 * 1000;
@@ -27,6 +29,7 @@ describe('POST /v1/account-deletions', () => {
   let app: TestApp;
   let admin: Account;
   let diego: Account;
+  let avatarUrl: string;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -36,11 +39,10 @@ describe('POST /v1/account-deletions', () => {
     await app.reset();
     admin = await registerFirstAdmin(app);
     diego = await registerVerified(app, 'diego_papi');
-    await updateProfile(app.server, diego.accessToken, diego.uuid, {
-      displayName: 'Diego 🎤',
-      avatarUrl: 'https://cdn.example.com/diego.png',
-      bio: 'Fan de BLACKPINK',
-    }).expect(200);
+    await updateProfile(app.server, diego.accessToken, diego.uuid, { displayName: 'Diego 🎤', bio: 'Fan de BLACKPINK' }).expect(
+      200,
+    );
+    avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
   });
 
   afterAll(async () => {
@@ -82,6 +84,23 @@ describe('POST /v1/account-deletions', () => {
         },
       }),
     ]);
+  });
+
+  it('stops serving the avatar but keeps serving the catalog images the account uploaded', async () => {
+    const catalogImage = await uploadedImageUrl(app, diego.accessToken);
+
+    await deleteAccount(app.server, diego.accessToken).expect(204);
+
+    await fetchImage(app, avatarUrl).expect(404);
+    await fetchImage(app, catalogImage).expect(200);
+  });
+
+  it('stops serving the avatar of a suspended account an administrator deletes', async () => {
+    await changeStatus(app, admin.accessToken, diego.uuid, { newStatus: 'suspended', reason: 'Spam' }).expect(201);
+
+    await changeStatus(app, admin.accessToken, diego.uuid, { newStatus: 'deleted', reason: 'Lo pidió' }).expect(201);
+
+    await fetchImage(app, avatarUrl).expect(404);
   });
 
   it('ends every session and pending token, so nothing logs in or acts any more', async () => {
