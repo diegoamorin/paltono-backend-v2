@@ -1,4 +1,7 @@
 import { Type } from '@nestjs/common';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { App } from 'supertest/types';
@@ -12,6 +15,7 @@ import { requireTestDatabaseUrl } from '../../src/database/test-database';
 import { truncateAllTables } from '../../src/database/truncate';
 import { CapturingMailer } from './capturing-mailer';
 import { FakeClock } from './fake-clock';
+import { TEST_IMAGE_BASE_URL } from './images';
 
 export interface TestAppOptions {
   /** Environment variables layered over the test environment, e.g. to boot as production. */
@@ -37,8 +41,11 @@ const TEST_ENV: NodeJS.ProcessEnv = { AUTH_RATE_LIMIT: '1000' };
 
 /** Boots the full application against the test database, with a controllable clock. */
 export async function createTestApp(options: TestAppOptions = {}): Promise<TestApp> {
+  // Each app stores its uploaded images in its own temporary folder, removed on close.
+  const imageDirectory = mkdtempSync(join(tmpdir(), 'paltono-images-'));
+  const imageEnv = { IMAGE_STORAGE_DIRECTORY: imageDirectory, IMAGE_PUBLIC_BASE_URL: TEST_IMAGE_BASE_URL };
   const config = {
-    ...loadConfig({ ...process.env, ...TEST_ENV, ...options.env }),
+    ...loadConfig({ ...process.env, ...TEST_ENV, ...imageEnv, ...options.env }),
     databaseUrl: requireTestDatabaseUrl(process.env),
   };
   const clock = new FakeClock(new Date(START_OF_TEST));
@@ -64,5 +71,10 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<TestA
     clock.set(START_OF_TEST);
   };
 
-  return { app, server: app.getHttpServer(), clock, mailer, reset, close: () => app.close() };
+  const close = async () => {
+    await app.close();
+    rmSync(imageDirectory, { recursive: true, force: true });
+  };
+
+  return { app, server: app.getHttpServer(), clock, mailer, reset, close };
 }

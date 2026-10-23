@@ -3,3 +3,5 @@ dist/
 coverage/
 *.tsbuildinfo
 .env
+# Images uploaded in development (IMAGE_STORAGE_DIRECTORY's default).
+/storage/

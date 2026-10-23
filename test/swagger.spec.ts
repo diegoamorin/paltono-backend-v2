@@ -127,6 +127,19 @@ describe('Swagger and the OpenAPI document', () => {
       expect(document.paths['/v1/identities/{id}'].get.tags).toEqual(['catalog-identities']);
     });
 
+    it('documents the image upload as a multipart body with a JSON:API response', async () => {
+      const { body: document } = await request(app.server).get('/docs-json').expect(200);
+      const upload = document.paths['/v1/images'].post;
+
+      expect(Object.keys(upload.requestBody.content)).toEqual(['multipart/form-data']);
+      expect(upload.requestBody.content['multipart/form-data'].schema.properties.file).toEqual(
+        expect.objectContaining({ type: 'string', format: 'binary' }),
+      );
+      expect(Object.keys(upload.responses['201'].content)).toEqual(['application/vnd.api+json']);
+      expect(upload.security).toEqual([{ bearer: [] }]);
+      expect(upload.responses).toHaveProperty('429');
+    });
+
     it('documents global search as a collection of resources of several types', async () => {
       const { body: document } = await request(app.server).get('/docs-json').expect(200);
 
