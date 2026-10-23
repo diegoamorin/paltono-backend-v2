@@ -45,7 +45,7 @@ importers:
         specifier: ^0.15.1
         version: 0.15.1
       multer:
-        specifier: 2.4.0
+        specifier: ^2.4.0
         version: 2.4.0
       pg:
         specifier: ^8.23.1

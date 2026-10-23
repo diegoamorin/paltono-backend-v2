@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { RELEASE_GROUP_TYPES } from '../music/entities/release.entity';
 import { PartialDateValue } from '../music/recordings';
 import {
@@ -21,7 +22,6 @@ import {
   writeReleaseField,
   writeReleaseGroupField,
 } from '../music/releases';
-import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { ENTITY_REFERENCE, creditChanges } from './credit-changes';
 import { RELEASE_CREDIT_CHANGES } from './release-credit-changes';
 import { RELEASE_TRACK_CHANGES } from './track-changes';

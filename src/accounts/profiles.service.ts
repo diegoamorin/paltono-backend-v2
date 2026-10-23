@@ -38,9 +38,10 @@ export class ProfilesService {
 
   /**
    * Applies the given changes to the account, whose id the request must name, and
-   * returns it updated. Clearing the avatar also removes its file. A new username needs 7 full days since the last one was
-   * assigned; the interval is checked with the account locked, so simultaneous
-   * changes cannot both pass, and sending the current username changes nothing.
+   * returns it updated. Clearing the avatar also removes its file. A new username
+   * needs 7 full days since the last one was assigned; the interval is checked
+   * with the account locked, so simultaneous changes cannot both pass, and
+   * sending the current username changes nothing.
    */
   async update(user: User, id: string, changes: ProfileChanges): Promise<User> {
     if (id !== user.uuid) {

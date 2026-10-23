@@ -1,6 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { hasArtist } from '../catalog-identities/artist-relations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { EVENT_STATUSES, LINK_PURPOSES, LIVE_ARTIST_ROLES, TOUR_STATUSES } from '../live-events/entities/live-event.entity';
 import {
   EVENT_FIELDS,
@@ -42,7 +43,6 @@ import {
 } from '../live-events/live-events';
 import { artistIdOfIdentity } from '../music/releases';
 import { PartialDateValue } from '../music/recordings';
-import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
