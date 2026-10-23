@@ -65,6 +65,7 @@ El reloj (`Clock`) es una dependencia inyectable: el código usa `clock.now()` y
 - `POST /v1/images` recibe `multipart/form-data` con la imagen en el campo `file` y devuelve una subida `catalog` con su URL. Las rutas que reciben un archivo se listan en `MULTIPART_PATHS` (`src/common/json-api/media-type.ts`); `@ReceivesImage()` y `@UploadedImage()` leen el archivo en memoria.
 - `ImageUploadsService.upload(cuenta, propósito, bytes)` valida, procesa con `sharp`, comprueba el cupo de subidas, guarda el archivo y lo registra en `image_uploads`. Un rechazo no guarda ni registra nada.
 - El almacenamiento es el puerto `ImageStorage` (guardar bytes por clave, borrar por clave). La carpeta local (`IMAGE_STORAGE_DIRECTORY`, por defecto `storage/images`, fuera de git) se sirve en `/images`, y la URL de cada imagen es `IMAGE_PUBLIC_BASE_URL` más su clave.
+- La regla de URLs de imagen vive en `CatalogImageUrls` (`src/images/catalog-image-urls.ts`): un campo de imagen del catálogo es null o una URL bajo `IMAGE_PUBLIC_BASE_URL` registrada como subida `catalog`. Una operación del registro editorial declara sus campos de imagen con `imageUrls(value)` (usando `imageUrlAt` y el esquema `CATALOG_IMAGE_URL`), y la regla se comprueba al escribir el microcambio y al enviarlo, nunca al aplicarlo.
 - En las pruebas, `createTestApp` usa una carpeta temporal y la base `http://localhost/images/`; `test/support/images.ts` genera las imágenes y lee las servidas.
 
 ## Roles y vocabularios

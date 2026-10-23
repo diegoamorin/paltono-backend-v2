@@ -1,6 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { IdentityCreationValue, PartialDateValue as PartialDate, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { IDENTITY_FIELDS, IdentityFieldPath, hasIdentityField, pickIdentityField, writeIdentityField } from '../catalog-identities/identity-fields';
+import { ImageUrlReference, imageUrlAt } from '../images/catalog-image-urls';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import {
@@ -30,6 +31,7 @@ interface FieldRules {
   schema: object;
   check?(value: unknown): PayloadProblem[];
   references?(value: unknown): VocabularyReference[];
+  imageUrls?(value: unknown): ImageUrlReference[];
   /** Rules against the identity's other fields, as they are now. */
   consistency?(identity: IdentityCreationValue, value: unknown): TargetProblem[];
 }
@@ -61,7 +63,11 @@ const partialDate = (field: 'founding' | 'dissolution'): Pick<FieldRules, 'check
 
 const FIELD_RULES: Record<IdentityFieldPath, FieldRules> = {
   'catalog_identities.display_name': { description: 'Nombre visible de la identidad.', schema: DISPLAY_NAME },
-  'catalog_identities.img_profile': { description: 'URL HTTP(S) de la imagen de perfil, o null.', schema: IMG_PROFILE },
+  'catalog_identities.img_profile': {
+    description: 'Imagen de perfil: la URL de una imagen subida para el catálogo con POST /v1/images, o null.',
+    schema: IMG_PROFILE,
+    imageUrls: (value) => imageUrlAt(value, '/value'),
+  },
   'catalog_identities.bio': { description: 'Biografía, o null.', schema: BIO },
   'people.given_name': { description: 'Nombre de pila de una persona.', schema: NAME },
   'people.family_name': { description: 'Apellido de una persona.', schema: NAME },
@@ -107,6 +113,7 @@ export const IDENTITY_FIELD_CHANGES: OperationDefinition[] = (Object.keys(IDENTI
     targetKeySchema: null,
     check: (value) => rules.check?.(value) ?? [],
     references: (value) => rules.references?.(value) ?? [],
+    imageUrls: (value) => rules.imageUrls?.(value) ?? [],
     targetProblems: async (manager, root, value) => {
       const identity = await currentIdentity(manager, root);
       if (!identity) return [];

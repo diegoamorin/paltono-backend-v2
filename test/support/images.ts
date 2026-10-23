@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import sharp from 'sharp';
 import request from 'supertest';
+import { DataSource } from 'typeorm';
+import { User } from '../../src/accounts/entities/user.entity';
+import { ImageUploadsService } from '../../src/images/image-uploads.service';
 import { JSON_API } from './json-api';
 import { TestApp } from './test-app';
 
@@ -20,6 +23,16 @@ export function uploadImage(app: TestApp, accessToken: string, bytes: Buffer, fi
 export async function uploadedImageUrl(app: TestApp, accessToken: string): Promise<string> {
   const response = await uploadImage(app, accessToken, await pngImage()).expect(201);
   return response.body.data.attributes.url;
+}
+
+/**
+ * Uploads a small PNG as the account's avatar and returns its public URL.
+ * Goes through the upload service while no endpoint uploads avatars (#30).
+ */
+export async function avatarUploadUrl(app: TestApp, account: { uuid: string }): Promise<string> {
+  const user = await app.app.get(DataSource).manager.findOneByOrFail(User, { uuid: account.uuid });
+  const upload = await app.app.get(ImageUploadsService).upload(user, 'avatar', await pngImage());
+  return upload.url;
 }
 
 /** GET of an uploaded image's public URL, through the app that serves the local storage. */

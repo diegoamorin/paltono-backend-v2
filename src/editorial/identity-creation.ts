@@ -1,4 +1,5 @@
 import { IdentityCreationValue as IdentityCreation, PartialDateValue as PartialDate, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { OperationDefinition, PayloadProblem } from './operation-registry';
 
 /*
@@ -29,7 +30,7 @@ export const PARTIAL_DATE = {
 };
 
 export const DISPLAY_NAME = { type: 'string', minLength: 1, maxLength: 200, pattern: '\\S' };
-export const IMG_PROFILE = { type: ['string', 'null'], maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' };
+export const IMG_PROFILE = CATALOG_IMAGE_URL;
 export const BIO = { type: ['string', 'null'], maxLength: 10000 };
 export const HEIGHT_CM = { type: ['integer', 'null'], minimum: 1, maximum: 300 };
 export const GENDER = { enum: ['male', 'female', 'other', null] };
@@ -95,6 +96,7 @@ export const IDENTITY_CREATION: OperationDefinition = {
     const countryId = (value as IdentityCreation).organization?.originCountryId;
     return countryId == null ? [] : [{ vocabulary: 'countries', id: countryId, path: '/value/organization/originCountryId' }];
   },
+  imageUrls: (value) => imageUrlAt((value as IdentityCreation).imgProfile, '/value/imgProfile'),
   read: async (manager, root) => {
     const created = await findCreatedIdentity(manager, root.id);
     return created ? { exists: true, value: created.value } : { exists: false };

@@ -364,7 +364,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             }
           }
         }
@@ -568,7 +569,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -1393,7 +1395,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "roles": {
               "type": "array",
@@ -1575,7 +1578,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "bio": {
               "type": [
@@ -2160,7 +2164,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -2865,7 +2870,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "roles": {
               "type": "array",
@@ -4305,7 +4311,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             },
             "isCancelled": {
               "type": "boolean",
@@ -4540,7 +4547,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },
@@ -5884,7 +5892,8 @@
                 "null"
               ],
               "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
             }
           }
         }
@@ -6088,7 +6097,8 @@
             "null"
           ],
           "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },

@@ -42,7 +42,8 @@ import {
 } from '../live-events/live-events';
 import { artistIdOfIdentity } from '../music/releases';
 import { PartialDateValue } from '../music/recordings';
-import { ENTITY_REFERENCE, SOURCE_URL } from './credit-changes';
+import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
+import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { COUNTRY_ID, PARTIAL_DATE, daysInMonth, interval } from './identity-creation';
@@ -71,7 +72,7 @@ const noReferences = { references: () => [] } satisfies Pick<OperationDefinition
 const text = (maxLength: number, nullable = false) => ({ type: nullable ? ['string', 'null'] : 'string', minLength: 1, maxLength, pattern: '\\S' });
 
 const TITLE = text(512);
-const IMAGE_URL = SOURCE_URL;
+const IMAGE_URL = CATALOG_IMAGE_URL;
 const TOUR_STATUS = { enum: TOUR_STATUSES, description: 'Estado de negocio, separado del de publicación; `scheduled` exige al menos el año de inicio' };
 const EVENT_STATUS = {
   enum: EVENT_STATUSES,
@@ -189,6 +190,7 @@ const TOUR_CREATION: OperationDefinition = {
   targetKeySchema: null,
   check: (value) => checkTourSchedule(value as TourValue, '/value'),
   ...noReferences,
+  imageUrls: (value) => imageUrlAt((value as TourValue).imageUrl, '/value/imageUrl'),
   read: async (manager, root) => {
     const created = await findCreatedTour(manager, root.id);
     return created ? { exists: true, value: { ...created.value } as never } : ABSENT;
@@ -203,7 +205,7 @@ const TOUR_CREATION: OperationDefinition = {
 const TOUR_FIELD_RULES: Record<TourFieldPath, { description: string; schema: object }> = {
   'tours.title': { description: 'Título del tour.', schema: TITLE },
   'tours.description': { description: 'Descripción del tour, o null.', schema: DESCRIPTION },
-  'tours.image_url': { description: 'URL HTTP(S) de la imagen del tour, o null.', schema: IMAGE_URL },
+  'tours.image_url': { description: 'Imagen del tour: la URL de una imagen subida para el catálogo con POST /v1/images, o null.', schema: IMAGE_URL },
   'tours.schedule': {
     description: 'Estado de negocio con el inicio y el fin anunciados, que cambian juntos. Nunca cambia el estado de sus conciertos.',
     schema: TOUR_SCHEDULE,
@@ -220,6 +222,7 @@ const TOUR_FIELD_CHANGES: OperationDefinition[] = (Object.keys(TOUR_FIELDS) as T
   targetKeySchema: null,
   check: (value) => (path === 'tours.schedule' ? checkTourSchedule(value as TourScheduleValue, '/value') : []),
   ...noReferences,
+  ...(path === 'tours.image_url' ? { imageUrls: (value: unknown) => imageUrlAt(value, '/value') } : {}),
   read: async (manager, root) => {
     const created = await findCreatedTour(manager, root.id);
     return created ? envelope(tourFieldValue(created.value, path)) : ABSENT;
@@ -245,6 +248,7 @@ const EVENT_CREATION: OperationDefinition = {
   targetKeySchema: null,
   check: (value) => checkEventSchedule(value as EventValue, '/value'),
   references: (value) => countryReference((value as EventValue).countryId, '/value/countryId'),
+  imageUrls: (value) => imageUrlAt((value as EventValue).imageUrl, '/value/imageUrl'),
   rootReferences: (value) => namedTour((value as EventValue).tour, '/value/tour/entity_id'),
   read: async (manager, root) => {
     const created = await findCreatedEvent(manager, root.id);
@@ -260,7 +264,10 @@ const EVENT_CREATION: OperationDefinition = {
 const EVENT_FIELD_RULES: Record<EventFieldPath, { description: string; schema: object }> = {
   'events.title': { description: 'Título del concierto.', schema: TITLE },
   'events.description': { description: 'Descripción del concierto, o null.', schema: DESCRIPTION },
-  'events.image_url': { description: 'URL HTTP(S) de la imagen del concierto, o null.', schema: IMAGE_URL },
+  'events.image_url': {
+    description: 'Imagen del concierto: la URL de una imagen subida para el catálogo con POST /v1/images, o null.',
+    schema: IMAGE_URL,
+  },
   'events.tour': { description: 'Tour al que pertenece el concierto, publicado o creado en la misma propuesta, o null.', schema: TOUR_REFERENCE },
   'events.schedule': {
     description:
@@ -281,6 +288,7 @@ const EVENT_FIELD_CHANGES: OperationDefinition[] = (Object.keys(EVENT_FIELDS) as
   targetKeySchema: null,
   check: (value) => (path === 'events.schedule' ? checkEventSchedule(value as EventScheduleValue, '/value') : []),
   references: (value) => (path === 'events.location' ? countryReference((value as EventLocationValue).countryId, '/value/countryId') : []),
+  ...(path === 'events.image_url' ? { imageUrls: (value: unknown) => imageUrlAt(value, '/value') } : {}),
   ...(path === 'events.tour' ? { rootReferences: (value: unknown) => namedTour(value as RootReference | null, '/value/entity_id') } : {}),
   read: async (manager, root) => {
     const created = await findCreatedEvent(manager, root.id);
