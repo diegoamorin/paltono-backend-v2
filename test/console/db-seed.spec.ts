@@ -286,6 +286,16 @@ describe('pnpm db:seed', () => {
       expect(purposes).toEqual(['catalog']);
     });
 
+    it('gives some idols a birth country apart from their nationalities', async () => {
+      const response = await getJsonApi(app, `/v1/identities/${await identityNamed('Mina')}?include=birthCountry,nationalities`).expect(200);
+
+      const country = (data: { id: string }) => response.body.included.find(({ type, id }: Resource) => type === 'countries' && id === data.id).attributes.code;
+      expect(country(response.body.data.relationships.birthCountry.data)).toBe('US');
+      expect(response.body.data.relationships.nationalities.data.map(country)).toEqual(['JP']);
+      const bornInAustralia = await getJsonApi(app, '/v1/identities?filter[birthCountry]=AU').expect(200);
+      expect(bornInAustralia.body.data.map(({ attributes }: Resource) => attributes.displayName)).toEqual(['Danielle', 'Hanni']);
+    });
+
     it('creates artists affiliated with their agencies', async () => {
       const response = await getJsonApi(app, '/v1/artists?filter[q]=BLACKPINK&include=identity,affiliations.organization').expect(200);
 

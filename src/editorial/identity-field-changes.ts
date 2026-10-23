@@ -61,6 +61,9 @@ const partialDate = (field: 'founding' | 'dissolution'): Pick<FieldRules, 'check
   },
 });
 
+const countryReference = (value: unknown): VocabularyReference[] =>
+  typeof value === 'number' ? [{ vocabulary: 'countries', id: value, path: '/value' }] : [];
+
 const FIELD_RULES: Record<IdentityFieldPath, FieldRules> = {
   'catalog_identities.display_name': { description: 'Nombre visible de la identidad.', schema: DISPLAY_NAME },
   'catalog_identities.img_profile': {
@@ -75,6 +78,11 @@ const FIELD_RULES: Record<IdentityFieldPath, FieldRules> = {
     description: 'Fecha completa de nacimiento de una persona (`YYYY-MM-DD`), o null.',
     schema: COMPLETE_DATE,
     ...completeDate('birthDate'),
+  },
+  'people.birth_country_id': {
+    description: 'País de nacimiento de una persona (el actual del lugar de nacimiento), o null.',
+    schema: COUNTRY_ID,
+    references: countryReference,
   },
   'people.death_date': {
     description: 'Fecha completa de fallecimiento de una persona (`YYYY-MM-DD`), o null.',
@@ -97,7 +105,7 @@ const FIELD_RULES: Record<IdentityFieldPath, FieldRules> = {
   'organizations.origin_country_id': {
     description: 'País de origen de una organización, o null.',
     schema: COUNTRY_ID,
-    references: (value) => (typeof value === 'number' ? [{ vocabulary: 'countries', id: value, path: '/value' }] : []),
+    references: countryReference,
   },
 };
 

@@ -116,7 +116,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
-| `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
+| `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `birthCountry`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `birthCountry`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
 | `artists` | `q`, `identityType`, `affiliatedWith` (organización), `affiliationStatus` | `displayName` (defecto), `-createdAt` | `identity`, `identity.aliases`, `affiliations`, `affiliations.organization` |
 | `organization-memberships` (C3) | `side=organization|member` (sin él, ambos lados) | `joined` (defecto, fechas desconocidas al final), `-createdAt` | `organization`, `member`, `roles`, `roles.role` |
 | `work-contributions`, `recording-contributions`, `release-contributions` (C4, documento heterogéneo) | `scope=work|recording|release`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `release`, `role` |

@@ -45,6 +45,8 @@ export interface PersonSpec extends IdentitySpec {
   givenName?: string;
   familyName?: string;
   birthDate?: string;
+  /** The present-day country of the birthplace, independent of the nationalities. */
+  birthCountry?: CountryCode;
   deathDate?: string;
   gender?: 'male' | 'female';
   nationalities?: CountryCode[];
@@ -282,6 +284,7 @@ export class CatalogWriter {
           givenName: spec.givenName ?? null,
           familyName: spec.familyName ?? null,
           birthDate: spec.birthDate ?? null,
+          birthCountryId: spec.birthCountry ? this.vocabularies.countries[spec.birthCountry] : null,
           deathDate: spec.deathDate ?? null,
           gender: spec.gender ?? null,
         },

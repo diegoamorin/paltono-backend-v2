@@ -56,6 +56,7 @@ export class CatalogIdentity {
 }
 
 @Entity('people')
+@Index('people_birth_country_id_idx', ['birthCountryId'])
 @Check('people_height_cm_range', `height_cm BETWEEN 1 AND 300`)
 @Check('people_lifespan', `death_date >= birth_date`)
 export class Person {
@@ -75,6 +76,14 @@ export class Person {
   /** Complete dates only, as `YYYY-MM-DD`; unknown is null. */
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate: string | null;
+
+  /** The present-day country of the birthplace, independent of the nationalities. */
+  @Column({ name: 'birth_country_id', type: 'integer', nullable: true })
+  birthCountryId: number | null;
+
+  @ManyToOne(() => Country, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'birth_country_id', foreignKeyConstraintName: 'people_birth_country_id_fkey' })
+  birthCountry?: Country | null;
 
   @Column({ name: 'death_date', type: 'date', nullable: true })
   deathDate: string | null;
