@@ -2,7 +2,7 @@
 
 Los microcambios guardan su payload con la forma de su versión del payload, y las tablas del dominio van a cambiar. Decidimos que una versión publicada no cambia nunca, que las revisiones aplicadas son solo historial (nunca se migran ni se vuelven a ejecutar: corregir algo es un microcambio nuevo sobre el estado actual) y que solo lo no aplicado puede necesitar adaptarse. Así las tablas pueden cambiar sin reescribir JSON histórico, a cambio de que el historial muestre cada valor en la forma con que se escribió.
 
-Una versión queda publicada al primer despliegue en producción. Hasta entonces no hay envíos ni revisiones reales que proteger: la v1 y las migraciones existentes se editan en sitio y `payload-schemas.json` se regenera, en vez de añadir versiones o migraciones nuevas.
+Una versión queda publicada al primer despliegue en producción. Hasta entonces no hay envíos ni revisiones reales que proteger: la v1 y las migraciones existentes se editan en sitio y `payload-schemas.json` se regenera (`pnpm payload-schemas:export --regenerate`; la base de desarrollo, con `pnpm db:rebuild`), en vez de añadir versiones o migraciones nuevas.
 
 Ante un cambio de tablas se elige, por este orden:
 
