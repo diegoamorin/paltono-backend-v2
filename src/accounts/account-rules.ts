@@ -18,4 +18,3 @@ export function normalizeUsername(value: unknown): unknown {
 }
 
 export const BIO_MAX_LENGTH = 1000;
-export const AVATAR_URL_MAX_LENGTH = 2048;

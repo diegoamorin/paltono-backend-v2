@@ -17,7 +17,7 @@ export const MULTIPART_MEDIA_TYPE = 'multipart/form-data';
  * Routes that receive a file instead of a JSON:API document: their body is
  * `multipart/form-data` and their response is still JSON:API.
  */
-export const MULTIPART_PATHS: readonly string[] = ['/v1/images'];
+export const MULTIPART_PATHS: readonly string[] = ['/v1/images', '/v1/me/avatar'];
 
 /** True when the `Content-Type` is `multipart/form-data`, whatever its boundary. */
 export function isMultipartContentType(header: string | undefined): boolean {

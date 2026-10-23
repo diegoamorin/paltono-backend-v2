@@ -11,7 +11,7 @@ import {
   reserveEntity,
   submitProposal,
 } from '../support/editorial';
-import { TEST_IMAGE_BASE_URL, avatarUploadUrl, uploadedImageUrl } from '../support/images';
+import { TEST_IMAGE_BASE_URL, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const present = (value: unknown) => ({ exists: true, value });
@@ -126,7 +126,7 @@ describe('image URLs of the catalog', () => {
   const refusedUrls = async (): Promise<Array<[string, string]>> => [
     ['an external URL', 'https://example.com/iu.png'],
     ['a URL under the base that was never uploaded', `${TEST_IMAGE_BASE_URL}00000000-0000-4000-8000-000000000000.png`],
-    ['an upload made as an avatar', await avatarUploadUrl(app, ana)],
+    ['an upload made as an avatar', await uploadedAvatarUrl(app, ana.accessToken)],
   ];
 
   /** The 422 errors of adding a change to a fresh draft. */

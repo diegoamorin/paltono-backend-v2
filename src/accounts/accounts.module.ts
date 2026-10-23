@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_CONFIG, AppConfig } from '../config/app-config';
+import { ImageStorageModule } from '../images/image-storage.module';
 import { AccessTokens } from './access-tokens';
 import { AccountDeletionsController } from './account-deletions.controller';
 import { AccountEmails } from './account-emails';
@@ -34,6 +35,8 @@ import { UsersController } from './users.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, UserCredential, UserToken, AuthSession, UserRoleChange, UserStatusChange]),
+    // Clearing an avatar, or deleting an account, removes the avatar's file.
+    ImageStorageModule,
     ThrottlerModule.forRootAsync({
       inject: [APP_CONFIG],
       useFactory: ({ auth }: AppConfig) => [{ ttl: 60_000, limit: auth.rateLimit }],

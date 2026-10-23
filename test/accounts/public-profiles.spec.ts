@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { deleteAccount, updateProfile } from '../support/accounts';
 import { Account, changeStatus, registerFirstAdmin, registerVerified } from '../support/administration';
+import { uploadedAvatarUrl } from '../support/images';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 
@@ -10,6 +11,7 @@ describe('public profiles', () => {
   let app: TestApp;
   let admin: Account;
   let diego: Account;
+  let avatarUrl: string;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -20,10 +22,8 @@ describe('public profiles', () => {
     admin = await registerFirstAdmin(app);
     app.clock.advance(MINUTE);
     diego = await registerVerified(app, 'diego_papi');
-    await updateProfile(app.server, diego.accessToken, diego.uuid, {
-      avatarUrl: 'https://cdn.example.com/diego.png',
-      bio: 'Fan de BLACKPINK',
-    }).expect(200);
+    await updateProfile(app.server, diego.accessToken, diego.uuid, { bio: 'Fan de BLACKPINK' }).expect(200);
+    avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
   });
 
   afterAll(async () => {
@@ -45,7 +45,7 @@ describe('public profiles', () => {
           attributes: {
             username: 'diego_papi',
             displayName: 'Diego 🎤',
-            avatarUrl: 'https://cdn.example.com/diego.png',
+            avatarUrl,
             bio: 'Fan de BLACKPINK',
             role: 'user',
             status: 'active',

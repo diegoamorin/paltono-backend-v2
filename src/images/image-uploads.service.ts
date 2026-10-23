@@ -1,6 +1,6 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { DataSource } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
@@ -28,8 +28,18 @@ export class ImageUploadsService {
     this.publicBaseUrl = config.images.publicBaseUrl;
   }
 
-  /** Uploads `file` for `purpose` as `user`, and returns the recorded upload with its uploader. */
-  async upload(user: User, purpose: ImageUploadPurpose, file: Buffer): Promise<ImageUpload> {
+  /**
+   * Uploads `file` for `purpose` as `user`, and returns the recorded upload with
+   * its uploader. `use`, when given, runs in the upload's transaction with the
+   * uploader locked and the new URL, so a change that uses the image (such as
+   * the avatar) commits or fails with the upload.
+   */
+  async upload(
+    user: User,
+    purpose: ImageUploadPurpose,
+    file: Buffer,
+    use?: (manager: EntityManager, uploader: User, url: string) => Promise<void>,
+  ): Promise<ImageUpload> {
     const image = await processImage(file);
     const id = randomUUID();
     const key = `${id}.${image.extension}`;
@@ -43,14 +53,9 @@ export class ImageUploadsService {
       const now = this.clock.now();
       await requireUploadQuota(manager, uploader, purpose, now);
 
-      await manager.insert(ImageUpload, {
-        id,
-        uploadedById: uploader.id,
-        purpose,
-        url: this.publicBaseUrl + key,
-        bytes: image.bytes.length,
-        createdAt: now,
-      });
+      const url = this.publicBaseUrl + key;
+      await manager.insert(ImageUpload, { id, uploadedById: uploader.id, purpose, url, bytes: image.bytes.length, createdAt: now });
+      await use?.(manager, uploader, url);
       // Stored last: a failure rolls the record back, and nothing is left behind.
       await this.storage.put(key, image.bytes, image.contentType);
       return manager.findOneOrFail(ImageUpload, { where: { id }, relations: { uploadedBy: true } });

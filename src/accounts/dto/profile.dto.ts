@@ -1,8 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { Equals, IsDefined, IsString, IsUrl, Length, Matches, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
+import { Equals, IsDefined, IsString, Length, Matches, MaxLength, ValidateIf, ValidateNested } from 'class-validator';
 import {
-  AVATAR_URL_MAX_LENGTH,
   BIO_MAX_LENGTH,
   DISPLAY_NAME_MAX_LENGTH,
   USERNAME_PATTERN,
@@ -11,7 +10,10 @@ import {
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
-/** Every attribute is optional; an absent one keeps its value, and `null` clears the avatar or the bio. */
+/**
+ * Every attribute is optional; an absent one keeps its value, and `null` clears
+ * the avatar or the bio. The avatar is set only by uploading one (ADR 0005).
+ */
 class ProfileAttributes {
   @ApiPropertyOptional({
     example: 'dieguito',
@@ -34,12 +36,14 @@ class ProfileAttributes {
   @Length(1, DISPLAY_NAME_MAX_LENGTH)
   displayName?: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true, maxLength: AVATAR_URL_MAX_LENGTH, description: 'URL HTTP(S) de la imagen' })
-  @ValidateIf((_, value) => value !== undefined && value !== null)
-  @IsString()
-  @IsUrl({ protocols: ['http', 'https'], require_protocol: true }, { message: 'avatarUrl must be an HTTP(S) URL' })
-  @MaxLength(AVATAR_URL_MAX_LENGTH)
-  avatarUrl?: string | null;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Solo admite `null`, que quita el avatar y borra su archivo. El avatar se sube con `PUT /v1/me/avatar`.',
+  })
+  @ValidateIf((_, value) => value !== undefined)
+  @Equals(null, { message: 'avatarUrl only accepts null; upload an avatar with PUT /v1/me/avatar' })
+  avatarUrl?: null;
 
   @ApiPropertyOptional({ type: String, nullable: true, maxLength: BIO_MAX_LENGTH, description: 'Vacía equivale a null' })
   @ValidateIf((_, value) => value !== undefined && value !== null)

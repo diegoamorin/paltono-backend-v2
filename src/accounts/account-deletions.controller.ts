@@ -19,7 +19,8 @@ export class AccountDeletionsController {
   @ApiOperation({
     summary: 'Darse de baja',
     description:
-      'Exige la contraseña. Borra el correo, que queda libre, el avatar, la biografía y la contraseña; el username queda ' +
+      'Exige la contraseña. Borra el correo, que queda libre, el avatar y su archivo, la biografía y la contraseña; las ' +
+      'imágenes de catálogo que subió se conservan. El username queda ' +
       'reservado y pasa a ser el nombre visible. Revoca todas las sesiones, invalida los tokens pendientes, borra la ' +
       'cookie de renovación y queda auditada con la propia cuenta como autora. El último administrador activo y ' +
       'verificado no puede darse de baja.',

@@ -1,5 +1,8 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Injectable } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { ImageUpload } from './entities/image-upload.entity';
 
 /**
  * Where uploaded images live, by storage key (`<random id>.<extension>`). The
@@ -12,6 +15,30 @@ export abstract class ImageStorage {
 
   /** Removes the file under `key`; a missing file is not an error. */
   abstract delete(key: string): Promise<void>;
+}
+
+/**
+ * Removes the stored files of uploads by their public URL, such as an avatar
+ * that is replaced, cleared or belongs to a deleted account.
+ */
+@Injectable()
+export class UploadedImageFiles {
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly storage: ImageStorage,
+  ) {}
+
+  /**
+   * Removes the file of the upload recorded with `url`; the record stays, as the
+   * history of the account. A URL no upload has, or `null`, removes nothing.
+   */
+  async remove(url: string | null): Promise<void> {
+    if (url === null) return;
+    const upload = await this.dataSource.getRepository(ImageUpload).findOne({ select: { url: true }, where: { url } });
+    if (!upload) return;
+    // The URL is the base at upload time plus the key, so its last segment is the key whatever the base is now.
+    await this.storage.delete(upload.url.slice(upload.url.lastIndexOf('/') + 1));
+  }
 }
 
 /** URL prefix under which the backend serves a local storage folder. */
