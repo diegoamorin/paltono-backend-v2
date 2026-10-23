@@ -19,7 +19,7 @@ export class ImageUpload {
   uploadedById: number;
 
   @ManyToOne(() => User, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'uploaded_by' })
+  @JoinColumn({ name: 'uploaded_by', foreignKeyConstraintName: 'image_uploads_uploaded_by_fkey' })
   uploadedBy: User;
 
   @Column({ type: 'enum', enum: IMAGE_UPLOAD_PURPOSES, enumName: 'image_upload_purpose' })
