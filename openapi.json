@@ -1036,7 +1036,7 @@
         ]
       },
       "patch": {
-        "description": "Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar o la biografía. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op no reinicia el plazo.",
+        "description": "Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar, y su archivo, o la biografía. `avatarUrl` no admite una URL: el avatar se sube con `PUT /v1/me/avatar`. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op no reinicia el plazo.",
         "operationId": "MeController_update",
         "parameters": [
           {
@@ -2465,7 +2465,7 @@
     },
     "/v1/account-deletions": {
       "post": {
-        "description": "Exige la contraseña. Borra el correo, que queda libre, el avatar, la biografía y la contraseña; el username queda reservado y pasa a ser el nombre visible. Revoca todas las sesiones, invalida los tokens pendientes, borra la cookie de renovación y queda auditada con la propia cuenta como autora. El último administrador activo y verificado no puede darse de baja.",
+        "description": "Exige la contraseña. Borra el correo, que queda libre, el avatar y su archivo, la biografía y la contraseña; las imágenes de catálogo que subió se conservan. El username queda reservado y pasa a ser el nombre visible. Revoca todas las sesiones, invalida los tokens pendientes, borra la cookie de renovación y queda auditada con la propia cuenta como autora. El último administrador activo y verificado no puede darse de baja.",
         "operationId": "AccountDeletionsController_delete",
         "parameters": [],
         "requestBody": {
@@ -15694,6 +15694,165 @@
         ]
       }
     },
+    "/v1/me/avatar": {
+      "put": {
+        "description": "Recibe la imagen como `multipart/form-data` en el campo `file`, con la misma validación y procesamiento que `POST /v1/images`, y la pone de inmediato como `avatarUrl` de la cuenta, sin revisión editorial. El avatar anterior se borra del almacenamiento. Cada cuenta, de cualquier rol, puede cambiar su avatar una vez cada 15 días, aparte del cupo de catálogo; al excederlo responde 429 con `meta.availableAt`, la fecha en que vuelve a haber cupo. Un rechazo no consume cupo. Devuelve la cuenta propia.",
+        "operationId": "AvatarsController_replace",
+        "parameters": [
+          {
+            "name": "fields[users]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de users separados por comas: username, email, displayName, avatarUrl, bio, emailVerified, role, status, createdAt, usernameChangedAt, usernameChangeAvailableAt",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG, PNG o WebP, detectado por su contenido; como máximo 3 MB y 4000 px por lado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/OwnAccountResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Subir el avatar propio",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/v1/search": {
       "get": {
         "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.",
@@ -16641,8 +16800,7 @@
           "avatarUrl": {
             "type": "string",
             "nullable": true,
-            "maxLength": 2048,
-            "description": "URL HTTP(S) de la imagen"
+            "description": "Solo admite `null`, que quita el avatar y borra su archivo. El avatar se sube con `PUT /v1/me/avatar`."
           },
           "bio": {
             "type": "string",

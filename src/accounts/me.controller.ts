@@ -37,8 +37,8 @@ export class MeController {
   @ApiOperation({
     summary: 'Editar el perfil propio',
     description:
-      'Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar o la ' +
-      'biografía. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op ' +
+      'Nombre visible, avatar, biografía y username. Los atributos ausentes no cambian; `null` borra el avatar, y su ' +
+      'archivo, o la biografía. `avatarUrl` no admite una URL: el avatar se sube con `PUT /v1/me/avatar`. El username se puede cambiar cuando han pasado 7 días completos desde el último cambio, y un no-op ' +
       'no reinicia el plazo.',
   })
   @ApiJsonApiQuery(ME_QUERY)

@@ -64,8 +64,9 @@ Cada controlador usa `@ApiTags` por módulo; cada operación `@ApiOperation`, `@
 | A12 | `POST /v1/me/email-change-requests` | Pedir cambio de correo | Auth **[P4]** | `{currentPassword, newEmail, frontend}`. Envía token al correo nuevo | ok val rate state |
 | A13 | `POST /v1/email-changes` | Confirmar cambio de correo | Pub | `{token}`. Revalida unicidad bajo bloqueo; invalida otros tokens de cambio | ok state conc |
 | A14 | `GET /v1/me` | Cuenta propia | Auth | Incluye correo, verificación, rol, estado, `usernameChangedAt` y próxima fecha de cambio | ok authn |
-| A15 | `PATCH /v1/me` | Editar perfil | Ver | displayName, avatarUrl, bio, username (cada 7 días; un no-op no reinicia el plazo) | ok val state conc |
-| A16 | `POST /v1/account-deletions` | Baja voluntaria | Ver | `{password}`. Aplica la limpieza de datos y respeta al último administrador | ok val state tx |
+| A15 | `PATCH /v1/me` | Editar perfil | Ver | displayName, bio, username (cada 7 días; un no-op no reinicia el plazo). `avatarUrl` solo admite `null`, que quita el avatar y borra su archivo; una URL responde 422 | ok val state conc |
+| A20 | `PUT /v1/me/avatar` | Subir el avatar propio | Ver | `multipart/form-data`, campo `file`, con la validación y el procesamiento de E19. Registra una subida `avatar`, la aplica de inmediato como `avatarUrl` (sin flujo editorial, ADR 0005) y borra del almacenamiento el avatar anterior. Devuelve la cuenta propia. Cupo de 1 cada 15 días para todos los roles, aparte del de catálogo: 429 `upload_quota_exceeded` con `meta.availableAt` | ok val authz rate tx |
+| A16 | `POST /v1/account-deletions` | Baja voluntaria | Ver | `{password}`. Aplica la limpieza de datos, borra del almacenamiento el archivo del avatar (las subidas de catálogo se conservan) y respeta al último administrador | ok val state tx |
 | A17 | `GET /v1/users/{id}` | Perfil público | Pub | username, displayName, avatar, bio, rol, fecha de registro, indicador de suspensión; eliminada solo muestra el username | ok authz |
 | A18 | `GET /v1/users?filter[username]=` | Buscar perfil por username | Pub | 0 o 1 resultado; no hay listado público de cuentas | ok val |
 | A19 | `GET /v1/users/{id}/proposals` | Envíos públicos de una cuenta | Pub | Proyección pública (ver E-proyección) | ok authz |
