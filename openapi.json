@@ -5416,14 +5416,14 @@
     },
     "/v1/identities": {
       "get": {
-        "description": "Personas y organizaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el nombre visible y los alias, sin distinguir mayúsculas ni acentos; `filter[type]` admite `person` y `organization`; `filter[hasArtistProfile]`, `true` o `false`; `filter[nationality]` y `filter[originCountry]` toman el código de dos letras de un país, y `filter[organizationType]`, el slug de un tipo de organización. Orden `displayName` (por defecto) o `-createdAt`.",
+        "description": "Personas y organizaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el nombre visible y los alias, sin distinguir mayúsculas ni acentos; `filter[type]` admite `person` y `organization`; `filter[hasArtistProfile]`, `true` o `false`; `filter[nationality]`, `filter[birthCountry]` y `filter[originCountry]` toman el código de dos letras de un país, y `filter[organizationType]`, el slug de un tipo de organización. Orden `displayName` (por defecto) o `-createdAt`.",
         "operationId": "IdentitiesController_list",
         "parameters": [
           {
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5486,7 +5486,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: aliases, nationalities, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
+            "description": "Relaciones separadas por comas: aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
             "schema": {
               "type": "string"
             }
@@ -5544,6 +5544,14 @@
           },
           {
             "name": "filter[nationality]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[birthCountry]",
             "required": false,
             "in": "query",
             "schema": {
@@ -5661,7 +5669,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5824,7 +5832,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -5887,7 +5895,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: aliases, nationalities, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
+            "description": "Relaciones separadas por comas: aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, platformLinks.platform, artist",
             "schema": {
               "type": "string"
             }
@@ -5980,7 +5988,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6166,7 +6174,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6295,7 +6303,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6507,7 +6515,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6654,7 +6662,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -6862,7 +6870,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -7125,7 +7133,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -7864,7 +7872,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -8242,7 +8250,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -8471,7 +8479,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9486,7 +9494,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9748,7 +9756,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -9895,7 +9903,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10125,7 +10133,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10299,7 +10307,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10563,7 +10571,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10778,7 +10786,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -10995,7 +11003,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -11210,7 +11218,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -15526,7 +15534,7 @@
             "name": "fields[identities]",
             "required": false,
             "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
             "schema": {
               "type": "string"
             }
@@ -17912,6 +17920,11 @@
             "format": "date",
             "nullable": true
           },
+          "birthCountryId": {
+            "type": "number",
+            "nullable": true,
+            "description": "id del país de nacimiento en /v1/countries"
+          },
           "deathDate": {
             "type": "string",
             "format": "date",
@@ -17935,6 +17948,7 @@
           "givenName",
           "familyName",
           "birthDate",
+          "birthCountryId",
           "deathDate",
           "heightCm",
           "gender"
@@ -18128,6 +18142,14 @@
               }
             ]
           },
+          "birthCountry": {
+            "description": "`countries`: país de nacimiento de una persona; null en una organización",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToOneLinkage"
+              }
+            ]
+          },
           "originCountry": {
             "description": "`countries`: país de origen de una organización; null en una persona",
             "allOf": [
@@ -18164,6 +18186,7 @@
         "required": [
           "aliases",
           "nationalities",
+          "birthCountry",
           "originCountry",
           "organizationTypes",
           "platformLinks",

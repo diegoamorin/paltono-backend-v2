@@ -51,6 +51,7 @@ const IDENTITY = {
         givenName: NAME,
         familyName: NAME,
         birthDate: COMPLETE_DATE,
+        birthCountryId: COUNTRY_ID,
         deathDate: COMPLETE_DATE,
         heightCm: HEIGHT_CM,
         gender: GENDER,
@@ -92,8 +93,12 @@ export const IDENTITY_CREATION: OperationDefinition = {
   targetKeySchema: null,
   check: (value) => checkIdentity(value as IdentityCreation),
   references: (value) => {
-    const countryId = (value as IdentityCreation).organization?.originCountryId;
-    return countryId == null ? [] : [{ vocabulary: 'countries', id: countryId, path: '/value/organization/originCountryId' }];
+    const { person, organization } = value as IdentityCreation;
+    const countries = [
+      { id: person?.birthCountryId, path: '/value/person/birthCountryId' },
+      { id: organization?.originCountryId, path: '/value/organization/originCountryId' },
+    ];
+    return countries.flatMap(({ id, path }) => (id == null ? [] : [{ vocabulary: 'countries' as const, id, path }]));
   },
   read: async (manager, root) => {
     const created = await findCreatedIdentity(manager, root.id);

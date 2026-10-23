@@ -80,7 +80,7 @@ export class IdentitiesService {
    * list would sort and filter it by the content it no longer shows.
    */
   async list(query: CollectionQuery): Promise<{ entries: IdentityEntry[]; total: number }> {
-    const { q, type, hasArtistProfile, nationality, originCountry, organizationType } = query.filter;
+    const { q, type, hasArtistProfile, nationality, birthCountry, originCountry, organizationType } = query.filter;
     const builder = this.dataSource.manager
       .createQueryBuilder(CatalogIdentity, 'identity')
       .innerJoinAndSelect('identity.editorialEntity', 'root')
@@ -110,6 +110,15 @@ export class IdentitiesService {
           WHERE nationality.person_id = identity.id AND nationality_country.code = :nationality
         )`,
         { nationality: nationality.toUpperCase() },
+      );
+    }
+    if (birthCountry !== undefined) {
+      builder.andWhere(
+        `EXISTS (
+          SELECT 1 FROM people birth JOIN countries birth_country ON birth_country.id = birth.birth_country_id
+          WHERE birth.catalog_identity_id = identity.id AND birth_country.code = :birthCountry
+        )`,
+        { birthCountry: birthCountry.toUpperCase() },
       );
     }
     if (originCountry !== undefined) {
@@ -174,7 +183,7 @@ export async function loadEntries(manager: EntityManager, identities: CatalogIde
   const ids = identities.filter(({ editorialEntity }) => editorialEntity!.publicationStatus !== 'withdrawn').map(({ id }) => id);
   if (ids.length === 0) return identities.map((identity) => ({ identity, person: null, organization: null, relations: null }));
   const [people, organizations, aliases, nationalities, assignments, platformLinks, artists] = await Promise.all([
-    manager.findBy(Person, { catalogIdentityId: In(ids) }),
+    manager.find(Person, { where: { catalogIdentityId: In(ids) }, relations: { birthCountry: true } }),
     manager.find(Organization, { where: { catalogIdentityId: In(ids) }, relations: { originCountry: true } }),
     manager.find(CatalogIdentityAlias, { where: { catalogIdentityId: In(ids) }, order: { sortOrder: 'ASC', id: 'ASC' } }),
     manager.find(PersonNationality, { where: { personId: In(ids) }, relations: { country: true }, order: { countryId: 'ASC' } }),
@@ -190,16 +199,18 @@ export async function loadEntries(manager: EntityManager, identities: CatalogIde
     if (!ids.includes(identity.id)) return { identity, person: null, organization: null, relations: null };
     /** The rows of this identity, whose id the given column holds. */
     const own = <T>(rows: T[], ownerId: (row: T) => number) => rows.filter((row) => ownerId(row) === identity.id);
+    const person = own(people, (row) => row.catalogIdentityId)[0] ?? null;
     const organization = own(organizations, (row) => row.catalogIdentityId)[0] ?? null;
     const relations: IdentityRelations = {
       aliases: own(aliases, (row) => row.catalogIdentityId),
       nationalities: own(nationalities, (row) => row.personId).map(({ country }) => country as Country),
+      birthCountry: person?.birthCountry ?? null,
       originCountry: organization?.originCountry ?? null,
       organizationTypes: own(assignments, (row) => row.organizationId).map(({ organizationType }) => organizationType!),
       platformLinks: own(platformLinks, (row) => row.catalogIdentityId),
       artist: null,
     };
-    const entry: IdentityEntry = { identity, person: own(people, (row) => row.catalogIdentityId)[0] ?? null, organization, relations };
+    const entry: IdentityEntry = { identity, person, organization, relations };
     const artist = own(artists, (row) => row.catalogIdentityId)[0];
     if (artist) relations.artist = { artist, identity: entry };
     return entry;
