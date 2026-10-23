@@ -278,15 +278,19 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         given_name varchar(200),
         family_name varchar(200),
         birth_date date,
+        birth_country_id integer,
         death_date date,
         height_cm smallint,
         gender person_gender,
         CONSTRAINT people_catalog_identity_id_fkey
           FOREIGN KEY (catalog_identity_id) REFERENCES catalog_identities (id) ON DELETE RESTRICT,
+        CONSTRAINT people_birth_country_id_fkey
+          FOREIGN KEY (birth_country_id) REFERENCES countries (id) ON DELETE RESTRICT,
         CONSTRAINT people_height_cm_range CHECK (height_cm BETWEEN 1 AND 300),
         CONSTRAINT people_lifespan CHECK (death_date >= birth_date)
       )
     `);
+    await queryRunner.query(`CREATE INDEX people_birth_country_id_idx ON people (birth_country_id)`);
 
     // Founding and dissolution are partial dates: a month needs its year, a day its month, and the day must exist.
     await queryRunner.query(`

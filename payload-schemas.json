@@ -1611,6 +1611,14 @@
                   ],
                   "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                 },
+                "birthCountryId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "id del país en /v1/countries"
+                },
                 "deathDate": {
                   "type": [
                     "string",
@@ -2298,6 +2306,31 @@
     "targetKeySchema": null
   },
   "identity.set_fields.organizations.origin_country_id.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "id del país en /v1/countries"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.birth_country_id.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",

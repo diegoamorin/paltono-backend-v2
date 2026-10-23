@@ -149,6 +149,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         givenName: 'Chae-young',
         familyName: 'Park',
         birthDate: '1997-02-11',
+        birthCountry: 'NZ',
         gender: 'female',
         nationalities: ['NZ', 'KR'],
         artist: true,
@@ -160,6 +161,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         displayName: 'Lisa',
         bio: 'Rapera y cantante tailandesa, integrante de BLACKPINK.',
         birthDate: '1997-03-27',
+        birthCountry: 'TH',
         gender: 'female',
         nationalities: ['TH'],
         artist: true,
@@ -253,13 +255,13 @@ export const KPOP_CATALOG: SeedSubmission[] = [
     people: [
       korean({ key: 'nayeon', displayName: 'Nayeon', givenName: 'Na-yeon', familyName: 'Im', birthDate: '1995-09-22', gender: 'female', aliases: ['나연', '임나연'] }),
       korean({ key: 'jeongyeon', displayName: 'Jeongyeon', givenName: 'Jeong-yeon', familyName: 'Yoo', birthDate: '1996-11-01', gender: 'female', aliases: ['정연', '유정연'] }),
-      { key: 'momo', displayName: 'Momo', givenName: 'Momo', familyName: 'Hirai', birthDate: '1996-11-09', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['모모', 'Hirai Momo'] },
-      { key: 'sana', displayName: 'Sana', givenName: 'Sana', familyName: 'Minatozaki', birthDate: '1996-12-29', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['사나', 'Minatozaki Sana'] },
+      { key: 'momo', displayName: 'Momo', givenName: 'Momo', familyName: 'Hirai', birthDate: '1996-11-09', birthCountry: 'JP', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['모모', 'Hirai Momo'] },
+      { key: 'sana', displayName: 'Sana', givenName: 'Sana', familyName: 'Minatozaki', birthDate: '1996-12-29', birthCountry: 'JP', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['사나', 'Minatozaki Sana'] },
       korean({ key: 'jihyo', displayName: 'Jihyo', givenName: 'Ji-hyo', familyName: 'Park', birthDate: '1997-02-01', gender: 'female', aliases: ['지효', '박지효'] }),
-      { key: 'mina', displayName: 'Mina', givenName: 'Mina', familyName: 'Myoi', birthDate: '1997-03-24', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['미나', 'Myoi Mina'] },
+      { key: 'mina', displayName: 'Mina', givenName: 'Mina', familyName: 'Myoi', birthDate: '1997-03-24', birthCountry: 'US', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['미나', 'Myoi Mina'] },
       korean({ key: 'dahyun', displayName: 'Dahyun', givenName: 'Da-hyun', familyName: 'Kim', birthDate: '1998-05-28', gender: 'female', aliases: ['다현', '김다현'] }),
       korean({ key: 'chaeyoung', displayName: 'Chaeyoung', givenName: 'Chae-young', familyName: 'Son', birthDate: '1999-04-23', gender: 'female', aliases: ['채영', '손채영'] }),
-      { key: 'tzuyu', displayName: 'Tzuyu', givenName: 'Tzu-yu', familyName: 'Chou', birthDate: '1999-06-14', gender: 'female', nationalities: ['TW'], artist: true, aliases: ['쯔위', '周子瑜'] },
+      { key: 'tzuyu', displayName: 'Tzuyu', givenName: 'Tzu-yu', familyName: 'Chou', birthDate: '1999-06-14', birthCountry: 'TW', gender: 'female', nationalities: ['TW'], artist: true, aliases: ['쯔위', '周子瑜'] },
     ],
     organizations: [
       {
@@ -325,13 +327,14 @@ export const KPOP_CATALOG: SeedSubmission[] = [
     ],
     people: [
       korean({ key: 'minji', displayName: 'Minji', givenName: 'Min-ji', familyName: 'Kim', birthDate: '2004-05-07', gender: 'female', aliases: ['민지', '김민지'] }),
-      { key: 'hanni', displayName: 'Hanni', familyName: 'Pham', birthDate: '2004-10-06', gender: 'female', nationalities: ['AU'], artist: true, aliases: ['하니', 'Hanni Pham'] },
+      { key: 'hanni', displayName: 'Hanni', familyName: 'Pham', birthDate: '2004-10-06', birthCountry: 'AU', gender: 'female', nationalities: ['AU'], artist: true, aliases: ['하니', 'Hanni Pham'] },
       {
         key: 'danielle',
         displayName: 'Danielle',
         givenName: 'Danielle',
         familyName: 'Marsh',
         birthDate: '2005-04-11',
+        birthCountry: 'AU',
         gender: 'female',
         nationalities: ['AU', 'KR'],
         artist: true,
@@ -375,9 +378,9 @@ export const KPOP_CATALOG: SeedSubmission[] = [
     ],
     people: [
       korean({ key: 'karina', displayName: 'Karina', givenName: 'Ji-min', familyName: 'Yu', birthDate: '2000-04-11', gender: 'female', aliases: ['카리나', '유지민'] }),
-      { key: 'giselle', displayName: 'Giselle', givenName: 'Aeri', familyName: 'Uchinaga', birthDate: '2000-10-30', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['지젤', 'Aeri Uchinaga'] },
+      { key: 'giselle', displayName: 'Giselle', givenName: 'Aeri', familyName: 'Uchinaga', birthDate: '2000-10-30', birthCountry: 'JP', gender: 'female', nationalities: ['JP'], artist: true, aliases: ['지젤', 'Aeri Uchinaga'] },
       korean({ key: 'winter', displayName: 'Winter', givenName: 'Min-jeong', familyName: 'Kim', birthDate: '2001-01-01', gender: 'female', aliases: ['윈터', '김민정'] }),
-      { key: 'ningning', displayName: 'Ningning', givenName: 'Yizhuo', familyName: 'Ning', birthDate: '2002-10-23', gender: 'female', nationalities: ['CN'], artist: true, aliases: ['닝닝', 'Ning Yizhuo'] },
+      { key: 'ningning', displayName: 'Ningning', givenName: 'Yizhuo', familyName: 'Ning', birthDate: '2002-10-23', birthCountry: 'CN', gender: 'female', nationalities: ['CN'], artist: true, aliases: ['닝닝', 'Ning Yizhuo'] },
     ],
     organizations: [
       {

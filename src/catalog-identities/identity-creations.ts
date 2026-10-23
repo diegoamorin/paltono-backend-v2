@@ -24,6 +24,7 @@ export interface IdentityCreationValue {
     givenName?: string | null;
     familyName?: string | null;
     birthDate?: string | null;
+    birthCountryId?: number | null;
     deathDate?: string | null;
     heightCm?: number | null;
     gender?: PersonGender | null;
@@ -68,6 +69,7 @@ export async function createIdentity(
       givenName: person.givenName ?? null,
       familyName: person.familyName ?? null,
       birthDate: person.birthDate ?? null,
+      birthCountryId: person.birthCountryId ?? null,
       deathDate: person.deathDate ?? null,
       heightCm: person.heightCm ?? null,
       gender: person.gender ?? null,
