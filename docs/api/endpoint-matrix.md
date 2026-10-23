@@ -233,7 +233,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 ## Fuera del MVP
 
-OAuth (`user_identities`), likes (`recording_likes`), subida de archivos, `play_count`, verticales por frontend, suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
+OAuth (`user_identities`), likes (`recording_likes`), `play_count`, verticales por frontend, suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
 
 ## Decisiones de esta matriz
 
