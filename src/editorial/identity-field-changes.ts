@@ -1,7 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { IdentityCreationValue, PartialDateValue as PartialDate, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { IDENTITY_FIELDS, IdentityFieldPath, hasIdentityField, pickIdentityField, writeIdentityField } from '../catalog-identities/identity-fields';
-import { ImageUrlReference, imageUrlAt } from '../images/catalog-image-urls';
+import { CATALOG_IMAGE_URL, ImageUrlReference, imageUrlAt } from '../images/catalog-image-urls';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import {
@@ -91,6 +91,12 @@ const FIELD_RULES: Record<IdentityFieldPath, FieldRules> = {
   },
   'people.height_cm': { description: 'Altura de una persona en centímetros, o null.', schema: HEIGHT_CM },
   'people.gender': { description: 'Género de una persona, o null.', schema: GENDER },
+  'people.img_full_body': {
+    description:
+      'Foto de cuerpo completo de una persona, independiente de su altura: la URL de una imagen subida para el catálogo con POST /v1/images, o null.',
+    schema: CATALOG_IMAGE_URL,
+    imageUrls: (value) => imageUrlAt(value, '/value'),
+  },
   'organizations.legal_name': { description: 'Razón social de una organización.', schema: NAME },
   'organizations.founding': {
     description: 'Fecha parcial de fundación de una organización: año, mes y día cambian juntos.',

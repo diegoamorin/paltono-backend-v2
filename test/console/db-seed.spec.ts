@@ -286,6 +286,19 @@ describe('pnpm db:seed', () => {
       expect(purposes).toEqual(['catalog']);
     });
 
+    it('gives some idols a full-body photo uploaded for the catalog, taller than wide', async () => {
+      const fullBody = async (name: string) =>
+        (await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200)).body.data.attributes.person.imgFullBody as string | null;
+
+      for (const name of ['Jisoo', 'Jennie', 'Rosé', 'Lisa']) {
+        const url = await fullBody(name);
+        expect(url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
+        const { width, height } = await sharp((await fetchImage(app, url!).expect(200)).body).metadata();
+        expect(height).toBeGreaterThan(width!);
+      }
+      expect(await fullBody('Nayeon')).toBeNull();
+    });
+
     it('gives some idols a birth country apart from their nationalities', async () => {
       const response = await getJsonApi(app, `/v1/identities/${await identityNamed('Mina')}?include=birthCountry,nationalities`).expect(200);
 

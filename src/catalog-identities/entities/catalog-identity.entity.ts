@@ -59,6 +59,7 @@ export class CatalogIdentity {
 @Index('people_birth_country_id_idx', ['birthCountryId'])
 @Check('people_height_cm_range', `height_cm BETWEEN 1 AND 300`)
 @Check('people_lifespan', `death_date >= birth_date`)
+@Check('people_img_full_body_format', `img_full_body IS NULL OR img_full_body ~* '^https?://[^\\s]+$'`)
 export class Person {
   @PrimaryColumn({ name: 'catalog_identity_id', type: 'integer' })
   catalogIdentityId: number;
@@ -93,6 +94,10 @@ export class Person {
 
   @Column({ type: 'enum', enum: PERSON_GENDERS, enumName: 'person_gender', nullable: true })
   gender: PersonGender | null;
+
+  /** A standing photo from head to feet, which the frontend scales with the height; independent of it. */
+  @Column({ name: 'img_full_body', type: 'varchar', length: 2048, nullable: true })
+  imgFullBody: string | null;
 }
 
 export const partialDateCheck = (prefix: string) =>

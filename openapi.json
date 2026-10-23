@@ -18119,6 +18119,11 @@
               "other"
             ],
             "nullable": true
+          },
+          "imgFullBody": {
+            "type": "string",
+            "nullable": true,
+            "description": "Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`"
           }
         },
         "required": [
@@ -18128,7 +18133,8 @@
           "birthCountryId",
           "deathDate",
           "heightCm",
-          "gender"
+          "gender",
+          "imgFullBody"
         ]
       },
       "PartialDate": {

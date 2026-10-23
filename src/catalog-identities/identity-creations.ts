@@ -28,6 +28,7 @@ export interface IdentityCreationValue {
     deathDate?: string | null;
     heightCm?: number | null;
     gender?: PersonGender | null;
+    imgFullBody?: string | null;
   };
   organization?: {
     legalName?: string | null;
@@ -73,6 +74,7 @@ export async function createIdentity(
       deathDate: person.deathDate ?? null,
       heightCm: person.heightCm ?? null,
       gender: person.gender ?? null,
+      imgFullBody: person.imgFullBody ?? null,
     });
   } else {
     const organization = creation.organization ?? {};

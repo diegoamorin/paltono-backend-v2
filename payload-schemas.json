@@ -1645,6 +1645,15 @@
                     "other",
                     null
                   ]
+                },
+                "imgFullBody": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 2048,
+                  "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+                  "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
                 }
               }
             },
@@ -2503,6 +2512,32 @@
           ],
           "minimum": 1,
           "maximum": 300
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.img_full_body.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
         }
       }
     },

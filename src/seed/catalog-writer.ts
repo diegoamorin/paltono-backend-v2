@@ -50,6 +50,8 @@ export interface PersonSpec extends IdentitySpec {
   deathDate?: string;
   gender?: 'male' | 'female';
   nationalities?: CountryCode[];
+  /** Gets a placeholder full-body photo. */
+  fullBody?: boolean;
 }
 
 export interface MemberSpec {
@@ -287,6 +289,7 @@ export class CatalogWriter {
           birthCountryId: spec.birthCountry ? this.vocabularies.countries[spec.birthCountry] : null,
           deathDate: spec.deathDate ?? null,
           gender: spec.gender ?? null,
+          imgFullBody: spec.fullBody ? await this.images.fullBodyPlaceholder(spec.key) : null,
         },
       },
     });

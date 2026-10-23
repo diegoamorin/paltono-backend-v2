@@ -83,6 +83,7 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
         deathDate: person.deathDate,
         heightCm: person.heightCm,
         gender: person.gender,
+        imgFullBody: person.imgFullBody,
       },
     ),
     organization: content(({ organization }) =>
@@ -140,6 +141,13 @@ class PersonAttributes {
 
   @ApiProperty({ enum: PERSON_GENDERS, nullable: true })
   gender: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`',
+  })
+  imgFullBody: string | null;
 }
 
 class OrganizationAttributes {

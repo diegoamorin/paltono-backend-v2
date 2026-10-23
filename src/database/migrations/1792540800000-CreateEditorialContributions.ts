@@ -282,12 +282,14 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         death_date date,
         height_cm smallint,
         gender person_gender,
+        img_full_body varchar(2048),
         CONSTRAINT people_catalog_identity_id_fkey
           FOREIGN KEY (catalog_identity_id) REFERENCES catalog_identities (id) ON DELETE RESTRICT,
         CONSTRAINT people_birth_country_id_fkey
           FOREIGN KEY (birth_country_id) REFERENCES countries (id) ON DELETE RESTRICT,
         CONSTRAINT people_height_cm_range CHECK (height_cm BETWEEN 1 AND 300),
-        CONSTRAINT people_lifespan CHECK (death_date >= birth_date)
+        CONSTRAINT people_lifespan CHECK (death_date >= birth_date),
+        CONSTRAINT people_img_full_body_format CHECK (img_full_body IS NULL OR img_full_body ~* '^https?://[^\\s]+$')
       )
     `);
     await queryRunner.query(`CREATE INDEX people_birth_country_id_idx ON people (birth_country_id)`);

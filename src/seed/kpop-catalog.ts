@@ -130,6 +130,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         familyName: 'Kim',
         birthDate: '1995-01-03',
         gender: 'female',
+        fullBody: true,
         aliases: ['지수', '김지수', 'Kim Ji-soo'],
       }),
       korean({
@@ -140,6 +141,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         familyName: 'Kim',
         birthDate: '1996-01-16',
         gender: 'female',
+        fullBody: true,
         aliases: ['제니', '김제니', 'Jennie Kim'],
       }),
       {
@@ -153,6 +155,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         gender: 'female',
         nationalities: ['NZ', 'KR'],
         artist: true,
+        fullBody: true,
         aliases: ['로제', '박채영', 'Roseanne Park'],
         affiliations: [{ organization: 'the-black-label', type: 'agency', status: 'current' }],
       },
@@ -165,6 +168,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         gender: 'female',
         nationalities: ['TH'],
         artist: true,
+        fullBody: true,
         aliases: ['리사', 'ลิซ่า'],
       },
     ],

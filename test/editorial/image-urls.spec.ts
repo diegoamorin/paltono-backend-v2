@@ -70,6 +70,7 @@ describe('image URLs of the catalog', () => {
     member: string;
     /** The resource that shows the published root, and its image attribute. */
     resource: string;
+    /** Dotted when nested, as `person.imgFullBody`. */
     attribute: string;
     /** A valid creation with the given image; it may publish what the root needs first. */
     creation(url: string | null): Promise<{ targetPath: string; value: object }>;
@@ -83,6 +84,14 @@ describe('image URLs of the catalog', () => {
       resource: 'identities',
       attribute: 'imgProfile',
       creation: async (url) => ({ targetPath: 'catalog_identities', value: personCreation({ imgProfile: url }).value }),
+    },
+    {
+      entityType: 'identity',
+      fieldPath: 'people.img_full_body',
+      member: 'person/imgFullBody',
+      resource: 'identities',
+      attribute: 'person.imgFullBody',
+      creation: async (url) => ({ targetPath: 'catalog_identities', value: { type: 'person', displayName: 'IU', person: { imgFullBody: url } } }),
     },
     {
       entityType: 'release',
@@ -148,7 +157,7 @@ describe('image URLs of the catalog', () => {
 
     async function shown(id: string): Promise<unknown> {
       const { body } = await getJsonApi(app, `/v1/${field.resource}/${id}`).expect(200);
-      return body.data.attributes[field.attribute];
+      return field.attribute.split('.').reduce((attributes, name) => attributes[name], body.data.attributes);
     }
 
     it('refuses, in a creation, a URL that is not a catalog upload', async () => {

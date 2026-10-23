@@ -53,6 +53,7 @@ export const IDENTITY_FIELDS = {
   'people.death_date': personColumn('deathDate'),
   'people.height_cm': personColumn('heightCm'),
   'people.gender': personColumn('gender'),
+  'people.img_full_body': personColumn('imgFullBody'),
   'organizations.legal_name': organizationColumn('legalName'),
   'organizations.founding': organizationDate('founding'),
   'organizations.dissolution': organizationDate('dissolution'),

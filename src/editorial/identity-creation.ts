@@ -56,6 +56,7 @@ const IDENTITY = {
         deathDate: COMPLETE_DATE,
         heightCm: HEIGHT_CM,
         gender: GENDER,
+        imgFullBody: CATALOG_IMAGE_URL,
       },
     },
     organization: {
@@ -101,7 +102,10 @@ export const IDENTITY_CREATION: OperationDefinition = {
     ];
     return countries.flatMap(({ id, path }) => (id == null ? [] : [{ vocabulary: 'countries' as const, id, path }]));
   },
-  imageUrls: (value) => imageUrlAt((value as IdentityCreation).imgProfile, '/value/imgProfile'),
+  imageUrls: (value) => {
+    const { imgProfile, person } = value as IdentityCreation;
+    return [...imageUrlAt(imgProfile, '/value/imgProfile'), ...imageUrlAt(person?.imgFullBody, '/value/person/imgFullBody')];
+  },
   read: async (manager, root) => {
     const created = await findCreatedIdentity(manager, root.id);
     return created ? { exists: true, value: created.value } : { exists: false };
