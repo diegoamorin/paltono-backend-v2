@@ -4,6 +4,7 @@ import { DataSource, EntityManager, In, Not } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { JsonApiErrorInput } from '../common/json-api/json-api.exception';
+import { CatalogImageUrls } from '../images/catalog-image-urls';
 import { withLinks } from './change-links.service';
 import { dependencyCycle, hasDependencyCycle } from './dependency-graph';
 import { changeNotFound, invalid } from './editorial-access';
@@ -56,6 +57,7 @@ export class ProposalChangesService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly clock: Clock,
+    private readonly images: CatalogImageUrls,
   ) {}
 
   add(user: User, proposalId: string, input: NewChange): Promise<ProposalChange> {
@@ -79,7 +81,7 @@ export class ProposalChangesService {
         atomicGroupId: input.atomicGroupId ?? null,
         position: input.position ?? (await nextPosition(manager, proposalId)),
       };
-      const problems = await changeProblems(manager, proposal, change, entity);
+      const problems = await changeProblems(manager, proposal, change, entity, 'draft', this.images);
       if (problems.length > 0) throw invalid(problems.map(asBodyError));
       await checkPosition(manager, proposalId, change.id, change.position);
 
@@ -111,7 +113,7 @@ export class ProposalChangesService {
       } as ProposalChange;
       change.proposedValue = normalizeReferences(change.proposedValue) as ValueEnvelope;
       const entity = await manager.findOneBy(EditorialEntity, { id: change.entityId });
-      const problems = await changeProblems(manager, proposal, change, entity);
+      const problems = await changeProblems(manager, proposal, change, entity, 'draft', this.images);
       if (problems.length > 0) throw invalid(problems.map(asBodyError));
       await checkPosition(manager, proposalId, change.id, change.position);
 
@@ -203,15 +205,20 @@ export async function recordImpliedDependencies(manager: EntityManager, change: 
   }
 }
 
-/** Checks a microchange again at submission, reporting each problem with the microchange it belongs to. */
+/**
+ * Checks a microchange again at submission or at a decision, reporting each
+ * problem with the microchange it belongs to. Only a submission checks image
+ * URLs, with `images`.
+ */
 export async function revalidateChange(
   manager: EntityManager,
   proposal: ChangeProposal,
   change: ProposalChange,
   entity: EditorialEntity | undefined,
-  stage: Stage = 'submission',
+  check: { stage: 'submission'; images: CatalogImageUrls } | { stage: 'decision' },
 ): Promise<JsonApiErrorInput[]> {
-  const problems = await changeProblems(manager, proposal, change, entity ?? null, stage);
+  const images = check.stage === 'submission' ? check.images : null;
+  const problems = await changeProblems(manager, proposal, change, entity ?? null, check.stage, images);
   return problems.map(({ code, detail, member }) => ({ code, detail, meta: { changeId: change.id, member } }));
 }
 
@@ -250,7 +257,8 @@ async function changeProblems(
   proposal: ChangeProposal,
   change: ChangeFields,
   entity: EditorialEntity | null,
-  stage: Stage = 'draft',
+  stage: Stage,
+  images: CatalogImageUrls | null,
 ): Promise<ChangeProblem[]> {
   // A reservation is private to its creator, so for anyone else it does not exist.
   if (!entity || (entity.publicationStatus === 'reserved' && entity.createdById !== proposal.authorId)) {
@@ -280,6 +288,8 @@ async function changeProblems(
     if (targetProblems.length > 0) return targetProblems;
   }
   problems.push(...(await payloadProblems(manager, definition, change.proposedValue)));
+  // Writing and submitting check the image URL rule; a decision never does, so a change of base leaves what was submitted valid (ADR 0005).
+  if (problems.length === 0 && images && stage !== 'decision') problems.push(...(await imageUrlProblems(manager, images, definition, change.proposedValue)));
   // A decision finds a referenced root that is no longer published as a conflict instead.
   if (problems.length === 0 && stage !== 'decision') {
     problems.push(...(await checkRootReferences(manager, change, rootReferencesOf(definition, change))).problems);
@@ -502,6 +512,19 @@ async function payloadProblems(manager: EntityManager, definition: OperationDefi
   }));
   if (problems.length > 0) return problems;
   return vocabularyProblems(manager, definition.references((proposed as { value: unknown }).value), 'proposedValue');
+}
+
+/** Each image URL a proposed value holds must be a catalog upload under the current base. */
+async function imageUrlProblems(
+  manager: EntityManager,
+  images: CatalogImageUrls,
+  definition: OperationDefinition,
+  proposed: unknown,
+): Promise<ChangeProblem[]> {
+  const { exists, value } = proposed as { exists: boolean; value?: unknown };
+  if (!exists || !definition.imageUrls) return [];
+  const problems = await images.problems(manager, definition.imageUrls(value));
+  return problems.map(({ code, detail, path }) => ({ code, detail, member: `proposedValue${path}` }));
 }
 
 /** Each vocabulary entry referred to must exist; `member` is where the paths of the references start. */

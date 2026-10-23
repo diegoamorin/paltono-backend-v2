@@ -57,7 +57,7 @@ export const PLATFORMS: Vocabulary<Platform> = {
   timestamps: true,
 };
 
-// An HTTP(S) URL, as media are referenced during the MVP (ADR 0005).
+// Any HTTP(S) URL: a platform's icon is vocabulary that admins curate, not a catalog image under ADR 0005's upload rule.
 const IconUrlValidation = () =>
   applyDecorators(IsUrl({ protocols: ['http', 'https'], require_protocol: true }), MaxLength(2048));
 

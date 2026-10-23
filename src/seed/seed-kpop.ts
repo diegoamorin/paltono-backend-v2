@@ -5,6 +5,7 @@ import { EditorialSeeder } from './editorial-seeder';
 import { KPOP_CATALOG } from './kpop-catalog';
 import { KPOP_RELEASES_AND_TOURS } from './kpop-releases-and-tours';
 import { AccountSeeder, SEED_PASSWORD } from './seed-accounts';
+import { SeedImages } from './seed-images';
 import { seedModeration } from './seed-moderation';
 import { seedVocabularies } from './seed-vocabularies';
 
@@ -25,7 +26,7 @@ export async function seedKpop(app: INestApplicationContext): Promise<string> {
   const vocabularies = await seedVocabularies(app);
 
   const editorial = new EditorialSeeder(app, accounts.moderator);
-  const catalog = new CatalogWriter(editorial, vocabularies);
+  const catalog = new CatalogWriter(editorial, vocabularies, new SeedImages(app, accounts.moderator));
   for (const { author, ...submission } of [...KPOP_CATALOG, ...KPOP_RELEASES_AND_TOURS]) await catalog.write(accounts[author], submission);
   await seedModeration(editorial, catalog, accounts);
 
