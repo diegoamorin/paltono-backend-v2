@@ -36,12 +36,21 @@ export interface MailConfig {
   from: string;
 }
 
-/** Where uploaded images are stored (ADR 0005). */
-export type ImageStorageConfig = {
-  /** A folder that the backend itself serves under `/images`. */
-  kind: 'local';
-  directory: string;
-};
+/** Where uploaded images are stored (ADR 0005): Cloudflare R2 in production, a local folder elsewhere. */
+export type ImageStorageConfig =
+  | {
+      /** A folder that the backend itself serves under `/images`. */
+      kind: 'local';
+      directory: string;
+    }
+  | {
+      /** A Cloudflare R2 bucket, reached through its S3-compatible API and served from the public base URL. */
+      kind: 'r2';
+      endpoint: string;
+      bucket: string;
+      accessKeyId: string;
+      secretAccessKey: string;
+    };
 
 export interface ImagesConfig {
   /** Public base of uploaded images, ending in `/`: an image's URL is this base plus its storage key. */
@@ -132,7 +141,21 @@ function imagesConfig(environment: Environment, env: NodeJS.ProcessEnv, port: nu
 
   return {
     publicBaseUrl: base.endsWith('/') ? base : `${base}/`,
-    storage: { kind: 'local', directory: resolve(env.IMAGE_STORAGE_DIRECTORY || DEFAULT_IMAGE_STORAGE_DIRECTORY) },
+    storage: imageStorageConfig(environment, env),
+  };
+}
+
+function imageStorageConfig(environment: Environment, env: NodeJS.ProcessEnv): ImageStorageConfig {
+  if (environment !== 'production') {
+    return { kind: 'local', directory: resolve(env.IMAGE_STORAGE_DIRECTORY || DEFAULT_IMAGE_STORAGE_DIRECTORY) };
+  }
+
+  return {
+    kind: 'r2',
+    endpoint: required(env, 'R2_ENDPOINT'),
+    bucket: required(env, 'R2_BUCKET'),
+    accessKeyId: required(env, 'R2_ACCESS_KEY_ID'),
+    secretAccessKey: required(env, 'R2_SECRET_ACCESS_KEY'),
   };
 }
 

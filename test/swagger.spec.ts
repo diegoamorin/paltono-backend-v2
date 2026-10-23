@@ -161,6 +161,10 @@ describe('Swagger and the OpenAPI document', () => {
       MAIL_FROM: 'Paltono <no-reply@paltono.com>',
       FRONTEND_URL_KPOP: 'https://kpop.paltono.com',
       FRONTEND_URL_MAIN: 'https://paltono.com',
+      R2_ENDPOINT: 'https://account.r2.cloudflarestorage.com',
+      R2_BUCKET: 'paltono-images',
+      R2_ACCESS_KEY_ID: 'access-key',
+      R2_SECRET_ACCESS_KEY: 'secret-key',
     };
 
     it('is disabled by default', async () => {

@@ -52,7 +52,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 - Los correos salen por el puerto `Mailer` después del commit; un fallo de envío no deshace la operación. Con `RESEND_API_KEY` se envían por Resend; sin ella, fuera de producción, se escriben en el log. Los enlaces apuntan a `FRONTEND_URL_KPOP` o `FRONTEND_URL_MAIN` según el `frontend` que pide el cliente.
 - Login, registro, reenvío de la verificación y solicitud de recuperación de contraseña admiten `AUTH_RATE_LIMIT` peticiones por minuto y dirección (10 por defecto); responden 429 por encima.
 
-En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_FROM`, `FRONTEND_URL_KPOP`, `FRONTEND_URL_MAIN` e `IMAGE_PUBLIC_BASE_URL`.
+En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_FROM`, `FRONTEND_URL_KPOP`, `FRONTEND_URL_MAIN`, `IMAGE_PUBLIC_BASE_URL` y la configuración de R2 (`R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`).
 
 En las pruebas, `createTestApp` sustituye el `Mailer` por un doble que captura los correos (`app.mailer`) y `app.reset()` vacía la base antes de cada prueba.
 
@@ -64,7 +64,7 @@ El reloj (`Clock`) es una dependencia inyectable: el código usa `clock.now()` y
 
 - `POST /v1/images` recibe `multipart/form-data` con la imagen en el campo `file` y devuelve una subida `catalog` con su URL. Las rutas que reciben un archivo se listan en `MULTIPART_PATHS` (`src/common/json-api/media-type.ts`); `@ReceivesImage()` y `@UploadedImage()` leen el archivo en memoria.
 - `ImageUploadsService.upload(cuenta, propósito, bytes)` valida, procesa con `sharp`, comprueba el cupo de subidas, guarda el archivo y lo registra en `image_uploads`. Un rechazo no guarda ni registra nada.
-- El almacenamiento es el puerto `ImageStorage` (guardar bytes por clave, borrar por clave). La carpeta local (`IMAGE_STORAGE_DIRECTORY`, por defecto `storage/images`, fuera de git) se sirve en `/images`, y la URL de cada imagen es `IMAGE_PUBLIC_BASE_URL` más su clave.
+- El almacenamiento es el puerto `ImageStorage` (guardar bytes por clave, borrar por clave), y la URL de cada imagen es `IMAGE_PUBLIC_BASE_URL` más su clave. En development y en pruebas es una carpeta local (`IMAGE_STORAGE_DIRECTORY`, por defecto `storage/images`, fuera de git) que el backend sirve en `/images`. En producción es un bucket de Cloudflare R2 (`R2ImageStorage`, sobre el cliente S3) configurado con `R2_ENDPOINT` (`https://<account id>.r2.cloudflarestorage.com`), `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`, y servido públicamente en `img.paltono.com`; el arranque falla si falta alguna. El adaptador de R2 no tiene test automático: se verifica a mano contra el bucket real.
 - La regla de URLs de imagen vive en `CatalogImageUrls` (`src/images/catalog-image-urls.ts`): un campo de imagen del catálogo es null o una URL bajo `IMAGE_PUBLIC_BASE_URL` registrada como subida `catalog`. Una operación del registro editorial declara sus campos de imagen con `imageUrls(value)` (usando `imageUrlAt` y el esquema `CATALOG_IMAGE_URL`), y la regla se comprueba al escribir el microcambio y al enviarlo, nunca al aplicarlo.
 - En las pruebas, `createTestApp` usa una carpeta temporal y la base `http://localhost/images/`; `test/support/images.ts` genera las imágenes y lee las servidas.
 
