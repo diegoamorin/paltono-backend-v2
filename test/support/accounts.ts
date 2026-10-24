@@ -8,7 +8,6 @@ export interface Registration {
   email: string;
   password: string;
   displayName: string;
-  frontend?: string;
 }
 
 export const DEFAULT_PASSWORD = 'correct horse battery staple';
@@ -42,9 +41,9 @@ export function verifyEmail(server: App, token: string) {
 }
 
 /** POST /v1/email-verification-requests */
-export function requestVerification(server: App, accessToken: string, frontend?: string) {
+export function requestVerification(server: App, accessToken: string) {
   return sendJsonApi(server, 'post', '/v1/email-verification-requests', {
-    data: { type: 'email-verification-requests', attributes: frontend ? { frontend } : {} },
+    data: { type: 'email-verification-requests', attributes: {} },
   }).set('Authorization', `Bearer ${accessToken}`);
 }
 
@@ -117,9 +116,9 @@ export function revokeSession(server: App, accessToken: string, id: string) {
 }
 
 /** POST /v1/password-reset-requests */
-export function requestPasswordReset(server: App, email: string, frontend?: string) {
+export function requestPasswordReset(server: App, email: string) {
   return sendJsonApi(server, 'post', '/v1/password-reset-requests', {
-    data: { type: 'password-reset-requests', attributes: frontend ? { email, frontend } : { email } },
+    data: { type: 'password-reset-requests', attributes: { email } },
   });
 }
 
@@ -148,7 +147,6 @@ export function updateProfile(server: App, accessToken: string, id: string, attr
 export interface EmailChangeRequest {
   currentPassword?: string;
   newEmail: string;
-  frontend?: string;
 }
 
 /** POST /v1/me/email-change-requests */

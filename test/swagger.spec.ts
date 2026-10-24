@@ -1,5 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import request from 'supertest';
+import { productionEnv } from './support/production-env';
 import { TestApp, createTestApp } from './support/test-app';
 import { WidgetsFixtureModule } from './support/widgets-fixture';
 
@@ -151,20 +152,7 @@ describe('Swagger and the OpenAPI document', () => {
   });
 
   describe('in production', () => {
-    const production = {
-      NODE_ENV: 'production',
-      SWAGGER_ENABLED: undefined,
-      SWAGGER_USER: undefined,
-      SWAGGER_PASSWORD: undefined,
-      ACCESS_TOKEN_SECRET: 'production-secret',
-      RESEND_API_KEY: 're_test',
-      MAIL_FROM: 'Paltono <no-reply@paltono.com>',
-      MAIN_APP_URL: 'https://paltono.com',
-      R2_ENDPOINT: 'https://account.r2.cloudflarestorage.com',
-      R2_BUCKET: 'paltono-images',
-      R2_ACCESS_KEY_ID: 'access-key',
-      R2_SECRET_ACCESS_KEY: 'secret-key',
-    };
+    const production = productionEnv({ SWAGGER_ENABLED: undefined, SWAGGER_USER: undefined, SWAGGER_PASSWORD: undefined });
 
     it('is disabled by default', async () => {
       const app = await createTestApp({ env: production });

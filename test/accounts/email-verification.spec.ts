@@ -1,4 +1,4 @@
-import { accessTokenFor, getMe, register, requestVerification, verifyEmail } from '../support/accounts';
+import { accessTokenFor, getMe, register, requestVerification, sendJsonApi, verifyEmail } from '../support/accounts';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const HOUR = 60 * 60 * 1000;
@@ -140,11 +140,15 @@ describe('email verification', () => {
       expect(app.mailer.lastLink('diego@example.com', 'email-verification').origin).toBe('https://paltono.test');
     });
 
-    it('rejects a frontend, which clients no longer choose', async () => {
+    it('rejects an unknown frontend attribute', async () => {
       await register(app.server).expect(201);
       const accessToken = await accessTokenFor(app.server, 'diego_papi');
 
-      const response = await requestVerification(app.server, accessToken, 'main').expect(422);
+      const response = await sendJsonApi(app.server, 'post', '/v1/email-verification-requests', {
+        data: { type: 'email-verification-requests', attributes: { frontend: 'main' } },
+      })
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(422);
 
       expect(response.body.errors).toEqual([
         expect.objectContaining({ source: { pointer: '/data/attributes/frontend' } }),

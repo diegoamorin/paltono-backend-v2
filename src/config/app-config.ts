@@ -61,7 +61,7 @@ export interface AppConfig {
   auth: AuthConfig;
   mail: MailConfig;
   images: ImagesConfig;
-  /** Base URL of the main app, `paltono.com`, the only one where accounts are used (ADR 0002). */
+  /** Base URL of the main app, `paltono.com`, ending in `/`: the only app where accounts are used (ADR 0002). */
   mainAppUrl: string;
 }
 
@@ -100,7 +100,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     auth: authConfig(environment, env),
     mail: mailConfig(environment, env),
     images: imagesConfig(environment, env, port),
-    mainAppUrl: requiredInProduction(environment, env, 'MAIN_APP_URL', 'http://localhost:5173'),
+    mainAppUrl: mainAppUrl(environment, env),
   };
 }
 
@@ -122,6 +122,12 @@ function mailConfig(environment: Environment, env: NodeJS.ProcessEnv): MailConfi
     // Resend's test sender outside production; the verified paltono.com domain in production.
     from: requiredInProduction(environment, env, 'MAIL_FROM', 'Paltono <onboarding@resend.dev>'),
   };
+}
+
+function mainAppUrl(environment: Environment, env: NodeJS.ProcessEnv): string {
+  const url = requiredInProduction(environment, env, 'MAIN_APP_URL', 'http://localhost:5173');
+  if (!/^https?:\/\/[^/]/.test(url)) throw new Error(`MAIN_APP_URL must be an http(s) URL; got "${url}"`);
+  return url.endsWith('/') ? url : `${url}/`;
 }
 
 /** The folder of locally stored images when `IMAGE_STORAGE_DIRECTORY` is unset; ignored by git. */

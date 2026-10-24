@@ -30,8 +30,9 @@ function allowMainAppOrigin(app: NestExpressApplication, { mainAppUrl }: AppConf
     // A list, not a string: the origin is echoed back only to a request that comes from it.
     origin: [new URL(mainAppUrl).origin],
     credentials: true,
-    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Accept', 'Authorization', 'Content-Type'],
+    // Only what browsers do not already allow without asking: `HEAD` and `Accept` always are.
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
   });
 }
 

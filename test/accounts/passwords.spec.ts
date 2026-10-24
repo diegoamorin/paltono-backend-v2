@@ -9,6 +9,7 @@ import {
   register,
   requestPasswordReset,
   resetPassword,
+  sendJsonApi,
   setAccountStatus,
 } from '../support/accounts';
 import { TestApp, createTestApp } from '../support/test-app';
@@ -77,8 +78,10 @@ describe('passwords', () => {
       await requestPasswordReset(app.server, 'diego@example.com').expect(202);
     });
 
-    it('validates the body and rejects a frontend, which clients no longer choose', async () => {
-      const response = await requestPasswordReset(app.server, 'not an email', 'main').expect(422);
+    it('validates the body and rejects an unknown frontend attribute', async () => {
+      const response = await sendJsonApi(app.server, 'post', '/v1/password-reset-requests', {
+        data: { type: 'password-reset-requests', attributes: { email: 'not an email', frontend: 'main' } },
+      }).expect(422);
 
       const pointers = response.body.errors.map((error: { source: { pointer: string } }) => error.source.pointer);
       expect([...new Set(pointers)].sort()).toEqual(['/data/attributes/email', '/data/attributes/frontend']);

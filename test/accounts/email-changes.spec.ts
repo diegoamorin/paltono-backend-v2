@@ -81,7 +81,7 @@ describe('email changes', () => {
       expect(app.mailer.sent).toEqual([]);
     });
 
-    it('validates the body and rejects a frontend, which clients no longer choose', async () => {
+    it('validates the body and rejects an unknown frontend attribute', async () => {
       const response = await sendJsonApi(app.server, 'post', '/v1/me/email-change-requests', {
         data: { type: 'email-change-requests', attributes: { newEmail: 'not an email', frontend: 'main' } },
       })

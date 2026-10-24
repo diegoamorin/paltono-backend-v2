@@ -90,7 +90,7 @@ export class AccountEmails {
 
   /** Account links always go to the main app, the only one where accounts are used. */
   private link(path: string, token: string): string {
-    const url = new URL(path, `${this.config.mainAppUrl.replace(/\/+$/, '')}/`);
+    const url = new URL(path, this.config.mainAppUrl);
     url.searchParams.set('token', token);
     return url.toString();
   }

@@ -98,8 +98,10 @@ describe('POST /v1/users (registration)', () => {
     });
   });
 
-  it('rejects an invalid email, a blank display name and a frontend, which clients no longer choose', async () => {
-    const response = await register(app.server, { email: 'not-an-email', displayName: '   ', frontend: 'main' }).expect(422);
+  it('rejects an invalid email, a blank display name and an unknown frontend attribute', async () => {
+    const response = await sendJsonApi(app.server, 'post', '/v1/users', {
+      data: { type: 'users', attributes: { ...registration({ email: 'not-an-email', displayName: '   ' }), frontend: 'main' } },
+    }).expect(422);
 
     const pointers = response.body.errors.map((error: { source: { pointer: string } }) => error.source.pointer);
     expect([...new Set(pointers)].sort()).toEqual([

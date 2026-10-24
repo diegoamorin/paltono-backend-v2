@@ -1,25 +1,20 @@
 import request from 'supertest';
 import { register } from '../support/accounts';
+import { productionEnv } from '../support/production-env';
 import { TestApp, createTestApp } from '../support/test-app';
-
-/** A complete production environment but for `MAIN_APP_URL`. */
-const PRODUCTION: NodeJS.ProcessEnv = {
-  NODE_ENV: 'production',
-  ACCESS_TOKEN_SECRET: 'production-secret',
-  RESEND_API_KEY: 're_test',
-  MAIL_FROM: 'Paltono <no-reply@paltono.com>',
-  IMAGE_PUBLIC_BASE_URL: 'https://img.paltono.com/',
-  R2_ENDPOINT: 'https://account.r2.cloudflarestorage.com',
-  R2_BUCKET: 'paltono-images',
-  R2_ACCESS_KEY_ID: 'access-key',
-  R2_SECRET_ACCESS_KEY: 'secret-key',
-  MAIN_APP_URL: undefined,
-};
 
 describe('the main app', () => {
   describe('configuration', () => {
     it('is required in production', async () => {
-      await expect(createTestApp({ env: PRODUCTION })).rejects.toThrow('Missing required environment variable MAIN_APP_URL');
+      await expect(createTestApp({ env: productionEnv({ MAIN_APP_URL: undefined }) })).rejects.toThrow(
+        'Missing required environment variable MAIN_APP_URL',
+      );
+    });
+
+    it('must be an http(s) URL', async () => {
+      await expect(createTestApp({ env: { MAIN_APP_URL: 'paltono.com' } })).rejects.toThrow(
+        'MAIN_APP_URL must be an http(s) URL; got "paltono.com"',
+      );
     });
 
     it('is the local main app by default outside production', async () => {
