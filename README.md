@@ -29,7 +29,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 
 - `GET /health`: JSON simple con la comprobación de la base de datos, para Railway.
 - `GET /docs` y `GET /docs-json`: Swagger UI y OpenAPI. Activos en desarrollo; en producción solo con `SWAGGER_ENABLED=true`, `SWAGGER_USER` y `SWAGGER_PASSWORD` (autenticación básica).
-- `openapi.json`: el mismo documento OpenAPI, versionado como contrato para los frontends. Tras cambiar un controlador o un DTO, regenéralo con `pnpm openapi:export` y haz commit; `pnpm test` falla mientras no coincida con la API.
+- `openapi.json`: el mismo documento OpenAPI, versionado como contrato para las aplicaciones. Tras cambiar un controlador o un DTO, regenéralo con `pnpm openapi:export` y haz commit; `pnpm test` falla mientras no coincida con la API.
 
 ## Infraestructura JSON:API
 
@@ -49,10 +49,11 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 - Las caducidades se configuran con `ACCESS_TOKEN_TTL_SECONDS` (15 minutos por defecto), `SESSION_TTL_DAYS` (30), `EMAIL_VERIFICATION_TTL_HOURS` (24) y `PASSWORD_RESET_TTL_MINUTES` (30).
 - El token de renovación viaja en la cookie `paltono_refresh_token` (web) o en `meta.refreshToken` (móvil). `POST /v1/session-refreshes` lo sustituye con una actualización condicionada al token presentado: un token ya sustituido no vuelve a servir y, de dos renovaciones simultáneas, solo una prospera. La renovación nunca extiende el límite absoluto de la sesión.
 - Recuperar o cambiar la contraseña revoca todas las sesiones de la cuenta; recuperarla además marca el correo como verificado.
-- Los correos salen por el puerto `Mailer` después del commit; un fallo de envío no deshace la operación. Con `RESEND_API_KEY` se envían por Resend; sin ella, fuera de producción, se escriben en el log. Los enlaces apuntan a `FRONTEND_URL_KPOP` o `FRONTEND_URL_MAIN` según el `frontend` que pide el cliente.
+- Los correos salen por el puerto `Mailer` después del commit; un fallo de envío no deshace la operación. Con `RESEND_API_KEY` se envían por Resend; sin ella, fuera de producción, se escriben en el log. Los enlaces apuntan siempre a la aplicación principal, `MAIN_APP_URL` (`http://localhost:5173` por defecto fuera de producción); el cliente no elige adónde.
+- CORS solo admite el origen de `MAIN_APP_URL`, con credenciales para la cookie de renovación; cualquier otro origen no recibe `Access-Control-Allow-Origin` y su navegador bloquea la respuesta.
 - Login, registro, reenvío de la verificación y solicitud de recuperación de contraseña admiten `AUTH_RATE_LIMIT` peticiones por minuto y dirección (10 por defecto); responden 429 por encima.
 
-En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_FROM`, `FRONTEND_URL_KPOP`, `FRONTEND_URL_MAIN`, `IMAGE_PUBLIC_BASE_URL` y la configuración de R2 (`R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`).
+En producción son obligatorias `ACCESS_TOKEN_SECRET`, `RESEND_API_KEY`, `MAIL_FROM`, `MAIN_APP_URL`, `IMAGE_PUBLIC_BASE_URL` y la configuración de R2 (`R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID` y `R2_SECRET_ACCESS_KEY`).
 
 En las pruebas, `createTestApp` sustituye el `Mailer` por un doble que captura los correos (`app.mailer`) y `app.reset()` vacía la base antes de cada prueba.
 

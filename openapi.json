@@ -16283,15 +16283,6 @@
             "type": "string",
             "example": "Diego",
             "maxLength": 100
-          },
-          "frontend": {
-            "type": "string",
-            "enum": [
-              "kpop",
-              "main"
-            ],
-            "default": "kpop",
-            "description": "Frontend al que apuntan los enlaces del correo"
           }
         },
         "required": [
@@ -16494,17 +16485,7 @@
       },
       "EmailVerificationRequestAttributes": {
         "type": "object",
-        "properties": {
-          "frontend": {
-            "type": "string",
-            "enum": [
-              "kpop",
-              "main"
-            ],
-            "default": "kpop",
-            "description": "Frontend al que apunta el enlace del correo"
-          }
-        }
+        "properties": {}
       },
       "EmailVerificationRequestResource": {
         "type": "object",
@@ -16544,15 +16525,6 @@
             "type": "string",
             "example": "nuevo@example.com",
             "description": "Se guarda en minúsculas"
-          },
-          "frontend": {
-            "type": "string",
-            "enum": [
-              "kpop",
-              "main"
-            ],
-            "default": "kpop",
-            "description": "Frontend al que apunta el enlace del correo"
           }
         },
         "required": [
@@ -16912,15 +16884,6 @@
           "email": {
             "type": "string",
             "example": "diego@example.com"
-          },
-          "frontend": {
-            "type": "string",
-            "enum": [
-              "kpop",
-              "main"
-            ],
-            "default": "kpop",
-            "description": "Frontend al que apunta el enlace del correo"
           }
         },
         "required": [

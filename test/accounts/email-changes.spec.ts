@@ -22,7 +22,7 @@ describe('email changes', () => {
 
   beforeAll(async () => {
     app = await createTestApp({
-      env: { FRONTEND_URL_KPOP: 'https://kpop.paltono.test', FRONTEND_URL_MAIN: 'https://paltono.test' },
+      env: { MAIN_APP_URL: 'https://paltono.test' },
     });
   });
 
@@ -38,7 +38,7 @@ describe('email changes', () => {
   });
 
   describe('POST /v1/me/email-change-requests', () => {
-    it('emails a Spanish confirmation link to the new address and keeps the old one until confirmed', async () => {
+    it('emails a Spanish confirmation link, to the main app, to the new address and keeps the old one until confirmed', async () => {
       const response = await requestEmailChange(app.server, accessToken, { newEmail: '  Nuevo@Example.com ' }).expect(202);
 
       expect(response.text).toBe('');
@@ -48,17 +48,11 @@ describe('email changes', () => {
       expect(email.text).toContain('Hola, Diego 🎤');
       expect(email.text).toContain('30 minutos');
       const link = app.mailer.lastLink('nuevo@example.com', 'email-change');
-      expect(link.origin + link.pathname).toBe('https://kpop.paltono.test/confirmar-correo');
+      expect(link.origin + link.pathname).toBe('https://paltono.test/confirmar-correo');
       expect(link.searchParams.get('token')).toMatch(/^[A-Za-z0-9_-]{43}$/);
 
       const me = await getMe(app.server, accessToken).expect(200);
       expect(me.body.data.attributes.email).toBe('diego@example.com');
-    });
-
-    it('links to the frontend the client names', async () => {
-      await requestEmailChange(app.server, accessToken, { newEmail: 'nuevo@example.com', frontend: 'main' }).expect(202);
-
-      expect(app.mailer.lastLink('nuevo@example.com', 'email-change').origin).toBe('https://paltono.test');
     });
 
     it('requires the current password, sending nothing otherwise', async () => {
@@ -87,9 +81,9 @@ describe('email changes', () => {
       expect(app.mailer.sent).toEqual([]);
     });
 
-    it('validates the body', async () => {
+    it('validates the body and rejects a frontend, which clients no longer choose', async () => {
       const response = await sendJsonApi(app.server, 'post', '/v1/me/email-change-requests', {
-        data: { type: 'email-change-requests', attributes: { newEmail: 'not an email', frontend: 'https://evil.example' } },
+        data: { type: 'email-change-requests', attributes: { newEmail: 'not an email', frontend: 'main' } },
       })
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(422);

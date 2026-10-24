@@ -2,7 +2,7 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, IsNull } from 'typeorm';
 import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { AccountEmails } from './account-emails';
 import { conflict } from './administration';
 import { User } from './entities/user.entity';
@@ -29,7 +29,7 @@ export class EmailChangesService {
    * right and no account holds that address. Any earlier pending change of the
    * account is cancelled, so only the latest address requested can be confirmed.
    */
-  async request(user: User, currentPassword: string, newEmail: string, frontend: Frontend): Promise<void> {
+  async request(user: User, currentPassword: string, newEmail: string): Promise<void> {
     const { current, token, tokenId } = await this.dataSource.transaction(async (manager) => {
       const now = this.clock.now();
       const current = await manager.findOneOrFail(User, { where: { id: user.id }, lock: { mode: 'pessimistic_write' } });
@@ -45,7 +45,7 @@ export class EmailChangesService {
       const issued = await issueUserToken(manager, current, 'email_change', this.config.auth.emailChangeTtlMs, now, newEmail);
       return { current, ...issued };
     });
-    await this.emails.sendEmailChange(current, newEmail, frontend, token, tokenId);
+    await this.emails.sendEmailChange(current, newEmail, token, tokenId);
   }
 
   /**

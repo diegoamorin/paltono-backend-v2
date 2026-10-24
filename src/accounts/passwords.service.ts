@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, IsNull } from 'typeorm';
 import { Clock } from '../common/clock/clock';
-import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { AccountEmails } from './account-emails';
 import { AuthSession } from './entities/auth-session.entity';
 import { User } from './entities/user.entity';
@@ -25,7 +25,7 @@ export class PasswordsService {
    * not deleted. The caller answers the same either way, and the email goes out
    * after this returns.
    */
-  async requestReset(email: string, frontend: Frontend): Promise<void> {
+  async requestReset(email: string): Promise<void> {
     const issued = await this.dataSource.transaction(async (manager) => {
       const user = await manager
         .getRepository(User)
@@ -39,7 +39,7 @@ export class PasswordsService {
     });
     // Not awaited: waiting for the provider only when the account exists would reveal it through the response time.
     // Sending never rejects; failures are logged.
-    if (issued) void this.emails.sendPasswordReset(issued.user, frontend, issued.token, issued.tokenId);
+    if (issued) void this.emails.sendPasswordReset(issued.user, issued.token, issued.tokenId);
   }
 
   /**

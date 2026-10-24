@@ -127,3 +127,17 @@ _Avoid_: Baja o bloqueo como sinónimos de suspensión.
 **Baja (account deletion)**:
 Cierre definitivo de una cuenta por decisión de su titular. Libera su correo, conserva su username reservado y mantiene la atribución de sus contribuciones.
 _Avoid_: Borrado para referirse a la baja, porque la cuenta y su historial se conservan.
+
+### Aplicaciones
+
+**Aplicación**:
+Cliente web de Paltono con su propio dominio sobre el mismo catálogo. Ninguna ficha pertenece a una aplicación.
+_Avoid_: Vertical, sitio.
+
+**Aplicación principal**:
+La aplicación de `paltono.com`, que muestra el catálogo entero. Es la única donde se usa una cuenta: registro, sesión, contribuciones y gestión de la cuenta.
+_Avoid_: Frontend K-pop, frontend general.
+
+**Microaplicación**:
+Aplicación con un solo propósito que solo lee datos públicos del catálogo, sin cuentas, como comparar alturas o ver en un calendario cumpleaños, lanzamientos y conciertos.
+_Avoid_: Vertical, módulo.

@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { Equals, IsDefined, IsIn, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
-import { FRONTENDS, Frontend } from '../../config/app-config';
+import { Equals, IsDefined, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 
 class EmailVerificationAttributes {
   @ApiProperty({ description: 'Token recibido en el enlace del correo' })
@@ -31,12 +30,8 @@ export class EmailVerificationDocument {
   data: EmailVerificationResource;
 }
 
-class EmailVerificationRequestAttributes {
-  @ApiPropertyOptional({ enum: FRONTENDS, default: 'kpop', description: 'Frontend al que apunta el enlace del correo' })
-  @IsOptional()
-  @IsIn(FRONTENDS)
-  frontend?: Frontend;
-}
+/** No attributes: the link always goes to the main app. Any attribute is rejected. */
+class EmailVerificationRequestAttributes {}
 
 class EmailVerificationRequestResource {
   @ApiProperty({ enum: ['email-verification-requests'] })

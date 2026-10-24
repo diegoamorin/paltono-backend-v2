@@ -8,7 +8,7 @@ describe('email verification', () => {
 
   beforeAll(async () => {
     app = await createTestApp({
-      env: { FRONTEND_URL_KPOP: 'https://kpop.paltono.test', FRONTEND_URL_MAIN: 'https://paltono.test' },
+      env: { MAIN_APP_URL: 'https://paltono.test' },
     });
   });
 
@@ -21,22 +21,16 @@ describe('email verification', () => {
   });
 
   describe('the email sent on registration', () => {
-    it('is in Spanish and links to the kpop frontend by default', async () => {
+    it('is in Spanish and links to the main app', async () => {
       await register(app.server).expect(201);
 
       const [email] = app.mailer.to('diego@example.com', 'email-verification');
       expect(email.subject).toBe('Confirma tu correo en Paltono');
       expect(email.text).toContain('Hola, Diego 🎤');
-      expect(email.html).toContain('href="https://kpop.paltono.test/verificar-correo?token=');
+      expect(email.html).toContain('href="https://paltono.test/verificar-correo?token=');
       const link = app.mailer.lastLink('diego@example.com', 'email-verification');
-      expect(link.origin + link.pathname).toBe('https://kpop.paltono.test/verificar-correo');
+      expect(link.origin + link.pathname).toBe('https://paltono.test/verificar-correo');
       expect(link.searchParams.get('token')).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    });
-
-    it('links to the frontend the person registered from', async () => {
-      await register(app.server, { frontend: 'main' }).expect(201);
-
-      expect(app.mailer.lastLink('diego@example.com', 'email-verification').origin).toBe('https://paltono.test');
     });
 
     it('is not sent when the registration fails', async () => {
@@ -133,8 +127,8 @@ describe('email verification', () => {
   });
 
   describe('POST /v1/email-verification-requests (resend)', () => {
-    it('sends a new verification link, to the kpop frontend by default', async () => {
-      await register(app.server, { frontend: 'main' }).expect(201);
+    it('sends a new verification link to the main app', async () => {
+      await register(app.server).expect(201);
       const accessToken = await accessTokenFor(app.server, 'diego_papi');
 
       const response = await requestVerification(app.server, accessToken).expect(202);
@@ -143,23 +137,14 @@ describe('email verification', () => {
       const emails = app.mailer.to('diego@example.com', 'email-verification');
       expect(emails).toHaveLength(2);
       expect(emails[1].idempotencyKey).not.toBe(emails[0].idempotencyKey);
-      expect(app.mailer.lastLink('diego@example.com', 'email-verification').origin).toBe('https://kpop.paltono.test');
-    });
-
-    it('links to the frontend the client names', async () => {
-      await register(app.server).expect(201);
-      const accessToken = await accessTokenFor(app.server, 'diego_papi');
-
-      await requestVerification(app.server, accessToken, 'main').expect(202);
-
       expect(app.mailer.lastLink('diego@example.com', 'email-verification').origin).toBe('https://paltono.test');
     });
 
-    it('rejects a frontend outside the allowed list', async () => {
+    it('rejects a frontend, which clients no longer choose', async () => {
       await register(app.server).expect(201);
       const accessToken = await accessTokenFor(app.server, 'diego_papi');
 
-      const response = await requestVerification(app.server, accessToken, 'https://evil.example').expect(422);
+      const response = await requestVerification(app.server, accessToken, 'main').expect(422);
 
       expect(response.body.errors).toEqual([
         expect.objectContaining({ source: { pointer: '/data/attributes/frontend' } }),

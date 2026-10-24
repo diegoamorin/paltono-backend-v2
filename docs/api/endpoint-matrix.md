@@ -50,18 +50,18 @@ Cada controlador usa `@ApiTags` por módulo; cada operación `@ApiOperation`, `@
 
 | # | Método y ruta | Caso de uso | Acceso | Cuerpo o resultado | Pruebas |
 |---|---|---|---|---|---|
-| A1 | `POST /v1/users` | Registro | Pub | `users`: username, email, password, displayName, frontend (`kpop`/`main`). 201 con cuenta sin verificar; envía correo después del commit | ok val rate conc |
+| A1 | `POST /v1/users` | Registro | Pub | `users`: username, email, password, displayName. 201 con cuenta sin verificar; envía correo, con enlace a la aplicación principal, después del commit | ok val rate conc |
 | A2 | `POST /v1/email-verifications` | Confirmar correo con token | Pub | `{token}`. Marca verificado y consume el token | ok val state |
-| A3 | `POST /v1/email-verification-requests` | Reenviar verificación | Auth | `{frontend}`. 202 aunque el envío falle | ok authn rate state |
+| A3 | `POST /v1/email-verification-requests` | Reenviar verificación | Auth | `{}`. 202 aunque el envío falle | ok authn rate state |
 | A4 | `POST /v1/sessions` | Login con username o correo | Pub | `{identifier, password, client: web|mobile}`. Devuelve token de acceso; renovación en cookie (web) o en el cuerpo (móvil). Suspendida: error específico solo con contraseña correcta | ok val rate state |
 | A5 | `POST /v1/session-refreshes` | Renovar sesión | Cookie o token de renovación | Rota el token; conserva el límite absoluto de 30 días. Reutilizar un token ya rotado falla | ok authn conc |
 | A6 | `DELETE /v1/sessions/current` | Logout | Auth | 204; revoca la sesión actual y borra la cookie | ok authn |
 | A7 | `GET /v1/me/sessions` | Listar sesiones propias | Auth | user agent, IP, creación, expiración; marca la actual | ok authn |
 | A8 | `DELETE /v1/me/sessions/{id}` | Revocar una sesión propia | Auth | 204; sesión ajena responde 404 | ok authn authz |
-| A9 | `POST /v1/password-reset-requests` | Pedir recuperación | Pub | `{email, frontend}`. 202 idéntico exista o no la cuenta | ok val rate |
+| A9 | `POST /v1/password-reset-requests` | Pedir recuperación | Pub | `{email}`. 202 idéntico exista o no la cuenta | ok val rate |
 | A10 | `POST /v1/password-resets` | Completar recuperación | Pub | `{token, password}`. Verifica el correo y revoca todas las sesiones | ok val state conc |
 | A11 | `POST /v1/me/password-changes` | Cambiar contraseña | Auth | `{currentPassword, newPassword}`. Revoca todas las sesiones | ok val authn |
-| A12 | `POST /v1/me/email-change-requests` | Pedir cambio de correo | Auth **[P4]** | `{currentPassword, newEmail, frontend}`. Envía token al correo nuevo | ok val rate state |
+| A12 | `POST /v1/me/email-change-requests` | Pedir cambio de correo | Auth **[P4]** | `{currentPassword, newEmail}`. Envía token al correo nuevo | ok val rate state |
 | A13 | `POST /v1/email-changes` | Confirmar cambio de correo | Pub | `{token}`. Revalida unicidad bajo bloqueo; invalida otros tokens de cambio | ok state conc |
 | A14 | `GET /v1/me` | Cuenta propia | Auth | Incluye correo, verificación, rol, estado, `usernameChangedAt` y próxima fecha de cambio | ok authn |
 | A15 | `PATCH /v1/me` | Editar perfil | Ver | displayName, bio, username (cada 7 días; un no-op no reinicia el plazo). `avatarUrl` solo admite `null`, que quita el avatar y borra su archivo; una URL responde 422 | ok val state conc |
@@ -233,7 +233,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 ## Fuera del MVP
 
-OAuth (`user_identities`), likes (`recording_likes`), `play_count`, verticales por frontend, suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
+OAuth (`user_identities`), likes (`recording_likes`), `play_count`, lectura desde las microaplicaciones (CORS), suspensiones con caducidad, colas persistentes de correo y retención antiabuso.
 
 ## Decisiones de esta matriz
 

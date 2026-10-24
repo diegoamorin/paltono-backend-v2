@@ -1,18 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import {
-  Equals,
-  IsDefined,
-  IsEmail,
-  IsIn,
-  IsOptional,
-  IsString,
-  Length,
-  Matches,
-  MaxLength,
-  ValidateNested,
-} from 'class-validator';
-import { FRONTENDS, Frontend } from '../../config/app-config';
+import { Equals, IsDefined, IsEmail, IsString, Length, Matches, MaxLength, ValidateNested } from 'class-validator';
 import {
   DISPLAY_NAME_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
@@ -49,11 +37,6 @@ class RegistrationAttributes {
   @IsString()
   @Length(1, DISPLAY_NAME_MAX_LENGTH)
   displayName: string;
-
-  @ApiPropertyOptional({ enum: FRONTENDS, default: 'kpop', description: 'Frontend al que apuntan los enlaces del correo' })
-  @IsOptional()
-  @IsIn(FRONTENDS)
-  frontend?: Frontend;
 }
 
 class RegistrationResource {

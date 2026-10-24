@@ -87,10 +87,12 @@ export class AccountSeeder {
   }
 
   private async register(username: string, displayName: string, { verified = true } = {}): Promise<User> {
-    const user = await this.registration.register(
-      { username, email: `${username}@example.com`, password: SEED_PASSWORD, displayName },
-      'kpop',
-    );
+    const user = await this.registration.register({
+      username,
+      email: `${username}@example.com`,
+      password: SEED_PASSWORD,
+      displayName,
+    });
     if (verified) {
       // The emailed token is not stored, so the seed issues its own and redeems it like the link would.
       const { token } = await this.dataSource.transaction((manager) =>

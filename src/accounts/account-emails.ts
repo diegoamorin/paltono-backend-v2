@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Email, Mailer } from '../common/mail/mailer';
-import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { User } from './entities/user.entity';
 
 /**
@@ -18,8 +18,8 @@ export class AccountEmails {
   ) {}
 
   /** `tokenId` identifies the send request, so retries of it are delivered once. */
-  async sendEmailVerification(user: User, frontend: Frontend, token: string, tokenId: number): Promise<void> {
-    const link = this.link(frontend, 'verificar-correo', token);
+  async sendEmailVerification(user: User, token: string, tokenId: number): Promise<void> {
+    const link = this.link('verificar-correo', token);
     await this.send({
       template: 'email-verification',
       to: user.email!,
@@ -41,8 +41,8 @@ export class AccountEmails {
   }
 
   /** `tokenId` identifies the send request, so retries of it are delivered once. */
-  async sendPasswordReset(user: User, frontend: Frontend, token: string, tokenId: number): Promise<void> {
-    const link = this.link(frontend, 'restablecer-contrasena', token);
+  async sendPasswordReset(user: User, token: string, tokenId: number): Promise<void> {
+    const link = this.link('restablecer-contrasena', token);
     const expiry = `El enlace caduca en ${Math.round(this.config.auth.passwordResetTtlMs / 60_000)} minutos y solo sirve una vez.`;
     await this.send({
       template: 'password-reset',
@@ -65,8 +65,8 @@ export class AccountEmails {
   }
 
   /** Goes to the new address, which the link proves the account controls. */
-  async sendEmailChange(user: User, newEmail: string, frontend: Frontend, token: string, tokenId: number): Promise<void> {
-    const link = this.link(frontend, 'confirmar-correo', token);
+  async sendEmailChange(user: User, newEmail: string, token: string, tokenId: number): Promise<void> {
+    const link = this.link('confirmar-correo', token);
     const expiry = `El enlace caduca en ${Math.round(this.config.auth.emailChangeTtlMs / 60_000)} minutos y solo sirve una vez.`;
     await this.send({
       template: 'email-change',
@@ -88,8 +88,9 @@ export class AccountEmails {
     });
   }
 
-  private link(frontend: Frontend, path: string, token: string): string {
-    const url = new URL(path, `${this.config.frontends[frontend].replace(/\/+$/, '')}/`);
+  /** Account links always go to the main app, the only one where accounts are used. */
+  private link(path: string, token: string): string {
+    const url = new URL(path, `${this.config.mainAppUrl.replace(/\/+$/, '')}/`);
     url.searchParams.set('token', token);
     return url.toString();
   }

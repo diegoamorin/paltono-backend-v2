@@ -21,7 +21,7 @@ describe('passwords', () => {
 
   beforeAll(async () => {
     app = await createTestApp({
-      env: { FRONTEND_URL_KPOP: 'https://kpop.paltono.test', FRONTEND_URL_MAIN: 'https://paltono.test' },
+      env: { MAIN_APP_URL: 'https://paltono.test' },
     });
   });
 
@@ -42,7 +42,7 @@ describe('passwords', () => {
   }
 
   describe('POST /v1/password-reset-requests', () => {
-    it('emails a Spanish reset link to the kpop frontend by default', async () => {
+    it('emails a Spanish reset link to the main app', async () => {
       const response = await requestPasswordReset(app.server, 'Diego@Example.com').expect(202);
 
       expect(response.text).toBe('');
@@ -51,14 +51,8 @@ describe('passwords', () => {
       expect(email.text).toContain('Hola, Diego 🎤');
       expect(email.text).toContain('30 minutos');
       const link = app.mailer.lastLink('diego@example.com', 'password-reset');
-      expect(link.origin + link.pathname).toBe('https://kpop.paltono.test/restablecer-contrasena');
+      expect(link.origin + link.pathname).toBe('https://paltono.test/restablecer-contrasena');
       expect(link.searchParams.get('token')).toMatch(/^[A-Za-z0-9_-]{43}$/);
-    });
-
-    it('links to the frontend the client names', async () => {
-      await requestPasswordReset(app.server, 'diego@example.com', 'main').expect(202);
-
-      expect(app.mailer.lastLink('diego@example.com', 'password-reset').origin).toBe('https://paltono.test');
     });
 
     it('answers an unknown or deleted account exactly as an existing one, without sending anything', async () => {
@@ -83,8 +77,8 @@ describe('passwords', () => {
       await requestPasswordReset(app.server, 'diego@example.com').expect(202);
     });
 
-    it('validates the body', async () => {
-      const response = await requestPasswordReset(app.server, 'not an email', 'https://evil.example').expect(422);
+    it('validates the body and rejects a frontend, which clients no longer choose', async () => {
+      const response = await requestPasswordReset(app.server, 'not an email', 'main').expect(422);
 
       const pointers = response.body.errors.map((error: { source: { pointer: string } }) => error.source.pointer);
       expect([...new Set(pointers)].sort()).toEqual(['/data/attributes/email', '/data/attributes/frontend']);

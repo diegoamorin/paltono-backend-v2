@@ -2,7 +2,6 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Res } from '@nestjs/commo
 import { ApiAcceptedResponse, ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ApiJsonApiBody, ApiJsonApiErrorResponses } from '../common/json-api/swagger';
-import { DEFAULT_FRONTEND } from '../config/app-config';
 import { Authenticated, CurrentAuthentication } from './authenticated.decorator';
 import { PasswordChangeDocument, PasswordResetDocument, PasswordResetRequestDocument } from './dto/password.dto';
 import { PasswordsService } from './passwords.service';
@@ -26,8 +25,7 @@ export class PasswordsController {
   @ApiAcceptedResponse({ description: 'Solicitud recibida' })
   @ApiJsonApiErrorResponses(406, 415, 422, 429)
   async requestReset(@Body() body: PasswordResetRequestDocument): Promise<void> {
-    const { email, frontend = DEFAULT_FRONTEND } = body.data.attributes;
-    await this.passwords.requestReset(email, frontend);
+    await this.passwords.requestReset(body.data.attributes.email);
   }
 
   @Post('password-resets')

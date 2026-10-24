@@ -1,7 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiAcceptedResponse, ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiJsonApiBody, ApiJsonApiErrorResponses } from '../common/json-api/swagger';
-import { DEFAULT_FRONTEND } from '../config/app-config';
 import { Authenticated, CurrentAuthentication } from './authenticated.decorator';
 import { EmailVerificationDocument, EmailVerificationRequestDocument } from './dto/email-verification.dto';
 import { RateLimited } from './rate-limited.decorator';
@@ -36,8 +35,8 @@ export class EmailVerificationsController {
   @ApiJsonApiErrorResponses(406, 409, 415, 422, 429)
   async requestVerification(
     @CurrentAuthentication() { user }: Authentication,
-    @Body() body: EmailVerificationRequestDocument,
+    @Body() _body: EmailVerificationRequestDocument,
   ): Promise<void> {
-    await this.registration.requestVerification(user, body.data.attributes?.frontend ?? DEFAULT_FRONTEND);
+    await this.registration.requestVerification(user);
   }
 }

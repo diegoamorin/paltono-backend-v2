@@ -1,7 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiAcceptedResponse, ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiJsonApiBody, ApiJsonApiErrorResponses } from '../common/json-api/swagger';
-import { DEFAULT_FRONTEND } from '../config/app-config';
 import { Authenticated, CurrentAuthentication } from './authenticated.decorator';
 import { EmailChangeDocument, EmailChangeRequestDocument } from './dto/email-change.dto';
 import { EmailChangesService } from './email-changes.service';
@@ -28,8 +27,8 @@ export class EmailChangesController {
   @ApiAcceptedResponse({ description: 'Envío solicitado' })
   @ApiJsonApiErrorResponses(406, 409, 415, 422, 429)
   async request(@CurrentAuthentication() { user }: Authentication, @Body() body: EmailChangeRequestDocument): Promise<void> {
-    const { currentPassword, newEmail, frontend = DEFAULT_FRONTEND } = body.data.attributes;
-    await this.emailChanges.request(user, currentPassword, newEmail, frontend);
+    const { currentPassword, newEmail } = body.data.attributes;
+    await this.emailChanges.request(user, currentPassword, newEmail);
   }
 
   @Post('email-changes')

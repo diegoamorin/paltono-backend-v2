@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { DataSource, EntityManager, IsNull } from 'typeorm';
 import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
-import { APP_CONFIG, AppConfig, Frontend } from '../config/app-config';
+import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { AccountEmails } from './account-emails';
 import { User } from './entities/user.entity';
 import { UserCredential } from './entities/user-credential.entity';
@@ -30,7 +30,7 @@ export class RegistrationService {
   ) {}
 
   /** Creates an active, unverified account and emails it a verification link once committed. */
-  async register(account: NewAccount, frontend: Frontend): Promise<User> {
+  async register(account: NewAccount): Promise<User> {
     const passwordHash = await hashPassword(account.password);
     const now = this.clock.now();
     try {
@@ -60,7 +60,7 @@ export class RegistrationService {
         });
         return { user, ...(await this.issueVerificationToken(manager, user)) };
       });
-      await this.emails.sendEmailVerification(user, frontend, token, tokenId);
+      await this.emails.sendEmailVerification(user, token, tokenId);
       return user;
     } catch (error) {
       throw takenError(error) ?? error;
@@ -80,7 +80,7 @@ export class RegistrationService {
   }
 
   /** Emails the account a new verification link, unless its email is already verified. */
-  async requestVerification(user: User, frontend: Frontend): Promise<void> {
+  async requestVerification(user: User): Promise<void> {
     const { token, tokenId } = await this.dataSource.transaction(async (manager) => {
       const current = await manager.findOneOrFail(User, { where: { id: user.id }, lock: { mode: 'pessimistic_write' } });
       if (current.emailVerified) {
@@ -90,7 +90,7 @@ export class RegistrationService {
       }
       return this.issueVerificationToken(manager, current);
     });
-    await this.emails.sendEmailVerification(user, frontend, token, tokenId);
+    await this.emails.sendEmailVerification(user, token, tokenId);
   }
 
   private issueVerificationToken(manager: EntityManager, user: User): Promise<IssuedUserToken> {

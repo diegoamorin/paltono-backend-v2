@@ -12,11 +12,6 @@ export interface SwaggerConfig {
   credentials?: { user: string; password: string };
 }
 
-/** Frontends that emails may link to; clients name one, never a URL (ADR 0002). */
-export const FRONTENDS = ['kpop', 'main'] as const;
-export type Frontend = (typeof FRONTENDS)[number];
-export const DEFAULT_FRONTEND: Frontend = 'kpop';
-
 export interface AuthConfig {
   /** HMAC key that signs access tokens. */
   accessTokenSecret: string;
@@ -66,8 +61,8 @@ export interface AppConfig {
   auth: AuthConfig;
   mail: MailConfig;
   images: ImagesConfig;
-  /** Base URL of each frontend. */
-  frontends: Record<Frontend, string>;
+  /** Base URL of the main app, `paltono.com`, the only one where accounts are used (ADR 0002). */
+  mainAppUrl: string;
 }
 
 const SECOND = 1000;
@@ -105,10 +100,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     auth: authConfig(environment, env),
     mail: mailConfig(environment, env),
     images: imagesConfig(environment, env, port),
-    frontends: {
-      kpop: requiredInProduction(environment, env, 'FRONTEND_URL_KPOP', 'http://localhost:5173'),
-      main: requiredInProduction(environment, env, 'FRONTEND_URL_MAIN', 'http://localhost:5174'),
-    },
+    mainAppUrl: requiredInProduction(environment, env, 'MAIN_APP_URL', 'http://localhost:5173'),
   };
 }
 

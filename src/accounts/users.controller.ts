@@ -11,7 +11,6 @@ import {
   ApiJsonApiQuery,
   ApiJsonApiResourceResponse,
 } from '../common/json-api/swagger';
-import { DEFAULT_FRONTEND } from '../config/app-config';
 import { OwnAccountResource, PublicAccountResource, ownAccountSchema, publicAccountSchema } from './account.resource';
 import { accountId } from './administration';
 import { RegistrationDocument } from './dto/registration.dto';
@@ -40,8 +39,7 @@ export class UsersController {
   @ApiJsonApiResourceResponse(OwnAccountResource, 201)
   @ApiJsonApiErrorResponses(400, 406, 409, 415, 422, 429)
   async register(@Body() body: RegistrationDocument, @JsonApiQuery(REGISTRATION_QUERY) query: ResourceQuery) {
-    const { frontend = DEFAULT_FRONTEND, ...account } = body.data.attributes;
-    const user = await this.registration.register(account, frontend);
+    const user = await this.registration.register(body.data.attributes);
     return resourceDocument(ownAccountSchema, user, { ...query, path: `/v1/users/${user.uuid}` });
   }
 

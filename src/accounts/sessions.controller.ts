@@ -12,7 +12,7 @@ import { RateLimited } from './rate-limited.decorator';
 import { NewSessionMeta, SessionResource, sessionSchema } from './session.resource';
 import { Authentication, NewSession, SessionsService } from './sessions.service';
 
-/** Carries the refresh token of web clients; the API and the frontends share paltono.com. */
+/** Carries the refresh token of web clients; the API and the main app share paltono.com. */
 export const REFRESH_TOKEN_COOKIE = 'paltono_refresh_token';
 const REFRESH_TOKEN_COOKIE_OPTIONS = { httpOnly: true, secure: true, sameSite: 'lax', path: '/v1' } as const;
 
