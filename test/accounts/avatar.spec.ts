@@ -4,6 +4,7 @@ import { Account, changeRole, registerFirstAdmin, registerVerified } from '../su
 import {
   TEST_IMAGE_BASE_URL,
   fetchImage,
+  fileRemovedAt,
   pngImage,
   uploadAvatar,
   uploadImage,
@@ -52,7 +53,7 @@ describe('PUT /v1/me/avatar', () => {
     expect(await sharp(served.body).metadata()).toEqual(expect.objectContaining({ format: 'png', width: 12, height: 12 }));
   });
 
-  it('stops serving the replaced avatar', async () => {
+  it('stops serving the replaced avatar and records when its file was removed', async () => {
     const first = await uploadedAvatarUrl(app, diego.accessToken);
     const accessToken = await advance(15 * DAY);
 
@@ -61,6 +62,8 @@ describe('PUT /v1/me/avatar', () => {
     expect(second).not.toBe(first);
     await fetchImage(app, first).expect(404);
     await fetchImage(app, second).expect(200);
+    expect(await fileRemovedAt(app, first)).toEqual(new Date('2026-01-16T00:00:00.000Z'));
+    expect(await fileRemovedAt(app, second)).toBeNull();
   });
 
   it('validates the image like a catalog upload, and a rejection keeps the current avatar', async () => {

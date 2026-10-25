@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { EntityManager, IsNull } from 'typeorm';
 import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { ImageUpload } from './entities/image-upload.entity';
 
@@ -36,7 +36,7 @@ export function imageUrlAt(url: unknown, path: string): ImageUrlReference[] {
 /**
  * The image URL rule of the catalog (ADR 0005): an image field holds null or
  * the URL of an image uploaded for the catalog, under the configured public
- * base. It is checked when a microchange is written and submitted, never when
+ * base, whose file is still stored. It is checked when a microchange is written and submitted, never when
  * it is applied, so changing the base leaves what was applied valid.
  */
 @Injectable()
@@ -51,7 +51,8 @@ export class CatalogImageUrls {
   async problems(manager: EntityManager, references: ImageUrlReference[]): Promise<ImageUrlProblem[]> {
     const problems: ImageUrlProblem[] = [];
     for (const { url, path } of references) {
-      const uploaded = url.startsWith(this.publicBaseUrl) && (await manager.existsBy(ImageUpload, { url, purpose: 'catalog' }));
+      const uploaded =
+        url.startsWith(this.publicBaseUrl) && (await manager.existsBy(ImageUpload, { url, purpose: 'catalog', fileRemovedAt: IsNull() }));
       if (!uploaded) {
         problems.push({
           code: 'unknown_catalog_image',

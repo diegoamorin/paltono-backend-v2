@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import sharp from 'sharp';
 import request from 'supertest';
+import { DataSource } from 'typeorm';
 import { JSON_API } from './json-api';
 import { TestApp } from './test-app';
 
@@ -35,6 +36,27 @@ export async function uploadedAvatarUrl(app: TestApp, accessToken: string): Prom
 export async function uploadedImageUrl(app: TestApp, accessToken: string): Promise<string> {
   const response = await uploadImage(app, accessToken, await pngImage()).expect(201);
   return response.body.data.attributes.url;
+}
+
+/**
+ * When the file of the upload with `url` was removed, or null while it is
+ * stored. No endpoint shows it, so it is read from the database.
+ */
+export async function fileRemovedAt(app: TestApp, url: string): Promise<Date | null> {
+  const [upload] = await app.app.get(DataSource).query('SELECT file_removed_at FROM image_uploads WHERE url = $1', [url]);
+  if (!upload) throw new Error(`No upload has the URL ${url}`);
+  return upload.file_removed_at;
+}
+
+/**
+ * Records the file of the upload with `url` as removed, as a cleanup of unused
+ * catalog images would: no endpoint removes a catalog image's file yet.
+ */
+export async function markImageFileRemoved(app: TestApp, url: string): Promise<void> {
+  const [, affected] = await app.app
+    .get(DataSource)
+    .query('UPDATE image_uploads SET file_removed_at = $2 WHERE url = $1', [url, app.clock.now()]);
+  if (affected !== 1) throw new Error(`No upload has the URL ${url}`);
 }
 
 /** GET of an uploaded image's public URL, through the app that serves the local storage. */

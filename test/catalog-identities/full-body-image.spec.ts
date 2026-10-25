@@ -43,7 +43,7 @@ describe('the full-body image of a person', () => {
     const url = await uploadedImageUrl(app, admin.accessToken);
     const { publicId } = await publishIdentity({ type: 'person', displayName: 'Jisoo', person: { imgFullBody: url } });
 
-    expect((await attributes(publicId)).person).toEqual(expect.objectContaining({ imgFullBody: url, heightCm: null }));
+    expect((await attributes(publicId)).person).toEqual(expect.objectContaining({ imgFullBody: { url, width: 8, height: 8 }, heightCm: null }));
   });
 
   it('is null by default', async () => {
@@ -63,7 +63,7 @@ describe('the full-body image of a person', () => {
     const url = await uploadedImageUrl(app, admin.accessToken);
 
     await publish([setImage(url)]);
-    expect((await attributes(publicId)).person).toEqual(expect.objectContaining({ imgFullBody: url, heightCm: null }));
+    expect((await attributes(publicId)).person).toEqual(expect.objectContaining({ imgFullBody: { url, width: 8, height: 8 }, heightCm: null }));
 
     await publish([setImage(null)]);
     expect((await attributes(publicId)).person.imgFullBody).toBeNull();

@@ -1,6 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
+import { shownImages } from '../images/shown-images';
 import { Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
 import { ReleaseContribution, Track } from './entities/track.entity';
 import { creditEntries } from './music-entries';
@@ -66,11 +67,13 @@ export async function releaseEntries(manager: EntityManager, releases: Release[]
   const groupIds = [...new Set(releases.map(({ releaseGroupId }) => releaseGroupId))];
   const groups = await releaseGroupEntries(manager, await manager.find(ReleaseGroup, { where: { id: In(groupIds) }, relations: { editorialEntity: true } }), now, false);
   const explicit = await explicitReleaseIds(manager, releases.map(({ id }) => id));
+  const images = await shownImages(manager, releases.filter(notWithdrawn).map(({ coverArtUrl }) => coverArtUrl));
   const plain = releases.map((release) => ({
     release,
     times: times.get(release.id)!,
     isExplicit: explicit.has(release.id),
     group: groups.find(({ group }) => group.id === release.releaseGroupId)!,
+    coverArt: images(release.coverArtUrl),
   }));
   if (!withRelations) return plain;
 

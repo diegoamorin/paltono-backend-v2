@@ -11,6 +11,7 @@ Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.m
 - Las columnas de orden listan campos: cada uno admite ambas direcciones, y la dirección escrita es la habitual **[P12]**. Un filtro por código o slug de un vocabulario que no existe devuelve una lista vacía, no 400 **[P13]**.
 - Errores en formato JSON:API: 400 consulta mal formada, 401 sin autenticación, 403 autenticado sin permiso, 404 inexistente u oculto por privacidad, 409 estado o concurrencia incompatibles, 415/406 media type, 422 validación, 429 límite de peticiones.
 - Fichas: solo se sirven raíces `published` o `withdrawn`; una reserva responde 404. Una ficha retirada responde 200 con su identificador, `publicationStatus: withdrawn`, `withdrawnAt` y sin el contenido retirado **[P3]**. Las relaciones hacia una ficha retirada muestran solo ese aviso. Los listados de fichas solo incluyen raíces `published`; una ficha retirada se consulta por su id **[P11]**.
+- Imágenes de las fichas (`imgProfile` y `person.imgFullBody` de identidades, `coverArt` de ediciones, `image` de tours y eventos): se leen como `{url, width, height}` o `null`, y `null` también cuando la URL guardada no tiene una subida con su archivo (ADR 0005). Los payloads editoriales, las revisiones y `avatarUrl` siguen siendo solo la URL.
 - Fechas parciales: se serializan como `{year, month, day}` con nulos; los filtros de rango comparan solo la precisión conocida y documentan que una fecha parcial que se solapa con el rango se incluye.
 
 ### Niveles de acceso
@@ -195,7 +196,7 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E16 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/sources` | Vincular fuentes a un microcambio | Own | Fuente de otra propuesta responde 422 | ok val spec |
 | E17 | `POST /v1/proposals/{id}/submission` | Enviar | Own | Exige descripción, un microcambio, una fuente, tipos y dependencias válidos; congela el contenido. Un microcambio en una versión obsoleta responde 422 `obsolete_payload_schema_version` con `meta.changeId` | ok val state conc tx spec |
 | E18 | `POST /v1/proposals/{id}/publication` | Publicación directa del personal | Staff, autor del borrador | Envía y aplica en una transacción; retirar una ficha publicada exige Admin | ok authz tx spec |
-| E22 | `POST /v1/images` | Subir una imagen de catálogo | Ver | `multipart/form-data`, campo `file`; devuelve `image-uploads` con la URL para el borrador (ADR 0005). JPEG, PNG o WebP por contenido, 3 MB (413) y 4000 px por lado (422). Cupo de 4 cada 15 días para `user`, sin cupo para el personal: 429 `upload_quota_exceeded` con `meta.availableAt`. Un rechazo no consume cupo | ok val authz rate |
+| E22 | `POST /v1/images` | Subir una imagen de catálogo | Ver | `multipart/form-data`, campo `file`; devuelve `image-uploads` con la URL para el borrador y el ancho y alto de la imagen guardada, ya aplicada su orientación EXIF (ADR 0005). JPEG, PNG o WebP por contenido, 3 MB (413) y 4000 px por lado (422). Cupo de 4 cada 15 días para `user`, sin cupo para el personal: 429 `upload_quota_exceeded` con `meta.availableAt`. Un rechazo no consume cupo | ok val authz rate |
 
 ### Moderación y decisiones
 

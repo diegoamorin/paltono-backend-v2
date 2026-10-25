@@ -1,6 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
+import { shownImages } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { EventArtist, EventLink, EventOrganizer, LiveEvent, Tour, TourArtist, TourLink, TourOrganizer } from './entities/live-event.entity';
 import { EventEntry, LiveArtistEntry, OrganizerEntry, TourDerived, TourEntry } from './live-event.resource';
@@ -57,7 +58,8 @@ export async function tourEntries(manager: EntityManager, tours: Tour[], withRel
   if (tours.length === 0) return [];
   const shown = tours.filter(notWithdrawn).map(({ id }) => id);
   const events = await publishedEventsOf(manager, shown);
-  const plain = tours.map((tour) => ({ tour, derived: derive(events.filter(({ tourId }) => tourId === tour.id)) }));
+  const images = await shownImages(manager, tours.filter(notWithdrawn).map(({ imageUrl }) => imageUrl));
+  const plain = tours.map((tour) => ({ tour, derived: derive(events.filter(({ tourId }) => tourId === tour.id)), image: images(tour.imageUrl) }));
   if (!withRelations) return plain;
   if (shown.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
 
@@ -84,9 +86,11 @@ export async function tourEntries(manager: EntityManager, tours: Tour[], withRel
 
 /** Events, each with its editorial root and country loaded, as entries; with their relations when `withRelations`. */
 export async function eventEntries(manager: EntityManager, events: LiveEvent[], withRelations = true): Promise<EventEntry[]> {
-  if (!withRelations) return events.map((event) => ({ event }));
+  const images = await shownImages(manager, events.filter(notWithdrawn).map(({ imageUrl }) => imageUrl));
+  const plain = events.map((event) => ({ event, image: images(event.imageUrl) }));
+  if (!withRelations) return plain;
   const shown = events.filter(notWithdrawn).map(({ id }) => id);
-  if (shown.length === 0) return events.map((event) => ({ event, relations: null }));
+  if (shown.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
 
   const tourIds = [...new Set(events.flatMap(({ tourId }) => (tourId === null ? [] : [tourId])))];
   const [tours, artists, organizers, links] = await Promise.all([
@@ -95,10 +99,11 @@ export async function eventEntries(manager: EntityManager, events: LiveEvent[], 
     organizerEntries(manager, await manager.find(EventOrganizer, { where: { eventId: In(shown) }, order: { position: 'ASC', id: 'ASC' } })),
     manager.find(EventLink, { where: { eventId: In(shown) }, order: { position: 'ASC', id: 'ASC' } }),
   ]);
-  return events.map((event) => {
-    if (!shown.includes(event.id)) return { event, relations: null };
+  return plain.map((entry) => {
+    const { event } = entry;
+    if (!shown.includes(event.id)) return { ...entry, relations: null };
     return {
-      event,
+      ...entry,
       relations: {
         tour: tours.find(({ tour }) => tour.id === event.tourId) ?? null,
         artists: artists.filter(({ row }) => (row as EventArtist).eventId === event.id),

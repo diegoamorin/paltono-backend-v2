@@ -54,7 +54,16 @@ export class ImageUploadsService {
       await requireUploadQuota(manager, uploader, purpose, now);
 
       const url = this.publicBaseUrl + key;
-      await manager.insert(ImageUpload, { id, uploadedById: uploader.id, purpose, url, bytes: image.bytes.length, createdAt: now });
+      await manager.insert(ImageUpload, {
+        id,
+        uploadedById: uploader.id,
+        purpose,
+        url,
+        bytes: image.bytes.length,
+        width: image.width,
+        height: image.height,
+        createdAt: now,
+      });
       await use?.(manager, uploader, url);
       // Stored last, so a failure before or while storing rolls the record back and
       // stores nothing. A failure to commit after storing leaves the file orphaned.

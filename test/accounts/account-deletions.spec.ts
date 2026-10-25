@@ -20,7 +20,7 @@ import {
   registerFirstAdmin,
   registerVerified,
 } from '../support/administration';
-import { fetchImage, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
+import { fetchImage, fileRemovedAt, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const MINUTE = 60 * 1000;
@@ -93,6 +93,8 @@ describe('POST /v1/account-deletions', () => {
 
     await fetchImage(app, avatarUrl).expect(404);
     await fetchImage(app, catalogImage).expect(200);
+    expect(await fileRemovedAt(app, avatarUrl)).not.toBeNull();
+    expect(await fileRemovedAt(app, catalogImage)).toBeNull();
   });
 
   it('stops serving the avatar of a suspended account an administrator deletes', async () => {
@@ -101,6 +103,7 @@ describe('POST /v1/account-deletions', () => {
     await changeStatus(app, admin.accessToken, diego.uuid, { newStatus: 'deleted', reason: 'Lo pidió' }).expect(201);
 
     await fetchImage(app, avatarUrl).expect(404);
+    expect(await fileRemovedAt(app, avatarUrl)).not.toBeNull();
   });
 
   it('ends every session and pending token, so nothing logs in or acts any more', async () => {

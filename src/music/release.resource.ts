@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+import { SHOWN_IMAGE_DESCRIPTION, ShownImage, ShownImageAttributes } from '../images/shown-images';
 import { RELEASE_GROUP_TYPES, Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
 import {
   CreditEntry,
@@ -44,6 +45,8 @@ export interface ReleaseEntry {
   isExplicit: boolean;
   /** Its release group, without relations. */
   group: ReleaseGroupEntry;
+  /** Its cover art as the reads show it. */
+  coverArt: ShownImage | null;
   relations?: { contributions: CreditEntry[]; tracks: TrackEntry[] } | null;
 }
 
@@ -115,7 +118,7 @@ export const releaseSchema: ResourceSchema<ReleaseEntry> = defineResource({
     availability: releaseContent(({ times }) => times.availability),
     isCancelled: releaseContent(({ release }) => release.isCancelled),
     isExplicit: releaseContent(({ isExplicit }) => isExplicit),
-    coverArtUrl: releaseContent(({ release }) => release.coverArtUrl),
+    coverArt: releaseContent(({ coverArt }) => coverArt),
     createdAt: releaseContent(({ release }) => release.createdAt.toISOString()),
     updatedAt: releaseContent(({ release }) => release.updatedAt.toISOString()),
   },
@@ -250,8 +253,8 @@ class ReleaseAttributes {
   @ApiProperty({ required: false, description: `Derivado: alguna de sus pistas usa una grabación explícita. ${WITHDRAWN}` })
   isExplicit?: boolean;
 
-  @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
-  coverArtUrl?: string | null;
+  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `Portada. ${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  coverArt?: ShownImageAttributes | null;
 
   @ApiProperty({ format: 'date-time', required: false, description: WITHDRAWN })
   createdAt?: string;

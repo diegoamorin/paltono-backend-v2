@@ -35,7 +35,7 @@ Imagen de una persona de pie, de la cabeza a los pies, pensada para mostrarla a 
 _Avoid_: Foto de perfil, avatar.
 
 **Subida de imagen (image upload)**:
-Imagen que una cuenta entregó a la plataforma para usarla en una ficha o como avatar. Existe desde que se sube, aunque ninguna ficha la use todavía.
+Imagen que una cuenta entregó a la plataforma para usarla en una ficha o como avatar. Existe desde que se sube, aunque ninguna ficha la use todavía. Puede perder su archivo, como el avatar que se reemplaza, y sigue existiendo como historial de la cuenta: cuenta para el cupo, pero no se puede volver a usar ni se muestra.
 _Avoid_: Adjunto, archivo.
 
 **Cupo de subidas (upload quota)**:

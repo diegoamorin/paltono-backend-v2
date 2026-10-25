@@ -10718,6 +10718,54 @@
 											"top": 1047,
 											"width": 414,
 											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "Vq3Lw8Zk1Rt5Xb7Nc2Hm9Pd4",
+											"_parent": {
+												"$ref": "OpmRThGNeIqIgpj4QI3BpO+6"
+											},
+											"model": {
+												"$ref": "Kp4Wz7Qn2Lx9Rv5Tb1Ys8Mf3"
+											},
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 6565,
+											"top": 1062,
+											"width": 414,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "Gh6Tn1Bv8Xc3Zm5Lq7Wr2Ks9",
+											"_parent": {
+												"$ref": "OpmRThGNeIqIgpj4QI3BpO+6"
+											},
+											"model": {
+												"$ref": "Jd2Fs9Hy4Np7Uc1Ve6Qa3Rb8"
+											},
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 6565,
+											"top": 1077,
+											"width": 414,
+											"height": 13
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "Ty5Pk8Mw2Ce7Xn4Ja1Lz9Gs6",
+											"_parent": {
+												"$ref": "OpmRThGNeIqIgpj4QI3BpO+6"
+											},
+											"model": {
+												"$ref": "Bx7Rm3Qd6Wv1Hk9Yp4Sn2Lc5"
+											},
+											"font": "Arial;13;0",
+											"parentStyle": true,
+											"left": 6565,
+											"top": 1092,
+											"width": 414,
+											"height": 13
 										}
 									],
 									"font": "Arial;13;0",
@@ -10725,7 +10773,7 @@
 									"left": 6560,
 									"top": 967,
 									"width": 424,
-									"height": 98
+									"height": 143
 								}
 							],
 							"font": "Arial;13;0",
@@ -10733,7 +10781,7 @@
 							"left": 6560,
 							"top": 944,
 							"width": 424,
-							"height": 140,
+							"height": 185,
 							"nameLabel": {
 								"$ref": "klBOSIjvdT/OY8IeclwdiC5n"
 							},
@@ -12665,7 +12713,7 @@
 								"$ref": "AAAAAAGeD8zCEoDaj/A="
 							},
 							"name": "img_full_body",
-							"documentation": "Optional full-body image, used with height_cm to show people to scale; independent of it. NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied.",
+							"documentation": "Optional full-body image, used with height_cm to show people to scale; independent of it. NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied. Public reads show it as {url, width, height} from its upload, or null when the URL has no upload with its file stored; payloads and revisions keep only the URL.",
 							"type": "VARCHAR",
 							"length": 2048,
 							"nullable": true
@@ -13921,7 +13969,7 @@
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "cover_art_url",
-							"documentation": "NULL when the cover is unknown. If present, a valid HTTP(S) URL; never store a frontend placeholder. Approved 2026-10-13. NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied.",
+							"documentation": "NULL when the cover is unknown. If present, a valid HTTP(S) URL; never store a frontend placeholder. Approved 2026-10-13. NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied. Public reads show it as {url, width, height} from its upload, or null when the URL has no upload with its file stored; payloads and revisions keep only the URL.",
 							"type": "VARCHAR",
 							"nullable": true
 						},
@@ -15461,7 +15509,7 @@
 								"$ref": "AAAAAAGeD8zCFYF0ZlM="
 							},
 							"name": "avatar_url",
-							"documentation": "Optional account avatar; NULL when not supplied. Set only by uploading an avatar (PUT /v1/me/avatar, an image_uploads row with purpose=avatar), which applies at once; cleared with PATCH /v1/me avatarUrl=null. The replaced or cleared avatar file, and the avatar of a deleted account, is removed from storage.",
+							"documentation": "Optional account avatar; NULL when not supplied. Set only by uploading an avatar (PUT /v1/me/avatar, an image_uploads row with purpose=avatar), which applies at once; cleared with PATCH /v1/me avatarUrl=null. The replaced or cleared avatar file, and the avatar of a deleted account, is removed from storage, and its upload records file_removed_at. Read as a plain URL, without dimensions.",
 							"type": "VARCHAR",
 							"nullable": true
 						},
@@ -16852,7 +16900,7 @@
 								"$ref": "JcB1o4Z9CtSv2t/uTjOiQTRS"
 							},
 							"name": "img_profile",
-							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied.",
+							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied. Public reads show it as {url, width, height} from its upload, or null when the URL has no upload with its file stored; payloads and revisions keep only the URL.",
 							"type": "VARCHAR",
 							"nullable": true
 						},
@@ -17366,7 +17414,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "image_uploads",
-					"documentation": "Every image an account uploaded to the platform (ADR 0005): purpose=catalog through POST /v1/images, purpose=avatar through PUT /v1/me/avatar. The backend validates the content (JPEG, PNG or WebP, at most 3 MB and 4000 px per side), strips EXIF metadata and recompresses before storing it in Cloudflare R2 (a local folder in development and tests). A rejected upload records nothing. The upload quota counts rows over the last 15 days: 4 catalog uploads for user (no limit for moderator and admin) and 1 avatar upload for everyone. Catalog image fields accept only URLs registered here with purpose=catalog. Rows survive account deletion, like the rest of its history; catalog files stay, the avatar file is removed.",
+					"documentation": "Every image an account uploaded to the platform (ADR 0005): purpose=catalog through POST /v1/images, purpose=avatar through PUT /v1/me/avatar. The backend validates the content (JPEG, PNG or WebP, at most 3 MB and 4000 px per side), strips EXIF metadata and recompresses before storing it in Cloudflare R2 (a local folder in development and tests). A rejected upload records nothing. The upload quota counts rows over the last 15 days: 4 catalog uploads for user (no limit for moderator and admin) and 1 avatar upload for everyone. Catalog image fields accept only URLs registered here with purpose=catalog and no file_removed_at. Rows survive account deletion, like the rest of its history; catalog files stay, the avatar file is removed and file_removed_at records when.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -17431,6 +17479,37 @@
 							"name": "created_at",
 							"documentation": "Upload time by the application clock. Index (uploaded_by, purpose, created_at) for the quota window.",
 							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "Kp4Wz7Qn2Lx9Rv5Tb1Ys8Mf3",
+							"_parent": {
+								"$ref": "sGINen4/FPVzZNqj3d1N+gGB"
+							},
+							"name": "width",
+							"documentation": "Width in pixels of the stored image, once its EXIF orientation is applied. CHECK width > 0 AND height > 0. Public reads add it to the catalog image.",
+							"type": "INTEGER"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "Jd2Fs9Hy4Np7Uc1Ve6Qa3Rb8",
+							"_parent": {
+								"$ref": "sGINen4/FPVzZNqj3d1N+gGB"
+							},
+							"name": "height",
+							"documentation": "Height in pixels of the stored image, once its EXIF orientation is applied.",
+							"type": "INTEGER"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "Bx7Rm3Qd6Wv1Hk9Yp4Sn2Lc5",
+							"_parent": {
+								"$ref": "sGINen4/FPVzZNqj3d1N+gGB"
+							},
+							"name": "file_removed_at",
+							"documentation": "NULL while the file is stored; when it was removed from storage otherwise (today the replaced or cleared avatar, and the avatar of a deleted account). The row stays and still counts for the quota, but its URL is no longer accepted in a catalog field nor shown by the reads.",
+							"type": "TIMESTAMPTZ",
+							"nullable": true
 						}
 					]
 				}
@@ -17512,7 +17591,7 @@
 								"$ref": "gS4tA/92sD6vk92VInlrDqSG"
 							},
 							"name": "image_url",
-							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied.",
+							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied. Public reads show it as {url, width, height} from its upload, or null when the URL has no upload with its file stored; payloads and revisions keep only the URL.",
 							"type": "TEXT",
 							"nullable": true
 						},
@@ -17765,7 +17844,7 @@
 								"$ref": "muJNvRmY9HAsh6NbDUoVnJ3X"
 							},
 							"name": "image_url",
-							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied.",
+							"documentation": "NULL or the URL of an image uploaded to the platform: it starts with IMAGE_PUBLIC_BASE_URL and is registered in image_uploads with purpose=catalog (ADR 0005). Checked when a microchange is written and submitted, not when applied. Public reads show it as {url, width, height} from its upload, or null when the URL has no upload with its file stored; payloads and revisions keep only the URL.",
 							"type": "TEXT",
 							"nullable": true
 						},

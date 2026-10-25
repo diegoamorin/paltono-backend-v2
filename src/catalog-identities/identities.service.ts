@@ -4,6 +4,7 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
+import { NO_SHOWN_IMAGES, shownImages } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { Artist, OrganizationMembership, OrganizationMembershipRole } from './entities/artist.entity';
 import { MembershipEntry } from './membership.resource';
@@ -181,7 +182,8 @@ async function loadMemberships(manager: EntityManager, memberships: Organization
 export async function loadEntries(manager: EntityManager, identities: CatalogIdentity[]): Promise<IdentityEntry[]> {
   // A withdrawn entry only shows its notice: its subtype and relations are not even read.
   const ids = identities.filter(({ editorialEntity }) => editorialEntity!.publicationStatus !== 'withdrawn').map(({ id }) => id);
-  if (ids.length === 0) return identities.map((identity) => ({ identity, person: null, organization: null, relations: null }));
+  const withdrawn = (identity: CatalogIdentity): IdentityEntry => ({ identity, person: null, organization: null, relations: null, images: NO_SHOWN_IMAGES });
+  if (ids.length === 0) return identities.map(withdrawn);
   const [people, organizations, aliases, nationalities, assignments, platformLinks, artists] = await Promise.all([
     manager.find(Person, { where: { catalogIdentityId: In(ids) }, relations: { birthCountry: true } }),
     manager.find(Organization, { where: { catalogIdentityId: In(ids) }, relations: { originCountry: true } }),
@@ -195,8 +197,12 @@ export async function loadEntries(manager: EntityManager, identities: CatalogIde
     manager.find(CatalogIdentityPlatformLink, { where: { catalogIdentityId: In(ids) }, relations: { platform: true }, order: { id: 'ASC' } }),
     manager.findBy(Artist, { catalogIdentityId: In(ids) }),
   ]);
+  const images = await shownImages(manager, [
+    ...identities.filter(({ id }) => ids.includes(id)).map(({ imgProfile }) => imgProfile),
+    ...people.map(({ imgFullBody }) => imgFullBody),
+  ]);
   return identities.map((identity) => {
-    if (!ids.includes(identity.id)) return { identity, person: null, organization: null, relations: null };
+    if (!ids.includes(identity.id)) return withdrawn(identity);
     /** The rows of this identity, whose id the given column holds. */
     const own = <T>(rows: T[], ownerId: (row: T) => number) => rows.filter((row) => ownerId(row) === identity.id);
     const person = own(people, (row) => row.catalogIdentityId)[0] ?? null;
@@ -210,7 +216,7 @@ export async function loadEntries(manager: EntityManager, identities: CatalogIde
       platformLinks: own(platformLinks, (row) => row.catalogIdentityId),
       artist: null,
     };
-    const entry: IdentityEntry = { identity, person, organization, relations };
+    const entry: IdentityEntry = { identity, person, organization, relations, images };
     const artist = own(artists, (row) => row.catalogIdentityId)[0];
     if (artist) relations.artist = { artist, identity: entry };
     return entry;

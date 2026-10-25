@@ -4,7 +4,7 @@ Las imágenes del catálogo (imagen de perfil, foto de cuerpo completo, portada 
 
 Cada archivo pasa por el backend antes de llegar a Cloudflare R2: el backend comprueba el tipo por su contenido (JPEG, PNG o WebP), el peso (3 MB) y las dimensiones (4000 px por lado), elimina los metadatos EXIF respetando la orientación y recomprime sin pérdida visible conservando el formato. Una subida directa del navegador a R2 con URL firmada impediría limpiar y validar el archivo.
 
-Cada subida se registra con su cuenta, para contar el cupo de subidas en Postgres (sobrevive a reinicios), saber quién subió cada imagen y encontrar más adelante las que ninguna ficha usa. En desarrollo y en pruebas el almacenamiento es una carpeta local servida por el propio backend, para que todo funcione sin red ni credenciales.
+Cada subida se registra con su cuenta y las dimensiones de la imagen guardada, para contar el cupo de subidas en Postgres (sobrevive a reinicios), saber quién subió cada imagen y encontrar más adelante las que ninguna ficha usa. Una subida puede perder su archivo (hoy, el avatar reemplazado, quitado o de una cuenta borrada) y el registro se conserva con el momento en que se borró: sigue contando para el cupo, pero su URL ya no se acepta en una ficha ni se muestra. Las fichas guardan solo la URL, también en sus payloads y revisiones; al leerlas, el backend añade las dimensiones de la subida, o muestra la imagen como ausente si su archivo ya no está. En desarrollo y en pruebas el almacenamiento es una carpeta local servida por el propio backend, para que todo funcione sin red ni credenciales.
 
 ## Considered Options
 

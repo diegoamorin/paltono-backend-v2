@@ -48,6 +48,8 @@ describe('image uploads', () => {
           purpose: 'catalog',
           url: expect.stringMatching(/\.png$/),
           bytes: expect.any(Number),
+          width: 20,
+          height: 10,
           createdAt: '2026-01-01T00:00:00.000Z',
         },
         relationships: { uploadedBy: { data: { type: 'users', id: diego.uuid } } },
@@ -149,8 +151,9 @@ describe('image uploads', () => {
       const original = await jpegImage({ width: 20, height: 10 }, 6);
       expect(await sharp(original).metadata()).toEqual(expect.objectContaining({ orientation: 6, exif: expect.any(Buffer) }));
 
-      const url = (await uploadImage(app, diego.accessToken, original, 'photo.jpg').expect(201)).body.data.attributes.url;
+      const { url, width, height } = (await uploadImage(app, diego.accessToken, original, 'photo.jpg').expect(201)).body.data.attributes;
 
+      expect({ width, height }).toEqual({ width: 10, height: 20 });
       const served = (await fetchImage(app, url).expect(200)).body as Buffer;
       const metadata = await sharp(served).metadata();
       expect(metadata).toEqual(expect.objectContaining({ format: 'jpeg', width: 10, height: 20 }));

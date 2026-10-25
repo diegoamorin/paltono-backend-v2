@@ -140,7 +140,7 @@ describe('release groups and releases in the editorial flow', () => {
             releaseInstant: null,
             availability: 'unknown',
             isCancelled: false,
-            coverArtUrl: null,
+            coverArt: null,
           }),
           relationships: expect.objectContaining({ releaseGroup: { data: { type: 'release-groups', id: group.id } } }),
           meta: { editorialEntityId: entityId },

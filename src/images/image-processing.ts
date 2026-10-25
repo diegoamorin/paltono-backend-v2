@@ -36,6 +36,9 @@ export interface ProcessedImage {
   bytes: Buffer;
   extension: string;
   contentType: string;
+  /** Of the processed image: a side swaps with the original's when the EXIF orientation rotates it. */
+  width: number;
+  height: number;
 }
 
 /**
@@ -58,13 +61,13 @@ export async function processImage(file: Buffer): Promise<ProcessedImage> {
   }
 
   // sharp drops all metadata unless asked to keep it; autoOrient applies the EXIF orientation first.
-  const bytes = await format
+  const { data: bytes, info } = await format
     .encode(sharp(file).autoOrient(), file)
-    .toBuffer()
+    .toBuffer({ resolveWithObject: true })
     .catch(() => {
       throw unsupportedImage();
     });
-  return { bytes, extension: format.extension, contentType: format.contentType };
+  return { bytes, extension: format.extension, contentType: format.contentType, width: info.width, height: info.height };
 }
 
 export function imageTooLarge(): JsonApiException {

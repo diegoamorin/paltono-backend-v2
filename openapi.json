@@ -6716,7 +6716,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -6924,7 +6924,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7187,7 +7187,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7334,7 +7334,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7514,7 +7514,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7716,7 +7716,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7818,7 +7818,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8068,7 +8068,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8196,7 +8196,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8425,7 +8425,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8608,7 +8608,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArtUrl, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -9449,7 +9449,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -9458,7 +9458,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -9711,7 +9711,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -9720,7 +9720,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -9867,7 +9867,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -9930,7 +9930,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10097,7 +10097,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -10160,7 +10160,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10262,7 +10262,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10271,7 +10271,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -10526,7 +10526,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10535,7 +10535,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -10750,7 +10750,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -10813,7 +10813,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10958,7 +10958,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -10967,7 +10967,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -11182,7 +11182,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -11245,7 +11245,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -15534,7 +15534,7 @@
             "name": "fields[image-uploads]",
             "required": false,
             "in": "query",
-            "description": "Campos de image-uploads separados por comas: purpose, url, bytes, createdAt, uploadedBy",
+            "description": "Campos de image-uploads separados por comas: purpose, url, bytes, width, height, createdAt, uploadedBy",
             "schema": {
               "type": "string"
             }
@@ -15915,7 +15915,7 @@
             "name": "fields[events]",
             "required": false,
             "in": "query",
-            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, imageUrl, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
+            "description": "Campos de events separados por comas: publicationStatus, withdrawnAt, title, type, status, description, image, startDate, startTime, timezone, city, venueName, createdAt, updatedAt, tour, artists, organizers, links, country",
             "schema": {
               "type": "string"
             }
@@ -15924,7 +15924,7 @@
             "name": "fields[tours]",
             "required": false,
             "in": "query",
-            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, imageUrl, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
             "schema": {
               "type": "string"
             }
@@ -18202,6 +18202,29 @@
           "data"
         ]
       },
+      "ShownImageAttributes": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL pública de la imagen"
+          },
+          "width": {
+            "type": "number",
+            "description": "Ancho en píxeles"
+          },
+          "height": {
+            "type": "number",
+            "description": "Alto en píxeles"
+          }
+        },
+        "required": [
+          "url",
+          "width",
+          "height"
+        ]
+      },
       "PersonAttributes": {
         "type": "object",
         "properties": {
@@ -18242,9 +18265,14 @@
             "nullable": true
           },
           "imgFullBody": {
-            "type": "string",
             "nullable": true,
-            "description": "Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`"
+            "description": "Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con `heightCm`. Imagen con sus dimensiones, o null si no hay o su archivo ya no está guardado",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownImageAttributes"
+              }
+            ]
           }
         },
         "required": [
@@ -18351,9 +18379,14 @@
             "description": "Ausente en una ficha retirada"
           },
           "imgProfile": {
-            "type": "string",
             "nullable": true,
-            "description": "Ausente en una ficha retirada"
+            "description": "Imagen con sus dimensiones, o null si no hay o su archivo ya no está guardado. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownImageAttributes"
+              }
+            ]
           },
           "bio": {
             "type": "string",
@@ -19353,10 +19386,15 @@
             "type": "boolean",
             "description": "Derivado: alguna de sus pistas usa una grabación explícita. Ausente en una ficha retirada"
           },
-          "coverArtUrl": {
-            "type": "string",
+          "coverArt": {
             "nullable": true,
-            "description": "Ausente en una ficha retirada"
+            "description": "Portada. Imagen con sus dimensiones, o null si no hay o su archivo ya no está guardado. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownImageAttributes"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -19584,10 +19622,15 @@
             "nullable": true,
             "description": "Ausente en una ficha retirada"
           },
-          "imageUrl": {
-            "type": "string",
+          "image": {
             "nullable": true,
-            "description": "Ausente en una ficha retirada"
+            "description": "Imagen con sus dimensiones, o null si no hay o su archivo ya no está guardado. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownImageAttributes"
+              }
+            ]
           },
           "startDate": {
             "nullable": true,
@@ -19779,10 +19822,15 @@
             "nullable": true,
             "description": "Ausente en una ficha retirada"
           },
-          "imageUrl": {
-            "type": "string",
+          "image": {
             "nullable": true,
-            "description": "Ausente en una ficha retirada"
+            "description": "Imagen con sus dimensiones, o null si no hay o su archivo ya no está guardado. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShownImageAttributes"
+              }
+            ]
           },
           "startDate": {
             "nullable": true,
@@ -21262,6 +21310,14 @@
             "type": "number",
             "description": "Peso de la imagen guardada, después de procesarla"
           },
+          "width": {
+            "type": "number",
+            "description": "Ancho en píxeles de la imagen guardada, ya aplicada su orientación EXIF"
+          },
+          "height": {
+            "type": "number",
+            "description": "Alto en píxeles de la imagen guardada, ya aplicada su orientación EXIF"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -21271,6 +21327,8 @@
           "purpose",
           "url",
           "bytes",
+          "width",
+          "height",
           "createdAt"
         ]
       },

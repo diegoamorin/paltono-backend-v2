@@ -1,7 +1,8 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
+import { Clock } from '../common/clock/clock';
 import { ImageUpload } from './entities/image-upload.entity';
 
 /**
@@ -26,18 +27,23 @@ export class UploadedImageFiles {
   constructor(
     private readonly dataSource: DataSource,
     private readonly storage: ImageStorage,
+    private readonly clock: Clock,
   ) {}
 
   /**
    * Removes the file of the upload recorded with `url`; the record stays, as the
-   * history of the account. A URL no upload has, or `null`, removes nothing.
+   * history of the account, with the moment its file was removed. A URL no
+   * upload has, or `null`, removes nothing.
    */
   async remove(url: string | null): Promise<void> {
     if (url === null) return;
-    const upload = await this.dataSource.getRepository(ImageUpload).findOne({ select: { url: true }, where: { url } });
+    const uploads = this.dataSource.getRepository(ImageUpload);
+    const upload = await uploads.findOne({ select: { id: true, url: true }, where: { url } });
     if (!upload) return;
     // The URL is the base at upload time plus the key, so its last segment is the key whatever the base is now.
     await this.storage.delete(upload.url.slice(upload.url.lastIndexOf('/') + 1));
+    // Recorded once removed, so a failure to remove leaves the upload looking stored, never the reverse.
+    await uploads.update({ id: upload.id, fileRemovedAt: IsNull() }, { fileRemovedAt: this.clock.now() });
   }
 }
 

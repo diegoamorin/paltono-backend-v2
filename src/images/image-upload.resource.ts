@@ -11,6 +11,8 @@ export const imageUploadSchema = defineResource<ImageUpload>({
     purpose: (upload) => upload.purpose,
     url: (upload) => upload.url,
     bytes: (upload) => upload.bytes,
+    width: (upload) => upload.width,
+    height: (upload) => upload.height,
     createdAt: (upload) => upload.createdAt.toISOString(),
   },
   relationships: {
@@ -27,6 +29,12 @@ class ImageUploadAttributes {
 
   @ApiProperty({ description: 'Peso de la imagen guardada, después de procesarla' })
   bytes: number;
+
+  @ApiProperty({ description: 'Ancho en píxeles de la imagen guardada, ya aplicada su orientación EXIF' })
+  width: number;
+
+  @ApiProperty({ description: 'Alto en píxeles de la imagen guardada, ya aplicada su orientación EXIF' })
+  height: number;
 
   @ApiProperty({ format: 'date-time' })
   createdAt: string;

@@ -1,6 +1,6 @@
 import { accessTokenFor, deleteAccount, getMe, login, register, updateProfile } from '../support/accounts';
 import { Account, registerVerified } from '../support/administration';
-import { fetchImage, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
+import { fetchImage, fileRemovedAt, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 
@@ -58,12 +58,13 @@ describe('PATCH /v1/me', () => {
     );
   });
 
-  it('stops serving the avatar it clears', async () => {
+  it('stops serving the avatar it clears and records when its file was removed', async () => {
     const avatarUrl = await uploadedAvatarUrl(app, diego.accessToken);
 
     await updateProfile(app.server, diego.accessToken, diego.uuid, { avatarUrl: null }).expect(200);
 
     await fetchImage(app, avatarUrl).expect(404);
+    expect(await fileRemovedAt(app, avatarUrl)).toEqual(new Date('2026-01-01T00:00:00.000Z'));
   });
 
   it('refuses an avatar URL, even one uploaded, since avatars are uploaded with PUT /v1/me/avatar', async () => {

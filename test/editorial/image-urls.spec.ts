@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { Account, changeRole, registerFirstAdmin, registerVerified } from '../support/administration';
 import {
   ChangeInput,
@@ -11,7 +12,14 @@ import {
   reserveEntity,
   submitProposal,
 } from '../support/editorial';
-import { TEST_IMAGE_BASE_URL, uploadedAvatarUrl, uploadedImageUrl } from '../support/images';
+import {
+  TEST_IMAGE_BASE_URL,
+  markImageFileRemoved,
+  pngImage,
+  uploadImage,
+  uploadedAvatarUrl,
+  uploadedImageUrl,
+} from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 
 const present = (value: unknown) => ({ exists: true, value });
@@ -68,7 +76,7 @@ describe('image URLs of the catalog', () => {
     fieldPath: string;
     /** Where the image goes in a creation's value. */
     member: string;
-    /** The resource that shows the published root, and its image attribute. */
+    /** The resource that shows the published root, and its image attribute: `{ url, width, height }` or null. */
     resource: string;
     /** Dotted when nested, as `person.imgFullBody`. */
     attribute: string;
@@ -98,7 +106,7 @@ describe('image URLs of the catalog', () => {
       fieldPath: 'releases.cover_art_url',
       member: 'coverArtUrl',
       resource: 'releases',
-      attribute: 'coverArtUrl',
+      attribute: 'coverArt',
       creation: async (url) => {
         const group = await publish('release_group', 'release_groups', { title: 'BE', type: 'album' });
         return { targetPath: 'releases', value: { releaseGroup: { entity_id: group.entityId }, coverArtUrl: url } };
@@ -109,7 +117,7 @@ describe('image URLs of the catalog', () => {
       fieldPath: 'tours.image_url',
       member: 'imageUrl',
       resource: 'tours',
-      attribute: 'imageUrl',
+      attribute: 'image',
       creation: async (url) => ({ targetPath: 'tours', value: { title: 'BORN PINK World Tour', status: 'announced', imageUrl: url } }),
     },
     {
@@ -117,7 +125,7 @@ describe('image URLs of the catalog', () => {
       fieldPath: 'events.image_url',
       member: 'imageUrl',
       resource: 'events',
-      attribute: 'imageUrl',
+      attribute: 'image',
       creation: async (url) => ({ targetPath: 'events', value: { title: 'BORN PINK in Seoul', status: 'announced', imageUrl: url } }),
     },
   ];
@@ -127,7 +135,14 @@ describe('image URLs of the catalog', () => {
     ['an external URL', 'https://example.com/iu.png'],
     ['a URL under the base that was never uploaded', `${TEST_IMAGE_BASE_URL}00000000-0000-4000-8000-000000000000.png`],
     ['an upload made as an avatar', await uploadedAvatarUrl(app, ana.accessToken)],
+    ['a catalog upload whose file was removed', await removedCatalogImageUrl()],
   ];
+
+  async function removedCatalogImageUrl(): Promise<string> {
+    const url = await uploadedImageUrl(app, ana.accessToken);
+    await markImageFileRemoved(app, url);
+    return url;
+  }
 
   /** The 422 errors of adding a change to a fresh draft. */
   async function refusal(change: ChangeInput) {
@@ -175,14 +190,15 @@ describe('image URLs of the catalog', () => {
       }
     });
 
-    it('publishes a creation with a catalog upload, and with null', async () => {
-      const url = await uploadedImageUrl(app, ana.accessToken);
+    it('publishes a creation with a catalog upload, shown with its dimensions, and with null', async () => {
+      const url = (await uploadImage(app, ana.accessToken, await pngImage({ width: 30, height: 12 })).expect(201)).body.data.attributes.url;
       const [withImage] = await submitChanges([await creationChange(url)]);
       const [withoutImage] = await submitChanges([await creationChange(null)]);
 
       const published = (await apply(withImage).expect(201)).body.included[0].attributes.resultKey.publicId;
-      await apply(withoutImage).expect(201);
-      expect(await shown(published)).toBe(url);
+      const unpublished = (await apply(withoutImage).expect(201)).body.included[0].attributes.resultKey.publicId;
+      expect(await shown(published)).toEqual({ url, width: 30, height: 12 });
+      expect(await shown(unpublished)).toBeNull();
     });
 
     it('sets and removes the image with set_fields', async () => {
@@ -190,9 +206,35 @@ describe('image URLs of the catalog', () => {
       const url = await uploadedImageUrl(app, ana.accessToken);
 
       await apply((await submitChanges([fieldChange(entityId, url)]))[0]).expect(201);
-      expect(await shown(id)).toBe(url);
+      expect(await shown(id)).toEqual({ url, width: 8, height: 8 });
       await apply((await submitChanges([fieldChange(entityId, null)]))[0]).expect(201);
       expect(await shown(id)).toBeNull();
+    });
+  });
+
+  describe('a published image without its file', () => {
+    async function identityWithImage(): Promise<{ id: string; url: string }> {
+      const url = await uploadedImageUrl(app, ana.accessToken);
+      const { id } = await publish('identity', 'catalog_identities', personCreation({ imgProfile: url }).value);
+      return { id, url };
+    }
+
+    const shownImage = async (id: string) => (await getJsonApi(app, `/v1/identities/${id}`).expect(200)).body.data.attributes.imgProfile;
+
+    it('shows no image once the file of its upload was removed', async () => {
+      const { id, url } = await identityWithImage();
+
+      await markImageFileRemoved(app, url);
+
+      expect(await shownImage(id)).toBeNull();
+    });
+
+    it('shows no image when no upload records its URL', async () => {
+      const { id, url } = await identityWithImage();
+
+      await app.app.get(DataSource).query('DELETE FROM image_uploads WHERE url = $1', [url]);
+
+      expect(await shownImage(id)).toBeNull();
     });
   });
 
@@ -218,7 +260,7 @@ describe('image URLs of the catalog', () => {
 
       const response = await decideChange(moved, moderator.accessToken, changeId, { action: 'apply' }, '?include=revision').expect(201);
       const { body } = await getJsonApi(moved, `/v1/identities/${response.body.included[0].attributes.resultKey.publicId}`).expect(200);
-      expect(body.data.attributes.imgProfile).toBe(url);
+      expect(body.data.attributes.imgProfile).toEqual({ url, width: 8, height: 8 });
     });
 
     it('refuses to submit a draft whose image is no longer under the base', async () => {

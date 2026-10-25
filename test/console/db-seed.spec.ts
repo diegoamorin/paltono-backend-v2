@@ -275,8 +275,8 @@ describe('pnpm db:seed', () => {
     it('gives identities a profile image uploaded for the catalog and served by the backend', async () => {
       for (const name of ['BLACKPINK', 'Jennie']) {
         const { body } = await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200);
-        const url: string = body.data.attributes.imgProfile;
-        expect(url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
+        const { url } = body.data.attributes.imgProfile;
+        expect(body.data.attributes.imgProfile).toEqual({ url: expect.stringMatching(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`)), width: 400, height: 400 });
         const image = await fetchImage(app, url).expect(200);
         expect(await sharp(image.body).metadata()).toEqual(expect.objectContaining({ format: 'png', width: 400, height: 400 }));
       }
@@ -288,12 +288,17 @@ describe('pnpm db:seed', () => {
 
     it('gives some idols a full-body image uploaded for the catalog, taller than wide', async () => {
       const fullBody = async (name: string) =>
-        (await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200)).body.data.attributes.person.imgFullBody as string | null;
+        (await getJsonApi(app, `/v1/identities/${await identityNamed(name)}`).expect(200)).body.data.attributes.person.imgFullBody as {
+          url: string;
+          width: number;
+          height: number;
+        } | null;
 
       for (const name of ['Jisoo', 'Jennie', 'Rosé', 'Lisa']) {
-        const url = await fullBody(name);
-        expect(url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
-        const { width, height } = await sharp((await fetchImage(app, url!).expect(200)).body).metadata();
+        const image = (await fullBody(name))!;
+        expect(image.url).toMatch(new RegExp(`^${TEST_IMAGE_BASE_URL}[0-9a-f-]{36}\\.png$`));
+        const { width, height } = await sharp((await fetchImage(app, image.url).expect(200)).body).metadata();
+        expect({ width, height }).toEqual({ width: image.width, height: image.height });
         expect(height).toBeGreaterThan(width!);
       }
       expect(await fullBody('Nayeon')).toBeNull();

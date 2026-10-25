@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+import { SHOWN_IMAGE_DESCRIPTION, ShownImage, ShownImageAttributes } from '../images/shown-images';
 import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN, content, isWithdrawn, partialDate } from '../music/resource-primitives';
 import { COUNTRIES } from '../vocabularies/countries';
 import { Country } from '../vocabularies/entities/country.entity';
@@ -36,6 +37,8 @@ export interface TourEntry {
   /** With its editorial root. */
   tour: Tour;
   derived: TourDerived;
+  /** Its image as the reads show it. */
+  image: ShownImage | null;
   relations?: {
     artists: LiveArtistEntry[];
     organizers: OrganizerEntry[];
@@ -47,6 +50,8 @@ export interface TourEntry {
 export interface EventEntry {
   /** With its editorial root and its country. */
   event: LiveEvent;
+  /** Its image as the reads show it. */
+  image: ShownImage | null;
   relations?: {
     tour: TourEntry | null;
     artists: LiveArtistEntry[];
@@ -132,7 +137,7 @@ export const tourSchema: ResourceSchema<TourEntry> = defineResource({
     title: tourContent(({ tour }) => tour.title),
     status: tourContent(({ tour }) => tour.status),
     description: tourContent(({ tour }) => tour.description),
-    imageUrl: tourContent(({ tour }) => tour.imageUrl),
+    image: tourContent(({ image }) => image),
     startDate: tourContent(({ tour }) => partialDate(tour.startYear, tour.startMonth, tour.startDay)),
     endDate: tourContent(({ tour }) => partialDate(tour.endYear, tour.endMonth, tour.endDay)),
     countries: tourContent(({ derived }) => derived.countries.map(({ code, name }) => ({ code, name }))),
@@ -161,7 +166,7 @@ export const eventSchema: ResourceSchema<EventEntry> = defineResource({
     type: eventContent(({ event }) => event.type),
     status: eventContent(({ event }) => event.status),
     description: eventContent(({ event }) => event.description),
-    imageUrl: eventContent(({ event }) => event.imageUrl),
+    image: eventContent(({ image }) => image),
     startDate: eventContent(({ event }) => partialDate(event.startYear, event.startMonth, event.startDay)),
     startTime: eventContent(({ event }) => event.startTime?.slice(0, 5) ?? null),
     timezone: eventContent(({ event }) => event.timezone),
@@ -206,8 +211,8 @@ class TourAttributes {
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   description?: string | null;
 
-  @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
-  imageUrl?: string | null;
+  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  image?: ShownImageAttributes | null;
 
   @ApiProperty({ type: PartialDate, nullable: true, required: false, description: `Inicio anunciado. ${WITHDRAWN}` })
   startDate?: PartialDate | null;
@@ -282,8 +287,8 @@ class EventAttributes {
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   description?: string | null;
 
-  @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
-  imageUrl?: string | null;
+  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  image?: ShownImageAttributes | null;
 
   @ApiProperty({ type: PartialDate, nullable: true, required: false, description: `Fecha parcial. ${WITHDRAWN}` })
   startDate?: PartialDate | null;
