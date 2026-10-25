@@ -38,7 +38,7 @@ class CountryAttributes {
   @CodeValidation()
   code: string;
 
-  @ApiProperty({ example: 'Corea del Sur', maxLength: NAME_MAX_LENGTH })
+  @ApiProperty({ example: 'South Korea', maxLength: NAME_MAX_LENGTH })
   @NameValidation()
   name: string;
 }
@@ -59,7 +59,7 @@ class CountryResponseAttributes {
   @ApiProperty({ example: 'KR' })
   code: string;
 
-  @ApiProperty({ example: 'Corea del Sur' })
+  @ApiProperty({ example: 'South Korea' })
   name: string;
 }
 

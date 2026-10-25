@@ -208,7 +208,7 @@ describe('dependencies, atomic groups and withdrawals', () => {
 
   describe('a prerequisite that fails', () => {
     it('blocks its dependents, transitively and with recorded decisions, and leaves independent microchanges available', async () => {
-      const korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'Corea del Sur' }));
+      const korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'South Korea' }));
       const published = await publishPerson();
       const entityId = await reserveIdentity(app, luis.accessToken);
       const { proposalId, changeIds } = await draftChanges(luis, [
@@ -246,7 +246,7 @@ describe('dependencies, atomic groups and withdrawals', () => {
     const GROUP = '5f1c0f3a-3a51-4c3e-9f0e-2b6f8b0e7d11';
 
     it('applies the whole group in dependency order when any member is decided, and returns all its decisions', async () => {
-      const korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'Corea del Sur' }));
+      const korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'South Korea' }));
       const entityId = await reserveIdentity(app, luis.accessToken);
       const { proposalId, changeIds } = await draftChanges(luis, [
         { entityId, atomicGroupId: GROUP },

@@ -191,7 +191,7 @@ class CountryName {
   @ApiProperty({ example: 'KR' })
   code: string;
 
-  @ApiProperty({ example: 'Corea del Sur' })
+  @ApiProperty({ example: 'South Korea' })
   name: string;
 }
 

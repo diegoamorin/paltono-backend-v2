@@ -78,7 +78,7 @@ describe('microchanges and sources of a draft', () => {
     it('creates an organization with a partial founding date and an origin country', async () => {
       const [{ id: countryId }] = await app.app
         .get(DataSource)
-        .query(`INSERT INTO countries (code, name) VALUES ('KR', 'Corea del Sur') RETURNING id`);
+        .query(`INSERT INTO countries (code, name) VALUES ('KR', 'South Korea') RETURNING id`);
       const entityId = await reserveIdentity(app, diego.accessToken);
       const proposalId = await createDraft(app, diego.accessToken);
       const proposedValue = {

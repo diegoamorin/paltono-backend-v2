@@ -23,6 +23,7 @@
     "db:seed": "ts-node --transpile-only src/console/db-seed.ts",
     "db:test:prepare": "ts-node --transpile-only src/console/db-test-prepare.ts",
     "admin:bootstrap": "ts-node --transpile-only src/console/admin-bootstrap.ts",
+    "countries:load": "ts-node --transpile-only src/console/countries-load.ts",
     "openapi:export": "ts-node --transpile-only src/console/openapi-export.ts",
     "payload-schemas:export": "ts-node --transpile-only src/console/payload-schemas-export.ts"
   },

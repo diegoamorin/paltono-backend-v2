@@ -15,11 +15,11 @@ Unidad de información editorial correspondiente a una identidad, obra, grabaci�
 _Avoid_: Página como sinónimo de la información del catálogo.
 
 **País (country)**:
-Estado soberano vigente en el que se ubica algo del catálogo. Los estados ya extintos no son países del catálogo: un lugar se registra con el país actual al que pertenece.
-_Avoid_: Región, territorio histórico.
+País o territorio vigente con identidad cultural propia en el que se ubica algo del catálogo, como en los catálogos musicales habituales: incluye Estados soberanos, territorios como Puerto Rico o Hong Kong y entidades de reconocimiento disputado como Taiwán, Palestina o Kosovo. Los estados ya extintos no son países del catálogo: un lugar se registra con el país actual al que pertenece. Las entidades sin reconocimiento internacional estándar, como Chipre del Norte o Somalilandia, tampoco: se registran con el país reconocido que las contiene.
+_Avoid_: Estado soberano como sinónimo, región, territorio histórico.
 
 **Nacionalidad (nationality)**:
-País del que una persona es nacional. Una persona puede tener varias, o ninguna conocida.
+País con el que una persona se identifica como nacional; es identidad cultural, no ciudadanía legal, por lo que una persona de Puerto Rico puede figurar con Puerto Rico y también con Estados Unidos. Una persona puede tener varias, o ninguna conocida.
 _Avoid_: País de nacimiento, origen.
 
 **País de nacimiento (birth country)**:

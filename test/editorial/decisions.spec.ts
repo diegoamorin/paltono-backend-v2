@@ -295,7 +295,7 @@ describe('decisions', () => {
     it('validates the payload again before applying it', async () => {
       const { proposalId, changeId } = await draftIdentityCreation(app, diego.accessToken);
       const dataSource = app.app.get(DataSource);
-      const [{ id: countryId }] = await dataSource.query(`INSERT INTO countries (code, name) VALUES ('KR', 'Corea del Sur') RETURNING id`);
+      const [{ id: countryId }] = await dataSource.query(`INSERT INTO countries (code, name) VALUES ('KR', 'South Korea') RETURNING id`);
       const proposedValue = organizationCreation({ originCountryId: countryId });
       await updateChange(app, diego.accessToken, proposalId, changeId, { proposedValue }).expect(200);
       await submitProposal(app, diego.accessToken, proposalId).expect(200);

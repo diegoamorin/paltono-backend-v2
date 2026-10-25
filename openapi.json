@@ -17383,7 +17383,7 @@
           },
           "name": {
             "type": "string",
-            "example": "Corea del Sur"
+            "example": "South Korea"
           }
         },
         "required": [
@@ -17423,7 +17423,7 @@
           },
           "name": {
             "type": "string",
-            "example": "Corea del Sur",
+            "example": "South Korea",
             "maxLength": 100
           }
         },
@@ -19776,7 +19776,7 @@
           },
           "name": {
             "type": "string",
-            "example": "Corea del Sur"
+            "example": "South Korea"
           }
         },
         "required": [

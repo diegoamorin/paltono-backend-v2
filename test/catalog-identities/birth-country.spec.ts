@@ -14,8 +14,8 @@ describe('the birth country of a person', () => {
     app = await createTestApp();
     await app.reset();
     admin = await registerFirstAdmin(app);
-    korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'Corea del Sur' }));
-    usa = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'US', name: 'Estados Unidos' }));
+    korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'South Korea' }));
+    usa = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'US', name: 'United States' }));
   });
 
   afterAll(async () => {
@@ -56,7 +56,7 @@ describe('the birth country of a person', () => {
     expect(body.data.attributes.person).toEqual(expect.objectContaining({ birthCountryId: usa }));
     expect(body.data.relationships.birthCountry).toEqual({ data: { type: 'countries', id: String(usa) } });
     expect(body.data.relationships.nationalities).toEqual({ data: [{ type: 'countries', id: String(korea) }] });
-    expect(body.included).toEqual([expect.objectContaining({ type: 'countries', id: String(usa), attributes: { code: 'US', name: 'Estados Unidos' } })]);
+    expect(body.included).toEqual([expect.objectContaining({ type: 'countries', id: String(usa), attributes: { code: 'US', name: 'United States' } })]);
   });
 
   it('filters identities by the code of their birth country', async () => {

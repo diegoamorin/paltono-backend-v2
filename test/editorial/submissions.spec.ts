@@ -75,7 +75,7 @@ describe('submissions', () => {
       // The origin country is deleted after the microchange was added.
       const [{ id: countryId }] = await app.app
         .get(DataSource)
-        .query(`INSERT INTO countries (code, name) VALUES ('KR', 'Corea del Sur') RETURNING id`);
+        .query(`INSERT INTO countries (code, name) VALUES ('KR', 'South Korea') RETURNING id`);
       const organization = { exists: true, value: { type: 'organization', displayName: 'EDAM', organization: { originCountryId: countryId } } };
       await updateChange(app, diego.accessToken, proposalId, changeId, { proposedValue: organization }).expect(200);
       await app.app.get(DataSource).query('DELETE FROM countries');

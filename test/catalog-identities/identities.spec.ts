@@ -54,8 +54,8 @@ describe('GET /v1/identities (C1) and /v1/identities/{id} (C2)', () => {
     app = await createTestApp();
     await app.reset();
     admin = await registerFirstAdmin(app);
-    korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'Corea del Sur' }));
-    const japan = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'JP', name: 'Japón' }));
+    korea = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'South Korea' }));
+    const japan = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'JP', name: 'Japan' }));
     agency = Number(await createdEntryId(app, admin.accessToken, 'organization-types', { slug: 'agency', name: 'Agencia' }));
     label = Number(await createdEntryId(app, admin.accessToken, 'organization-types', { slug: 'label', name: 'Sello' }));
     spotify = Number(
@@ -145,7 +145,7 @@ describe('GET /v1/identities (C1) and /v1/identities/{id} (C2)', () => {
     expect(body.included).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ type: 'identity-aliases', attributes: { alias: 'Lee Ji-eun', isPrimary: true, sortOrder: 0 } }),
-        expect.objectContaining({ type: 'countries', id: String(korea), attributes: { code: 'KR', name: 'Corea del Sur' } }),
+        expect.objectContaining({ type: 'countries', id: String(korea), attributes: { code: 'KR', name: 'South Korea' } }),
         expect.objectContaining({
           type: 'identity-platform-links',
           attributes: expect.objectContaining({ url: 'https://open.spotify.com/artist/iu' }),

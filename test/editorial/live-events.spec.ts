@@ -159,7 +159,7 @@ describe('tours and events in the editorial flow', () => {
     });
 
     it('changes the location of an event and refuses an unknown country', async () => {
-      const country = await createdEntryId(app, admin.accessToken, 'countries', { code: 'PE', name: 'Perú' });
+      const country = await createdEntryId(app, admin.accessToken, 'countries', { code: 'PE', name: 'Peru' });
       const event = await publish('event', 'events', { title: 'Show', status: 'announced' });
 
       expect(await pointers(setField(event.entityId, 'events.location', { countryId: 99999, city: null, venueName: null }))).toEqual([
@@ -170,7 +170,7 @@ describe('tours and events in the editorial flow', () => {
 
       const { body } = await getJsonApi(app, `/v1/events/${event.id}?include=country`).expect(200);
       expect(body.data.attributes).toEqual(expect.objectContaining({ city: 'Lima', venueName: 'Estadio Nacional' }));
-      expect(body.included).toEqual([expect.objectContaining({ type: 'countries', id: country, attributes: { code: 'PE', name: 'Perú' } })]);
+      expect(body.included).toEqual([expect.objectContaining({ type: 'countries', id: country, attributes: { code: 'PE', name: 'Peru' } })]);
     });
   });
 

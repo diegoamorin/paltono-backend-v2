@@ -180,7 +180,7 @@ describe('withdrawing a published entry (withdraw_entity)', () => {
     const newDraft = await createDraft(app, luis.accessToken);
     await addChange(app, luis.accessToken, newDraft, addAlias(entityId, 'Jieun')).expect(422);
     // Not even a relation whose key names the root itself.
-    const [{ id: countryId }] = await app.app.get(DataSource).query(`INSERT INTO countries (code, name) VALUES ('KR', 'Corea del Sur') RETURNING id`);
+    const [{ id: countryId }] = await app.app.get(DataSource).query(`INSERT INTO countries (code, name) VALUES ('KR', 'South Korea') RETURNING id`);
     const nationality = {
       entityId,
       operation: 'add_relation',

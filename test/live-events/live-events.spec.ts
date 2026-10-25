@@ -43,9 +43,9 @@ describe('events (L1, L2), tours (L3–L5) and their organizers and artists (C5,
     app = await createTestApp();
     await app.reset();
     admin = await registerFirstAdmin(app);
-    countries.KR = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'Corea del Sur' }));
-    countries.JP = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'JP', name: 'Japón' }));
-    countries.PE = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'PE', name: 'Perú' }));
+    countries.KR = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'KR', name: 'South Korea' }));
+    countries.JP = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'JP', name: 'Japan' }));
+    countries.PE = Number(await createdEntryId(app, admin.accessToken, 'countries', { code: 'PE', name: 'Peru' }));
 
     await publishRoot('blackpink', 'identity', 'catalog_identities', { type: 'organization', displayName: 'BLACKPINK', organization: {} });
     await publishRoot('livenation', 'identity', 'catalog_identities', { type: 'organization', displayName: 'Live Nation', organization: {} });
@@ -132,8 +132,8 @@ describe('events (L1, L2), tours (L3–L5) and their organizers and artists (C5,
           startDate: { year: 2022, month: 10, day: null },
           endDate: { year: 2023, month: 9, day: null },
           countries: [
-            { code: 'KR', name: 'Corea del Sur' },
-            { code: 'JP', name: 'Japón' },
+            { code: 'JP', name: 'Japan' },
+            { code: 'KR', name: 'South Korea' },
           ],
           eventDates: [
             { year: 2022, month: 10, day: 15 },

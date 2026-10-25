@@ -368,7 +368,7 @@ describe('relation changes', () => {
     }
 
     it('names a new root by its editorial id, depends on its creation and is translated to its key when applied', async () => {
-      const korea = await country('KR', 'Corea del Sur');
+      const korea = await country('KR', 'South Korea');
       const entityId = await reserveIdentity(app, ana.accessToken);
       const proposalId = await createDraft(app, ana.accessToken);
       const creation = await addChange(app, ana.accessToken, proposalId, { entityId }).expect(201);
@@ -391,7 +391,7 @@ describe('relation changes', () => {
     });
 
     it('removes a nationality by its composite key', async () => {
-      const korea = await country('KR', 'Corea del Sur');
+      const korea = await country('KR', 'South Korea');
       const entityId = await publishPerson();
       const { changeIds } = await submitChanges(ana, [nationality('add_relation', entityId, korea)]);
       await apply(changeIds[0]).expect(201);
@@ -405,7 +405,7 @@ describe('relation changes', () => {
     });
 
     it('refuses a key naming another root, an unknown country or a reservation the proposal does not create', async () => {
-      const korea = await country('KR', 'Corea del Sur');
+      const korea = await country('KR', 'South Korea');
       const entityId = await publishPerson();
       const other = await publishPerson();
       const reserved = await reserveIdentity(app, luis.accessToken);

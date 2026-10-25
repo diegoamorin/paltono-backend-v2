@@ -304,6 +304,14 @@ describe('pnpm db:seed', () => {
       expect(await fullBody('Nayeon')).toBeNull();
     });
 
+    it('loads the whole country list, in English', async () => {
+      const response = await getJsonApi(app, '/v1/countries?filter[code]=KR').expect(200);
+
+      expect(response.body.data.map(({ attributes }: Resource) => attributes)).toEqual([{ code: 'KR', name: 'South Korea' }]);
+      const [{ n }] = await queryTestDatabase<{ n: number }>('SELECT count(*)::int AS n FROM countries');
+      expect(n).toBe(250);
+    });
+
     it('gives some idols a birth country apart from their nationalities', async () => {
       const response = await getJsonApi(app, `/v1/identities/${await identityNamed('Mina')}?include=birthCountry,nationalities`).expect(200);
 

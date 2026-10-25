@@ -231,6 +231,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 | O5 | `pnpm db:reset` | Vacía todos los registros, conserva tablas; solo desarrollo | ok |
 | O6 | `pnpm migration:run`, `migration:revert`, `migration:generate` | Migraciones TypeORM | ok |
 | O7 | `pnpm payload-schemas:export` | Añade a `payload-schemas.json` las versiones del payload recién publicadas; falla sin escribir si una ya publicada cambió o desapareció ([ADR 0006](../adr/0006-payload-schema-versions.md)). Una prueba compara el archivo con el registro | ok |
+| O8 | `pnpm countries:load` | Inserta los países de la lista cuyo código falta, en cualquier entorno; salta los existentes sin tocarlos y avisa de los que parecen tener mal el código ([ADR 0007](../adr/0007-country-list.md)) | ok |
 
 ## Fuera del MVP
 

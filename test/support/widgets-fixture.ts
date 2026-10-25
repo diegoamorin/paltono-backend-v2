@@ -49,11 +49,11 @@ interface Widget {
 const NEW_FOR_DAYS = 30;
 const DAY = 24 * 60 * 60 * 1000;
 
-const korea: Country = { code: 'KR', name: 'Corea del Sur' };
+const korea: Country = { code: 'KR', name: 'South Korea' };
 const makers: Maker[] = [
   { id: 1, name: 'Hybe Merch', country: korea },
   { id: 2, name: 'SM Goods', country: korea },
-  { id: 3, name: 'Weverse Shop US', country: { code: 'US', name: 'Estados Unidos' } },
+  { id: 3, name: 'Weverse Shop US', country: { code: 'US', name: 'United States' } },
 ];
 const tags: Tag[] = [{ slug: 'limited' }, { slug: 'official' }];
 

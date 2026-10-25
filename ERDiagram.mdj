@@ -16953,7 +16953,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "countries",
-					"documentation": "Administrated shared country vocabulary. Stable ID and unique uppercase two-letter code. Used independently for nationality, organization origin and event location. No inference between these concepts; do not infer timezone from country. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
+					"documentation": "Administrated shared country vocabulary. Stable ID and unique uppercase two-letter code: ISO 3166-1 alpha-2, territories included, plus XK for Kosovo; names are common short English names, translated by code in the frontend (ADR 0007). Used independently for nationality, organization origin and event location. No inference between these concepts; do not infer timezone from country. Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",

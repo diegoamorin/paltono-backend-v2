@@ -1,6 +1,7 @@
 import { INestApplicationContext } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { ContributionRolesStore } from '../vocabularies/contribution-roles';
-import { CountriesStore } from '../vocabularies/countries';
+import { loadCountries } from '../vocabularies/country-list';
 import { ContributionRoleCategory, ContributionRoleScopeName } from '../vocabularies/entities/contribution-role.entity';
 import { GenresStore } from '../vocabularies/genres';
 import { OrganizationTypesStore } from '../vocabularies/organization-types';
@@ -8,23 +9,13 @@ import { PlatformsStore } from '../vocabularies/platforms';
 
 /*
  * The shared vocabularies the seed's catalog refers to. They are administered
- * data, written as an administrator would and outside the editorial flow.
+ * data, written as an administrator would and outside the editorial flow; the
+ * countries come from the whole country list, as `pnpm countries:load` loads it.
  */
 
-const COUNTRIES = {
-  KR: 'Corea del Sur',
-  JP: 'Japón',
-  CN: 'China',
-  TW: 'Taiwán',
-  TH: 'Tailandia',
-  AU: 'Australia',
-  NZ: 'Nueva Zelanda',
-  US: 'Estados Unidos',
-  CA: 'Canadá',
-  GB: 'Reino Unido',
-  IT: 'Italia',
-} as const;
-export type CountryCode = keyof typeof COUNTRIES;
+/** The countries the catalog refers to, among all those `loadCountries` inserts. */
+const COUNTRIES = ['KR', 'JP', 'CN', 'TW', 'TH', 'AU', 'NZ', 'US', 'CA', 'GB', 'IT'] as const;
+export type CountryCode = (typeof COUNTRIES)[number];
 
 const GENRES = {
   'k-pop': 'K-pop',
@@ -96,14 +87,16 @@ export async function seedVocabularies(app: INestApplicationContext): Promise<Se
     for (const key of Object.keys(entries) as K[]) result[key] = (await create(key)).id;
     return result;
   };
-  const countries = app.get(CountriesStore);
+  const dataSource = app.get(DataSource);
+  await loadCountries(dataSource);
+  const countryRows: { id: number; code: CountryCode }[] = await dataSource.query('SELECT id, code FROM countries WHERE code = ANY($1)', [COUNTRIES]);
   const genres = app.get(GenresStore);
   const organizationTypes = app.get(OrganizationTypesStore);
   const roles = app.get(ContributionRolesStore);
   const platforms = app.get(PlatformsStore);
 
   return {
-    countries: await ids(COUNTRIES, (code) => countries.create({ code, name: COUNTRIES[code] })),
+    countries: Object.fromEntries(countryRows.map(({ id, code }) => [code, id])) as Record<CountryCode, number>,
     genres: await ids(GENRES, (slug) => genres.create({ slug, name: GENRES[slug] })),
     organizationTypes: await ids(ORGANIZATION_TYPES, (slug) => organizationTypes.create({ slug, ...ORGANIZATION_TYPES[slug] })),
     // The store takes the scopes alongside the role's own columns.

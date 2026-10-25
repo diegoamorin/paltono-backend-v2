@@ -9,8 +9,11 @@ import { SeedImages } from './seed-images';
 import { seedModeration } from './seed-moderation';
 import { seedVocabularies } from './seed-vocabularies';
 
-/** Tables whose rows mean the database already holds data the seed would collide with. */
-const OCCUPIED_TABLES = ['users', 'countries', 'editorial_entities'];
+/**
+ * Tables whose rows mean the database already holds data the seed would collide with.
+ * Countries already loaded by `pnpm countries:load` don't: the seed loads them the same way.
+ */
+const OCCUPIED_TABLES = ['users', 'editorial_entities'];
 
 /**
  * Seeds an empty database: the accounts of each role and status, the shared
