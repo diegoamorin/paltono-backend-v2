@@ -36,8 +36,9 @@ export function imageUrlAt(url: unknown, path: string): ImageUrlReference[] {
 /**
  * The image URL rule of the catalog (ADR 0005): an image field holds null or
  * the URL of an image uploaded for the catalog, under the configured public
- * base, whose file is still stored. It is checked when a microchange is written and submitted, never when
- * it is applied, so changing the base leaves what was applied valid.
+ * base, whose file is still stored. It is checked when a microchange is
+ * written and submitted, never when it is applied, so changing the base
+ * leaves what was applied valid.
  */
 @Injectable()
 export class CatalogImageUrls {

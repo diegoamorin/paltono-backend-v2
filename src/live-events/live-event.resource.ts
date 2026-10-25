@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
-import { SHOWN_IMAGE_DESCRIPTION, ShownImage, ShownImageAttributes } from '../images/shown-images';
+import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN, content, isWithdrawn, partialDate } from '../music/resource-primitives';
 import { COUNTRIES } from '../vocabularies/countries';
 import { Country } from '../vocabularies/entities/country.entity';
@@ -211,8 +211,8 @@ class TourAttributes {
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   description?: string | null;
 
-  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
-  image?: ShownImageAttributes | null;
+  @ApiProperty({ type: ShownImage, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  image?: ShownImage | null;
 
   @ApiProperty({ type: PartialDate, nullable: true, required: false, description: `Inicio anunciado. ${WITHDRAWN}` })
   startDate?: PartialDate | null;
@@ -287,8 +287,8 @@ class EventAttributes {
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   description?: string | null;
 
-  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
-  image?: ShownImageAttributes | null;
+  @ApiProperty({ type: ShownImage, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  image?: ShownImage | null;
 
   @ApiProperty({ type: PartialDate, nullable: true, required: false, description: `Fecha parcial. ${WITHDRAWN}` })
   startDate?: PartialDate | null;

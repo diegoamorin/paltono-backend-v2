@@ -18202,7 +18202,7 @@
           "data"
         ]
       },
-      "ShownImageAttributes": {
+      "ShownImage": {
         "type": "object",
         "properties": {
           "url": {
@@ -18270,7 +18270,7 @@
             "type": "object",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ShownImageAttributes"
+                "$ref": "#/components/schemas/ShownImage"
               }
             ]
           }
@@ -18384,7 +18384,7 @@
             "type": "object",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ShownImageAttributes"
+                "$ref": "#/components/schemas/ShownImage"
               }
             ]
           },
@@ -19392,7 +19392,7 @@
             "type": "object",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ShownImageAttributes"
+                "$ref": "#/components/schemas/ShownImage"
               }
             ]
           },
@@ -19628,7 +19628,7 @@
             "type": "object",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ShownImageAttributes"
+                "$ref": "#/components/schemas/ShownImage"
               }
             ]
           },
@@ -19828,7 +19828,7 @@
             "type": "object",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ShownImageAttributes"
+                "$ref": "#/components/schemas/ShownImage"
               }
             ]
           },

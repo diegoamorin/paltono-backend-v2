@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from './artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
-import { SHOWN_IMAGE_DESCRIPTION, ShownImageAttributes, ShownImageOf } from '../images/shown-images';
+import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
 import { COUNTRIES } from '../vocabularies/countries';
@@ -29,8 +29,8 @@ export interface IdentityEntry {
   person: Person | null;
   organization: Organization | null;
   relations: IdentityRelations | null;
-  /** The images it shows, by their stored URLs. */
-  images: ShownImageOf;
+  /** Its profile image and, for a person, the full-body one, as the reads show them. */
+  images: { profile: ShownImage | null; fullBody: ShownImage | null };
 }
 
 export const identityAliasSchema = defineResource<CatalogIdentityAlias>({
@@ -75,7 +75,7 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
     withdrawnAt: ({ identity }) => identity.editorialEntity!.withdrawnAt?.toISOString() ?? null,
     type: content(({ identity }) => identity.type),
     displayName: content(({ identity }) => identity.displayName),
-    imgProfile: content(({ identity, images }) => images(identity.imgProfile)),
+    imgProfile: content(({ images }) => images.profile),
     bio: content(({ identity }) => identity.bio),
     person: content(({ person, images }) =>
       person && {
@@ -86,7 +86,7 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
         deathDate: person.deathDate,
         heightCm: person.heightCm,
         gender: person.gender,
-        imgFullBody: images(person.imgFullBody),
+        imgFullBody: images.fullBody,
       },
     ),
     organization: content(({ organization }) =>
@@ -146,11 +146,11 @@ class PersonAttributes {
   gender: string | null;
 
   @ApiProperty({
-    type: ShownImageAttributes,
+    type: ShownImage,
     nullable: true,
     description: `Foto de cuerpo completo, de pie y de la cabeza a los pies, para mostrarla a escala con \`heightCm\`. ${SHOWN_IMAGE_DESCRIPTION}`,
   })
-  imgFullBody: ShownImageAttributes | null;
+  imgFullBody: ShownImage | null;
 }
 
 class OrganizationAttributes {
@@ -182,8 +182,8 @@ class IdentityAttributes {
   @ApiProperty({ example: 'IU', required: false, description: WITHDRAWN })
   displayName?: string;
 
-  @ApiProperty({ type: ShownImageAttributes, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
-  imgProfile?: ShownImageAttributes | null;
+  @ApiProperty({ type: ShownImage, nullable: true, required: false, description: `${SHOWN_IMAGE_DESCRIPTION}. ${WITHDRAWN}` })
+  imgProfile?: ShownImage | null;
 
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })
   bio?: string | null;

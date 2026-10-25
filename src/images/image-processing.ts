@@ -36,7 +36,7 @@ export interface ProcessedImage {
   bytes: Buffer;
   extension: string;
   contentType: string;
-  /** Of the processed image: a side swaps with the original's when the EXIF orientation rotates it. */
+  /** Dimensions once the EXIF orientation is applied: width and height swap when it rotates the image. */
   width: number;
   height: number;
 }
