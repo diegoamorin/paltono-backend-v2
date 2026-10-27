@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import sharp, { Sharp } from 'sharp';
-import { JsonApiException } from '../common/json-api/json-api.exception';
+import { JsonApiErrorInput, JsonApiException } from '../common/json-api/json-api.exception';
+import { MAX_SVG_ICON_BYTES, SvgViolation, checkSvgIcon } from './svg-icons';
 
 /** Upload limits of ADR 0005. */
 export const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -68,6 +69,61 @@ export async function processImage(file: Buffer): Promise<ProcessedImage> {
       throw unsupportedImage();
     });
   return { bytes, extension: format.extension, contentType: format.contentType, width: info.width, height: info.height };
+}
+
+/**
+ * Validates an uploaded platform icon and prepares it for storage: the SVG
+ * rebuilt by `checkSvgIcon`, sized by its `viewBox`. Rejects with one JSON:API
+ * error per violation before anything is stored.
+ */
+export function processPlatformIcon(file: Buffer): ProcessedImage {
+  const check = checkSvgIcon(file);
+  if (!check.ok) {
+    if (check.violations.some(({ code }) => code === 'svg_too_large')) throw svgIconTooLarge();
+    throw new JsonApiException(HttpStatus.UNPROCESSABLE_ENTITY, check.violations.map(svgViolationError));
+  }
+  return { bytes: check.svg, extension: 'svg', contentType: 'image/svg+xml', width: check.width, height: check.height };
+}
+
+export function svgIconTooLarge(): JsonApiException {
+  return new JsonApiException(HttpStatus.PAYLOAD_TOO_LARGE, [svgViolationError({ code: 'svg_too_large' })]);
+}
+
+function svgViolationError(violation: SvgViolation): JsonApiErrorInput {
+  switch (violation.code) {
+    case 'svg_too_large':
+      return { code: violation.code, detail: `The icon must weigh at most ${MAX_SVG_ICON_BYTES / 1024} KB` };
+    case 'svg_unparseable':
+      return { code: violation.code, detail: 'The file must be a well-formed SVG document whose root is <svg>' };
+    case 'svg_doctype_not_allowed':
+      return { code: violation.code, detail: 'Remove the DOCTYPE and any entity declarations' };
+    case 'svg_missing_viewbox':
+      return { code: violation.code, detail: 'The <svg> element needs a viewBox with a positive width and height' };
+    case 'svg_forbidden_element':
+      return {
+        code: violation.code,
+        detail:
+          violation.element === 'style'
+            ? 'Remove the <style> element; use presentation attributes like fill instead'
+            : `Remove the <${violation.element}> element`,
+        meta: { element: violation.element },
+      };
+    case 'svg_forbidden_attribute':
+      return {
+        code: violation.code,
+        detail:
+          violation.attribute === 'style'
+            ? `Remove the style attribute from <${violation.element}>; use presentation attributes like fill instead`
+            : `Remove the ${violation.attribute} attribute from <${violation.element}>`,
+        meta: { element: violation.element, attribute: violation.attribute },
+      };
+    case 'svg_external_reference':
+      return {
+        code: violation.code,
+        detail: `The ${violation.attribute} attribute of <${violation.element}> may only reference an element of the icon, as #id`,
+        meta: { element: violation.element, attribute: violation.attribute },
+      };
+  }
 }
 
 export function imageTooLarge(): JsonApiException {

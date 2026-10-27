@@ -1,5 +1,6 @@
 import { Account, changeRole, registerFirstAdmin, registerVerified } from '../support/administration';
 import { ChangeInput, WIKIPEDIA, addChange, addSource, createDraft, decideChange, getJsonApi, reserveEntity, submitProposal } from '../support/editorial';
+import { uploadedPlatformIconUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 import { createdEntryId } from '../support/vocabularies';
 
@@ -364,8 +365,13 @@ describe('tracks and credits of releases in the editorial flow', () => {
     });
 
     it('links a track on a platform that supports tracks, once per platform and URL', async () => {
-      const platform = (slug: string, supportsTrack: boolean) =>
-        createdEntryId(app, admin.accessToken, 'platforms', { name: slug, slug, iconUrl: `https://cdn.example.com/${slug}.svg`, supportsTrack });
+      const platform = async (slug: string, supportsTrack: boolean) =>
+        createdEntryId(app, admin.accessToken, 'platforms', {
+          name: slug,
+          slug,
+          iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, slug),
+          supportsTrack,
+        });
       const spotify = Number(await platform('spotify', true));
       const instagram = Number(await platform('instagram', false));
       const recording = await publishRecording();

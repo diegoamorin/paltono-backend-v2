@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsModule } from '../accounts/accounts.module';
+import { ImagesModule } from '../images/images.module';
 import { ContributionRolesController, ContributionRolesStore } from './contribution-roles';
 import { CountriesController, CountriesStore } from './countries';
 import { ContributionRole, ContributionRoleScope } from './entities/contribution-role.entity';
@@ -14,7 +15,7 @@ import { PlatformsController, PlatformsStore } from './platforms';
 
 /** Shared vocabularies: public reads and administrator writes, outside the editorial flow. */
 @Module({
-  imports: [AccountsModule, TypeOrmModule.forFeature([Country, Genre, Platform, OrganizationType, ContributionRole, ContributionRoleScope])],
+  imports: [AccountsModule, ImagesModule, TypeOrmModule.forFeature([Country, Genre, Platform, OrganizationType, ContributionRole, ContributionRoleScope])],
   controllers: [CountriesController, GenresController, PlatformsController, OrganizationTypesController, ContributionRolesController],
   providers: [CountriesStore, GenresStore, PlatformsStore, OrganizationTypesStore, ContributionRolesStore],
 })

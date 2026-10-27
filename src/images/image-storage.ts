@@ -47,6 +47,17 @@ export class UploadedImageFiles {
   }
 }
 
+/**
+ * Headers every stored image is served with, so an SVG opened on its own can
+ * run, load or embed nothing (ADR 0005). Production sets them with a Cloudflare
+ * transform rule on the public domain, as R2 cannot set them per object; the
+ * local storage sets them itself.
+ */
+export const IMAGE_RESPONSE_HEADERS = {
+  'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+  'X-Content-Type-Options': 'nosniff',
+};
+
 /** URL prefix under which the backend serves a local storage folder. */
 export const LOCAL_IMAGES_PATH = '/images';
 

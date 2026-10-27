@@ -9,10 +9,12 @@ export const UPLOAD_QUOTA_WINDOW_MS = 15 * 24 * 60 * 60 * 1000;
 
 /**
  * Uploads an account may make per window: 4 of catalog for users, none counted
- * for staff, and 1 avatar for everyone. `null` means no limit.
+ * for staff, 1 avatar for everyone, and platform icons, which only
+ * administrators upload, without limit. `null` means no limit.
  */
 export function uploadQuota(purpose: ImageUploadPurpose, account: User): number | null {
   if (purpose === 'avatar') return 1;
+  if (purpose === 'platform_icon') return null;
   return account.role === 'user' ? 4 : null;
 }
 

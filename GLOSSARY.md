@@ -35,8 +35,12 @@ Imagen de una persona de pie, de la cabeza a los pies, pensada para mostrarla a 
 _Avoid_: Foto de perfil, avatar.
 
 **Subida de imagen (image upload)**:
-Imagen que una cuenta entregó a la plataforma para usarla en una ficha o como avatar. Existe desde que se sube, aunque ninguna ficha la use todavía. Puede perder su archivo, como el avatar que se reemplaza, y sigue existiendo como historial de la cuenta: cuenta para el cupo, pero no se puede volver a usar ni se muestra.
+Imagen que una cuenta entregó a Paltono para usarla en una ficha, como avatar o como icono de una plataforma externa. Existe desde que se sube, aunque ninguna ficha la use todavía. Puede perder su archivo, como el avatar que se reemplaza, y sigue existiendo como historial de la cuenta: cuenta para el cupo, pero no se puede volver a usar ni se muestra.
 _Avoid_: Adjunto, archivo.
+
+**Plataforma externa (platform)**:
+Servicio ajeno a Paltono donde se publica música o se mantiene un perfil, como Spotify o YouTube, al que pueden enlazar las fichas. Se muestra con su icono.
+_Avoid_: Plataforma a secas para estos servicios, porque también nombra a Paltono.
 
 **Cupo de subidas (upload quota)**:
 Número de subidas de imagen que una cuenta puede hacer en los últimos 15 días. El de catálogo y el de avatar son independientes, y el personal no tiene cupo de catálogo.

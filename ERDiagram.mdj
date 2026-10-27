@@ -14713,7 +14713,9 @@
 								"$ref": "AAAAAAGeD8zCFYFOCsU="
 							},
 							"name": "icon_url",
-							"type": "VARCHAR"
+							"documentation": "URL of an SVG uploaded with purpose platform_icon; each icon belongs to one platform.",
+							"type": "VARCHAR",
+							"unique": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -17445,7 +17447,7 @@
 								"$ref": "sGINen4/FPVzZNqj3d1N+gGB"
 							},
 							"name": "purpose",
-							"documentation": "catalog | avatar",
+							"documentation": "catalog | avatar | platform_icon",
 							"type": "enum"
 						},
 						{

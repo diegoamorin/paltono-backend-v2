@@ -94,6 +94,24 @@ describe('pnpm db:seed', () => {
       expect(seed).toMatchObject({ status: 0 });
     });
 
+    it('creates the platforms with their SVG icons, uploaded and served', async () => {
+      const response = await getJsonApi(app, '/v1/platforms?page[size]=100').expect(200);
+
+      const platforms = response.body.data.map(({ attributes }: Resource) => attributes);
+      expect(platforms.map(({ slug }: { slug: string }) => slug).sort()).toEqual(
+        ['apple-music', 'instagram', 'spotify', 'x', 'youtube', 'youtube-music'],
+      );
+      for (const { name, iconUrl } of platforms) {
+        const served = await fetchImage(app, iconUrl).expect(200);
+        expect(served.headers['content-type']).toBe('image/svg+xml');
+        expect(served.body.toString()).toContain(`<title>${name}</title>`);
+      }
+      const [{ purposes }] = await queryTestDatabase<{ purposes: string[] }>(
+        `SELECT array_agg(DISTINCT u.purpose::text) AS purposes FROM platforms p JOIN image_uploads u ON u.url = p.icon_url`,
+      );
+      expect(purposes).toEqual(['platform_icon']);
+    });
+
     it('creates accounts of each role and status, among them the seed moderator', async () => {
       const admin = await accessTokenFor(app.server, 'seed_admin', SEED_PASSWORD);
 
@@ -283,7 +301,8 @@ describe('pnpm db:seed', () => {
       const [{ purposes }] = await queryTestDatabase<{ purposes: string[] }>(
         'SELECT array_agg(DISTINCT purpose::text) AS purposes FROM image_uploads',
       );
-      expect(purposes).toEqual(['catalog']);
+      // Besides the catalog images, only the platform icons are uploads.
+      expect(purposes).toEqual(['catalog', 'platform_icon']);
     });
 
     it('gives some idols a full-body image uploaded for the catalog, taller than wide', async () => {

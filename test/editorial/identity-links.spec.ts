@@ -11,6 +11,7 @@ import {
   submitIdentityCreation,
   submitProposal,
 } from '../support/editorial';
+import { uploadedPlatformIconUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 import { createdEntryId } from '../support/vocabularies';
 
@@ -142,11 +143,11 @@ describe('organization types and platform links of identities', () => {
     let melon: number;
 
     beforeEach(async () => {
-      const platform = (slug: string, supportsCatalogIdentity: boolean) =>
+      const platform = async (slug: string, supportsCatalogIdentity: boolean) =>
         createdEntryId(app, admin.accessToken, 'platforms', {
           name: slug,
           slug,
-          iconUrl: `https://cdn.example.com/${slug}.svg`,
+          iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, slug),
           supportsCatalogIdentity,
           supportsTrack: true,
         });

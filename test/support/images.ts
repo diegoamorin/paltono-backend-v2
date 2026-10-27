@@ -26,6 +26,28 @@ export function uploadAvatar(app: TestApp, accessToken: string, bytes: Buffer, f
     .attach('file', bytes, filename);
 }
 
+/** POST /v1/images/platform-icons, sending `bytes` as the multipart `file` field. */
+export function uploadPlatformIcon(app: TestApp, accessToken: string, bytes: Buffer, filename = 'icon.svg') {
+  return request(app.server)
+    .post('/v1/images/platform-icons')
+    .set('Accept', JSON_API)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .attach('file', bytes, filename);
+}
+
+/** A small valid platform icon; `label` tells icons apart. */
+export function svgIcon(label = 'icon'): Buffer {
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>${label}</title><path d="M0 0h24v24H0z"/></svg>`,
+  );
+}
+
+/** Uploads a platform icon as an administrator and returns its public URL. */
+export async function uploadedPlatformIconUrl(app: TestApp, adminAccessToken: string, label?: string): Promise<string> {
+  const response = await uploadPlatformIcon(app, adminAccessToken, svgIcon(label)).expect(201);
+  return response.body.data.attributes.url;
+}
+
 /** Uploads a small PNG as the account's avatar and returns its public URL. */
 export async function uploadedAvatarUrl(app: TestApp, accessToken: string): Promise<string> {
   const response = await uploadAvatar(app, accessToken, await pngImage()).expect(200);

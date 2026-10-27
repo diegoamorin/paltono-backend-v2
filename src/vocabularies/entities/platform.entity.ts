@@ -4,6 +4,7 @@ import { Check, Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 @Entity('platforms')
 @Unique('platforms_name_key', ['name'])
 @Unique('platforms_slug_key', ['slug'])
+@Unique('platforms_icon_url_key', ['iconUrl'])
 @Check('platforms_slug_format', `slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`)
 @Check('platforms_name_nonblank', `btrim(name) <> ''`)
 @Check('platforms_icon_url_format', `icon_url ~ '^https?://'`)

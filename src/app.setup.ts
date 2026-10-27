@@ -3,7 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { API_PREFIX } from './common/json-api/api-prefix';
 import { JSON_API_MEDIA_TYPE } from './common/json-api/media-type';
 import { AppConfig } from './config/app-config';
-import { LOCAL_IMAGES_PATH } from './images/image-storage';
+import { IMAGE_RESPONSE_HEADERS, LOCAL_IMAGES_PATH } from './images/image-storage';
 import { setupSwagger } from './swagger.setup';
 
 /** Options for `NestFactory.create`; `configureApp` registers the body parser itself. */
@@ -46,6 +46,8 @@ function serveLocalImages(app: NestExpressApplication, { images }: AppConfig): v
     // A key names one immutable file: a new image gets a new key.
     immutable: true,
     maxAge: '365d',
-    setHeaders: (response) => response.setHeader('X-Content-Type-Options', 'nosniff'),
+    setHeaders: (response) => {
+      for (const [name, value] of Object.entries(IMAGE_RESPONSE_HEADERS)) response.setHeader(name, value);
+    },
   });
 }

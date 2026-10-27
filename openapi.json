@@ -15702,6 +15702,173 @@
         ]
       }
     },
+    "/v1/images/platform-icons": {
+      "post": {
+        "description": "Recibe un SVG como `multipart/form-data` en el campo `file` y devuelve su URL pública, para ponerla como `iconUrl` de una plataforma externa. Es el único endpoint que acepta SVG. Solo admite una lista blanca de elementos (`svg`, `g`, `path`, `circle`, `ellipse`, `rect`, `line`, `polyline`, `polygon`, `defs`, `linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `use`, `title`) y de atributos de geometría y presentación, `role` y `aria-*`; `href` y `url()` solo como `#id`. Un `viewBox` es obligatorio y da `width` y `height`. Se descartan comentarios, `<metadata>` y la marca de los editores; cualquier otra cosa se rechaza con 422, un error por elemento o atributo a quitar (`svg_forbidden_element`, `svg_forbidden_attribute`, `svg_external_reference`, con su nombre en `meta`; como máximo 20), o con `svg_doctype_not_allowed`, `svg_missing_viewbox` o `svg_unparseable`. Un SVG de más de 64 KB responde 413 `svg_too_large`. Se guarda el SVG reconstruido, no el original. Sin cupo. Muéstralo solo con `<img src>`.",
+        "operationId": "ImagesController_uploadPlatformIcon",
+        "parameters": [
+          {
+            "name": "fields[image-uploads]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de image-uploads separados por comas: purpose, url, bytes, width, height, createdAt, uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[users]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de users separados por comas: username, displayName, avatarUrl, bio, role, status, createdAt",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: uploadedBy",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "SVG con viewBox; como máximo 64 KB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImageUploadResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized\n\nUnauthorized",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden\n\nForbidden",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Subir el icono de una plataforma externa",
+        "tags": [
+          "images"
+        ]
+      }
+    },
     "/v1/me/avatar": {
       "put": {
         "description": "Recibe la imagen como `multipart/form-data` en el campo `file`, con la misma validación y procesamiento que `POST /v1/images`, y la pone de inmediato como `avatarUrl` de la cuenta, sin revisión editorial. El avatar anterior se borra del almacenamiento. Cada cuenta, de cualquier rol, puede cambiar su avatar una vez cada 15 días, aparte del cupo de catálogo; al excederlo responde 429 con `meta.availableAt`, la fecha en que vuelve a haber cupo. Un rechazo no consume cupo. Devuelve la cuenta propia.",
@@ -17721,8 +17888,8 @@
           },
           "iconUrl": {
             "type": "string",
-            "example": "https://cdn.example.com/spotify.svg",
-            "description": "URL HTTP(S)"
+            "example": "https://img.paltono.com/0b6f1c9e-4d3a-4f7e-9a51-2c8d7e6b5a40.svg",
+            "description": "URL de un SVG subido con POST /v1/images/platform-icons que ninguna otra plataforma externa use. Al reemplazarlo o borrar la plataforma externa, se borra el archivo del icono anterior."
           },
           "supportsCatalogIdentity": {
             "type": "boolean",
@@ -17785,7 +17952,8 @@
             "maxLength": 64
           },
           "iconUrl": {
-            "type": "string"
+            "type": "string",
+            "description": "URL de un SVG subido con POST /v1/images/platform-icons que ninguna otra plataforma externa use. Al reemplazarlo o borrar la plataforma externa, se borra el archivo del icono anterior."
           },
           "supportsCatalogIdentity": {
             "type": "boolean"
@@ -21298,7 +21466,8 @@
             "type": "string",
             "enum": [
               "catalog",
-              "avatar"
+              "avatar",
+              "platform_icon"
             ]
           },
           "url": {

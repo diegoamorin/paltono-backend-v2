@@ -1,7 +1,7 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, Unique } from 'typeorm';
 import { User } from '../../accounts/entities/user.entity';
 
-export const IMAGE_UPLOAD_PURPOSES = ['catalog', 'avatar'] as const;
+export const IMAGE_UPLOAD_PURPOSES = ['catalog', 'avatar', 'platform_icon'] as const;
 export type ImageUploadPurpose = (typeof IMAGE_UPLOAD_PURPOSES)[number];
 
 // Mirrors the CreateImageUploads and AddImageUploadDimensionsAndFileRemoval migrations, so `migration:generate` finds no drift.

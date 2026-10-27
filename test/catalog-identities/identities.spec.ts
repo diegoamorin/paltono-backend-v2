@@ -1,6 +1,7 @@
 import { sendJsonApi } from '../support/accounts';
 import { Account, registerFirstAdmin } from '../support/administration';
 import { ChangeInput, WIKIPEDIA, addChange, addSource, createDraft, getJsonApi, reserveIdentity } from '../support/editorial';
+import { uploadedPlatformIconUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 import { createdEntryId } from '../support/vocabularies';
 
@@ -62,7 +63,7 @@ describe('GET /v1/identities (C1) and /v1/identities/{id} (C2)', () => {
       await createdEntryId(app, admin.accessToken, 'platforms', {
         name: 'Spotify',
         slug: 'spotify',
-        iconUrl: 'https://cdn.example.com/spotify.svg',
+        iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken),
         supportsCatalogIdentity: true,
       }),
     );

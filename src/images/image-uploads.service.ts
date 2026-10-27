@@ -6,9 +6,16 @@ import { Clock } from '../common/clock/clock';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { APP_CONFIG, AppConfig } from '../config/app-config';
 import { ImageUpload, ImageUploadPurpose } from './entities/image-upload.entity';
-import { processImage } from './image-processing';
+import { ProcessedImage, processImage, processPlatformIcon } from './image-processing';
 import { ImageStorage } from './image-storage';
 import { requireUploadQuota } from './upload-quotas';
+
+/** How the file of each purpose is validated and prepared: platform icons are SVG, the rest raster images. */
+const PROCESSORS: Record<ImageUploadPurpose, (file: Buffer) => ProcessedImage | Promise<ProcessedImage>> = {
+  catalog: processImage,
+  avatar: processImage,
+  platform_icon: processPlatformIcon,
+};
 
 /**
  * Image uploads (ADR 0005): validates and cleans a file, checks the account's
@@ -40,7 +47,7 @@ export class ImageUploadsService {
     file: Buffer,
     use?: (manager: EntityManager, uploader: User, url: string) => Promise<void>,
   ): Promise<ImageUpload> {
-    const image = await processImage(file);
+    const image = await PROCESSORS[purpose](file);
     const id = randomUUID();
     const key = `${id}.${image.extension}`;
 

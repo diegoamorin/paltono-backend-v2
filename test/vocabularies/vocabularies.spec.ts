@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { sendJsonApi } from '../support/accounts';
 import { Account, changeRole, registerFirstAdmin, registerVerified } from '../support/administration';
+import { fetchImage, fileRemovedAt, uploadedAvatarUrl, uploadedImageUrl, uploadedPlatformIconUrl } from '../support/images';
 import { JSON_API } from '../support/json-api';
 import { TestApp, createTestApp } from '../support/test-app';
 import {
@@ -30,6 +31,10 @@ interface VocabularyCase {
   /** Columns of the stand-in catalog table that reference the entry. */
   reference: (id: number) => Record<string, string | number>;
 }
+
+/** Stand-ins for the URLs of two platform icons, uploaded before each test. */
+const ICON = '<icon>';
+const OTHER_ICON = '<other icon>';
 
 const VOCABULARIES: VocabularyCase[] = [
   {
@@ -76,11 +81,11 @@ const VOCABULARIES: VocabularyCase[] = [
   },
   {
     type: 'platforms',
-    create: { name: 'Spotify', slug: 'spotify', iconUrl: 'https://cdn.example.com/spotify.svg', supportsTrack: true },
+    create: { name: 'Spotify', slug: 'spotify', iconUrl: ICON, supportsTrack: true },
     created: {
       name: 'Spotify',
       slug: 'spotify',
-      iconUrl: 'https://cdn.example.com/spotify.svg',
+      iconUrl: ICON,
       supportsCatalogIdentity: false,
       supportsTrack: true,
       supportsAlbum: false,
@@ -90,13 +95,15 @@ const VOCABULARIES: VocabularyCase[] = [
     update: { supportsAlbum: true },
     updated: { supportsTrack: true, supportsAlbum: true },
     invalid: [
-      [{ name: 'Spotify', slug: 'spotify', iconUrl: 'ftp://cdn.example.com/spotify.svg' }, '/data/attributes/iconUrl'],
+      [{ name: 'Spotify', slug: 'spotify', iconUrl: 'ftp://img.example.com/spotify.svg' }, '/data/attributes/iconUrl'],
       [{ name: 'Spotify', slug: 'spotify' }, '/data/attributes/iconUrl'],
-      [{ name: 'Spotify', slug: 'spotify', iconUrl: 'https://cdn.example.com/a.svg', supportsTrack: 'yes' }, '/data/attributes/supportsTrack'],
+      [{ name: 'Spotify', slug: 'spotify', iconUrl: 'https://cdn.example.com/spotify.svg' }, '/data/attributes/iconUrl'],
+      [{ name: 'Spotify', slug: 'spotify', iconUrl: OTHER_ICON, supportsTrack: 'yes' }, '/data/attributes/supportsTrack'],
     ],
     duplicate: [
-      [{ name: 'Spotify', slug: 'spotify-2', iconUrl: 'https://cdn.example.com/a.svg' }, 'name'],
-      [{ name: 'Spotify 2', slug: 'spotify', iconUrl: 'https://cdn.example.com/a.svg' }, 'slug'],
+      [{ name: 'Spotify', slug: 'spotify-2', iconUrl: OTHER_ICON }, 'name'],
+      [{ name: 'Spotify 2', slug: 'spotify', iconUrl: OTHER_ICON }, 'slug'],
+      [{ name: 'Spotify 2', slug: 'spotify-2', iconUrl: ICON }, 'iconUrl'],
     ],
     reference: (id) => ({ platform_id: id }),
   },
@@ -129,10 +136,20 @@ describe('vocabularies', () => {
     await createVocabularyReferencesTable(dataSource);
   });
 
+  let icons: Record<string, string>;
+
   beforeEach(async () => {
     await app.reset();
     admin = await registerFirstAdmin(app);
+    icons = {
+      [ICON]: await uploadedPlatformIconUrl(app, admin.accessToken, 'icon'),
+      [OTHER_ICON]: await uploadedPlatformIconUrl(app, admin.accessToken, 'other icon'),
+    };
   });
+
+  /** `attributes` with the icon stand-ins replaced by the uploaded URLs. */
+  const withIcons = (attributes: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(attributes).map(([name, value]) => [name, icons[value as string] ?? value]));
 
   afterAll(async () => {
     await dropVocabularyReferencesTable(dataSource);
@@ -141,7 +158,7 @@ describe('vocabularies', () => {
 
   describe.each(VOCABULARIES)('$type', (vocabulary) => {
     const { type } = vocabulary;
-    const create = (attributes = vocabulary.create, token = admin.accessToken) => createEntry(app, token, type, attributes);
+    const create = (attributes = vocabulary.create, token = admin.accessToken) => createEntry(app, token, type, withIcons(attributes));
 
     it('lets an administrator create an entry, which anyone can read', async () => {
       const response = await create().expect(201);
@@ -151,7 +168,7 @@ describe('vocabularies', () => {
       expect(id).toMatch(/^\d+$/);
       expect(response.body).toEqual({
         jsonapi: { version: '1.1' },
-        data: { type, id, attributes: expect.objectContaining(vocabulary.created) },
+        data: { type, id, attributes: expect.objectContaining(withIcons(vocabulary.created)) },
         links: { self: `/v1/${type}/${id}` },
       });
 
@@ -179,7 +196,7 @@ describe('vocabularies', () => {
     });
 
     it('lets an administrator update an entry partially', async () => {
-      const id = await createdEntryId(app, admin.accessToken, type, vocabulary.create);
+      const id = await createdEntryId(app, admin.accessToken, type, withIcons(vocabulary.create));
 
       const response = await updateEntry(app, admin.accessToken, type, id, vocabulary.update).expect(200);
 
@@ -188,7 +205,7 @@ describe('vocabularies', () => {
     });
 
     it('refuses an update whose id does not match the URL', async () => {
-      const id = await createdEntryId(app, admin.accessToken, type, vocabulary.create);
+      const id = await createdEntryId(app, admin.accessToken, type, withIcons(vocabulary.create));
 
       const response = await sendJsonApi(app.server, 'patch', `/v1/${type}/${id}`, {
         data: { type, id: String(Number(id) + 1), attributes: vocabulary.update },
@@ -200,7 +217,7 @@ describe('vocabularies', () => {
     });
 
     it('lets an administrator delete an unused entry', async () => {
-      const id = await createdEntryId(app, admin.accessToken, type, vocabulary.create);
+      const id = await createdEntryId(app, admin.accessToken, type, withIcons(vocabulary.create));
 
       const response = await deleteEntry(app, admin.accessToken, type, id).expect(204);
 
@@ -209,7 +226,7 @@ describe('vocabularies', () => {
     });
 
     it('refuses to delete an entry in use, without cascading', async () => {
-      const id = await createdEntryId(app, admin.accessToken, type, vocabulary.create);
+      const id = await createdEntryId(app, admin.accessToken, type, withIcons(vocabulary.create));
       await referenceEntry(dataSource, vocabulary.reference(Number(id)));
 
       const response = await deleteEntry(app, admin.accessToken, type, id).expect(409);
@@ -232,7 +249,7 @@ describe('vocabularies', () => {
       if (role === 'moderator') {
         await changeRole(app, admin.accessToken, diego.uuid, { newRole: 'moderator', reason: 'Moderación' }).expect(201);
       }
-      const id = await createdEntryId(app, admin.accessToken, type, vocabulary.create);
+      const id = await createdEntryId(app, admin.accessToken, type, withIcons(vocabulary.create));
 
       await create(vocabulary.create, diego.accessToken).expect(403);
       await updateEntry(app, diego.accessToken, type, id, vocabulary.update).expect(403);
@@ -282,11 +299,10 @@ describe('vocabularies', () => {
 
   describe('platforms filters and order', () => {
     it('filters by what a platform supports', async () => {
-      const icon = 'https://cdn.example.com/icon.svg';
       const spotify = await createdEntryId(app, admin.accessToken, 'platforms', {
         name: 'Spotify',
         slug: 'spotify',
-        iconUrl: icon,
+        iconUrl: icons[ICON],
         supportsCatalogIdentity: true,
         supportsTrack: true,
         supportsAlbum: true,
@@ -294,7 +310,7 @@ describe('vocabularies', () => {
       const instagram = await createdEntryId(app, admin.accessToken, 'platforms', {
         name: 'Instagram',
         slug: 'instagram',
-        iconUrl: icon,
+        iconUrl: icons[OTHER_ICON],
         supportsCatalogIdentity: true,
       });
 
@@ -310,7 +326,7 @@ describe('vocabularies', () => {
       const id = await createdEntryId(app, admin.accessToken, 'platforms', {
         name: 'Melon',
         slug: 'melon',
-        iconUrl: 'https://cdn.example.com/melon.svg',
+        iconUrl: icons[ICON],
       });
       app.clock.advance(60_000);
 
@@ -320,6 +336,66 @@ describe('vocabularies', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:01:00.000Z',
       });
+    });
+  });
+
+  describe('platform icons', () => {
+    const platform = (iconUrl: string, slug = 'spotify') =>
+      createdEntryId(app, admin.accessToken, 'platforms', { name: slug, slug, iconUrl });
+
+    it.each([
+      ['an external URL', async () => 'https://open.spotify.com/favicon.ico'],
+      ['a catalog upload', async () => uploadedImageUrl(app, admin.accessToken)],
+      ['an avatar', async () => uploadedAvatarUrl(app, admin.accessToken)],
+    ])('refuses %s as an icon', async (_, url) => {
+      const iconUrl = await url();
+      const id = await platform(icons[ICON]);
+
+      for (const response of [
+        await createEntry(app, admin.accessToken, 'platforms', { name: 'Melon', slug: 'melon', iconUrl }).expect(422),
+        await updateEntry(app, admin.accessToken, 'platforms', id, { iconUrl }).expect(422),
+      ]) {
+        expect(response.body.errors).toEqual([
+          expect.objectContaining({ code: 'unknown_platform_icon', source: { pointer: '/data/attributes/iconUrl' } }),
+        ]);
+      }
+      expect((await getPublic(app, `platforms/${id}`).expect(200)).body.data.attributes.iconUrl).toBe(icons[ICON]);
+    });
+
+    it('removes the file of a replaced icon, which no platform can use again', async () => {
+      const id = await platform(icons[ICON]);
+
+      const response = await updateEntry(app, admin.accessToken, 'platforms', id, { iconUrl: icons[OTHER_ICON] }).expect(200);
+
+      expect(response.body.data.attributes.iconUrl).toBe(icons[OTHER_ICON]);
+      await fetchImage(app, icons[ICON]).expect(404);
+      expect(await fileRemovedAt(app, icons[ICON])).toEqual(app.clock.now());
+      await fetchImage(app, icons[OTHER_ICON]).expect(200);
+      const reused = await createEntry(app, admin.accessToken, 'platforms', { name: 'Melon', slug: 'melon', iconUrl: icons[ICON] }).expect(422);
+      expect(reused.body.errors).toEqual([expect.objectContaining({ code: 'unknown_platform_icon' })]);
+    });
+
+    it('keeps the icon of an update that does not replace it', async () => {
+      const id = await platform(icons[ICON]);
+
+      await updateEntry(app, admin.accessToken, 'platforms', id, { name: 'Spotify', iconUrl: icons[ICON] }).expect(200);
+      await updateEntry(app, admin.accessToken, 'platforms', id, { supportsTrack: true }).expect(200);
+
+      await fetchImage(app, icons[ICON]).expect(200);
+      expect(await fileRemovedAt(app, icons[ICON])).toBeNull();
+    });
+
+    it('removes the icon file of a deleted platform, and keeps it while the platform is in use', async () => {
+      const used = await platform(icons[ICON]);
+      await referenceEntry(dataSource, { platform_id: Number(used) });
+      const unused = await platform(icons[OTHER_ICON], 'melon');
+
+      await deleteEntry(app, admin.accessToken, 'platforms', used).expect(409);
+      await deleteEntry(app, admin.accessToken, 'platforms', unused).expect(204);
+
+      await fetchImage(app, icons[ICON]).expect(200);
+      await fetchImage(app, icons[OTHER_ICON]).expect(404);
+      expect(await fileRemovedAt(app, icons[OTHER_ICON])).toEqual(app.clock.now());
     });
   });
 

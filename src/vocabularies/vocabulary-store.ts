@@ -11,6 +11,9 @@ export interface VocabularyEntry {
   id: number;
 }
 
+/** Work outside the database, such as removing a stored file, that must wait for the write to commit. */
+export type AfterCommit = () => Promise<void>;
+
 /** Narrows a list query; `entry` is the alias of the vocabulary table. */
 export type VocabularyFilter = (builder: SelectQueryBuilder<any>, value: string) => void;
 
@@ -67,8 +70,8 @@ export class VocabularyStore<T extends VocabularyEntry> {
     const stamps = this.vocabulary.timestamps ? { createdAt: now, updatedAt: now } : {};
     return this.write(async (manager) => {
       const entry = await manager.save(manager.create(this.vocabulary.entity, { ...attributes, ...stamps } as T));
-      await this.afterWrite(manager, entry, attributes);
-      return this.findIn(manager, String(entry.id));
+      const afterCommit = await this.afterWrite(manager, entry, attributes);
+      return { result: await this.findIn(manager, String(entry.id)), afterCommit };
     });
   }
 
@@ -78,24 +81,33 @@ export class VocabularyStore<T extends VocabularyEntry> {
     return this.write(async (manager) => {
       const entry = await this.findIn(manager, id, { lock: true });
       await manager.save(this.vocabulary.entity, { ...entry, ...changes, ...stamps });
-      await this.afterWrite(manager, entry, changes);
-      return this.findIn(manager, id);
+      // `entry` still holds the values from before the update.
+      const afterCommit = await this.afterWrite(manager, entry, changes);
+      return { result: await this.findIn(manager, id), afterCommit };
     });
   }
 
   async remove(id: string): Promise<void> {
     await this.write(async (manager) => {
       const entry = await this.findIn(manager, id, { lock: true });
-      await this.beforeRemove(manager, entry);
+      const afterCommit = await this.beforeRemove(manager, entry);
       await manager.delete(this.vocabulary.entity, { id: entry.id });
+      return { result: undefined, afterCommit };
     });
   }
 
-  /** Writes what the entry owns besides its own row; runs in the write transaction. */
-  protected async afterWrite(_manager: EntityManager, _entry: T, _attributes: Partial<T>): Promise<void> {}
+  /**
+   * Writes what the entry owns besides its own row; runs in the write
+   * transaction, with the entry as it was before an update. What it returns
+   * runs once the transaction commits.
+   */
+  protected async afterWrite(_manager: EntityManager, _entry: T, _attributes: Partial<T>): Promise<AfterCommit | void> {}
 
-  /** Removes what the entry owns before the entry itself; runs in the delete transaction. */
-  protected async beforeRemove(_manager: EntityManager, _entry: T): Promise<void> {}
+  /**
+   * Removes what the entry owns before the entry itself; runs in the delete
+   * transaction. What it returns runs once the entry is deleted for good.
+   */
+  protected async beforeRemove(_manager: EntityManager, _entry: T): Promise<AfterCommit | void> {}
 
   private select(manager: EntityManager): SelectQueryBuilder<T> {
     const builder = manager.createQueryBuilder(this.vocabulary.entity, 'entry');
@@ -114,12 +126,15 @@ export class VocabularyStore<T extends VocabularyEntry> {
     return entry;
   }
 
-  private async write<R>(work: (manager: EntityManager) => Promise<R>): Promise<R> {
+  private async write<R>(work: (manager: EntityManager) => Promise<{ result: R; afterCommit: AfterCommit | void }>): Promise<R> {
+    let done: { result: R; afterCommit: AfterCommit | void };
     try {
-      return await this.dataSource.transaction(work);
+      done = await this.dataSource.transaction(work);
     } catch (error) {
       throw this.conflict(error) ?? error;
     }
+    await done.afterCommit?.();
+    return done.result;
   }
 
   private conflict(error: unknown): JsonApiException | undefined {

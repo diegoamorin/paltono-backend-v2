@@ -26,7 +26,7 @@ export async function seedKpop(app: INestApplicationContext): Promise<string> {
   await requireEmptyDatabase(dataSource);
   const seeder = new AccountSeeder(app);
   const accounts = await seeder.createAccounts();
-  const vocabularies = await seedVocabularies(app);
+  const vocabularies = await seedVocabularies(app, accounts.admin);
 
   const editorial = new EditorialSeeder(app, accounts.moderator);
   const catalog = new CatalogWriter(editorial, vocabularies, new SeedImages(app, accounts.moderator));

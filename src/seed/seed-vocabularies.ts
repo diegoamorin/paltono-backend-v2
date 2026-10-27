@@ -1,5 +1,9 @@
 import { INestApplicationContext } from '@nestjs/common';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DataSource } from 'typeorm';
+import { User } from '../accounts/entities/user.entity';
+import { ImageUploadsService } from '../images/image-uploads.service';
 import { ContributionRolesStore } from '../vocabularies/contribution-roles';
 import { loadCountries } from '../vocabularies/country-list';
 import { ContributionRoleCategory, ContributionRoleScopeName } from '../vocabularies/entities/contribution-role.entity';
@@ -54,21 +58,17 @@ const ROLES: Record<RoleSlug, { name: string; category: ContributionRoleCategory
   drummer: { name: 'Batería', category: 'performance', scopes: ['recording', 'membership'] },
 };
 
+/**
+ * The platforms, each with its icon in `platform-icons/<slug>.svg`: the brand
+ * icons of Simple Icons (CC0), uploaded through the same check as an admin's.
+ */
 const PLATFORMS = {
-  youtube: {
-    name: 'YouTube',
-    iconUrl: 'https://www.youtube.com/favicon.ico',
-    supportsCatalogIdentity: true,
-    supportsTrack: true,
-    supportsAlbum: true,
-  },
-  spotify: {
-    name: 'Spotify',
-    iconUrl: 'https://open.spotify.com/favicon.ico',
-    supportsCatalogIdentity: true,
-    supportsTrack: true,
-    supportsAlbum: true,
-  },
+  youtube: { name: 'YouTube', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
+  spotify: { name: 'Spotify', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
+  'apple-music': { name: 'Apple Music', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
+  'youtube-music': { name: 'YouTube Music', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
+  instagram: { name: 'Instagram', supportsCatalogIdentity: true },
+  x: { name: 'X', supportsCatalogIdentity: true },
 } as const;
 export type PlatformSlug = keyof typeof PLATFORMS;
 
@@ -81,7 +81,8 @@ export interface SeedVocabularies {
   platforms: Record<PlatformSlug, number>;
 }
 
-export async function seedVocabularies(app: INestApplicationContext): Promise<SeedVocabularies> {
+/** The vocabularies, written as `admin`, who also uploads the platform icons. */
+export async function seedVocabularies(app: INestApplicationContext, admin: User): Promise<SeedVocabularies> {
   const ids = async <K extends string>(entries: Record<K, unknown>, create: (key: K) => Promise<{ id: number }>) => {
     const result = {} as Record<K, number>;
     for (const key of Object.keys(entries) as K[]) result[key] = (await create(key)).id;
@@ -94,6 +95,7 @@ export async function seedVocabularies(app: INestApplicationContext): Promise<Se
   const organizationTypes = app.get(OrganizationTypesStore);
   const roles = app.get(ContributionRolesStore);
   const platforms = app.get(PlatformsStore);
+  const uploads = app.get(ImageUploadsService);
 
   return {
     countries: Object.fromEntries(countryRows.map(({ id, code }) => [code, id])) as Record<CountryCode, number>,
@@ -101,6 +103,9 @@ export async function seedVocabularies(app: INestApplicationContext): Promise<Se
     organizationTypes: await ids(ORGANIZATION_TYPES, (slug) => organizationTypes.create({ slug, ...ORGANIZATION_TYPES[slug] })),
     // The store takes the scopes alongside the role's own columns.
     roles: await ids(ROLES, (slug) => roles.create({ slug, ...ROLES[slug] } as never)),
-    platforms: await ids(PLATFORMS, (slug) => platforms.create({ slug, ...PLATFORMS[slug] })),
+    platforms: await ids(PLATFORMS, async (slug) => {
+      const icon = await uploads.upload(admin, 'platform_icon', readFileSync(join(__dirname, 'platform-icons', `${slug}.svg`)));
+      return platforms.create({ slug, ...PLATFORMS[slug], iconUrl: icon.url });
+    }),
   };
 }

@@ -14,45 +14,71 @@ import multer, { MulterError } from 'multer';
 import { Observable } from 'rxjs';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { MULTIPART_MEDIA_TYPE } from '../common/json-api/media-type';
-import { MAX_IMAGE_BYTES, imageTooLarge } from './image-processing';
+import { MAX_IMAGE_BYTES, imageTooLarge, svgIconTooLarge } from './image-processing';
+import { MAX_SVG_ICON_BYTES } from './svg-icons';
 
 /** The multipart field that carries the image. */
 export const IMAGE_FIELD = 'file';
 
-/** Reads one file of at most the upload limit into memory, without touching the disk. */
-const readImageFile = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }).single(
-  IMAGE_FIELD,
-);
+/** What an endpoint accepts in its file: how much it may weigh, the error past that, and how it is documented. */
+export interface ImageFileKind {
+  maxBytes: number;
+  tooLarge: () => JsonApiException;
+  description: string;
+}
+
+/** The JPEG, PNG or WebP of catalog uploads and avatars. */
+export const RASTER_IMAGE: ImageFileKind = {
+  maxBytes: MAX_IMAGE_BYTES,
+  tooLarge: imageTooLarge,
+  description: `JPEG, PNG o WebP, detectado por su contenido; como máximo ${MAX_IMAGE_BYTES / 1024 / 1024} MB y 4000 px por lado`,
+};
+
+/** The SVG of a platform icon. */
+export const SVG_ICON: ImageFileKind = {
+  maxBytes: MAX_SVG_ICON_BYTES,
+  tooLarge: svgIconTooLarge,
+  description: `SVG con viewBox; como máximo ${MAX_SVG_ICON_BYTES / 1024} KB`,
+};
 
 @Injectable()
 class ImageFileInterceptor implements NestInterceptor {
+  /** Reads one file of at most the kind's limit into memory, without touching the disk. */
+  private readonly read: ReturnType<multer.Multer['single']>;
+
+  constructor(private readonly kind: ImageFileKind) {
+    this.read = multer({ storage: multer.memoryStorage(), limits: { fileSize: kind.maxBytes, files: 1 } }).single(IMAGE_FIELD);
+  }
+
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const http = context.switchToHttp();
     await new Promise<void>((resolve, reject) =>
-      readImageFile(http.getRequest<Request>(), http.getResponse<Response>(), (error: unknown) =>
-        error ? reject(toJsonApiError(error)) : resolve(),
+      this.read(http.getRequest<Request>(), http.getResponse<Response>(), (error: unknown) =>
+        error ? reject(this.toJsonApiError(error)) : resolve(),
       ),
     );
     return next.handle();
   }
-}
 
-function toJsonApiError(error: unknown): unknown {
-  if (!(error instanceof MulterError)) return error;
-  if (error.code === 'LIMIT_FILE_SIZE') return imageTooLarge();
-  return new JsonApiException(HttpStatus.BAD_REQUEST, [
-    { code: 'invalid_image_upload', detail: `Send one image in the multipart field "${IMAGE_FIELD}"` },
-  ]);
+  private toJsonApiError(error: unknown): unknown {
+    if (!(error instanceof MulterError)) return error;
+    if (error.code === 'LIMIT_FILE_SIZE') return this.kind.tooLarge();
+    return new JsonApiException(HttpStatus.BAD_REQUEST, [
+      { code: 'invalid_image_upload', detail: `Send one image in the multipart field "${IMAGE_FIELD}"` },
+    ]);
+  }
 }
 
 /**
- * Receives the endpoint's body as `multipart/form-data` with one image in the
- * `file` field, documented as such. The route must also be listed in
- * `MULTIPART_PATHS`, so the JSON:API media type check lets its body through.
+ * Receives the endpoint's body as `multipart/form-data` with one file of
+ * `kind` in the `file` field, documented as such. The route must also be
+ * listed in `MULTIPART_PATHS`, so the JSON:API media type check lets its body
+ * through.
  */
-export function ReceivesImage() {
+export function ReceivesImage(kind: ImageFileKind = RASTER_IMAGE) {
+  const { description } = kind;
   return applyDecorators(
-    UseInterceptors(ImageFileInterceptor),
+    UseInterceptors(new ImageFileInterceptor(kind)),
     ApiConsumes(MULTIPART_MEDIA_TYPE),
     ApiBody({
       schema: {
@@ -62,7 +88,7 @@ export function ReceivesImage() {
           [IMAGE_FIELD]: {
             type: 'string',
             format: 'binary',
-            description: `JPEG, PNG o WebP, detectado por su contenido; como máximo ${MAX_IMAGE_BYTES / 1024 / 1024} MB y 4000 px por lado`,
+            description,
           },
         },
       },
