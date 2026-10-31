@@ -10,11 +10,11 @@ export class AddOneCurrentMembership1793188800000 implements MigrationInterface 
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE UNIQUE INDEX organization_memberships_one_current ON organization_memberships (organization_id, member_identity_id) WHERE status = 'current'`,
+      `CREATE UNIQUE INDEX organization_memberships_current_key ON organization_memberships (organization_id, member_identity_id) WHERE status = 'current'`,
     );
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP INDEX organization_memberships_one_current');
+    await queryRunner.query('DROP INDEX organization_memberships_current_key');
   }
 }

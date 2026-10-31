@@ -48,7 +48,7 @@ export class Artist {
 // UNIQUE NULLS NOT DISTINCT in the migration, which TypeORM cannot declare.
 @Unique('organization_memberships_period_key', ['organizationId', 'memberIdentityId', 'joinedYear', 'joinedMonth', 'joinedDay'])
 @Index('organization_memberships_member_identity_id_idx', ['memberIdentityId'])
-@Index('organization_memberships_one_current', ['organizationId', 'memberIdentityId'], { unique: true, where: `status = 'current'` })
+@Index('organization_memberships_current_key', ['organizationId', 'memberIdentityId'], { unique: true, where: `status = 'current'` })
 @Check('organization_memberships_not_self', `organization_id <> member_identity_id`)
 @Check('organization_memberships_joined_date', partialDateCheck('joined'))
 @Check('organization_memberships_left_date', partialDateCheck('left'))
