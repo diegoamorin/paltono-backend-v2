@@ -90,7 +90,7 @@ const ADD_MEMBERSHIP: OperationDefinition = {
   operation: 'add_relation',
   description:
     'Añade la membresía de una persona u organización a la organización, con sus roles. Un miembro no repite fecha de entrada, ' +
-    'sus periodos no se solapan con certeza y ninguna organización acaba siendo miembro de sí misma.',
+    'tiene como mucho una membresía actual, sus periodos no se solapan con certeza y ninguna organización acaba siendo miembro de sí misma.',
   valueSchema: MEMBERSHIP,
   targetKeySchema: null,
   naturalKey: (value) => {

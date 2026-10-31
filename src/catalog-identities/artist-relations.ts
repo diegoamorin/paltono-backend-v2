@@ -121,9 +121,9 @@ export async function findMembershipByStart(
 
 /**
  * What a membership of an organization would break, besides the row it
- * replaces: the uniqueness of its start, a period that certainly overlaps
- * another one of the same member, and a cycle of organizations that are
- * members of each other.
+ * replaces: the uniqueness of its start, a second current membership of the
+ * same member, a period that certainly overlaps another one of the same
+ * member, and a cycle of organizations that are members of each other.
  */
 export async function membershipClashes(
   manager: EntityManager,
@@ -141,6 +141,8 @@ export async function membershipClashes(
   const start = (row: OrganizationMembership) => partialDate(row.joinedYear, row.joinedMonth, row.joinedDay);
   if (others.some((row) => samePartialDate(start(row), value.joined))) {
     clashes.push('El miembro ya tiene una membresía con esa fecha de entrada');
+  } else if (value.status === 'current' && others.some((row) => row.status === 'current')) {
+    clashes.push('El miembro ya tiene una membresía actual en esta organización');
   } else if (others.some((row) => certainlyOverlap(period(value), period(rowPeriod(row))))) {
     clashes.push('El periodo se solapa con certeza con otra membresía del mismo miembro');
   }

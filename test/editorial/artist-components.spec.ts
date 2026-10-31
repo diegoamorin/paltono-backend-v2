@@ -246,6 +246,59 @@ describe('artist profiles, memberships and affiliations of identities', () => {
       await apply(uncertain.changeIds[0]).expect(201);
     });
 
+    it('refuses a second current membership of the same member in the organization', async () => {
+      const group = await publishOrganization('Corazón Serrano');
+      const member = await publishPerson('Lesly Águila');
+      await apply((await submitChanges([addMembership(group, membership(group, member))])).changeIds[0]).expect(201);
+
+      const second = await submitChanges([addMembership(group, membership(group, member, { joined: { year: 2018, month: 1, day: 25 } }))]);
+      await apply(second.changeIds[0]).expect(409);
+      const rebased = await decideChange(app, moderator.accessToken, second.changeIds[0], {
+        action: 'apply_rebased',
+        confirmedVersion: 2,
+        reason: 'Segunda actual',
+      }).expect(409);
+
+      expect(rebased.body.errors[0]).toEqual(
+        expect.objectContaining({ code: 'constraint_violated', detail: 'El miembro ya tiene una membresía actual en esta organización' }),
+      );
+    });
+
+    it('lets a member hold one current membership at a time when periods are updated', async () => {
+      const group = await publishOrganization('Corazón Serrano');
+      const member = await publishPerson('Lesly Águila');
+      const addAndApply = async (value: object) =>
+        (await apply((await submitChanges([addMembership(group, membership(group, member, value))])).changeIds[0]).expect(201)).body
+          .included[0].attributes.resultKey;
+      const updateMembership = (targetKey: object, value: object): ChangeInput => ({
+        entityId: group,
+        operation: 'update_relation',
+        targetPath: MEMBERSHIPS,
+        targetKey,
+        proposedValue: { exists: true, value: membership(group, member, value) },
+      });
+      const first = { joined: { year: 2010 }, left: { year: 2011 }, status: 'former' };
+      const second = { joined: { year: 2018, month: 1, day: 25 } };
+      const firstKey = await addAndApply(first);
+      const secondKey = await addAndApply(second);
+
+      const reopened = await submitChanges([updateMembership(firstKey, { ...first, left: null, status: 'current' })]);
+      await apply(reopened.changeIds[0]).expect(409);
+      const rebased = await decideChange(app, moderator.accessToken, reopened.changeIds[0], {
+        action: 'apply_rebased',
+        confirmedVersion: 3,
+        reason: 'Reabre un periodo',
+      }).expect(409);
+      expect(rebased.body.errors[0]).toEqual(
+        expect.objectContaining({ code: 'constraint_violated', detail: 'El miembro ya tiene una membresía actual en esta organización' }),
+      );
+
+      await apply((await submitChanges([updateMembership(secondKey, { ...second, roles: [] })])).changeIds[0]).expect(201);
+      const departed = { ...second, left: { year: 2020 }, status: 'former' };
+      await apply((await submitChanges([updateMembership(secondKey, departed)])).changeIds[0]).expect(201);
+      await addAndApply({ joined: { year: 2022 } });
+    });
+
     it('does not apply a membership whose member was withdrawn after it was submitted', async () => {
       const group = await publishOrganization('BLACKPINK');
       const member = await publishPerson('Jisoo');

@@ -46,6 +46,10 @@ _Avoid_: Plataforma a secas para estos servicios, porque también nombra a Palto
 Número de subidas de imagen que una cuenta puede hacer en los últimos 15 días. El de catálogo y el de avatar son independientes, y el personal no tiene cupo de catálogo.
 _Avoid_: Rate limit, para no confundirlo con los límites por frecuencia de peticiones.
 
+**Membresía (membership)**:
+Periodo en que una persona u organización forma parte, como miembro musical, de una organización. Un miembro puede tener varias en la misma organización, si se fue y volvió, pero solo una actual a la vez.
+_Avoid_: Afiliación, que es la relación de un artista con una agencia, un sello o su mánager.
+
 ### Música
 
 **Lanzamiento (release group)**:
