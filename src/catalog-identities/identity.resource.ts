@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from './artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
-import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
+import { BirthDate, PartialDate, birthResponse, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
@@ -79,9 +79,9 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
       person && {
         givenName: person.givenName,
         familyName: person.familyName,
-        birthDate: person.birthDate,
+        birthDate: birthResponse(person),
         birthCountryId: person.birthCountryId,
-        deathDate: person.deathDate,
+        deathDate: partialDateResponse(person, 'death'),
         heightCm: person.heightCm,
         gender: person.gender,
         imgFullBody: images.fullBody,
@@ -117,14 +117,14 @@ class PersonAttributes {
   @ApiProperty({ type: String, nullable: true })
   familyName: string | null;
 
-  @ApiProperty({ type: String, format: 'date', nullable: true })
-  birthDate: string | null;
+  @ApiProperty({ type: BirthDate, nullable: true, description: 'Fecha parcial: los nulos marcan la precisión desconocida, y `year: null` es un cumpleaños sin año' })
+  birthDate: BirthDate | null;
 
   @ApiProperty({ type: Number, nullable: true, description: 'id del país de nacimiento en /v1/countries' })
   birthCountryId: number | null;
 
-  @ApiProperty({ type: String, format: 'date', nullable: true })
-  deathDate: string | null;
+  @ApiProperty({ type: PartialDate, nullable: true, description: 'Fecha parcial: los nulos marcan la precisión desconocida' })
+  deathDate: PartialDate | null;
 
   @ApiProperty({ type: Number, nullable: true })
   heightCm: number | null;

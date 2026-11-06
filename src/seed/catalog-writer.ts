@@ -1,5 +1,5 @@
 import { User } from '../accounts/entities/user.entity';
-import { PartialDateValue } from '../common/partial-date/partial-date';
+import { BirthValue, PartialDateValue } from '../common/partial-date/partial-date';
 import { EditorialEntityType } from '../editorial/entities/editorial-entity.entity';
 import { EventStatus, LiveArtistRole, TourStatus } from '../live-events/entities/live-event.entity';
 import { ReleaseGroupType } from '../music/entities/release.entity';
@@ -46,10 +46,10 @@ interface IdentitySpec {
 export interface PersonSpec extends IdentitySpec {
   givenName?: string;
   familyName?: string;
-  birthDate?: string;
+  birthDate?: BirthValue;
   /** The present-day country of the birthplace, independent of the nationalities. */
   birthCountry?: CountryCode;
-  deathDate?: string;
+  deathDate?: PartialDateValue;
   gender?: 'male' | 'female';
   nationalities?: CountryCode[];
   /** Gets a placeholder full-body image. */

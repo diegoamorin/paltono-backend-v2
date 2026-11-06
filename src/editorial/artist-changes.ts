@@ -18,10 +18,10 @@ import {
 import { AFFILIATION_RELATIONSHIP_TYPES, ASSOCIATION_STATUSES } from '../catalog-identities/entities/artist.entity';
 import { findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
-import { PartialDateValue, isWhollyBefore } from '../common/partial-date/partial-date';
+import { PartialDateValue, datedBirth, isWhollyBefore } from '../common/partial-date/partial-date';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { BIO, COMPLETE_DATE, PARTIAL_DATE, isCalendarDate, partialDateOf, partialDateProblems } from './identity-creation';
+import { BIO, COMPLETE_DATE, PARTIAL_DATE, isCalendarDate, partialDateProblems } from './identity-creation';
 import { KEY_ONLY, KEY_ONLY_ROW, ROW_KEY, envelope, noRules, reference } from './identity-relation-changes';
 import type { OperationDefinition, PayloadProblem, RowKey, TargetProblem } from './operation-registry';
 
@@ -99,7 +99,7 @@ const SET_DEBUT: OperationDefinition = {
       return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile has a debut', member: 'entity' }];
     }
     const { person, organization } = created.value;
-    const start = person?.birthDate ? partialDateOf(person.birthDate) : organization?.founding;
+    const start = person ? datedBirth(person.birthDate) : organization?.founding;
     if (!start || !value || !isWhollyBefore(value as PartialDateValue, start)) return [];
     return [{ code: 'inconsistent_value', detail: `debut is before the current ${person ? 'birthDate' : 'founding'}`, member: 'proposedValue/value' }];
   },

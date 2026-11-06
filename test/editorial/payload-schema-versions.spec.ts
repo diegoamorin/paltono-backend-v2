@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { IDENTITY_CREATION } from '../../src/editorial/identity-creation';
 import { OPERATIONS, useOperations } from '../../src/editorial/operation-registry';
 import { IDENTITY_FIELD_CHANGES } from '../../src/editorial/identity-field-changes';
@@ -21,9 +22,9 @@ import {
 } from '../support/editorial';
 import { TestApp, createTestApp } from '../support/test-app';
 
-/** Publishes a version 2 of the identity creation, as a deployment that changes its payload without an upcast would. */
-function publishCreationV2(): () => void {
-  return useOperations([...OPERATIONS, { ...IDENTITY_CREATION, payloadSchemaVersion: 2 }]);
+/** Publishes a version 3 of the identity creation, as a deployment that changes its payload without an upcast would. */
+function publishCreationV3(): () => void {
+  return useOperations([...OPERATIONS, { ...IDENTITY_CREATION, payloadSchemaVersion: 3 }]);
 }
 
 const DISPLAY_NAME = 'catalog_identities.display_name';
@@ -64,13 +65,13 @@ describe('payload schema versions', () => {
 
   describe('GET /v1/editorial-operations', () => {
     it('marks the highest version of a selector current and keeps listing the older one as obsolete', async () => {
-      restore = publishCreationV2();
+      restore = publishCreationV3();
 
       const operations = await listOperations();
 
       const statusOf = (id: string) => operations.find((operation) => operation.id === id)?.attributes.status;
-      expect(statusOf('identity.create_entity.catalog_identities.v1')).toBe('obsolete');
-      expect(statusOf('identity.create_entity.catalog_identities.v2')).toBe('current');
+      expect(statusOf('identity.create_entity.catalog_identities.v2')).toBe('obsolete');
+      expect(statusOf('identity.create_entity.catalog_identities.v3')).toBe('current');
       expect(statusOf('identity.set_fields.catalog_identities.display_name.v1')).toBe('current');
     });
   });
@@ -84,20 +85,20 @@ describe('payload schema versions', () => {
     });
 
     it('stores the current version when the client omits it', async () => {
-      restore = publishCreationV2();
+      restore = publishCreationV3();
       const entityId = await reserveIdentity(app, diego.accessToken);
       const proposalId = await createDraft(app, diego.accessToken);
 
       const response = await addChange(app, diego.accessToken, proposalId, { entityId, payloadSchemaVersion: undefined }).expect(201);
 
-      expect(response.body.data.attributes.payloadSchemaVersion).toBe(2);
+      expect(response.body.data.attributes.payloadSchemaVersion).toBe(3);
     });
 
     it('rejects an obsolete version, also when editing a microchange of the draft', async () => {
       const { proposalId, changeId, entityId } = await draftIdentityCreation(app, diego.accessToken);
-      restore = publishCreationV2();
+      restore = publishCreationV3();
 
-      const added = await addChange(app, diego.accessToken, proposalId, { entityId, payloadSchemaVersion: 1 }).expect(422);
+      const added = await addChange(app, diego.accessToken, proposalId, { entityId, payloadSchemaVersion: 2 }).expect(422);
       const edited = await updateChange(app, diego.accessToken, proposalId, changeId, { proposedValue: personCreation({ displayName: '아이유' }) }).expect(422);
 
       for (const { body } of [added, edited]) {
@@ -105,7 +106,7 @@ describe('payload schema versions', () => {
           expect.objectContaining({ code: 'obsolete_payload_schema_version', source: { pointer: '/data/attributes/payloadSchemaVersion' } }),
         ]);
       }
-      await updateChange(app, diego.accessToken, proposalId, changeId, { payloadSchemaVersion: 2, proposedValue: personCreation() }).expect(200);
+      await updateChange(app, diego.accessToken, proposalId, changeId, { payloadSchemaVersion: 3, proposedValue: personCreation() }).expect(200);
     });
   });
 
@@ -119,7 +120,7 @@ describe('payload schema versions', () => {
 
     it('shows its author the obsolete microchange as written, and cannot be submitted until it is redone', async () => {
       const { proposalId, changeId, entityId } = await draftIdentityCreation(app, diego.accessToken);
-      restore = publishCreationV2();
+      restore = publishCreationV3();
 
       const shown = await getJsonApi(app, `/v1/proposals/${proposalId}?include=changes`, diego.accessToken).expect(200);
       const own = await getJsonApi(app, '/v1/me/proposals?include=changes', diego.accessToken).expect(200);
@@ -127,7 +128,7 @@ describe('payload schema versions', () => {
         expect(body.included).toEqual([
           expect.objectContaining({
             id: changeId,
-            attributes: expect.objectContaining({ payloadSchemaVersion: 1, payloadSchemaStatus: 'obsolete', proposedValue: personCreation() }),
+            attributes: expect.objectContaining({ payloadSchemaVersion: 2, payloadSchemaStatus: 'obsolete', proposedValue: personCreation() }),
           }),
         ]);
       }
@@ -138,8 +139,70 @@ describe('payload schema versions', () => {
       ]);
 
       await removeChange(app, diego.accessToken, proposalId, changeId).expect(204);
-      await addChange(app, diego.accessToken, proposalId, { entityId, payloadSchemaVersion: 2 }).expect(201);
+      await addChange(app, diego.accessToken, proposalId, { entityId, payloadSchemaVersion: 3 }).expect(201);
       await submitProposal(app, diego.accessToken, proposalId).expect(200);
+    });
+  });
+
+  describe('the complete dates of a person, replaced by partial ones without a translation', () => {
+    const SELECTORS = [
+      ['identity.create_entity.catalog_identities', { operation: 'create_entity', targetPath: 'catalog_identities', proposedValue: personCreation({ person: { birthDate: '1993-05-16' } }) }],
+      ['identity.set_fields.people.birth_date', { operation: 'set_fields', targetPath: 'people.birth_date', proposedValue: { exists: true, value: '1993-05-16' } }],
+      ['identity.set_fields.people.death_date', { operation: 'set_fields', targetPath: 'people.death_date', proposedValue: { exists: true, value: '2020-01-02' } }],
+    ] as const;
+    let diego: Account;
+    let moderator: Account;
+
+    beforeEach(async () => {
+      await app.reset();
+      const admin = await registerFirstAdmin(app);
+      diego = await registerVerified(app, 'diego_papi');
+      moderator = await registerVerified(app, 'modera_ana');
+      await changeRole(app, admin.accessToken, moderator.uuid, { newRole: 'moderator', reason: 'Moderación' }).expect(201);
+    });
+
+    /** IU's root once published. */
+    async function publishPerson(): Promise<string> {
+      const { entityId, changeId } = await submitIdentityCreation(app, diego.accessToken);
+      await decideChange(app, moderator.accessToken, changeId, { action: 'apply' }).expect(201);
+      return entityId;
+    }
+
+    it.each(SELECTORS)('keeps listing %s v1 as obsolete, with v2 current', async (id) => {
+      const operations = await listOperations();
+
+      const statusOf = (version: number) => operations.find((operation) => operation.id === `${id}.v${version}`)?.attributes.status;
+      expect([statusOf(1), statusOf(2)]).toEqual(['obsolete', 'current']);
+    });
+
+    it.each(SELECTORS)('refuses a microchange of %s in v1', async (_, change) => {
+      const entityId = change.operation === 'create_entity' ? await reserveIdentity(app, diego.accessToken) : await publishPerson();
+      const proposalId = await createDraft(app, diego.accessToken);
+
+      const response = await addChange(app, diego.accessToken, proposalId, { entityId, ...change, payloadSchemaVersion: 1 }).expect(422);
+
+      expect(response.body.errors).toEqual([
+        expect.objectContaining({ code: 'obsolete_payload_schema_version', source: { pointer: '/data/attributes/payloadSchemaVersion' } }),
+      ]);
+    });
+
+    it('refuses to submit a draft left with a microchange in v1', async () => {
+      const entityId = await publishPerson();
+      const proposalId = await createDraft(app, diego.accessToken);
+      const added = await addChange(app, diego.accessToken, proposalId, {
+        entityId,
+        operation: 'set_fields',
+        targetPath: 'people.birth_date',
+        proposedValue: { exists: true, value: { year: 1993 } },
+      }).expect(201);
+      const changeId = added.body.data.id;
+      await addSource(app, diego.accessToken, proposalId, { url: WIKIPEDIA }).expect(201);
+      // What a draft written before version 2 holds.
+      await app.app.get(DataSource).query(`UPDATE proposal_changes SET payload_schema_version = 1, proposed_value = '{"exists": true, "value": "1993-05-16"}' WHERE id = $1`, [changeId]);
+
+      const refused = await submitProposal(app, diego.accessToken, proposalId).expect(422);
+
+      expect(refused.body.errors).toEqual([expect.objectContaining({ code: 'obsolete_payload_schema_version', meta: { changeId, member: 'payloadSchemaVersion' } })]);
     });
   });
 

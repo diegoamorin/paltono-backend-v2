@@ -1,5 +1,5 @@
 import { EntityManager } from 'typeorm';
-import { PartialDateValue, partialDateColumns } from '../common/partial-date/partial-date';
+import { BirthValue, PartialDateValue, partialDateColumns } from '../common/partial-date/partial-date';
 import { CatalogIdentity, CatalogIdentityType, Organization, Person } from './entities/catalog-identity.entity';
 import { IdentityCreationValue, findCreatedIdentity } from './identity-creations';
 
@@ -31,6 +31,12 @@ const personColumn = (column: keyof Person): IdentityField => ({
   write: { entity: Person, columns: (value) => ({ [column]: value }) },
 });
 
+const personDate = (prefix: 'birth' | 'death', field: 'birthDate' | 'deathDate'): IdentityField => ({
+  type: 'person',
+  pick: (identity) => identity.person![field],
+  write: { entity: Person, columns: (value: BirthValue | null) => partialDateColumns(prefix, value) },
+});
+
 const organizationColumn = (column: 'legalName' | 'originCountryId'): IdentityField => ({
   type: 'organization',
   pick: (identity) => identity.organization![column],
@@ -49,9 +55,9 @@ export const IDENTITY_FIELDS = {
   'catalog_identities.bio': identityColumn('bio'),
   'people.given_name': personColumn('givenName'),
   'people.family_name': personColumn('familyName'),
-  'people.birth_date': personColumn('birthDate'),
+  'people.birth_date': personDate('birth', 'birthDate'),
   'people.birth_country_id': personColumn('birthCountryId'),
-  'people.death_date': personColumn('deathDate'),
+  'people.death_date': personDate('death', 'deathDate'),
   'people.height_cm': personColumn('heightCm'),
   'people.gender': personColumn('gender'),
   'people.img_full_body': personColumn('imgFullBody'),

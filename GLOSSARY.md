@@ -50,6 +50,26 @@ _Avoid_: Rate limit, para no confundirlo con los límites por frecuencia de peti
 Periodo en que una persona u organización forma parte, como miembro musical, de una organización. Un miembro puede tener varias en la misma organización, si se fue y volvió, pero solo una actual a la vez.
 _Avoid_: Afiliación, que es la relación de un artista con una agencia, un sello o su mánager.
 
+**Afiliación (affiliation)**:
+Relación informativa de un artista con una agencia, un sello o su mánager durante un periodo.
+_Avoid_: Membresía, que es formar parte de una organización como miembro musical.
+
+**Aniversario (anniversary)**:
+Fecha de una identidad que se recuerda cada año: su nacimiento, fallecimiento, debut, fundación o disolución. Una identidad tiene uno por cada fecha conocida con mes.
+_Avoid_: Efeméride, cumpleaños como sinónimo general.
+
+**Cumpleaños (birthday)**:
+Día y mes del nacimiento de una persona, que se repite cada año y puede conocerse aunque no se conozca el año.
+_Avoid_: Nacimiento, que es el momento completo con la precisión que se conozca.
+
+**Nacimiento (birth)**:
+Momento en que nació una persona, conocido con la precisión que permitan las fuentes: año, año y mes, fecha completa, o solo día y mes cuando se celebra su cumpleaños sin publicar el año.
+_Avoid_: Cumpleaños, que es solo su día y mes.
+
+**Fallecimiento (death)**:
+Momento en que murió una persona, del que se conoce al menos el año.
+_Avoid_: Fecha de muerte exacta como requisito.
+
 **Fundación (founding)**:
 Momento en que una organización surgió como tal, según las fuentes. No es su registro legal ni su debut.
 _Avoid_: Registro legal, creación.

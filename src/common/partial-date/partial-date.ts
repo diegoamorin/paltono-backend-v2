@@ -10,6 +10,9 @@ import { FindOperator, IsNull } from 'typeorm';
  * (`PartialDateValue`); API responses mark it with nulls (`PartialDate`). It
  * stands for the interval from its first possible day to its last, so of two
  * partial dates only one wholly before the other is certainly earlier.
+ *
+ * A birth is a partial date or a birthday, its month and day without a year,
+ * which recurs every year and so means no interval to compare.
  */
 
 /** A partial date as payloads propose it and revisions record it. */
@@ -18,6 +21,9 @@ export interface PartialDateValue {
   month?: number;
   day?: number;
 }
+
+/** A birth as payloads propose it and revisions record it. */
+export type BirthValue = PartialDateValue | { year?: undefined; month: number; day: number };
 
 /** A partial date as API responses show it. */
 export class PartialDate {
@@ -31,11 +37,31 @@ export class PartialDate {
   day: number | null;
 }
 
+/** A birth as API responses show it. */
+export class BirthDate {
+  @ApiProperty({ type: Number, nullable: true, example: 1993, description: 'null en un cumpleaños sin año' })
+  year: number | null;
+
+  @ApiProperty({ type: Number, nullable: true, example: 5 })
+  month: number | null;
+
+  @ApiProperty({ type: Number, nullable: true, example: 16 })
+  day: number | null;
+}
+
 type ColumnsOf<Prefix extends string, Value> = Record<`${Prefix}Year` | `${Prefix}Month` | `${Prefix}Day`, Value>;
 
+/** Without a year a day is judged against a leap year, so February 29 is a birthday. */
+const LEAP_YEAR = 2000;
+
 /** Whether its day exists in its month; a date without a day has none to miss. */
-export function isRealDay({ year, month, day }: PartialDateValue): boolean {
-  return day === undefined || month === undefined || day <= daysInMonth(year, month);
+export function isRealDay({ year, month, day }: BirthValue): boolean {
+  return day === undefined || month === undefined || day <= daysInMonth(year ?? LEAP_YEAR, month);
+}
+
+/** A birth as a date to compare with others; a birthday has no year, so it compares with nothing. */
+export function datedBirth(birth: BirthValue | null | undefined): PartialDateValue | null {
+  return birth?.year === undefined ? null : birth;
 }
 
 /** The first and last days a partial date may mean, as comparable `YYYYMMDD` numbers. */
@@ -56,7 +82,7 @@ export function samePartialDate(a: PartialDateValue | null, b: PartialDateValue 
 }
 
 /** The columns that store a partial date; without one they are all null. */
-export function partialDateColumns<Prefix extends string>(prefix: Prefix, date: PartialDateValue | null | undefined): ColumnsOf<Prefix, number | null> {
+export function partialDateColumns<Prefix extends string>(prefix: Prefix, date: BirthValue | null | undefined): ColumnsOf<Prefix, number | null> {
   return {
     [`${prefix}Year`]: date?.year ?? null,
     [`${prefix}Month`]: date?.month ?? null,
@@ -88,9 +114,24 @@ export function partialDateResponse<Prefix extends string>(row: ColumnsOf<Prefix
   return year === null ? null : { year, month, day };
 }
 
+/** What a person's birth columns store, as a payload would propose it. */
+export function birthValue(row: ColumnsOf<'birth', number | null>): BirthValue | null {
+  const shown = birthResponse(row);
+  if (shown?.year === null) return { month: shown.month!, day: shown.day! };
+  return partialDateValue(row, 'birth');
+}
+
+/** What a person's birth columns store, as an API response shows it; a birthday has a null year. */
+export function birthResponse({ birthYear: year, birthMonth: month, birthDay: day }: ColumnsOf<'birth', number | null>): BirthDate | null {
+  return year === null && month === null ? null : { year, month, day };
+}
+
 /** The check constraint of a partial date's columns, as the migrations wrote it, so `migration:generate` finds no drift. */
 export const partialDateCheck = (prefix: string) =>
   `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
+
+/** The check constraint of a person's birth: a partial date, or a month and day without a year, judged against a leap year. */
+export const birthDateCheck = `(birth_year IS NULL OR birth_year BETWEEN 1 AND 9999) AND (birth_month IS NULL OR birth_month BETWEEN 1 AND 12) AND (birth_day IS NULL OR (birth_month IS NOT NULL AND birth_day BETWEEN 1 AND extract(day FROM make_date(coalesce(birth_year, ${LEAP_YEAR}), birth_month, 1) + interval '1 month - 1 day'))) AND (birth_year IS NOT NULL OR birth_month IS NULL OR birth_day IS NOT NULL)`;
 
 /** SQL expressions of the first and last days a partial date may mean, over the row aliased `row`. */
 export function partialDateIntervalSql(row: string, prefix: string) {

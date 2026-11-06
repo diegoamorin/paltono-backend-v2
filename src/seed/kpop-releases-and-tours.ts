@@ -304,7 +304,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         bio: 'Cantante surcoreana de SM Entertainment.',
         givenName: 'Bo-ah',
         familyName: 'Kwon',
-        birthDate: '1986-11-05',
+        birthDate: { year: 1986, month: 11, day: 5 },
         gender: 'female',
         nationalities: ['KR'],
         artist: true,

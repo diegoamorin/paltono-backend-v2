@@ -1,7 +1,7 @@
 import { IdentityCreationValue as IdentityCreation, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
-import { PartialDateValue, isRealDay, isWhollyBefore } from '../common/partial-date/partial-date';
+import { BirthValue, datedBirth, isRealDay, isWhollyBefore } from '../common/partial-date/partial-date';
 import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
-import { OperationDefinition, PayloadProblem } from './operation-registry';
+import { OperationDefinition, PayloadProblem, PublishedOperation } from './operation-registry';
 
 /*
  * `create_entity` of an identity: the minimal valid creation of a person or an
@@ -13,19 +13,28 @@ import { OperationDefinition, PayloadProblem } from './operation-registry';
 export const NAME = { type: ['string', 'null'], maxLength: 200, pattern: '\\S' };
 export const COMPLETE_DATE = { type: ['string', 'null'], pattern: '^\\d{4}-\\d{2}-\\d{2}$' };
 
-export const PARTIAL_DATE = {
+const MONTH = { type: 'integer', minimum: 1, maximum: 12 };
+const DAY = { type: 'integer', minimum: 1, maximum: 31 };
+
+const DATE_WITH_YEAR = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['year'],
+  properties: {
+    year: { type: 'integer', minimum: 1, maximum: 9999 },
+    month: MONTH,
+    day: DAY,
+  },
+  dependentRequired: { day: ['month'] },
+};
+
+export const PARTIAL_DATE = { anyOf: [DATE_WITH_YEAR, { type: 'null' }] };
+
+/** A partial date, or a birthday: a month and a day without a year. */
+export const BIRTH_DATE = {
   anyOf: [
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['year'],
-      properties: {
-        year: { type: 'integer', minimum: 1, maximum: 9999 },
-        month: { type: 'integer', minimum: 1, maximum: 12 },
-        day: { type: 'integer', minimum: 1, maximum: 31 },
-      },
-      dependentRequired: { day: ['month'] },
-    },
+    DATE_WITH_YEAR,
+    { type: 'object', additionalProperties: false, required: ['month', 'day'], properties: { month: MONTH, day: DAY } },
     { type: 'null' },
   ],
 };
@@ -37,7 +46,7 @@ export const HEIGHT_CM = { type: ['integer', 'null'], minimum: 1, maximum: 300 }
 export const GENDER = { enum: ['male', 'female', 'other', null] };
 export const COUNTRY_ID = { type: ['integer', 'null'], minimum: 1, description: 'id del país en /v1/countries' };
 
-const IDENTITY = {
+const identitySchema = (birthDate: object, deathDate: object) => ({
   type: 'object',
   additionalProperties: false,
   required: ['type', 'displayName'],
@@ -52,9 +61,9 @@ const IDENTITY = {
       properties: {
         givenName: NAME,
         familyName: NAME,
-        birthDate: COMPLETE_DATE,
+        birthDate,
         birthCountryId: COUNTRY_ID,
-        deathDate: COMPLETE_DATE,
+        deathDate,
         heightCm: HEIGHT_CM,
         gender: GENDER,
         imgFullBody: CATALOG_IMAGE_URL,
@@ -82,9 +91,10 @@ const IDENTITY = {
       then: { required: ['organization'], properties: { person: false } },
     },
   ],
-};
+});
 
-export const IDENTITY_CREATION: OperationDefinition = {
+/** Replaced by version 2 without a translation: the dates of a person became partial (ADR 0006). */
+export const IDENTITY_CREATION_V1: PublishedOperation = {
   entityType: 'identity',
   operation: 'create_entity',
   targetPath: 'catalog_identities',
@@ -92,7 +102,19 @@ export const IDENTITY_CREATION: OperationDefinition = {
   description:
     'Alta mínima de una persona u organización: nombre visible, tipo y exactamente el subtipo de ese tipo. ' +
     'Las fechas de persona son completas; las de organización, parciales.',
-  valueSchema: IDENTITY,
+  valueSchema: identitySchema(COMPLETE_DATE, COMPLETE_DATE),
+  targetKeySchema: null,
+};
+
+export const IDENTITY_CREATION: OperationDefinition = {
+  entityType: 'identity',
+  operation: 'create_entity',
+  targetPath: 'catalog_identities',
+  payloadSchemaVersion: 2,
+  description:
+    'Alta mínima de una persona u organización: nombre visible, tipo y exactamente el subtipo de ese tipo. ' +
+    'Las fechas son parciales, y el nacimiento admite además mes y día sin año.',
+  valueSchema: identitySchema(BIRTH_DATE, PARTIAL_DATE),
   targetKeySchema: null,
   check: (value) => checkIdentity(value as IdentityCreation),
   references: (value) => {
@@ -126,10 +148,10 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
   const { person, organization } = identity;
   if (person) {
     for (const field of ['birthDate', 'deathDate'] as const) {
-      const date = person[field];
-      if (date && !isCalendarDate(date)) problems.push({ path: `/value/person/${field}`, detail: `${field} is not a calendar date` });
+      problems.push(...partialDateProblems(field, person[field], `/value/person/${field}`));
     }
-    if (person.birthDate && person.deathDate && person.deathDate < person.birthDate) {
+    const birth = datedBirth(person.birthDate);
+    if (birth && person.deathDate && isWhollyBefore(person.deathDate, birth)) {
       problems.push({ path: '/value/person/deathDate', detail: 'deathDate is before birthDate' });
     }
   }
@@ -147,15 +169,9 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
 }
 
 /** A partial date whose day does not exist in its month, which the JSON Schema cannot say. */
-export function partialDateProblems(field: string, date: PartialDateValue | null | undefined, at = '/value'): PayloadProblem[] {
+export function partialDateProblems(field: string, date: BirthValue | null | undefined, at = '/value'): PayloadProblem[] {
   if (!date || isRealDay(date)) return [];
   return [{ path: `${at}/day`, detail: `${field} is not a calendar date` }];
-}
-
-/** A complete date, `YYYY-MM-DD`, as a partial date. */
-export function partialDateOf(date: string): PartialDateValue {
-  const [year, month, day] = date.split('-').map(Number);
-  return { year, month, day };
 }
 
 export function isCalendarDate(date: string): boolean {

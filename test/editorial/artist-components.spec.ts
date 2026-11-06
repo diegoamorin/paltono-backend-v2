@@ -171,13 +171,27 @@ describe('artist profiles, memberships and affiliations of identities', () => {
     });
 
     it('cannot be wholly before the birth, and a birth cannot move past it', async () => {
-      const entityId = await publishArtistProfile(await publish({ type: 'person', displayName: 'IU', person: { birthDate: '1993-05-16' } }));
+      const entityId = await publishArtistProfile(await publish({ type: 'person', displayName: 'IU', person: { birthDate: { year: 1993, month: 5, day: 16 } } }));
 
       expect((await problem(setDebut(entityId, { year: 1992 }))).code).toBe('inconsistent_value');
       await apply((await submitChanges([setDebut(entityId, { year: 1993 })])).changeIds[0]).expect(201);
 
-      const birth: ChangeInput = { entityId, operation: 'set_fields', targetPath: 'people.birth_date', proposedValue: { exists: true, value: '1994-01-01' } };
+      const birth: ChangeInput = { entityId, operation: 'set_fields', targetPath: 'people.birth_date', proposedValue: { exists: true, value: { year: 1994 } } };
       expect((await problem(birth)).code).toBe('inconsistent_value');
+    });
+
+    it('may share its year with a birth known only by its year', async () => {
+      const entityId = await publishArtistProfile(await publish({ type: 'person', displayName: 'IU', person: { birthDate: { year: 1993 } } }));
+
+      await apply((await submitChanges([setDebut(entityId, { year: 1993, month: 1 })])).changeIds[0]).expect(201);
+    });
+
+    it('is not compared with a birthday, in either direction', async () => {
+      const entityId = await publishArtistProfile(await publish({ type: 'person', displayName: 'IU', person: { birthDate: { month: 5, day: 16 } } }));
+
+      await apply((await submitChanges([setDebut(entityId, { year: 1 })])).changeIds[0]).expect(201);
+      const birthday: ChangeInput = { entityId, operation: 'set_fields', targetPath: 'people.birth_date', proposedValue: { exists: true, value: { month: 1, day: 1 } } };
+      await apply((await submitChanges([birthday])).changeIds[0]).expect(201);
     });
 
     it('cannot be wholly before the founding, and a founding cannot move past it', async () => {

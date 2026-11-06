@@ -18393,6 +18393,56 @@
           "height"
         ]
       },
+      "BirthDate": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "number",
+            "nullable": true,
+            "example": 1993,
+            "description": "null en un cumpleaños sin año"
+          },
+          "month": {
+            "type": "number",
+            "nullable": true,
+            "example": 5
+          },
+          "day": {
+            "type": "number",
+            "nullable": true,
+            "example": 16
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "day"
+        ]
+      },
+      "PartialDate": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "number",
+            "example": 2008
+          },
+          "month": {
+            "type": "number",
+            "nullable": true,
+            "example": 9
+          },
+          "day": {
+            "type": "number",
+            "nullable": true,
+            "example": null
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "day"
+        ]
+      },
       "PersonAttributes": {
         "type": "object",
         "properties": {
@@ -18405,9 +18455,14 @@
             "nullable": true
           },
           "birthDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Fecha parcial: los nulos marcan la precisión desconocida, y `year: null` es un cumpleaños sin año",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BirthDate"
+              }
+            ]
           },
           "birthCountryId": {
             "type": "number",
@@ -18415,9 +18470,14 @@
             "description": "id del país de nacimiento en /v1/countries"
           },
           "deathDate": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Fecha parcial: los nulos marcan la precisión desconocida",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
           },
           "heightCm": {
             "type": "number",
@@ -18452,30 +18512,6 @@
           "heightCm",
           "gender",
           "imgFullBody"
-        ]
-      },
-      "PartialDate": {
-        "type": "object",
-        "properties": {
-          "year": {
-            "type": "number",
-            "example": 2008
-          },
-          "month": {
-            "type": "number",
-            "nullable": true,
-            "example": 9
-          },
-          "day": {
-            "type": "number",
-            "nullable": true,
-            "example": null
-          }
-        },
-        "required": [
-          "year",
-          "month",
-          "day"
         ]
       },
       "OrganizationAttributes": {

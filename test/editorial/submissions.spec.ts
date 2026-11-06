@@ -201,7 +201,7 @@ describe('submissions', () => {
         operation: 'create_entity',
         targetPath: 'catalog_identities',
         targetKey: null,
-        payloadSchemaVersion: 1,
+        payloadSchemaVersion: 2,
         baseVersion: 0,
         baseValue: { exists: false },
         proposedValue: personCreation(),

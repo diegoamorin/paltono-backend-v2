@@ -68,7 +68,7 @@ describe('GET /v1/identities (C1) and /v1/identities/{id} (C2)', () => {
       }),
     );
 
-    await publishIdentity({ type: 'person', displayName: 'IU', person: { birthDate: '1993-05-16' } }, (entityId) => ({
+    await publishIdentity({ type: 'person', displayName: 'IU', person: { birthDate: { year: 1993, month: 5, day: 16 } } }, (entityId) => ({
       withCreation: [relation(entityId, 'person_nationalities', null, { person_id: { entity_id: entityId }, country_id: korea })],
       later: [
         relation(entityId, 'catalog_identity_aliases', { alias: 'Lee Ji-eun', isPrimary: true, sortOrder: 0 }),
