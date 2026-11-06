@@ -19264,6 +19264,31 @@
           "meta"
         ]
       },
+      "AnniversaryDate": {
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "number",
+            "nullable": true,
+            "example": 1993,
+            "description": "null en un cumpleaños sin año"
+          },
+          "month": {
+            "type": "number",
+            "example": 5
+          },
+          "day": {
+            "type": "number",
+            "nullable": true,
+            "example": 16
+          }
+        },
+        "required": [
+          "year",
+          "month",
+          "day"
+        ]
+      },
       "AnniversaryAttributes": {
         "type": "object",
         "properties": {
@@ -19281,7 +19306,7 @@
             "description": "Fecha parcial con mes conocido: los nulos marcan la precisión desconocida, y `year: null` es un cumpleaños sin año",
             "allOf": [
               {
-                "$ref": "#/components/schemas/BirthDate"
+                "$ref": "#/components/schemas/AnniversaryDate"
               }
             ]
           }
@@ -19329,7 +19354,7 @@
           },
           "id": {
             "type": "string",
-            "description": "public_id de la identidad y `kind`, separados por dos puntos"
+            "description": "public_id de la identidad y `kind`, separados por un punto"
           },
           "attributes": {
             "$ref": "#/components/schemas/AnniversaryAttributes"

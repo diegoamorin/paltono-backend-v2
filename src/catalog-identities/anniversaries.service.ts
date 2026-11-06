@@ -1,14 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { pageWindow } from '../common/json-api/document';
-import { JsonApiException } from '../common/json-api/json-api.exception';
-import { CollectionQuery, requireOneOf } from '../common/json-api/query';
-import { BirthDate } from '../common/partial-date/partial-date';
-import { ANNIVERSARY_KINDS, AnniversaryEntry, AnniversaryKind } from './anniversary.resource';
+import { CollectionQuery, badParameter, requireOneOf } from '../common/json-api/query';
+import { ANNIVERSARY_KINDS, AnniversaryDate, AnniversaryEntry, AnniversaryKind } from './anniversary.resource';
 import { artistProfileCondition, identityEntriesById } from './identities.service';
 
 /** The table and column prefix of the date behind each kind; every table keys on `catalog_identity_id`. */
-const SOURCES: Record<AnniversaryKind, { table: string; prefix: string }> = {
+const DATE_COLUMNS: Record<AnniversaryKind, { table: string; prefix: string }> = {
   birth: { table: 'people', prefix: 'birth' },
   death: { table: 'people', prefix: 'death' },
   debut: { table: 'artists', prefix: 'debut' },
@@ -16,7 +14,7 @@ const SOURCES: Record<AnniversaryKind, { table: string; prefix: string }> = {
   dissolution: { table: 'organizations', prefix: 'dissolution' },
 };
 
-interface AnniversaryRow extends BirthDate {
+interface AnniversaryRow extends AnniversaryDate {
   kind: AnniversaryKind;
   identity_id: number;
 }
@@ -33,9 +31,7 @@ export class AnniversariesService {
     if (month !== undefined) requireOneOf('filter[month]', month, numbersUpTo(12));
     if (day !== undefined) {
       requireOneOf('filter[day]', day, numbersUpTo(31));
-      if (month === undefined) {
-        throw new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: 'filter[day] requires filter[month]', source: { parameter: 'filter[day]' } }]);
-      }
+      if (month === undefined) throw badParameter('filter[day]', 'requires filter[month]');
     }
     const conditions = [`root.publication_status = 'published'`, '($1::smallint IS NULL OR anniversary.month = $1)', '($2::smallint IS NULL OR anniversary.day = $2)'];
     if (deceased !== undefined) {
@@ -46,24 +42,24 @@ export class AnniversariesService {
     }
     if (hasArtistProfile !== undefined) conditions.push(artistProfileCondition(hasArtistProfile));
 
-    const anniversaries = `
+    const fromClause = `
       FROM (${datesOf(kindsOf(kind))}) anniversary
       JOIN catalog_identities identity ON identity.id = anniversary.identity_id
       JOIN editorial_entities root ON root.id = identity.editorial_entity_id
       WHERE ${conditions.join(' AND ')}`;
     const parameters = [month ?? null, day ?? null];
     const manager = this.dataSource.manager;
-    const [{ total }] = await manager.query(`SELECT count(*)::int AS total ${anniversaries}`, parameters);
+    const [{ total }] = await manager.query(`SELECT count(*)::int AS total ${fromClause}`, parameters);
     const { skip, take } = pageWindow(query);
     const page: AnniversaryRow[] = await manager.query(
-      `SELECT anniversary.* ${anniversaries}
+      `SELECT anniversary.* ${fromClause}
       ORDER BY anniversary.month, anniversary.day NULLS LAST, identity.display_name, anniversary.kind, identity.public_id
       OFFSET $3 LIMIT $4`,
       [...parameters, skip, take],
     );
-    const entries = await identityEntriesById(manager, page.map(({ identity_id }) => identity_id));
+    const identities = await identityEntriesById(manager, page.map((row) => row.identity_id));
     return {
-      entries: page.map(({ kind, year, month, day, identity_id }) => ({ kind, date: { year, month, day }, identity: entries.get(identity_id)! })),
+      entries: page.map((row) => ({ kind: row.kind, date: { year: row.year, month: row.month, day: row.day }, identity: identities.get(row.identity_id)! })),
       total,
     };
   }
@@ -81,7 +77,7 @@ function kindsOf(filter: string | undefined): readonly AnniversaryKind[] {
 function datesOf(kinds: readonly AnniversaryKind[]): string {
   return kinds
     .map((kind) => {
-      const { table, prefix } = SOURCES[kind];
+      const { table, prefix } = DATE_COLUMNS[kind];
       return `
       SELECT '${kind}' AS kind, catalog_identity_id AS identity_id, ${prefix}_year AS year, ${prefix}_month AS month, ${prefix}_day AS day
       FROM ${table}
