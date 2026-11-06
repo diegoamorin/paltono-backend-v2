@@ -173,8 +173,3 @@ export function partialDateProblems(field: string, date: BirthValue | null | und
   if (!date || isRealDay(date)) return [];
   return [{ path: `${at}/day`, detail: `${field} is not a calendar date` }];
 }
-
-export function isCalendarDate(date: string): boolean {
-  const [year, month, day] = date.split('-').map(Number);
-  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && isRealDay({ year, month, day });
-}

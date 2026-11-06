@@ -746,7 +746,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         aliases: ['싸이', '박재상', 'PSY'],
         links: YOUTUBE('officialpsy'),
         affiliations: [
-          { organization: 'yg', type: 'agency', status: 'former' },
+          { organization: 'yg', type: 'agency', status: 'former', startedAt: { year: 2010 }, endedAt: { year: 2018, month: 5 } },
           { organization: 'p-nation', type: 'agency', status: 'current' },
         ],
       }),

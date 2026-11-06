@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { collectionDocument, resourceDocument } from '../common/json-api/document';
 import { JsonApiQuery } from '../common/json-api/json-api-query.decorator';
 import { CollectionQuery, ResourceQuery, collectionQuery, resourceQuery } from '../common/json-api/query';
@@ -9,7 +9,7 @@ import {
   ApiJsonApiQuery,
   ApiJsonApiResourceResponse,
 } from '../common/json-api/swagger';
-import { ArtistResource, artistSchema } from './artist.resource';
+import { AffiliationResource, ArtistResource, artistSchema } from './artist.resource';
 import { ArtistsService } from './artists.service';
 
 const INCLUDE = ['identity', 'identity.aliases', 'affiliations', 'affiliations.organization'];
@@ -24,6 +24,8 @@ const ARTISTS_QUERY = collectionQuery(artistSchema, {
 });
 
 @ApiTags('catalog-identities')
+// Reached through `include`, so no response names it.
+@ApiExtraModels(AffiliationResource)
 @Controller('artists')
 export class ArtistsController {
   constructor(private readonly artists: ArtistsService) {}

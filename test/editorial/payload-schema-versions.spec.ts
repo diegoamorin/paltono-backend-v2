@@ -206,6 +206,108 @@ describe('payload schema versions', () => {
     });
   });
 
+  describe('the complete dates of an affiliation, replaced by partial ones without a translation', () => {
+    const AFFILIATIONS = 'artist_organization_affiliations';
+    const affiliation = (organization: string, startedAt: unknown) => ({
+      organization: { entity_id: organization },
+      relationshipType: 'agency',
+      startedAt,
+      endedAt: null,
+      status: 'current',
+      description: null,
+    });
+    let diego: Account;
+    let moderator: Account;
+
+    beforeEach(async () => {
+      await app.reset();
+      const admin = await registerFirstAdmin(app);
+      diego = await registerVerified(app, 'diego_papi');
+      moderator = await registerVerified(app, 'modera_ana');
+      await changeRole(app, admin.accessToken, moderator.uuid, { newRole: 'moderator', reason: 'Moderación' }).expect(201);
+    });
+
+    /** Applies a microchange through a proposal of its own, and returns its result. */
+    async function publish(change: ChangeInput): Promise<object> {
+      const proposalId = await createDraft(app, diego.accessToken);
+      const added = await addChange(app, diego.accessToken, proposalId, change).expect(201);
+      await addSource(app, diego.accessToken, proposalId, { url: WIKIPEDIA }).expect(201);
+      await submitProposal(app, diego.accessToken, proposalId).expect(200);
+      const decided = await decideChange(app, moderator.accessToken, added.body.data.id, { action: 'apply' }, '?include=revision').expect(201);
+      return decided.body.included[0].attributes.resultKey;
+    }
+
+    /** An artist and an agency, both published. */
+    async function publishArtistAndAgency(): Promise<{ artist: string; agency: string }> {
+      const artist = await reserveIdentity(app, diego.accessToken);
+      await publish({ entityId: artist });
+      const agency = await reserveIdentity(app, diego.accessToken);
+      await publish({ entityId: agency, proposedValue: { exists: true, value: { type: 'organization', displayName: 'EDAM', organization: {} } } });
+      await publish({
+        entityId: artist,
+        operation: 'add_relation',
+        targetPath: 'artists',
+        targetKey: { catalog_identity_id: { entity_id: artist } },
+        proposedValue: { exists: true, value: {} },
+      });
+      return { artist, agency };
+    }
+
+    it.each(['add_relation', 'update_relation'])('keeps listing %s v1 as obsolete, with v2 current', async (operation) => {
+      const operations = await listOperations();
+
+      const statusOf = (version: number) => operations.find(({ id }) => id === `identity.${operation}.${AFFILIATIONS}.v${version}`)?.attributes.status;
+      expect([statusOf(1), statusOf(2)]).toEqual(['obsolete', 'current']);
+    });
+
+    it('leaves the removal in v1, whose payload does not change', async () => {
+      const operations = await listOperations();
+
+      const removal = operations.filter(({ id }) => id.startsWith(`identity.remove_relation.${AFFILIATIONS}.`));
+      expect(removal.map(({ id, attributes }) => [id, attributes.status])).toEqual([[`identity.remove_relation.${AFFILIATIONS}.v1`, 'current']]);
+    });
+
+    it('refuses an addition and an update in v1', async () => {
+      const { artist, agency } = await publishArtistAndAgency();
+      const resultKey = await publish({
+        entityId: artist,
+        operation: 'add_relation',
+        targetPath: AFFILIATIONS,
+        proposedValue: { exists: true, value: affiliation(agency, { year: 2008 }) },
+      });
+      const proposalId = await createDraft(app, diego.accessToken);
+      const inV1 = { entityId: artist, targetPath: AFFILIATIONS, payloadSchemaVersion: 1, proposedValue: { exists: true, value: affiliation(agency, '2008-09-18') } };
+
+      const addition = await addChange(app, diego.accessToken, proposalId, { ...inV1, operation: 'add_relation' }).expect(422);
+      const update = await addChange(app, diego.accessToken, proposalId, { ...inV1, operation: 'update_relation', targetKey: resultKey }).expect(422);
+
+      for (const { body } of [addition, update]) {
+        expect(body.errors).toEqual([
+          expect.objectContaining({ code: 'obsolete_payload_schema_version', source: { pointer: '/data/attributes/payloadSchemaVersion' } }),
+        ]);
+      }
+    });
+
+    it('still removes an affiliation in v1', async () => {
+      const { artist, agency } = await publishArtistAndAgency();
+      const resultKey = await publish({
+        entityId: artist,
+        operation: 'add_relation',
+        targetPath: AFFILIATIONS,
+        proposedValue: { exists: true, value: affiliation(agency, { year: 2008 }) },
+      });
+
+      await publish({
+        entityId: artist,
+        operation: 'remove_relation',
+        targetPath: AFFILIATIONS,
+        targetKey: resultKey,
+        payloadSchemaVersion: 1,
+        proposedValue: { exists: false },
+      });
+    });
+  });
+
   describe('a submission left on an obsolete version', () => {
     let admin: Account;
     let moderator: Account;

@@ -46,12 +46,12 @@ describe('artists (C6, C7) and memberships (C3)', () => {
     return entityId;
   }
 
-  const affiliation = (organization: string, startedAt: string, endedAt: string | null) => ({
+  const affiliation = (organization: string, startedAt: object | null, endedAt: object | null, status = endedAt ? 'former' : 'current') => ({
     organization: { entity_id: organization },
     relationshipType: 'agency',
     startedAt,
     endedAt,
-    status: endedAt ? 'former' : 'current',
+    status,
     description: null,
   });
 
@@ -79,13 +79,19 @@ describe('artists (C6, C7) and memberships (C3)', () => {
     const iu = await publishIdentity('IU', 'person');
     await publish([
       add(iu, 'catalog_identity_aliases', { alias: 'Lee Ji-eun', isPrimary: true, sortOrder: 0 }),
-      add(iu, 'artist_organization_affiliations', affiliation(edam, '2008-09-18', null)),
+      add(iu, 'artist_organization_affiliations', affiliation(edam, { year: 2008, month: 9, day: 18 }, null)),
     ]);
     const blackpink = await publishIdentity('BLACKPINK', 'organization');
-    await publish([add(blackpink, 'artist_organization_affiliations', affiliation(yg, '2016-08-08', '2023-12-31'))]);
+    await publish([add(blackpink, 'artist_organization_affiliations', affiliation(yg, { year: 2016, month: 8, day: 8 }, { year: 2023, month: 12 }))]);
     const jisoo = await publishIdentity('Jisoo', 'person');
-    await publish([add(jisoo, 'artist_organization_affiliations', affiliation(yg, '2016-08-08', '2023-12-31'))]);
+    await publish([add(jisoo, 'artist_organization_affiliations', affiliation(yg, { year: 2016, month: 8, day: 8 }, { year: 2023, month: 12 }))]);
     const lisa = await publishIdentity('Lisa', 'person');
+    const label = await publishIdentity('Sello de Lisa', 'organization', false);
+    await publish(
+      [null, { year: 2016, month: 3, day: 2 }, { year: 2016 }, { year: 2015, month: 12 }, { year: 2016, month: 3 }].map((startedAt) =>
+        add(lisa, 'artist_organization_affiliations', affiliation(label, startedAt, null, 'former')),
+      ),
+    );
     const retired = await publishIdentity('Retirada', 'person');
     await publish([
       add(blackpink, 'organization_memberships', membership(jisoo, { year: 2016, month: 8, day: 8 }, [{ contributionRoleId: vocalist, position: 0, details: null }])),
@@ -156,8 +162,32 @@ describe('artists (C6, C7) and memberships (C3)', () => {
       expect(types.sort()).toEqual(['artist-affiliations:', 'identities:EDAM Entertainment', 'identities:IU', 'identity-aliases:'].sort());
       const affiliation = body.included.find(({ type }: { type: string }) => type === 'artist-affiliations');
       expect(affiliation.attributes).toEqual(
-        expect.objectContaining({ relationshipType: 'agency', startedAt: '2008-09-18', endedAt: null, status: 'current' }),
+        expect.objectContaining({ relationshipType: 'agency', startedAt: { year: 2008, month: 9, day: 18 }, endedAt: null, status: 'current' }),
       );
+    });
+
+    it('shows the dates of an affiliation with nulls for what is unknown', async () => {
+      const { body } = await get('/v1/artists?filter[q]=Jisoo&include=affiliations').expect(200);
+
+      const shown = body.included.find(({ type }: { type: string }) => type === 'artist-affiliations');
+      expect(shown.attributes).toEqual(
+        expect.objectContaining({ startedAt: { year: 2016, month: 8, day: 8 }, endedAt: { year: 2023, month: 12, day: null }, status: 'former' }),
+      );
+    });
+
+    it('orders the affiliations of an artist by start, the less precise first and the unknown last', async () => {
+      const { body } = await get('/v1/artists?filter[q]=Lisa&include=affiliations').expect(200);
+
+      const starts = body.data[0].relationships.affiliations.data.map(
+        ({ id }: { id: string }) => body.included.find((resource: { id: string; type: string }) => resource.type === 'artist-affiliations' && resource.id === id).attributes.startedAt,
+      );
+      expect(starts).toEqual([
+        { year: 2015, month: 12, day: null },
+        { year: 2016, month: null, day: null },
+        { year: 2016, month: 3, day: null },
+        { year: 2016, month: 3, day: 2 },
+        null,
+      ]);
     });
   });
 
@@ -238,7 +268,7 @@ describe('artists (C6, C7) and memberships (C3)', () => {
         'Lisa',
       ]);
       const { body: without } = await get('/v1/identities?filter[hasArtistProfile]=false').expect(200);
-      expect(without.meta.total).toBe(2);
+      expect(without.meta.total).toBe(3);
     });
   });
 });

@@ -8,7 +8,7 @@ import { OrganizationType } from '../vocabularies/entities/organization-type.ent
 import { Platform } from '../vocabularies/entities/platform.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entity';
-import { ARTIST_CHANGES } from './artist-changes';
+import { ARTIST_CHANGES, ARTIST_CHANGES_V1 } from './artist-changes';
 import { MEMBERSHIP_CHANGES } from './membership-changes';
 import { withdrawalOf } from './entity-withdrawal';
 import { IDENTITY_CREATION, IDENTITY_CREATION_V1 } from './identity-creation';
@@ -189,6 +189,7 @@ export const OPERATIONS: readonly PublishedOperation[] = [
   ...IDENTITY_FIELD_CHANGES_V1,
   ...IDENTITY_FIELD_CHANGES,
   ...IDENTITY_RELATION_CHANGES,
+  ...ARTIST_CHANGES_V1,
   ...ARTIST_CHANGES,
   ...MEMBERSHIP_CHANGES,
   withdrawalOf('identity'),

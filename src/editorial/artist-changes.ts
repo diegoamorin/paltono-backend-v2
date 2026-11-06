@@ -21,9 +21,9 @@ import { identityIdOf } from '../catalog-identities/identity-relations';
 import { PartialDateValue, datedBirth, isWhollyBefore } from '../common/partial-date/partial-date';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { BIO, COMPLETE_DATE, PARTIAL_DATE, isCalendarDate, partialDateProblems } from './identity-creation';
+import { BIO, COMPLETE_DATE, PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import { KEY_ONLY, KEY_ONLY_ROW, ROW_KEY, envelope, noRules, reference } from './identity-relation-changes';
-import type { OperationDefinition, PayloadProblem, RowKey, TargetProblem } from './operation-registry';
+import type { OperationDefinition, PayloadProblem, PublishedOperation, RowKey, TargetProblem } from './operation-registry';
 
 /*
  * The artist profile of an identity and its affiliations.
@@ -131,19 +131,21 @@ async function referencesOf(manager: EntityManager, root: EditorialEntity): Prom
  * list of an organization's artists is derived from them.
  */
 
-const AFFILIATION = {
+const affiliationSchema = (date: object) => ({
   type: 'object',
   additionalProperties: false,
   required: ['organization', 'relationshipType', 'startedAt', 'endedAt', 'status', 'description'],
   properties: {
     organization: reference('entity_id', 'Raíz editorial de la organización: otra identidad de tipo organization'),
     relationshipType: { enum: AFFILIATION_RELATIONSHIP_TYPES },
-    startedAt: COMPLETE_DATE,
-    endedAt: COMPLETE_DATE,
+    startedAt: date,
+    endedAt: date,
     status: { enum: ASSOCIATION_STATUSES, description: 'Un fin conocido exige former; current exige fin desconocido' },
     description: BIO,
   },
-};
+});
+
+const AFFILIATION = affiliationSchema(PARTIAL_DATE);
 
 const proposedAffiliationRules = {
   check: (value: unknown) => checkAffiliation(value as AffiliationValue),
@@ -170,16 +172,20 @@ const proposedAffiliationRules = {
 const affiliationBase = {
   entityType: 'identity',
   targetPath: 'artist_organization_affiliations',
-  payloadSchemaVersion: 1,
 } satisfies Partial<OperationDefinition>;
+
+const ADD_AFFILIATION_DESCRIPTION =
+  'Añade una afiliación informativa del artista con una agencia, un sello o su management, sin autoafiliación. ' +
+  'Organización, tipo y fecha de inicio son únicos en el artista.';
+
+const UPDATE_AFFILIATION_DESCRIPTION = 'Sustituye los datos de una afiliación existente del artista.';
 
 const ADD_AFFILIATION: OperationDefinition = {
   ...affiliationBase,
   ...proposedAffiliationRules,
   operation: 'add_relation',
-  description:
-    'Añade una afiliación informativa del artista con una agencia, un sello o su management, sin autoafiliación. ' +
-    'Organización, tipo y fecha de inicio son únicos en el artista.',
+  payloadSchemaVersion: 2,
+  description: ADD_AFFILIATION_DESCRIPTION,
   valueSchema: AFFILIATION,
   targetKeySchema: null,
   naturalKey: (value) => {
@@ -206,7 +212,8 @@ const UPDATE_AFFILIATION: OperationDefinition = {
   ...affiliationBase,
   ...proposedAffiliationRules,
   operation: 'update_relation',
-  description: 'Sustituye los datos de una afiliación existente del artista.',
+  payloadSchemaVersion: 2,
+  description: UPDATE_AFFILIATION_DESCRIPTION,
   valueSchema: AFFILIATION,
   targetKeySchema: ROW_KEY,
   read: (manager, root, key) => readAffiliation(manager, root, key!),
@@ -225,6 +232,7 @@ const UPDATE_AFFILIATION: OperationDefinition = {
 const REMOVE_AFFILIATION: OperationDefinition = {
   ...affiliationBase,
   operation: 'remove_relation',
+  payloadSchemaVersion: 1,
   description: 'Quita una afiliación del artista; la revisión guarda sus valores anteriores.',
   valueSchema: null,
   targetKeySchema: ROW_KEY,
@@ -246,6 +254,26 @@ export const ARTIST_CHANGES: OperationDefinition[] = [
   REMOVE_AFFILIATION,
 ];
 
+/** Replaced by version 2 without a translation: the dates of an affiliation became partial (ADR 0006). */
+export const ARTIST_CHANGES_V1: PublishedOperation[] = [
+  {
+    ...affiliationBase,
+    operation: 'add_relation',
+    payloadSchemaVersion: 1,
+    description: ADD_AFFILIATION_DESCRIPTION,
+    valueSchema: affiliationSchema(COMPLETE_DATE),
+    targetKeySchema: null,
+  },
+  {
+    ...affiliationBase,
+    operation: 'update_relation',
+    payloadSchemaVersion: 1,
+    description: UPDATE_AFFILIATION_DESCRIPTION,
+    valueSchema: affiliationSchema(COMPLETE_DATE),
+    targetKeySchema: ROW_KEY,
+  },
+];
+
 /** Reads the affiliation of the root's artist that a key by generated id selects. */
 async function readAffiliation(manager: EntityManager, root: EditorialEntity, key: RowKey): Promise<ValueEnvelope> {
   const identityId = await identityIdOf(manager, root.id);
@@ -265,15 +293,12 @@ async function affiliationIds(
   return artistId === null || organizationId === null ? null : { artistId, organizationId };
 }
 
-/** What the JSON Schema cannot say: calendar dates, an end after the start and a status coherent with it. */
+/** What the JSON Schema cannot say: calendar dates, a status coherent with the end and an interval that can exist. */
 function checkAffiliation({ startedAt, endedAt, status }: AffiliationValue): PayloadProblem[] {
-  const problems: PayloadProblem[] = [];
-  for (const [field, date] of [['startedAt', startedAt], ['endedAt', endedAt]] as const) {
-    if (date && !isCalendarDate(date)) problems.push({ path: `/value/${field}`, detail: `${field} is not a calendar date` });
-  }
+  const problems = [...partialDateProblems('startedAt', startedAt, '/value/startedAt'), ...partialDateProblems('endedAt', endedAt, '/value/endedAt')];
   if (endedAt && status !== 'former') {
     problems.push({ path: '/value/status', detail: 'A known end requires status former' });
-  } else if (startedAt && endedAt && endedAt < startedAt) {
+  } else if (startedAt && endedAt && isWhollyBefore(endedAt, startedAt)) {
     problems.push({ path: '/value/endedAt', detail: 'endedAt is before startedAt' });
   }
   return problems;

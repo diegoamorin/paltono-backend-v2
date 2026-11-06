@@ -398,9 +398,14 @@ async function relationChangeProblems(
     others.andWhere('other.target_key = :targetKey::jsonb', { targetKey: JSON.stringify(change.targetKey) });
   }
   if (naturalKey) {
-    others
-      .andWhere(`other.operation = 'add_relation'`)
-      .andWhere(`other.proposed_value -> 'value' @> :naturalKey::jsonb`, { naturalKey: JSON.stringify(naturalKey) });
+    others.andWhere(`other.operation = 'add_relation'`);
+    // Member by member, not by containment: a year alone is not the same start as that year with a month.
+    Object.entries(naturalKey).forEach(([member, value], index) => {
+      others.andWhere(`other.proposed_value -> 'value' -> :member${index}::text = :value${index}::jsonb`, {
+        [`member${index}`]: member,
+        [`value${index}`]: JSON.stringify(value),
+      });
+    });
   }
   if ((change.targetKey !== null || naturalKey) && (await others.getExists())) {
     const member = change.targetKey === null ? 'proposedValue/value' : 'targetKey';
