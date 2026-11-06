@@ -92,9 +92,9 @@ describe('GET /v1/anniversaries (C11)', () => {
   it('shows a date with its kind, its partial date and its identity', async () => {
     const { body } = await list('?include=identity&page[size]=100').expect(200);
 
-    expect(body.data.find(({ id }: Row) => id === `${identities.IU}:birth`)).toEqual({
+    expect(body.data.find(({ id }: Row) => id === `${identities.IU}.birth`)).toEqual({
       type: 'anniversaries',
-      id: `${identities.IU}:birth`,
+      id: `${identities.IU}.birth`,
       attributes: { kind: 'birth', date: { year: 1993, month: 5, day: 16 } },
       relationships: { identity: { data: { type: 'identities', id: identities.IU } } },
     });
@@ -104,7 +104,7 @@ describe('GET /v1/anniversaries (C11)', () => {
   it('shows a birth without a year, with a null year', async () => {
     const { body } = await list('?page[size]=100').expect(200);
 
-    expect(body.data.find(({ id }: Row) => id === `${identities['Ahn Hyo-jin']}:birth`).attributes.date).toEqual({ year: null, month: 5, day: 2 });
+    expect(body.data.find(({ id }: Row) => id === `${identities['Ahn Hyo-jin']}.birth`).attributes.date).toEqual({ year: null, month: 5, day: 2 });
   });
 
   it('leaves the identity out unless it is included', async () => {
@@ -137,7 +137,7 @@ describe('GET /v1/anniversaries (C11)', () => {
     const { body } = await list('?page[size]=100').expect(200);
     const sowol = identities['Kim Sowol'];
 
-    expect(body.data.map(({ id }: Row) => id).filter((id: string) => id.startsWith(sowol))).toEqual([`${sowol}:birth`, `${sowol}:debut`, `${sowol}:death`]);
+    expect(body.data.map(({ id }: Row) => id).filter((id: string) => id.startsWith(sowol))).toEqual([`${sowol}.birth`, `${sowol}.debut`, `${sowol}.death`]);
     expect(body.meta.total).toBe(15);
   });
 

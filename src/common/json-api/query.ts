@@ -260,6 +260,7 @@ function namedPeriod(value: string): { first: string; last: string } | undefined
   return { first: iso(m, d), last: iso(m, d) };
 }
 
-function badParameter(parameter: string, detail: string): JsonApiException {
+/** A 400 about a query parameter, whose detail starts with its name. */
+export function badParameter(parameter: string, detail: string): JsonApiException {
   return new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} ${detail}`, source: { parameter } }]);
 }
