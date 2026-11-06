@@ -16,7 +16,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm start:dev` | API en modo observación |
 | `pnpm build` / `pnpm start` | Compila a `dist/` y la ejecuta |
 | `pnpm typecheck` | Comprobación de tipos |
-| `pnpm test` | Pruebas HTTP y de consola con Jest y Supertest contra la base de pruebas (`DATABASE_URL_TEST`, con el sufijo del worktree en un worktree enlazado), que se crea si falta y se recrea con las migraciones antes de cada ejecución |
+| `pnpm test` | Pruebas HTTP y de consola con Jest y Supertest contra la base de pruebas (`DATABASE_URL_TEST`, con el sufijo del worktree en un worktree enlazado), que se crea si falta con el locale raíz de ICU y se recrea con las migraciones antes de cada ejecución |
 | `pnpm migration:run` / `migration:revert` | Aplica o revierte migraciones sobre `DATABASE_URL` |
 | `pnpm migration:generate src/database/migrations/<Nombre>` | Genera una migración a partir de las entidades |
 | `pnpm db:reset` | Vacía todos los registros conservando las tablas; solo con `NODE_ENV=development` |
@@ -24,7 +24,7 @@ API JSON:API de Paltono: NestJS 11, Node 24 LTS, pnpm y PostgreSQL con TypeORM. 
 | `pnpm admin:bootstrap -- --username <u> --reason <texto>` | Promueve a administrador la primera cuenta activa y verificada mientras no exista ninguno (ADR 0003); queda auditado sin administrador actuante |
 | `pnpm countries:load` | Inserta los países de la lista (ISO 3166-1 con territorios, más Kosovo; ADR 0007) cuyo código falta, en cualquier entorno; no modifica ni borra los existentes y avisa de los que parecen tener mal el código. `db:seed` lo ejecuta por dentro |
 | `pnpm openapi:export [ruta]` | Escribe en `openapi.json` (o en la ruta dada) el documento OpenAPI que sirve `/docs-json`, sin levantar el servidor ni conectar a la base |
-| `pnpm db:test:prepare` | Crea si falta y recrea la base de pruebas (la misma que usa `pnpm test`); rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
+| `pnpm db:test:prepare` | Crea si falta, reemplaza si no usa ICU y recrea la base de pruebas (la misma que usa `pnpm test`); rechaza cualquier base que no termine en `_test` o que coincida con `DATABASE_URL` |
 
 ## Endpoints de operación
 

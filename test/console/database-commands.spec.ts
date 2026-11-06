@@ -104,11 +104,15 @@ describe('pnpm db:test:prepare', () => {
     expect(await migrationNames()).toContain('EnableSearchExtensions1792195200000');
   });
 
-  describe('when the test database does not exist', () => {
+  describe('when the test database does not exist or has the text order of the server', () => {
     // The command adds this checkout's worktree suffix, if any, to the configured name.
     const configured = otherDatabaseUrl('paltono_missing_test');
     const effective = testDatabaseUrl({ DATABASE_URL_TEST: configured })!;
     const missingDevelopment = 'paltono_missing_dev';
+    const sortedTitles = async () =>
+      (await queryDatabase<{ title: string }>(effective, `SELECT title FROM (VALUES ('좋은 날'), ('Butter'), ('Árbol')) AS titles (title) ORDER BY title`)).map(
+        (row) => row.title,
+      );
 
     afterEach(async () => {
       for (const database of [databaseName(effective), missingDevelopment]) {
@@ -122,6 +126,22 @@ describe('pnpm db:test:prepare', () => {
       expect(result).toMatchObject({ status: 0 });
       const migrations = await queryDatabase<{ name: string }>(effective, 'SELECT name FROM migrations');
       expect(migrations.map((row) => row.name)).toContain('EnableSearchExtensions1792195200000');
+    });
+
+    it('creates it with the same text order on any server', async () => {
+      const result = await runPnpm(['db:test:prepare'], { DATABASE_URL_TEST: configured });
+
+      expect(result).toMatchObject({ status: 0 });
+      expect(await sortedTitles()).toEqual(['Árbol', 'Butter', '좋은 날']);
+    });
+
+    it('replaces one created with the text order of the server', async () => {
+      await queryTestDatabase(`CREATE DATABASE "${databaseName(effective)}"`);
+
+      const result = await runPnpm(['db:test:prepare'], { DATABASE_URL_TEST: configured });
+
+      expect(result).toMatchObject({ status: 0 });
+      expect(await sortedTitles()).toEqual(['Árbol', 'Butter', '좋은 날']);
     });
 
     it('refuses a name not ending in _test before creating anything', async () => {

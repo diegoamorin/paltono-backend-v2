@@ -23,10 +23,10 @@ export function requireTestDatabaseUrl(env: NodeJS.ProcessEnv): string {
   return url;
 }
 
-/** Creates the test database if missing, drops everything in it and recreates it with the migrations. */
+/** Ensures the test database exists with ICU's root locale, drops everything in it and recreates it with the migrations. */
 export async function prepareTestDatabase(env: NodeJS.ProcessEnv): Promise<void> {
   const url = requireTestDatabaseUrl(env);
-  await createDatabaseIfMissing(url);
+  await ensureDatabase(url);
   const dataSource = new DataSource(databaseOptions(url));
   await dataSource.initialize();
   try {
@@ -36,17 +36,24 @@ export async function prepareTestDatabase(env: NodeJS.ProcessEnv): Promise<void>
   }
 }
 
-/** Creates the database a URL names, connecting to the server's `postgres` database. */
-async function createDatabaseIfMissing(url: string): Promise<void> {
+/**
+ * Ensures the database a URL names exists, connecting to the server's
+ * `postgres` database. It uses ICU's root locale, so tests see the same text
+ * order on any server; a database's locale cannot change, so one that does not
+ * use ICU is replaced.
+ */
+async function ensureDatabase(url: string): Promise<void> {
   const { database } = parseDatabaseTarget(url);
   const server = new URL(url);
   server.pathname = '/postgres';
   const client = new Client({ connectionString: server.toString() });
   await client.connect();
   try {
-    const { rowCount } = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [database]);
-    if (rowCount) return;
-    await client.query(`CREATE DATABASE ${client.escapeIdentifier(database)}`);
+    const { rows } = await client.query<{ provider: string }>('SELECT datlocprovider AS provider FROM pg_database WHERE datname = $1', [database]);
+    if (rows[0]?.provider === ICU_PROVIDER) return;
+    const name = client.escapeIdentifier(database);
+    if (rows[0]) await client.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+    await client.query(`CREATE DATABASE ${name} TEMPLATE template0 LOCALE_PROVIDER icu ICU_LOCALE 'und'`);
   } catch (error) {
     // Another run created it first.
     if ((error as { code?: string }).code !== DUPLICATE_DATABASE) throw error;
@@ -56,6 +63,7 @@ async function createDatabaseIfMissing(url: string): Promise<void> {
 }
 
 const DUPLICATE_DATABASE = '42P04';
+const ICU_PROVIDER = 'i';
 
 interface DatabaseTarget {
   host: string;
