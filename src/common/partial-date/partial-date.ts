@@ -100,6 +100,15 @@ export function partialDateLookup<Prefix extends string>(prefix: Prefix, date: P
   } as ColumnsOf<Prefix, number | FindOperator<number>>;
 }
 
+/** The order of a find by a partial date, ascending: unknown dates last, and a less precise date before the more precise ones within it. */
+export function partialDateOrder<Prefix extends string>(prefix: Prefix) {
+  return {
+    [`${prefix}Year`]: { direction: 'ASC', nulls: 'LAST' },
+    [`${prefix}Month`]: { direction: 'ASC', nulls: 'FIRST' },
+    [`${prefix}Day`]: { direction: 'ASC', nulls: 'FIRST' },
+  } as ColumnsOf<Prefix, { direction: 'ASC'; nulls: 'LAST' | 'FIRST' }>;
+}
+
 /** What a row's columns store, as a payload would propose it. */
 export function partialDateValue<Prefix extends string>(row: ColumnsOf<Prefix, number | null>, prefix: Prefix): PartialDateValue | null {
   const shown = partialDateResponse(row, prefix);
