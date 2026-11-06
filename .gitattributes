@@ -1,4 +1,3 @@
-# `pnpm openapi:export` writes LF; the test that keeps openapi.json current compares it byte for byte.
-openapi.json text eol=lf
-# Likewise `pnpm payload-schemas:export` and payload-schemas.json.
-payload-schemas.json text eol=lf
+# LF everywhere, whatever the machine's `core.autocrlf`: the exports and their byte-for-byte tests need it, and so do
+# line-based tools on Windows.
+* text=auto eol=lf
