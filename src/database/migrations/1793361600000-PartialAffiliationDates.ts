@@ -9,8 +9,9 @@ const partialDateCheck = (prefix: string) =>
  * interval rule moves to the code, like the founding and the dissolution.
  *
  * Going down keeps only complete dates: a partial one does not fit a `date`
- * column and becomes NULL. Two affiliations told apart only by partial starts
- * then collide, and the migration fails rather than choose one to delete.
+ * column and becomes NULL. Two affiliations with the same organization and
+ * type then collide if neither start is complete, also when one is unknown,
+ * and the migration fails rather than choose one to delete.
  */
 export class PartialAffiliationDates1793361600000 implements MigrationInterface {
   name = 'PartialAffiliationDates1793361600000';

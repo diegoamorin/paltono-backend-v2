@@ -24,6 +24,8 @@ describe('migration PartialAffiliationDates', () => {
   beforeEach(async () => {
     runner = dataSource.createQueryRunner();
     await runner.startTransaction();
+    // Other specs leave partial starts behind, which going down cannot keep apart.
+    await runner.query('DELETE FROM artist_organization_affiliations');
     await migration.down(runner);
     const [{ id: userId }] = await runner.query(
       `INSERT INTO users (uuid, username, email, display_name, created_at, updated_at, username_changed_at)
@@ -72,10 +74,10 @@ describe('migration PartialAffiliationDates', () => {
 
   const affiliation = async (id: number) => (await runner.query(`SELECT * FROM artist_organization_affiliations WHERE id = $1`, [id]))[0];
 
-  /** Runs a statement the schema must refuse, and leaves the transaction usable. */
-  async function expectRefused(sql: string, constraint: string): Promise<void> {
+  /** Runs a statement or a migration step the schema must refuse, and leaves the transaction usable. */
+  async function expectRefused(step: string | (() => Promise<unknown>), constraint: string): Promise<void> {
     await runner.query('SAVEPOINT refused');
-    await expect(runner.query(sql)).rejects.toThrow(constraint);
+    await expect(typeof step === 'string' ? runner.query(step) : step()).rejects.toThrow(constraint);
     await runner.query('ROLLBACK TO SAVEPOINT refused');
   }
 
@@ -152,5 +154,15 @@ describe('migration PartialAffiliationDates', () => {
     expect(await dates(complete)).toEqual({ started_at: '2008-09-18', ended_at: '2024-12-31' });
     expect(await dates(partial)).toEqual({ started_at: null, ended_at: null });
     await migration.up(runner);
+  });
+
+  it('refuses to go down rather than delete one of two affiliations left with the same start', async () => {
+    const first = await insertAffiliation({}, 'agency');
+    const second = await insertAffiliation({}, 'label');
+    await migration.up(runner);
+    await runner.query(`UPDATE artist_organization_affiliations SET started_year = 2020 WHERE id = ${first}`);
+    await runner.query(`UPDATE artist_organization_affiliations SET relationship_type = 'agency', started_year = 2021 WHERE id = ${second}`);
+
+    await expectRefused(() => migration.down(runner), 'artist_organization_affiliations_period_key');
   });
 });

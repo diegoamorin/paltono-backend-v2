@@ -3,6 +3,7 @@ import { DataSource, EntityManager, In } from 'typeorm';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { partialDateOrder } from '../common/partial-date/partial-date';
 import { containsPattern } from '../database/like-pattern';
 import { ArtistEntry } from './artist.resource';
 import { ASSOCIATION_STATUSES, Artist, ArtistOrganizationAffiliation } from './entities/artist.entity';
@@ -81,16 +82,7 @@ export async function loadArtistEntries(manager: EntityManager, artists: Artist[
   const affiliations =
     shown.length === 0
       ? []
-      : await manager.find(ArtistOrganizationAffiliation, {
-          where: { artistId: In(shown) },
-          // Unknown dates last, and a less precise date before the more precise ones within it.
-          order: {
-            startedYear: { direction: 'ASC', nulls: 'LAST' },
-            startedMonth: { direction: 'ASC', nulls: 'FIRST' },
-            startedDay: { direction: 'ASC', nulls: 'FIRST' },
-            id: 'ASC',
-          },
-        });
+      : await manager.find(ArtistOrganizationAffiliation, { where: { artistId: In(shown) }, order: { ...partialDateOrder('started'), id: 'ASC' } });
   const organizationIds = [...new Set(affiliations.map(({ organizationId }) => organizationId))];
   const organizations =
     organizationIds.length === 0

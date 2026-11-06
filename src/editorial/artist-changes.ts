@@ -131,7 +131,7 @@ async function referencesOf(manager: EntityManager, root: EditorialEntity): Prom
  * list of an organization's artists is derived from them.
  */
 
-const affiliationSchema = (date: object) => ({
+const affiliationValueSchema = (date: object) => ({
   type: 'object',
   additionalProperties: false,
   required: ['organization', 'relationshipType', 'startedAt', 'endedAt', 'status', 'description'],
@@ -145,7 +145,7 @@ const affiliationSchema = (date: object) => ({
   },
 });
 
-const AFFILIATION = affiliationSchema(PARTIAL_DATE);
+const AFFILIATION = affiliationValueSchema(PARTIAL_DATE);
 
 const proposedAffiliationRules = {
   check: (value: unknown) => checkAffiliation(value as AffiliationValue),
@@ -261,7 +261,7 @@ export const ARTIST_CHANGES_V1: PublishedOperation[] = [
     operation: 'add_relation',
     payloadSchemaVersion: 1,
     description: ADD_AFFILIATION_DESCRIPTION,
-    valueSchema: affiliationSchema(COMPLETE_DATE),
+    valueSchema: affiliationValueSchema(COMPLETE_DATE),
     targetKeySchema: null,
   },
   {
@@ -269,7 +269,7 @@ export const ARTIST_CHANGES_V1: PublishedOperation[] = [
     operation: 'update_relation',
     payloadSchemaVersion: 1,
     description: UPDATE_AFFILIATION_DESCRIPTION,
-    valueSchema: affiliationSchema(COMPLETE_DATE),
+    valueSchema: affiliationValueSchema(COMPLETE_DATE),
     targetKeySchema: ROW_KEY,
   },
 ];
