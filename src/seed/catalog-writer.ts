@@ -24,8 +24,8 @@ export interface AffiliationSpec {
   organization: string;
   type: 'agency' | 'label' | 'management';
   status: Status;
-  startedAt?: string;
-  endedAt?: string;
+  startedAt?: PartialDateValue;
+  endedAt?: PartialDateValue;
 }
 
 interface IdentitySpec {

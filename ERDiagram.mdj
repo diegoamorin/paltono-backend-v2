@@ -10533,12 +10533,12 @@
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "KC+unw0t6tFe1dnslzJEGT3I",
+											"_id": "d26d47a0-78a6-4767-8256-0e9b580e8d26",
 											"_parent": {
 												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
 											},
 											"model": {
-												"$ref": "E6Uk4t/yLDp1ovkhUfrfKB6L"
+												"$ref": "c512907c-a2b5-47b1-a4a5-205981cff902"
 											},
 											"fillColor": "#DDEEF8",
 											"font": "Arial;12;0",
@@ -10550,18 +10550,86 @@
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "uS4mecmlRFmwWieEFAgNTAgr",
+											"_id": "84f829f3-7b0b-43c1-b5c8-d2c68a1c5faa",
 											"_parent": {
 												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
 											},
 											"model": {
-												"$ref": "H7pvR/82hrO/fJmF+HcLYqfR"
+												"$ref": "fe0802bb-efc1-453e-81d0-09eec3c9461e"
 											},
 											"fillColor": "#DDEEF8",
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 2821,
 											"top": 841,
+											"width": 574,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "f37b10ce-3565-4bb6-917a-0cdd863eb3f7",
+											"_parent": {
+												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
+											},
+											"model": {
+												"$ref": "23da2fd5-704b-4210-97b6-f99d98a92f6e"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2821,
+											"top": 855,
+											"width": 574,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "7ea89aca-8582-43a7-af70-4d1f8d281474",
+											"_parent": {
+												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
+											},
+											"model": {
+												"$ref": "7704d900-920d-4e38-9971-9776d4ee964b"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2821,
+											"top": 869,
+											"width": 574,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "8893635f-9b6f-40a7-b211-fdf6f98c610d",
+											"_parent": {
+												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
+											},
+											"model": {
+												"$ref": "f58cd901-8fe4-41cb-bbd2-bbce20585a3e"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2821,
+											"top": 883,
+											"width": 574,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b8b5788d-e24f-451a-8a60-2b9c953a183b",
+											"_parent": {
+												"$ref": "tSK0faBGCzO6PbPk/eShijAp"
+											},
+											"model": {
+												"$ref": "06d99dd9-ffdf-4834-a9c4-fb710c7f5725"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2821,
+											"top": 897,
 											"width": 574,
 											"height": 12
 										},
@@ -10578,7 +10646,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 2821,
-											"top": 855,
+											"top": 911,
 											"width": 574,
 											"height": 12
 										},
@@ -10595,7 +10663,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 2821,
-											"top": 869,
+											"top": 925,
 											"width": 574,
 											"height": 12
 										},
@@ -10612,7 +10680,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 2821,
-											"top": 883,
+											"top": 939,
 											"width": 574,
 											"height": 12
 										},
@@ -10629,7 +10697,7 @@
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 2821,
-											"top": 897,
+											"top": 953,
 											"width": 574,
 											"height": 12
 										}
@@ -10640,7 +10708,7 @@
 									"left": 2816,
 									"top": 766,
 									"width": 584,
-									"height": 148
+									"height": 204
 								}
 							],
 							"fillColor": "#DDEEF8",
@@ -10649,7 +10717,7 @@
 							"left": 2816,
 							"top": 744,
 							"width": 584,
-							"height": 190,
+							"height": 246,
 							"nameLabel": {
 								"$ref": "Hy/73EEoJifiNAiL32Ll8LfS"
 							},
@@ -17449,7 +17517,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Informational artist association with agency, label or management; no contracts/percentages/ownership. UNIQUE NULLS NOT DISTINCT (artist_id,organization_id,relationship_type,started_at). Known end >= start. status=current|former|unknown, same date/status rules as memberships. No self-affiliation of a profile with its own identity. Owned by artist identity editorial root; reverse organization list is derived. Changes include both identities in editorial scopes.",
+					"documentation": "Informational artist association with agency, label or management; no contracts/percentages/ownership. UNIQUE NULLS NOT DISTINCT (artist_id,organization_id,relationship_type,started_year,started_month,started_day). started and ended are partial dates; an end wholly before the start is refused in code. status=current|former|unknown, same date/status rules as memberships. No self-affiliation of a profile with its own identity. Owned by artist identity editorial root; reverse organization list is derived. Changes include both identities in editorial scopes.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -17496,22 +17564,62 @@
 						},
 						{
 							"_type": "ERDColumn",
-							"_id": "E6Uk4t/yLDp1ovkhUfrfKB6L",
+							"_id": "c512907c-a2b5-47b1-a4a5-205981cff902",
 							"_parent": {
 								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
 							},
-							"name": "started_at",
-							"type": "DATE",
+							"name": "started_year",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{
 							"_type": "ERDColumn",
-							"_id": "H7pvR/82hrO/fJmF+HcLYqfR",
+							"_id": "fe0802bb-efc1-453e-81d0-09eec3c9461e",
 							"_parent": {
 								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
 							},
-							"name": "ended_at",
-							"type": "DATE",
+							"name": "started_month",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "23da2fd5-704b-4210-97b6-f99d98a92f6e",
+							"_parent": {
+								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
+							},
+							"name": "started_day",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "7704d900-920d-4e38-9971-9776d4ee964b",
+							"_parent": {
+								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
+							},
+							"name": "ended_year",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "f58cd901-8fe4-41cb-bbd2-bbce20585a3e",
+							"_parent": {
+								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
+							},
+							"name": "ended_month",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "06d99dd9-ffdf-4834-a9c4-fb710c7f5725",
+							"_parent": {
+								"$ref": "36NJAZNVU7XSM16DjoCCI2+D"
+							},
+							"name": "ended_day",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{

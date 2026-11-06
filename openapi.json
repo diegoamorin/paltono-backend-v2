@@ -18905,6 +18905,110 @@
           "relationships"
         ]
       },
+      "AffiliationAttributes": {
+        "type": "object",
+        "properties": {
+          "relationshipType": {
+            "type": "string",
+            "enum": [
+              "agency",
+              "label",
+              "management"
+            ]
+          },
+          "startedAt": {
+            "nullable": true,
+            "description": "Fecha parcial de inicio; los nulos marcan la precisión desconocida",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
+          },
+          "endedAt": {
+            "nullable": true,
+            "description": "Fecha parcial de fin",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "current",
+              "former",
+              "unknown"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "relationshipType",
+          "startedAt",
+          "endedAt",
+          "status",
+          "description",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AffiliationRelationships": {
+        "type": "object",
+        "properties": {
+          "organization": {
+            "description": "`identities`: la agencia, el sello o el management; si está retirada, solo su aviso",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToOneLinkage"
+              }
+            ]
+          }
+        },
+        "required": [
+          "organization"
+        ]
+      },
+      "AffiliationResource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "artist-affiliations"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/AffiliationAttributes"
+          },
+          "relationships": {
+            "$ref": "#/components/schemas/AffiliationRelationships"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "relationships"
+        ]
+      },
       "ArtistAttributes": {
         "type": "object",
         "properties": {

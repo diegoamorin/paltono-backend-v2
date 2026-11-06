@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { EntityManager, IsNull, Not } from 'typeorm';
+import { EntityManager, Not } from 'typeorm';
 import {
   PartialDateValue,
   partialDateColumns,
@@ -54,8 +54,8 @@ export interface MembershipValue {
 export interface AffiliationValue {
   organization: RootReference;
   relationshipType: AffiliationRelationshipType;
-  startedAt: string | null;
-  endedAt: string | null;
+  startedAt: PartialDateValue | null;
+  endedAt: PartialDateValue | null;
   status: AssociationStatus;
   description: string | null;
 }
@@ -271,7 +271,7 @@ export async function findAffiliationByStart(
   value: Pick<AffiliationValue, 'relationshipType' | 'startedAt'>,
 ): Promise<AffiliationValue | null> {
   const row = await manager.findOne(ArtistOrganizationAffiliation, {
-    where: { artistId, organizationId, relationshipType: value.relationshipType, startedAt: value.startedAt ?? IsNull() },
+    where: { artistId, organizationId, relationshipType: value.relationshipType, ...partialDateLookup('started', value.startedAt) },
     relations: { organization: { catalogIdentity: true } },
   });
   return row && affiliationValue(row);
@@ -289,7 +289,7 @@ export async function affiliationClashes(
     artistId,
     organizationId,
     relationshipType: value.relationshipType,
-    startedAt: value.startedAt ?? IsNull(),
+    ...partialDateLookup('started', value.startedAt),
     ...(replacedId === null ? {} : { id: Not(replacedId) }),
   });
   return clash ? ['El artista ya tiene esa afiliación con la organización desde esa fecha'] : [];
@@ -334,8 +334,8 @@ function affiliationValue(row: ArtistOrganizationAffiliation): AffiliationValue 
   return {
     organization: { entity_id: row.organization!.catalogIdentity!.editorialEntityId },
     relationshipType: row.relationshipType,
-    startedAt: row.startedAt,
-    endedAt: row.endedAt,
+    startedAt: partialDateValue(row, 'started'),
+    endedAt: partialDateValue(row, 'ended'),
     status: row.status,
     description: row.description,
   };
@@ -343,7 +343,7 @@ function affiliationValue(row: ArtistOrganizationAffiliation): AffiliationValue 
 
 function affiliationColumns(value: AffiliationValue) {
   const { relationshipType, startedAt, endedAt, status, description } = value;
-  return { relationshipType, startedAt, endedAt, status, description };
+  return { relationshipType, ...partialDateColumns('started', startedAt), ...partialDateColumns('ended', endedAt), status, description };
 }
 
 // Periods

@@ -168,10 +168,11 @@ export class OrganizationMembershipRole {
 /** An informational association of an artist with an agency, a label or management, owned by the artist's root. */
 @Entity('artist_organization_affiliations')
 // UNIQUE NULLS NOT DISTINCT in the migration, which TypeORM cannot declare.
-@Unique('artist_organization_affiliations_period_key', ['artistId', 'organizationId', 'relationshipType', 'startedAt'])
+@Unique('artist_organization_affiliations_period_key', ['artistId', 'organizationId', 'relationshipType', 'startedYear', 'startedMonth', 'startedDay'])
 @Index('artist_organization_affiliations_organization_id_idx', ['organizationId'])
-@Check('artist_organization_affiliations_interval', `ended_at >= started_at`)
-@Check('artist_organization_affiliations_status', `(ended_at IS NULL OR status = 'former') AND (status <> 'current' OR ended_at IS NULL)`)
+@Check('artist_organization_affiliations_started_date', partialDateCheck('started'))
+@Check('artist_organization_affiliations_ended_date', partialDateCheck('ended'))
+@Check('artist_organization_affiliations_status', `(ended_year IS NULL OR status = 'former') AND (status <> 'current' OR ended_year IS NULL)`)
 export class ArtistOrganizationAffiliation {
   @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
   id: number;
@@ -193,12 +194,23 @@ export class ArtistOrganizationAffiliation {
   @Column({ name: 'relationship_type', type: 'enum', enum: AFFILIATION_RELATIONSHIP_TYPES, enumName: 'affiliation_relationship_type' })
   relationshipType: AffiliationRelationshipType;
 
-  /** Complete dates only, as `YYYY-MM-DD`; unknown is null. */
-  @Column({ name: 'started_at', type: 'date', nullable: true })
-  startedAt: string | null;
+  @Column({ name: 'started_year', type: 'smallint', nullable: true })
+  startedYear: number | null;
 
-  @Column({ name: 'ended_at', type: 'date', nullable: true })
-  endedAt: string | null;
+  @Column({ name: 'started_month', type: 'smallint', nullable: true })
+  startedMonth: number | null;
+
+  @Column({ name: 'started_day', type: 'smallint', nullable: true })
+  startedDay: number | null;
+
+  @Column({ name: 'ended_year', type: 'smallint', nullable: true })
+  endedYear: number | null;
+
+  @Column({ name: 'ended_month', type: 'smallint', nullable: true })
+  endedMonth: number | null;
+
+  @Column({ name: 'ended_day', type: 'smallint', nullable: true })
+  endedDay: number | null;
 
   @Column({ type: 'enum', enum: ASSOCIATION_STATUSES, enumName: 'association_status', default: 'unknown' })
   status: AssociationStatus;

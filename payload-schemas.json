@@ -1130,6 +1130,145 @@
     },
     "targetKeySchema": null
   },
+  "identity.add_relation.artist_organization_affiliations.v2": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization",
+            "relationshipType",
+            "startedAt",
+            "endedAt",
+            "status",
+            "description"
+          ],
+          "properties": {
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la organización: otra identidad de tipo organization"
+            },
+            "relationshipType": {
+              "enum": [
+                "agency",
+                "label",
+                "management"
+              ]
+            },
+            "startedAt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endedAt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Un fin conocido exige former; current exige fin desconocido"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
   "identity.add_relation.artists.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -3119,6 +3258,176 @@
                 "null"
               ],
               "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "status": {
+              "enum": [
+                "current",
+                "former",
+                "unknown"
+              ],
+              "description": "Un fin conocido exige former; current exige fin desconocido"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "identity.update_relation.artist_organization_affiliations.v2": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "organization",
+            "relationshipType",
+            "startedAt",
+            "endedAt",
+            "status",
+            "description"
+          ],
+          "properties": {
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la organización: otra identidad de tipo organization"
+            },
+            "relationshipType": {
+              "enum": [
+                "agency",
+                "label",
+                "management"
+              ]
+            },
+            "startedAt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endedAt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "status": {
               "enum": [

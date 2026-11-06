@@ -382,6 +382,18 @@ describe('artist profiles, memberships and affiliations of identities', () => {
       await apply(uncertain.changeIds[0]).expect(201);
     });
 
+    it('takes memberships whose starts differ in precision in the same proposal, not two with the same start', async () => {
+      const group = await publishOrganization('BLACKPINK');
+      const member = await publishPerson('Jisoo');
+      const proposalId = await createDraft(app, ana.accessToken);
+      const add = (joined: object) => addChange(app, ana.accessToken, proposalId, addMembership(group, membership(group, member, { joined })));
+
+      await add({ year: 2020, month: 3 }).expect(201);
+      await add({ year: 2020 }).expect(201);
+
+      expect((await add({ year: 2020 }).expect(422)).body.errors[0].code).toBe('overlapping_change');
+    });
+
     it('refuses a second current membership of the same member in the organization', async () => {
       const group = await publishOrganization('Corazón Serrano');
       const member = await publishPerson('Lesly Águila');
@@ -469,7 +481,7 @@ describe('artist profiles, memberships and affiliations of identities', () => {
     const affiliation = (organization: string, overrides: object = {}) => ({
       organization: { entity_id: organization },
       relationshipType: 'agency',
-      startedAt: '2008-09-18',
+      startedAt: { year: 2008, month: 9, day: 18 },
       endedAt: null,
       status: 'current',
       description: null,
@@ -498,7 +510,7 @@ describe('artist profiles, memberships and affiliations of identities', () => {
       const { resultKey, afterValue } = addition.body.included[0].attributes;
       expect(afterValue).toEqual({ exists: true, value: affiliation(agency) });
 
-      const ended = affiliation(agency, { endedAt: '2024-12-31', status: 'former' });
+      const ended = affiliation(agency, { endedAt: { year: 2024, month: 12 }, status: 'former' });
       const updated = await submitChanges([
         { entityId: artist, operation: 'update_relation', targetPath: AFFILIATIONS, targetKey: resultKey, proposedValue: { exists: true, value: ended } },
       ]);
@@ -520,13 +532,53 @@ describe('artist profiles, memberships and affiliations of identities', () => {
 
       expect((await problem(person, affiliation(agency))).code).toBe('no_artist_profile');
       expect((await problem(artist, affiliation(person))).code).toBe('not_an_organization');
-      expect((await problem(artist, affiliation(agency, { endedAt: '2020-01-01' }))).source).toEqual({
+      expect((await problem(artist, affiliation(agency, { endedAt: { year: 2020 } }))).source).toEqual({
         pointer: '/data/attributes/proposedValue/value/status',
       });
-      expect((await problem(artist, affiliation(agency, { endedAt: '2001-01-01', status: 'former' }))).source).toEqual({
+      expect((await problem(artist, affiliation(agency, { status: 'unknown', endedAt: { year: 2020 } }))).source).toEqual({
+        pointer: '/data/attributes/proposedValue/value/status',
+      });
+      expect((await problem(artist, affiliation(agency, { endedAt: { year: 2001 }, status: 'former' }))).source).toEqual({
         pointer: '/data/attributes/proposedValue/value/endedAt',
       });
       expect((await problem(artist, affiliation(agency, { relationshipType: 'owner' }))).code).toBe('invalid_payload');
+    });
+
+    it('takes a year, a year and month, a complete date or null, and refuses the rest', async () => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      const proposalId = await createDraft(app, ana.accessToken);
+      const add = (value: object) => addChange(app, ana.accessToken, proposalId, addAffiliation(artist, value));
+      const former = (startedAt: object | null, endedAt: object | null) => affiliation(agency, { startedAt, endedAt, status: 'former' });
+
+      await add(former({ year: 2015 }, { year: 2016, month: 3 })).expect(201);
+      await add(former({ year: 2015, month: 3 }, null)).expect(201);
+      await add(former(null, { year: 2016 })).expect(201);
+      await add(former({ year: 2015, month: 3, day: 14 }, null)).expect(201);
+
+      expect((await add(affiliation(agency, { startedAt: '2008-09-18' })).expect(422)).body.errors[0].code).toBe('invalid_payload');
+      expect((await add(affiliation(agency, { startedAt: { month: 9 } })).expect(422)).body.errors[0].code).toBe('invalid_payload');
+      expect((await add(affiliation(agency, { startedAt: { year: 2021, month: 2, day: 29 } })).expect(422)).body.errors[0].source).toEqual({
+        pointer: '/data/attributes/proposedValue/value/startedAt/day',
+      });
+      expect((await add(former({ year: 2017 }, { year: 2024, month: 4, day: 31 })).expect(422)).body.errors[0].source).toEqual({
+        pointer: '/data/attributes/proposedValue/value/endedAt/day',
+      });
+    });
+
+    it('refuses an end wholly before the start, not one that may be after it', async () => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      const proposalId = await createDraft(app, ana.accessToken);
+      const add = (startedAt: object, endedAt: object) =>
+        addChange(app, ana.accessToken, proposalId, addAffiliation(artist, affiliation(agency, { startedAt, endedAt, status: 'former' })));
+
+      await add({ year: 2020 }, { year: 2020, month: 3 }).expect(201);
+      await add({ year: 2020, month: 3 }, { year: 2020 }).expect(201);
+      await add({ year: 2021, month: 3 }, { year: 2021, month: 3, day: 1 }).expect(201);
+
+      const refused = await add({ year: 2022, month: 3 }, { year: 2022, month: 2 }).expect(422);
+      expect(refused.body.errors[0].source).toEqual({ pointer: '/data/attributes/proposedValue/value/endedAt' });
     });
 
     it('never affiliates an organization with its own profile', async () => {
@@ -562,6 +614,70 @@ describe('artist profiles, memberships and affiliations of identities', () => {
       const response = await apply(second.changeIds[0]).expect(201);
 
       expect(response.body.data[0].attributes.resultingStatus).toBe('satisfied');
+    });
+
+    it.each([
+      ['a partial start', { year: 2020, month: 3 }],
+      ['an unknown start', null],
+    ])('takes two affiliations with the same organization, type and %s as the same one', async (_, startedAt) => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      const first = await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt }))]);
+      const second = await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt }))]);
+      await apply(first.changeIds[0]).expect(201);
+
+      const response = await apply(second.changeIds[0]).expect(201);
+
+      expect(response.body.data[0].attributes.resultingStatus).toBe('satisfied');
+    });
+
+    it('tells apart affiliations whose starts differ in precision', async () => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      const first = await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt: { year: 2020 } }))]);
+      const second = await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt: { year: 2020, month: 3 } }))]);
+      await apply(first.changeIds[0]).expect(201);
+
+      const response = await apply(second.changeIds[0]).expect(201);
+
+      expect(response.body.data[0].attributes.resultingStatus).toBe('applied');
+    });
+
+    it('refuses to update an affiliation to the start of another one', async () => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      await apply((await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt: { year: 2020 } }))])).changeIds[0]).expect(201);
+      const later = await apply((await submitChanges([addAffiliation(artist, affiliation(agency, { startedAt: { year: 2021 } }))])).changeIds[0]).expect(201);
+
+      const moved = await submitChanges([
+        {
+          entityId: artist,
+          operation: 'update_relation',
+          targetPath: AFFILIATIONS,
+          targetKey: later.body.included[0].attributes.resultKey,
+          proposedValue: { exists: true, value: affiliation(agency, { startedAt: { year: 2020 } }) },
+        },
+      ]);
+      await apply(moved.changeIds[0]).expect(409);
+      const rebased = await decideChange(app, moderator.accessToken, moved.changeIds[0], {
+        action: 'apply_rebased',
+        confirmedVersion: 4,
+        reason: 'Mismo inicio',
+      }).expect(409);
+
+      expect(rebased.body.errors[0]).toEqual(expect.objectContaining({ code: 'constraint_violated', detail: expect.stringContaining('afiliación') }));
+    });
+
+    it('takes affiliations whose starts differ in precision in the same proposal, not two with the same start', async () => {
+      const artist = await publishArtist();
+      const agency = await publishOrganization();
+      const proposalId = await createDraft(app, ana.accessToken);
+      const add = (startedAt: object) => addChange(app, ana.accessToken, proposalId, addAffiliation(artist, affiliation(agency, { startedAt })));
+
+      await add({ year: 2020, month: 3 }).expect(201);
+      await add({ year: 2020 }).expect(201);
+
+      expect((await add({ year: 2020 }).expect(422)).body.errors[0].code).toBe('overlapping_change');
     });
   });
 });

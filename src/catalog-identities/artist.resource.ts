@@ -28,8 +28,8 @@ export const affiliationSchema: ResourceSchema<AffiliationEntry> = defineResourc
   id: ({ affiliation }) => String(affiliation.id),
   attributes: {
     relationshipType: ({ affiliation }) => affiliation.relationshipType,
-    startedAt: ({ affiliation }) => affiliation.startedAt,
-    endedAt: ({ affiliation }) => affiliation.endedAt,
+    startedAt: ({ affiliation }) => partialDateResponse(affiliation, 'started'),
+    endedAt: ({ affiliation }) => partialDateResponse(affiliation, 'ended'),
     status: ({ affiliation }) => affiliation.status,
     description: ({ affiliation }) => affiliation.description,
     createdAt: ({ affiliation }) => affiliation.createdAt.toISOString(),
@@ -123,11 +123,11 @@ class AffiliationAttributes {
   @ApiProperty({ enum: AFFILIATION_RELATIONSHIP_TYPES })
   relationshipType: string;
 
-  @ApiProperty({ type: String, format: 'date', nullable: true })
-  startedAt: string | null;
+  @ApiProperty({ type: PartialDate, nullable: true, description: 'Fecha parcial de inicio; los nulos marcan la precisión desconocida' })
+  startedAt: PartialDate | null;
 
-  @ApiProperty({ type: String, format: 'date', nullable: true })
-  endedAt: string | null;
+  @ApiProperty({ type: PartialDate, nullable: true, description: 'Fecha parcial de fin' })
+  endedAt: PartialDate | null;
 
   @ApiProperty({ enum: ASSOCIATION_STATUSES })
   status: string;
