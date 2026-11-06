@@ -425,7 +425,7 @@ describe('relation changes', () => {
 
   describe('the registry of operations', () => {
     it('publishes the shape of the key of each relation operation', async () => {
-      const { body } = await getJsonApi(app, '/v1/editorial-operations').expect(200);
+      const { body } = await getJsonApi(app, '/v1/editorial-operations?page[size]=100').expect(200);
       const byId = (id: string) => body.data.find((operation: { id: string }) => operation.id === id).attributes;
 
       expect(byId('identity.add_relation.catalog_identity_aliases.v1').targetKey).toBeNull();

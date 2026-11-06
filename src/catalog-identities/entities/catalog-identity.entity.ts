@@ -1,5 +1,5 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique } from 'typeorm';
-import { partialDateCheck } from '../../common/partial-date/partial-date';
+import { birthDateCheck, partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { Country } from '../../vocabularies/entities/country.entity';
 
@@ -59,7 +59,8 @@ export class CatalogIdentity {
 @Entity('people')
 @Index('people_birth_country_id_idx', ['birthCountryId'])
 @Check('people_height_cm_range', `height_cm BETWEEN 1 AND 300`)
-@Check('people_lifespan', `death_date >= birth_date`)
+@Check('people_birth_date', birthDateCheck)
+@Check('people_death_date', partialDateCheck('death'))
 @Check('people_img_full_body_format', `img_full_body IS NULL OR img_full_body ~* '^https?://[^\\s]+$'`)
 export class Person {
   @PrimaryColumn({ name: 'catalog_identity_id', type: 'integer' })
@@ -75,9 +76,15 @@ export class Person {
   @Column({ name: 'family_name', type: 'varchar', length: 200, nullable: true })
   familyName: string | null;
 
-  /** Complete dates only, as `YYYY-MM-DD`; unknown is null. */
-  @Column({ name: 'birth_date', type: 'date', nullable: true })
-  birthDate: string | null;
+  /** A partial date, or a birthday: its month and day with a null year. */
+  @Column({ name: 'birth_year', type: 'smallint', nullable: true })
+  birthYear: number | null;
+
+  @Column({ name: 'birth_month', type: 'smallint', nullable: true })
+  birthMonth: number | null;
+
+  @Column({ name: 'birth_day', type: 'smallint', nullable: true })
+  birthDay: number | null;
 
   /** The present-day country of the birthplace, independent of the nationalities. */
   @Column({ name: 'birth_country_id', type: 'integer', nullable: true })
@@ -87,8 +94,14 @@ export class Person {
   @JoinColumn({ name: 'birth_country_id', foreignKeyConstraintName: 'people_birth_country_id_fkey' })
   birthCountry?: Country | null;
 
-  @Column({ name: 'death_date', type: 'date', nullable: true })
-  deathDate: string | null;
+  @Column({ name: 'death_year', type: 'smallint', nullable: true })
+  deathYear: number | null;
+
+  @Column({ name: 'death_month', type: 'smallint', nullable: true })
+  deathMonth: number | null;
+
+  @Column({ name: 'death_day', type: 'smallint', nullable: true })
+  deathDay: number | null;
 
   @Column({ name: 'height_cm', type: 'smallint', nullable: true })
   heightCm: number | null;

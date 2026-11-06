@@ -274,13 +274,47 @@
 												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
 											},
 											"model": {
-												"$ref": "AAAAAAGeD8zCE4Deg2w="
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c401"
 											},
 											"fillColor": "#DDEEF8",
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 765,
 											"top": 813,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c502",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
+											},
+											"model": {
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c402"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 765,
+											"top": 827,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c503",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
+											},
+											"model": {
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c403"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 765,
+											"top": 841,
 											"width": 510,
 											"height": 12
 										},
@@ -308,13 +342,47 @@
 												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
 											},
 											"model": {
-												"$ref": "AAAAAAGeD8zCE4DfOgQ="
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c404"
 											},
 											"fillColor": "#DDEEF8",
 											"font": "Arial;12;0",
 											"parentStyle": true,
 											"left": 765,
 											"top": 841,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c505",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
+											},
+											"model": {
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c405"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 765,
+											"top": 855,
+											"width": 510,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c506",
+											"_parent": {
+												"$ref": "AAAAAAGeD8zCE4Dj1Ts="
+											},
+											"model": {
+												"$ref": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c406"
+											},
+											"fillColor": "#DDEEF8",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 765,
+											"top": 869,
 											"width": 510,
 											"height": 12
 										},
@@ -12685,13 +12753,35 @@
 						},
 						{
 							"_type": "ERDColumn",
-							"_id": "AAAAAAGeD8zCE4Deg2w=",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c401",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCEoDaj/A="
 							},
-							"name": "birth_date",
-							"documentation": "Optional complete Gregorian DATE only. NULL when unknown; partial year/month dates are not accepted and missing components must not be fabricated.",
-							"type": "DATE",
+							"name": "birth_year",
+							"documentation": "Optional partial Gregorian date: year 1..9999; NULL when unknown, or in a birthday published without its year.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c402",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEoDaj/A="
+							},
+							"name": "birth_month",
+							"documentation": "Optional month 1..12. Without a year it requires the day: a month alone is not a birthday. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c403",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEoDaj/A="
+							},
+							"name": "birth_day",
+							"documentation": "Optional day; requires the month; validate actual Gregorian calendar, against a leap year when there is no year, so February 29 is a valid birthday. NULL when unknown.",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{
@@ -12708,13 +12798,35 @@
 						},
 						{
 							"_type": "ERDColumn",
-							"_id": "AAAAAAGeD8zCE4DfOgQ=",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c404",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCEoDaj/A="
 							},
-							"name": "death_date",
-							"documentation": "Optional complete Gregorian DATE only. NULL when unknown; partial year/month dates are not accepted and missing components must not be fabricated.",
-							"type": "DATE",
+							"name": "death_year",
+							"documentation": "Optional partial Gregorian date: year 1..9999; NULL when unknown. Lifespan rule in application code: a death wholly before the birth is refused; a birth without a year compares with nothing.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c405",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEoDaj/A="
+							},
+							"name": "death_month",
+							"documentation": "Optional month 1..12; requires the corresponding year. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "b2e4c8d3-6f1a-4b7c-8d52-9a3f1e20c406",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEoDaj/A="
+							},
+							"name": "death_day",
+							"documentation": "Optional day; requires corresponding year and month; validate actual Gregorian calendar. NULL when unknown.",
+							"type": "SMALLINT",
 							"nullable": true
 						},
 						{

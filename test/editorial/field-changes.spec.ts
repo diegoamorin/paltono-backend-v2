@@ -467,7 +467,7 @@ describe('field changes', () => {
 
       for (const [targetPath, value, pointer] of [
         ['people.height_cm', 500, '/data/attributes/proposedValue/value'],
-        ['people.birth_date', '1993-02-30', '/data/attributes/proposedValue/value'],
+        ['people.birth_date', { year: 1993, month: 2, day: 30 }, '/data/attributes/proposedValue/value/day'],
         ['catalog_identities.display_name', '   ', '/data/attributes/proposedValue/value'],
         ['catalog_identities.display_name', null, '/data/attributes/proposedValue/value'],
       ] as const) {
@@ -480,7 +480,7 @@ describe('field changes', () => {
       const { entityId } = await publishPerson();
       const proposalId = await createDraft(app, luis.accessToken, 'Fallecimiento');
 
-      const response = await addFieldChange(luis, proposalId, entityId, 'people.death_date', '1990-01-01').expect(422);
+      const response = await addFieldChange(luis, proposalId, entityId, 'people.death_date', { year: 1990 }).expect(422);
 
       expect(response.body.errors[0]).toEqual(
         expect.objectContaining({ code: 'inconsistent_value', source: { pointer: '/data/attributes/proposedValue/value' } }),
@@ -489,14 +489,113 @@ describe('field changes', () => {
 
     it('checks those fields again when the microchange is applied', async () => {
       const { entityId, publicId } = await publishPerson();
-      const death = await submitFieldChanges(luis, entityId, { 'people.death_date': '2000-01-01' });
-      const birth = await submitFieldChanges(ana, entityId, { 'people.birth_date': '2001-01-01' });
+      const death = await submitFieldChanges(luis, entityId, { 'people.death_date': { year: 2000 } });
+      const birth = await submitFieldChanges(ana, entityId, { 'people.birth_date': { year: 2001 } });
       await decideChange(app, moderator.accessToken, death.changeIds[0], { action: 'apply' }).expect(201);
 
       const response = await decideChange(app, moderator.accessToken, birth.changeIds[0], { action: 'apply' }).expect(422);
 
       expect(response.body.errors[0]).toEqual(expect.objectContaining({ code: 'inconsistent_value', meta: expect.objectContaining({ changeId: birth.changeIds[0] }) }));
-      expect((await identity(publicId)).person.birthDate).toBe('1993-05-16');
+      expect((await identity(publicId)).person.birthDate).toEqual({ year: 1993, month: 5, day: 16 });
+    });
+  });
+
+  describe('the birth and the death of a person', () => {
+    const apply = async (entityId: string, fields: Record<string, unknown>) => {
+      const { changeIds } = await submitFieldChanges(luis, entityId, fields);
+      await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(201);
+    };
+
+    it('records a birthday without its year, which the API shows with a null year', async () => {
+      const { entityId, publicId } = await publishPerson();
+
+      await apply(entityId, { 'people.birth_date': { month: 3, day: 14 } });
+
+      expect((await identity(publicId)).person.birthDate).toEqual({ year: null, month: 3, day: 14 });
+    });
+
+    it.each([
+      ['a year', { year: 1993 }, { year: 1993, month: null, day: null }],
+      ['a year and month', { year: 1993, month: 5 }, { year: 1993, month: 5, day: null }],
+      ['a complete date', { year: 1992, month: 2, day: 29 }, { year: 1992, month: 2, day: 29 }],
+      ['February 29 without a year', { month: 2, day: 29 }, { year: null, month: 2, day: 29 }],
+    ])('accepts a birth with %s', async (_, value, shown) => {
+      const { entityId, publicId } = await publishPerson();
+
+      await apply(entityId, { 'people.birth_date': value });
+
+      expect((await identity(publicId)).person.birthDate).toEqual(shown);
+    });
+
+    it.each([
+      ['a year', { year: 2020 }, { year: 2020, month: null, day: null }],
+      ['a year and month', { year: 2020, month: 3 }, { year: 2020, month: 3, day: null }],
+      ['a complete date', { year: 2020, month: 3, day: 14 }, { year: 2020, month: 3, day: 14 }],
+    ])('accepts a death with %s', async (_, value, shown) => {
+      const { entityId, publicId } = await publishPerson();
+
+      await apply(entityId, { 'people.death_date': value });
+
+      expect((await identity(publicId)).person.deathDate).toEqual(shown);
+    });
+
+    it.each([
+      ['people.birth_date', 'a month alone', { month: 3 }],
+      ['people.birth_date', 'a day without a month', { day: 14 }],
+      ['people.birth_date', 'a year and day without a month', { year: 1993, day: 14 }],
+      ['people.birth_date', 'a day its month lacks', { year: 1993, month: 4, day: 31 }],
+      ['people.birth_date', 'February 29 of a common year', { year: 1993, month: 2, day: 29 }],
+      ['people.birth_date', 'a birthday that does not exist', { month: 2, day: 30 }],
+      ['people.death_date', 'a birthday-like date without a year', { month: 3, day: 14 }],
+      ['people.death_date', 'a year and day without a month', { year: 2020, day: 14 }],
+      ['people.death_date', 'a day its month lacks', { year: 2021, month: 2, day: 29 }],
+    ])('rejects in %s %s', async (targetPath, _, value) => {
+      const { entityId } = await publishPerson();
+      const proposalId = await createDraft(app, luis.accessToken, 'Fecha');
+
+      const response = await addFieldChange(luis, proposalId, entityId, targetPath, value).expect(422);
+
+      expect(response.body.errors[0].code).toBe('invalid_payload');
+    });
+
+    it('empties either date with null', async () => {
+      const { entityId, publicId } = await publishPerson();
+      await apply(entityId, { 'people.death_date': { year: 2020 } });
+
+      await apply(entityId, { 'people.birth_date': null });
+      await apply(entityId, { 'people.death_date': null });
+
+      expect((await identity(publicId)).person).toEqual(expect.objectContaining({ birthDate: null, deathDate: null }));
+    });
+
+    it('accepts a death that may fall after the birth, though only by the month', async () => {
+      const { entityId, publicId } = await publishPerson();
+      await apply(entityId, { 'people.birth_date': { year: 2000 } });
+
+      await apply(entityId, { 'people.death_date': { year: 2000, month: 3 } });
+
+      expect((await identity(publicId)).person.deathDate).toEqual({ year: 2000, month: 3, day: null });
+    });
+
+    it('rejects a death wholly before the birth, by a day and from the birth too', async () => {
+      const { entityId } = await publishPerson();
+      await apply(entityId, { 'people.birth_date': { year: 2000, month: 3, day: 2 } });
+      const proposalId = await createDraft(app, luis.accessToken, 'Fechas');
+
+      await addFieldChange(luis, proposalId, entityId, 'people.death_date', { year: 2000, month: 3, day: 1 }).expect(422);
+      await apply(entityId, { 'people.death_date': { year: 2000, month: 3 } });
+      const response = await addFieldChange(luis, proposalId, entityId, 'people.birth_date', { year: 2000, month: 4 }).expect(422);
+
+      expect(response.body.errors[0].code).toBe('inconsistent_value');
+    });
+
+    it('does not compare a birthday with the death', async () => {
+      const { entityId, publicId } = await publishPerson();
+      await apply(entityId, { 'people.birth_date': { month: 12, day: 31 } });
+
+      await apply(entityId, { 'people.death_date': { year: 1 } });
+
+      expect((await identity(publicId)).person.deathDate).toEqual({ year: 1, month: null, day: null });
     });
   });
 });

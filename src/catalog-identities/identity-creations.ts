@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { EntityManager } from 'typeorm';
-import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
+import { BirthValue, PartialDateValue, birthValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { CatalogIdentity, CatalogIdentityType, Organization, Person, PersonGender } from './entities/catalog-identity.entity';
 
 /*
@@ -18,9 +18,9 @@ export interface IdentityCreationValue {
   person?: {
     givenName?: string | null;
     familyName?: string | null;
-    birthDate?: string | null;
+    birthDate?: BirthValue | null;
     birthCountryId?: number | null;
-    deathDate?: string | null;
+    deathDate?: PartialDateValue | null;
     heightCm?: number | null;
     gender?: PersonGender | null;
     imgFullBody?: string | null;
@@ -64,9 +64,9 @@ export async function createIdentity(
       catalogIdentityId,
       givenName: person.givenName ?? null,
       familyName: person.familyName ?? null,
-      birthDate: person.birthDate ?? null,
+      ...partialDateColumns('birth', person.birthDate),
       birthCountryId: person.birthCountryId ?? null,
-      deathDate: person.deathDate ?? null,
+      ...partialDateColumns('death', person.deathDate),
       heightCm: person.heightCm ?? null,
       gender: person.gender ?? null,
       imgFullBody: person.imgFullBody ?? null,
@@ -90,8 +90,23 @@ export async function findCreatedIdentity(manager: EntityManager, editorialEntit
   if (!identity) return null;
   const base = { type: identity.type, displayName: identity.displayName, imgProfile: identity.imgProfile, bio: identity.bio };
   if (identity.type === 'person') {
-    const { catalogIdentityId: _, ...person } = await manager.findOneByOrFail(Person, { catalogIdentityId: identity.id });
-    return { identity, value: { ...base, person } };
+    const person = await manager.findOneByOrFail(Person, { catalogIdentityId: identity.id });
+    return {
+      identity,
+      value: {
+        ...base,
+        person: {
+          givenName: person.givenName,
+          familyName: person.familyName,
+          birthDate: birthValue(person),
+          birthCountryId: person.birthCountryId,
+          deathDate: partialDateValue(person, 'death'),
+          heightCm: person.heightCm,
+          gender: person.gender,
+          imgFullBody: person.imgFullBody,
+        },
+      },
+    };
   }
   const organization = await manager.findOneByOrFail(Organization, { catalogIdentityId: identity.id });
   return {

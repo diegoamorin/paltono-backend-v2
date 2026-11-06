@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { DataSource, EntityManager, In, Not, QueryFailedError } from 'typeorm';
+import { DataSource, EntityManager, In, Not } from 'typeorm';
 import { User } from '../accounts/entities/user.entity';
 import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
@@ -33,9 +33,6 @@ export interface DecisionInput {
 }
 
 const OPEN_STATUSES: ChangeStatus[] = ['pending', 'conflicted'];
-
-/** PostgreSQL's error code for a row that fails a CHECK constraint. */
-const CHECK_VIOLATION = '23514';
 
 /** Statuses of a prerequisite that let its dependents apply: its result exists. */
 const FULFILLED_STATUSES: ChangeStatus[] = ['applied', 'satisfied'];
@@ -501,7 +498,7 @@ async function applyAll(context: DecisionContext, open: ProposalChange[]): Promi
         }
         // Alone, a microchange is checked before it writes; a group, once all its members have.
         if (open.length === 1) await checkFinalState(savepoint, open, [{ changeId: change.id }]);
-        const step = await applyStep({ ...context, manager: savepoint }, change, dependsOn, open.length > 1);
+        const step = await applyOne({ ...context, manager: savepoint }, change, dependsOn);
         if ('conflict' in step) {
           conflicts.push(step.conflict);
           skipped.add(change.id);
@@ -524,26 +521,6 @@ async function applyAll(context: DecisionContext, open: ProposalChange[]): Promi
     return { decisions: [], failure: new JsonApiException(HttpStatus.CONFLICT, errors) };
   }
   return { decisions: await loadDecisions(manager, decisions.map(({ id }) => id)), failure: null };
-}
-
-/**
- * Decides one member of a group. A rule of the domain tables that a state on
- * the way refuses, such as a death before the birth, answers 422: the order of
- * the group follows its dependencies, which the author can declare.
- */
-async function applyStep(context: DecisionContext, change: ProposalChange, dependsOn: string[], inGroup: boolean): Promise<Step> {
-  try {
-    return await applyOne(context, change, dependsOn);
-  } catch (error) {
-    if (!inGroup || !(error instanceof QueryFailedError) || (error.driverError as { code?: string }).code !== CHECK_VIOLATION) throw error;
-    throw invalid([
-      {
-        code: 'inconsistent_value',
-        detail: 'Applying the group in dependency order passes through a state the root refuses; declare dependencies that order it',
-        meta: { changeId: change.id },
-      },
-    ]);
-  }
 }
 
 /**

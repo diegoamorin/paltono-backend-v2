@@ -336,29 +336,45 @@ describe('dependencies, atomic groups and withdrawals', () => {
       expect(await statuses(luis, proposalId)).toEqual(['applied', 'applied']);
     });
 
-    it('follows the dependencies when the domain refuses a state on the way', async () => {
+    it('moves a birth past the current death when the group moves the death too, in any order', async () => {
       const entityId = await publishPerson();
-      const date = (targetPath: string, value: string, atomicGroupId: string): ChangeInput => ({
-        entityId,
-        operation: 'set_fields',
-        targetPath,
-        proposedValue: { exists: true, value },
-        atomicGroupId,
-      });
-      const death = await submitChanges(ana, [{ entityId, operation: 'set_fields', targetPath: 'people.death_date', proposedValue: { exists: true, value: '2000-01-01' } }]);
+      const date = (targetPath: string, value: object): ChangeInput => ({ entityId, operation: 'set_fields', targetPath, proposedValue: { exists: true, value }, atomicGroupId: GROUP });
+      const death = await submitChanges(ana, [{ entityId, operation: 'set_fields', targetPath: 'people.death_date', proposedValue: { exists: true, value: { year: 2000 } } }]);
       await decideChange(app, moderator.accessToken, death.changeIds[0], { action: 'apply' }).expect(201);
-      const later = (atomicGroupId: string) => [date('people.birth_date', '2005-01-01', atomicGroupId), date('people.death_date', '2060-01-01', atomicGroupId)];
 
-      // Moving the birth first would put it after the current death.
-      const unordered = await submitChanges(luis, later(GROUP));
-      const refused = await decideChange(app, moderator.accessToken, unordered.changeIds[0], { action: 'apply' }).expect(422);
-      expect(refused.body.errors[0]).toEqual(expect.objectContaining({ code: 'inconsistent_value', meta: { changeId: unordered.changeIds[0] } }));
-      expect(await statuses(luis, unordered.proposalId)).toEqual(['pending', 'pending']);
+      // Moving the birth first puts it after the current death for a moment.
+      const { proposalId, changeIds } = await submitChanges(luis, [date('people.birth_date', { year: 2005 }), date('people.death_date', { year: 2060 })]);
+      await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(201);
 
-      await decideChange(app, luis.accessToken, unordered.changeIds[0], { action: 'withdraw_change' }).expect(201);
-      const ordered = await submitChanges(luis, later('9d4f2c1e-8b7a-4e6d-a5c3-1f0e9d8c7b6a'), [[0, 1]]);
-      await decideChange(app, moderator.accessToken, ordered.changeIds[0], { action: 'apply' }).expect(201);
-      expect(await statuses(luis, ordered.proposalId)).toEqual(['applied', 'applied']);
+      expect(await statuses(luis, proposalId)).toEqual(['applied', 'applied']);
+    });
+
+    it('refuses a group that leaves a death wholly before the birth, though each date is valid alone', async () => {
+      const entityId = await publishPerson();
+      const date = (targetPath: string, value: object): ChangeInput => ({ entityId, operation: 'set_fields', targetPath, proposedValue: { exists: true, value }, atomicGroupId: GROUP });
+
+      const { proposalId, changeIds } = await submitChanges(luis, [date('people.birth_date', { year: 2005 }), date('people.death_date', { year: 2000 })]);
+      const refused = await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(422);
+
+      expect(refused.body.errors.map(({ code, meta }: { code: string; meta: { changeId: string } }) => [code, meta.changeId])).toEqual([
+        ['inconsistent_value', changeIds[0]],
+        ['inconsistent_value', changeIds[1]],
+      ]);
+      expect(await statuses(luis, proposalId)).toEqual(['pending', 'pending']);
+    });
+
+    it('refuses a group that leaves a debut wholly before the birth', async () => {
+      const entityId = await publishPerson();
+      const profile = await submitChanges(ana, [
+        { entityId, operation: 'add_relation', targetPath: 'artists', targetKey: { catalog_identity_id: { entity_id: entityId } }, proposedValue: { exists: true, value: {} } },
+      ]);
+      await decideChange(app, moderator.accessToken, profile.changeIds[0], { action: 'apply' }).expect(201);
+      const date = (targetPath: string, value: object): ChangeInput => ({ entityId, operation: 'set_fields', targetPath, proposedValue: { exists: true, value }, atomicGroupId: GROUP });
+
+      const { proposalId, changeIds } = await submitChanges(luis, [date('people.birth_date', { year: 2005 }), date('artists.debut', { year: 2000 })]);
+
+      await decideChange(app, moderator.accessToken, changeIds[0], { action: 'apply' }).expect(422);
+      expect(await statuses(luis, proposalId)).toEqual(['pending', 'pending']);
     });
 
     it('reports every member in conflict, and applies over new bases on several roots once each version is confirmed', async () => {

@@ -59,7 +59,7 @@ export function personCreation(overrides: object = {}) {
       type: 'person',
       displayName: 'IU',
       bio: 'Cantante y actriz surcoreana.',
-      person: { givenName: 'Ji-eun', familyName: 'Lee', birthDate: '1993-05-16', heightCm: 162, gender: 'female' },
+      person: { givenName: 'Ji-eun', familyName: 'Lee', birthDate: { year: 1993, month: 5, day: 16 }, heightCm: 162, gender: 'female' },
       ...overrides,
     },
   };
@@ -92,7 +92,6 @@ export function addChange(app: TestApp, accessToken: string, proposalId: string,
   const attributes = {
     operation: 'create_entity',
     targetPath: 'catalog_identities',
-    payloadSchemaVersion: 1,
     proposedValue: personCreation(),
     ...input,
   };

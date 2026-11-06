@@ -11,8 +11,8 @@ import { ChangeOperation, ValueEnvelope } from './entities/proposal-change.entit
 import { ARTIST_CHANGES } from './artist-changes';
 import { MEMBERSHIP_CHANGES } from './membership-changes';
 import { withdrawalOf } from './entity-withdrawal';
-import { IDENTITY_CREATION } from './identity-creation';
-import { IDENTITY_FIELD_CHANGES } from './identity-field-changes';
+import { IDENTITY_CREATION, IDENTITY_CREATION_V1 } from './identity-creation';
+import { IDENTITY_FIELD_CHANGES, IDENTITY_FIELD_CHANGES_V1 } from './identity-field-changes';
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 import { EVENT_CHANGES, TOUR_CHANGES } from './live-event-changes';
 import { RECORDING_CHANGES } from './recording-changes';
@@ -184,7 +184,9 @@ export type VersionStatus = 'current' | 'obsolete';
  * so the history can always be read (see `payload-schemas.json`).
  */
 export const OPERATIONS: readonly PublishedOperation[] = [
+  IDENTITY_CREATION_V1,
   IDENTITY_CREATION,
+  ...IDENTITY_FIELD_CHANGES_V1,
   ...IDENTITY_FIELD_CHANGES,
   ...IDENTITY_RELATION_CHANGES,
   ...ARTIST_CHANGES,

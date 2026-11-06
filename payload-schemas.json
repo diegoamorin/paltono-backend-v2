@@ -1799,6 +1799,344 @@
     },
     "targetKeySchema": null
   },
+  "identity.create_entity.catalog_identities.v2": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "displayName"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "person",
+                "organization"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S"
+            },
+            "imgProfile": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
+            },
+            "bio": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "person": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "givenName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "familyName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "birthDate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "month",
+                        "day"
+                      ],
+                      "properties": {
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "birthCountryId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "id del país en /v1/countries"
+                },
+                "deathDate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "heightCm": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "maximum": 300
+                },
+                "gender": {
+                  "enum": [
+                    "male",
+                    "female",
+                    "other",
+                    null
+                  ]
+                },
+                "imgFullBody": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 2048,
+                  "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+                  "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
+                }
+              }
+            },
+            "organization": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "legalName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 200,
+                  "pattern": "\\S"
+                },
+                "founding": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "dissolution": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "year"
+                      ],
+                      "properties": {
+                        "year": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9999
+                        },
+                        "month": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 12
+                        },
+                        "day": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 31
+                        }
+                      },
+                      "dependentRequired": {
+                        "day": [
+                          "month"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "originCountryId": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "id del país en /v1/countries"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "person"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "person"
+                ],
+                "properties": {
+                  "organization": false
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "organization"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "required": [
+                  "organization"
+                ],
+                "properties": {
+                  "person": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
   "identity.remove_relation.artist_organization_affiliations.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2446,6 +2784,79 @@
     },
     "targetKeySchema": null
   },
+  "identity.set_fields.people.birth_date.v2": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "year"
+              ],
+              "properties": {
+                "year": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "dependentRequired": {
+                "day": [
+                  "month"
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "month",
+                "day"
+              ],
+              "properties": {
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
   "identity.set_fields.people.death_date.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2465,6 +2876,59 @@
             "null"
           ],
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "identity.set_fields.people.death_date.v2": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "year"
+              ],
+              "properties": {
+                "year": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9999
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                },
+                "day": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 31
+                }
+              },
+              "dependentRequired": {
+                "day": [
+                  "month"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },

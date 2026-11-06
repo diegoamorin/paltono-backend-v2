@@ -53,7 +53,7 @@ describe('microchanges and sources of a draft', () => {
             operation: 'create_entity',
             targetPath: 'catalog_identities',
             targetKey: null,
-            payloadSchemaVersion: 1,
+            payloadSchemaVersion: 2,
             baseVersion: 0,
             baseValue: { exists: false },
             proposedValue: personCreation(),
@@ -90,11 +90,22 @@ describe('microchanges and sources of a draft', () => {
     });
 
     it.each([
+      ['a birth and a death in partial shapes', { birthDate: { year: 2000 }, deathDate: { year: 2000, month: 3 } }],
+      ['a birthday, which compares with nothing', { birthDate: { month: 2, day: 29 }, deathDate: { year: 1 } }],
+      ['empty dates', { birthDate: null, deathDate: null }],
+    ])('creates a person with %s', async (_, person) => {
+      const entityId = await reserveIdentity(app, diego.accessToken);
+      const proposalId = await createDraft(app, diego.accessToken);
+
+      await addChange(app, diego.accessToken, proposalId, { entityId, proposedValue: personCreation({ person }) }).expect(201);
+    });
+
+    it.each([
       ['an unknown operation', { operation: 'drop_table' }, '/data/attributes/operation'],
       ['a selector the operation does not register', { operation: 'withdraw_entity' }, '/data/attributes/targetPath'],
       ['a selector naming an arbitrary table', { targetPath: 'users' }, '/data/attributes/targetPath'],
       ['a selector with SQL', { targetPath: 'catalog_identities; DROP TABLE users' }, '/data/attributes/targetPath'],
-      ['an unknown payload version', { payloadSchemaVersion: 2 }, '/data/attributes/payloadSchemaVersion'],
+      ['an unknown payload version', { payloadSchemaVersion: 3 }, '/data/attributes/payloadSchemaVersion'],
       ['a row key for a root operation', { targetKey: { id: 1 } }, '/data/attributes/targetKey'],
     ])('refuses %s', async (_, input, pointer) => {
       const entityId = await reserveIdentity(app, diego.accessToken);
@@ -116,14 +127,17 @@ describe('microchanges and sources of a draft', () => {
       ['an unknown member', personCreation({ isAdmin: true }), '/data/attributes/proposedValue/value/isAdmin'],
       [
         'an impossible birth date',
-        personCreation({ person: { birthDate: '1993-02-30' } }),
-        '/data/attributes/proposedValue/value/person/birthDate',
+        personCreation({ person: { birthDate: { year: 1993, month: 2, day: 30 } } }),
+        '/data/attributes/proposedValue/value/person/birthDate/day',
       ],
       [
         'a death before birth',
-        personCreation({ person: { birthDate: '1993-05-16', deathDate: '1990-01-01' } }),
+        personCreation({ person: { birthDate: { year: 1993, month: 5 }, deathDate: { year: 1993, month: 4 } } }),
         '/data/attributes/proposedValue/value/person/deathDate',
       ],
+      ['a complete date as text', personCreation({ person: { birthDate: '1993-05-16' } }), '/data/attributes/proposedValue/value/person/birthDate'],
+      ['a birth with a month alone', personCreation({ person: { birthDate: { month: 3 } } }), '/data/attributes/proposedValue/value/person/birthDate'],
+      ['a death without its year', personCreation({ person: { deathDate: { month: 3, day: 14 } } }), '/data/attributes/proposedValue/value/person/deathDate'],
       ['a removal instead of a creation', { exists: false }, '/data/attributes/proposedValue/exists'],
       [
         'a day without its month',
