@@ -151,7 +151,7 @@ describe('release groups (M11–M14), releases (M7, M8) and discographies (C8)',
     it('lists published release groups by date, newest first and undated last', async () => {
       const { body } = await getJsonApi(app, '/v1/release-groups').expect(200);
 
-      expect(ids(body)).toEqual([publicIds.next, publicIds.be, ...[publicIds.announced, publicIds.undated].sort()]);
+      expect(ids(body)).toEqual([publicIds.next, publicIds.be, ...[publicIds.announced, publicIds.undated].sort((a, b) => a.localeCompare(b, 'und'))]);
       expect(body.meta.total).toBe(4);
     });
 
