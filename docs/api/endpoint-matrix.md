@@ -5,7 +5,7 @@ Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.m
 ## Convenciones comunes
 
 - Prefijo `/v1`; `Content-Type` y `Accept`: `application/vnd.api+json` (415/406 según JSON:API). `/health` queda fuera.
-- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos (`release-groups`), ediciones (`releases`), eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
+- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos (`release-groups`), ediciones (`releases`), eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**; `public_id` de la identidad y `kind`, separados por dos puntos, en aniversarios, que no tienen fila propia. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
 - Paginación `page[number]`/`page[size]` (20 por defecto, 100 máximo), con `meta.total` y enlaces `first/prev/next/last`. Orden estable: toda ordenación añade el `id` como desempate.
 - `include` hasta dos niveles, solo por las rutas listadas. `fields[tipo]` en todos los recursos. Un `include`, `sort` o filtro no listado responde 400.
 - Las columnas de orden listan campos: cada uno admite ambas direcciones, y la dirección escrita es la habitual **[P12]**. Un filtro por código o slug de un vocabulario que no existe devuelve una lista vacía, no 400 **[P13]**.
@@ -115,6 +115,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de presentación, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
 | C9 | `GET /v1/artists/{id}/tracks` | Pistas acreditadas (`filter[rank]`) | ok val |
 | C10 | `GET /v1/artists/{id}/events` y `/tours` | Anunciado en eventos y tours | ok val |
+| C11 | `GET /v1/anniversaries` | Aniversarios: una fila por cada fecha con mes conocido (`birth`, `death`, `debut`, `founding`, `dissolution`) de una identidad publicada. Sin consulta individual | ok val |
 
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
@@ -122,6 +123,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | `artists` | `q`, `identityType`, `affiliatedWith` (organización), `affiliationStatus` | `displayName` (defecto), `-createdAt` | `identity`, `identity.aliases`, `affiliations`, `affiliations.organization` |
 | `organization-memberships` (C3) | `side=organization|member` (sin él, ambos lados) | `joined` (defecto, fechas desconocidas al final), `-createdAt` | `organization`, `member`, `roles`, `roles.role` |
 | `work-contributions`, `recording-contributions`, `release-contributions` (C4, documento heterogéneo) | `scope=work|recording|release`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `release`, `role` |
+| `anniversaries` (C11) | `month` (1 a 12), `day` (1 a 31, exige `month`; deja fuera las fechas sin día), `kind` (uno o varios, separados por comas), `deceased=true|false` (según haya fallecimiento registrado; `false` excluye todas las filas de la identidad), `hasArtistProfile=true|false` | Fijo: mes, día con los nulos al final de su mes, `displayName`, `kind` e identidad. No acepta `sort` | `identity` |
 
 ## 5. Catálogo: música (módulo `music`)
 
@@ -256,3 +258,4 @@ Aprobadas el 2026-10-17.
 | P11 | Los listados de fichas (C1, C6, M1…) omiten las fichas retiradas | Filtrar por `q` u ordenar por nombre operaría sobre el contenido retirado y lo revelaría; el aviso sigue accesible por id y desde las relaciones |
 | P12 | Cada campo de orden listado admite ambas direcciones | Todos los listados ya lo hacen con el mismo analizador de consultas; la dirección escrita en la matriz es la de uso habitual, no una restricción |
 | P13 | Un filtro con un código o slug de vocabulario desconocido devuelve una lista vacía | Es la respuesta correcta a "identidades de un país sin identidades"; validar contra el vocabulario no protege de nada y añade una consulta |
+| P14 | Los aniversarios (C11) tienen un orden fijo y no aceptan `sort`, ni siquiera por `id` | Es la excepción a P12: un calendario solo tiene sentido por mes y día, y no hay otro orden que ofrecer. Un `sort` responde 400 como cualquier parámetro no admitido |

@@ -8,6 +8,8 @@ import {
   OrganizationTypeAssignment,
   PersonNationality,
 } from './entities/identity-relation.entity';
+import { AnniversariesController } from './anniversaries.controller';
+import { AnniversariesService } from './anniversaries.service';
 import { ArtistsController } from './artists.controller';
 import { ArtistsService } from './artists.service';
 import { IdentitiesController } from './identities.controller';
@@ -34,7 +36,7 @@ import { IdentitiesService } from './identities.service';
       ArtistOrganizationAffiliation,
     ]),
   ],
-  controllers: [IdentitiesController, ArtistsController],
-  providers: [IdentitiesService, ArtistsService],
+  controllers: [IdentitiesController, ArtistsController, AnniversariesController],
+  providers: [IdentitiesService, ArtistsService, AnniversariesService],
 })
 export class CatalogIdentitiesModule {}

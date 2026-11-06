@@ -6276,6 +6276,164 @@
         ]
       }
     },
+    "/v1/anniversaries": {
+      "get": {
+        "description": "Las fechas de las identidades publicadas, una fila por cada fecha con mes conocido: nacimientos (también sin año), fallecimientos, debuts, fundaciones y disoluciones. `filter[month]` admite de 1 a 12; `filter[day]`, de 1 a 31 y exige `filter[month]`, y deja fuera las fechas sin día; `filter[kind]`, uno o varios tipos separados por comas; `filter[deceased]`, `true` o `false`, según la identidad tenga un fallecimiento registrado, y `false` excluye todas sus filas, también su debut; `filter[hasArtistProfile]`, `true` o `false`. Orden fijo: mes, día con las fechas sin día al final de su mes, `displayName`, `kind` e identidad. No acepta `sort`.",
+        "operationId": "AnniversariesController_list",
+        "parameters": [
+          {
+            "name": "fields[anniversaries]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de anniversaries separados por comas: kind, date, identity",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[identities]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: identity",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page[number]",
+            "required": false,
+            "in": "query",
+            "description": "Página, desde 1",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page[size]",
+            "required": false,
+            "in": "query",
+            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "filter[month]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[day]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[kind]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[deceased]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[hasArtistProfile]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "links",
+                    "meta"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AnniversaryResource"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Listar aniversarios",
+        "tags": [
+          "catalog-identities"
+        ]
+      }
+    },
     "/v1/works": {
       "get": {
         "description": "Obras publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[slug]` resuelve una obra por su slug; `filter[iswc]` toma el ISWC canónico; `filter[contributor]`, el public_id de una identidad acreditada, y `filter[role]`, el slug de un rol musical (juntos, en el mismo crédito). Orden `title` (por defecto) o `-createdAt`.",
@@ -19104,6 +19262,87 @@
           "attributes",
           "relationships",
           "meta"
+        ]
+      },
+      "AnniversaryAttributes": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "birth",
+              "death",
+              "debut",
+              "founding",
+              "dissolution"
+            ]
+          },
+          "date": {
+            "description": "Fecha parcial con mes conocido: los nulos marcan la precisión desconocida, y `year: null` es un cumpleaños sin año",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BirthDate"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "date"
+        ]
+      },
+      "AnniversaryIdentityLinkage": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ResourceIdentifier"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AnniversaryRelationships": {
+        "type": "object",
+        "properties": {
+          "identity": {
+            "description": "`identities`: la identidad de la fecha",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnniversaryIdentityLinkage"
+              }
+            ]
+          }
+        },
+        "required": [
+          "identity"
+        ]
+      },
+      "AnniversaryResource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "anniversaries"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "public_id de la identidad y `kind`, separados por dos puntos"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/AnniversaryAttributes"
+          },
+          "relationships": {
+            "$ref": "#/components/schemas/AnniversaryRelationships"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "attributes",
+          "relationships"
         ]
       },
       "WorkAttributes": {

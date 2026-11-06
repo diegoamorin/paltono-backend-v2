@@ -99,11 +99,7 @@ export class IdentitiesService {
       requireOneOf('filter[type]', type, CATALOG_IDENTITY_TYPES);
       builder.andWhere('identity.type = :type', { type });
     }
-    if (hasArtistProfile !== undefined) {
-      requireOneOf('filter[hasArtistProfile]', hasArtistProfile, ['true', 'false']);
-      const has = hasArtistProfile === 'true' ? 'EXISTS' : 'NOT EXISTS';
-      builder.andWhere(`${has} (SELECT 1 FROM artists artist WHERE artist.catalog_identity_id = identity.id)`);
-    }
+    if (hasArtistProfile !== undefined) builder.andWhere(artistProfileCondition(hasArtistProfile));
     if (nationality !== undefined) {
       builder.andWhere(
         `EXISTS (
@@ -146,6 +142,13 @@ export class IdentitiesService {
     const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
     return { entries: await loadEntries(this.dataSource.manager, page), total };
   }
+}
+
+/** The SQL condition of `filter[hasArtistProfile]`, over the row aliased `identity`; any other value than `true` or `false` is a 400. */
+export function artistProfileCondition(hasArtistProfile: string): string {
+  requireOneOf('filter[hasArtistProfile]', hasArtistProfile, ['true', 'false']);
+  const has = hasArtistProfile === 'true' ? 'EXISTS' : 'NOT EXISTS';
+  return `${has} (SELECT 1 FROM artists artist WHERE artist.catalog_identity_id = identity.id)`;
 }
 
 /**
