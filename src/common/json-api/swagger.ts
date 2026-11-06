@@ -257,12 +257,16 @@ export function ApiJsonApiQuery(spec: QuerySpec) {
         type: Number,
         description: `Tamaño de página; ${DEFAULT_PAGE_SIZE} por defecto, ${MAX_PAGE_SIZE} como máximo`,
       }),
-      ApiQuery({
-        name: 'sort',
-        required: false,
-        type: String,
-        description: `Campos separados por comas, con - para orden descendente: ${[...spec.sort].join(', ')}. Por defecto ${defaultSort.join(',')}; el id desempata`,
-      }),
+      ...(spec.sort.size === 0
+        ? []
+        : [
+            ApiQuery({
+              name: 'sort',
+              required: false,
+              type: String,
+              description: `Campos separados por comas, con - para orden descendente: ${[...spec.sort].join(', ')}. Por defecto ${defaultSort.join(',')}; el id desempata`,
+            }),
+          ]),
       ...[...spec.filters].map((filter) => ApiQuery({ name: `filter[${filter}]`, required: false, type: String })),
     );
   }

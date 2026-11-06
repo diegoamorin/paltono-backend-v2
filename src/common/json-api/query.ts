@@ -27,6 +27,7 @@ export interface ResourceQuerySpec {
 /** What a collection endpoint accepts: also `page`, `sort` and `filter`. */
 export interface CollectionQuerySpec extends Omit<ResourceQuerySpec, 'kind'> {
   kind: 'collection';
+  /** Empty in a collection with a fixed order, which refuses `sort`. */
   sort: ReadonlySet<string>;
   defaultSort: SortField[];
   filters: ReadonlySet<string>;
@@ -57,18 +58,25 @@ export interface ResourceQueryOptions {
   include?: string[];
 }
 
-export interface CollectionQueryOptions extends ResourceQueryOptions {
-  /**
-   * Other types the collection mixes with the schema's, as a heterogeneous
-   * document does. An include path must exist on one of them at least.
-   */
-  alsoOf?: AnyResourceSchema[];
-  /** Fields a client may sort by. `id` is always allowed and appended as tiebreaker. */
-  sort: string[];
-  /** Sort applied when the request has none, in `sort` syntax, such as `-createdAt`. */
-  defaultSort: string;
-  filters?: string[];
-}
+/** What a client may sort by; a collection with a fixed order leaves both out and refuses `sort`. */
+type CollectionSortOptions =
+  | {
+      /** Fields a client may sort by. `id` is always allowed and appended as tiebreaker. */
+      sort: string[];
+      /** Sort applied when the request has none, in `sort` syntax, such as `-createdAt`. */
+      defaultSort: string;
+    }
+  | { sort?: undefined; defaultSort?: undefined };
+
+export type CollectionQueryOptions = ResourceQueryOptions &
+  CollectionSortOptions & {
+    /**
+     * Other types the collection mixes with the schema's, as a heterogeneous
+     * document does. An include path must exist on one of them at least.
+     */
+    alsoOf?: AnyResourceSchema[];
+    filters?: string[];
+  };
 
 export function resourceQuery(schema: AnyResourceSchema, options: ResourceQueryOptions = {}): ResourceQuerySpec {
   const include = allowedIncludes([schema], options.include ?? []);
@@ -78,12 +86,13 @@ export function resourceQuery(schema: AnyResourceSchema, options: ResourceQueryO
 export function collectionQuery(schema: AnyResourceSchema, options: CollectionQueryOptions): CollectionQuerySpec {
   const schemas = [schema, ...(options.alsoOf ?? [])];
   const include = allowedIncludes(schemas, options.include ?? []);
-  const base = { schema, include, fields: fieldsByType(schemas, include) };
+  const base = { schema, include, fields: fieldsByType(schemas, include), filters: new Set(options.filters ?? []) };
+  if (options.sort === undefined) return { ...base, kind: 'collection', sort: new Set(), defaultSort: [] };
   const sort = new Set([...options.sort, TIEBREAKER_SORT_FIELD]);
   const defaultSort = parseSort(options.defaultSort, sort);
   if (!defaultSort) throw new Error(`Default sort "${options.defaultSort}" uses a field outside the allowed sort`);
 
-  return { ...base, kind: 'collection', sort, defaultSort, filters: new Set(options.filters ?? []) };
+  return { ...base, kind: 'collection', sort, defaultSort };
 }
 
 type RawQuery = Record<string, unknown>;
@@ -107,7 +116,7 @@ export function parseQuery(spec: QuerySpec, raw: RawQuery, path: string): Resour
       query.include = parseInclude(value, spec.include);
     } else if (family?.[1] === 'fields') {
       query.fields.set(family[2], parseFieldset(parameter, family[2], value, spec.fields));
-    } else if (spec.kind === 'collection' && parameter === 'sort') {
+    } else if (spec.kind === 'collection' && parameter === 'sort' && spec.sort.size > 0) {
       const sort = parseSort(value, spec.sort);
       if (!sort) throw badParameter('sort', `must list fields among: ${[...spec.sort].join(', ')}`);
       collection.sort = sort;
