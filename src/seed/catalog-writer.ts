@@ -37,6 +37,8 @@ interface IdentitySpec {
   aliases?: string[];
   /** Becomes an artist. */
   artist?: boolean;
+  /** The debut of an artist, once its profile is published. */
+  debut?: PartialDateValue;
   affiliations?: AffiliationSpec[];
   links?: Partial<Record<PlatformSlug, string>>;
 }
@@ -232,6 +234,7 @@ export class CatalogWriter {
     for (const organization of organizations) await this.planOrganization(author, plan, organization);
     for (const person of people) await this.planPerson(author, plan, person);
     for (const identity of [...organizations, ...people]) {
+      if (identity.debut) plan.completions.push({ entityId: this.root(identity.key), operation: 'set_fields', targetPath: 'artists.debut', value: identity.debut });
       for (const affiliation of identity.affiliations ?? []) plan.completions.push(this.affiliation(identity.key, affiliation));
     }
     for (const organization of organizations) {

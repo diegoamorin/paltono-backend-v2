@@ -13,12 +13,13 @@ export type AffiliationRelationshipType = (typeof AFFILIATION_RELATIONSHIP_TYPES
  * changes write.
  */
 
-// Mirrors the CreateArtistsAndMemberships migration, so `migration:generate` finds no drift.
+// Mirrors the CreateArtistsAndMemberships and AddArtistDebut migrations, so `migration:generate` finds no drift.
 /** The optional artist profile of an identity: a component of its root, not a root of its own. */
 @Entity('artists')
 @Unique('artists_uuid_key', ['uuid'])
 @Unique('artists_public_id_key', ['publicId'])
 @Unique('artists_catalog_identity_id_key', ['catalogIdentityId'])
+@Check('artists_debut_date', partialDateCheck('debut'))
 export class Artist {
   @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
   id: number;
@@ -35,6 +36,15 @@ export class Artist {
   @ManyToOne(() => CatalogIdentity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'catalog_identity_id', foreignKeyConstraintName: 'artists_catalog_identity_id_fkey' })
   identity?: CatalogIdentity;
+
+  @Column({ name: 'debut_year', type: 'smallint', nullable: true })
+  debutYear: number | null;
+
+  @Column({ name: 'debut_month', type: 'smallint', nullable: true })
+  debutMonth: number | null;
+
+  @Column({ name: 'debut_day', type: 'smallint', nullable: true })
+  debutDay: number | null;
 
   @Column({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

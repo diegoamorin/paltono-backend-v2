@@ -5477,7 +5477,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -5886,7 +5886,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -5979,7 +5979,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -6165,7 +6165,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -7505,7 +7505,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -7707,7 +7707,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -8059,7 +8059,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -8599,7 +8599,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -8780,7 +8780,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -8928,7 +8928,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -9111,7 +9111,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -9294,7 +9294,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -9476,7 +9476,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -9738,7 +9738,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -9885,7 +9885,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -10115,7 +10115,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -10289,7 +10289,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -10553,7 +10553,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -10768,7 +10768,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -10985,7 +10985,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -11200,7 +11200,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -16046,7 +16046,7 @@
             "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, createdAt, updatedAt, identity, affiliations",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -18884,6 +18884,16 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "debut": {
+            "nullable": true,
+            "description": "Debut del artista, fecha parcial: los nulos marcan la precisión desconocida. Ausente si la identidad está retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
           },
           "createdAt": {
             "type": "string",

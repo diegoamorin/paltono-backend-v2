@@ -14,6 +14,7 @@ import { TestApp, createTestApp } from '../support/test-app';
 import { createdEntryId } from '../support/vocabularies';
 
 const ARTISTS = 'artists';
+const DEBUT = 'artists.debut';
 const MEMBERSHIPS = 'organization_memberships';
 const AFFILIATIONS = 'artist_organization_affiliations';
 
@@ -116,6 +117,127 @@ describe('artist profiles, memberships and affiliations of identities', () => {
 
       const removed = await submitChanges([artistProfile(entityId, 'remove_relation')]);
       await apply(removed.changeIds[0]).expect(201);
+
+      const { body } = await identity(entityId).expect(200);
+      expect(body.data.relationships.artist.data).toBeNull();
+    });
+  });
+
+  describe('debut', () => {
+    const setDebut = (entityId: string, value: object | null): ChangeInput => ({
+      entityId,
+      operation: 'set_fields',
+      targetPath: DEBUT,
+      proposedValue: { exists: true, value },
+    });
+
+    const publishArtistProfile = async (entityId: string) => {
+      await apply((await submitChanges([artistProfile(entityId)])).changeIds[0]).expect(201);
+      return entityId;
+    };
+
+    const shownDebut = async (entityId: string) => {
+      const { body } = await identity(entityId).expect(200);
+      return body.included.find(({ type }: { type: string }) => type === 'artists').attributes.debut;
+    };
+
+    it('starts empty, and a moderator applies a proposed debut of an artist', async () => {
+      const entityId = await publishArtistProfile(await publishPerson());
+      expect(await shownDebut(entityId)).toBeNull();
+
+      const { changeIds } = await submitChanges([setDebut(entityId, { year: 2008, month: 9, day: 18 })]);
+      await apply(changeIds[0]).expect(201);
+
+      expect(await shownDebut(entityId)).toEqual({ year: 2008, month: 9, day: 18 });
+    });
+
+    const problem = async (change: ChangeInput) => {
+      const proposalId = await createDraft(app, ana.accessToken);
+      return (await addChange(app, ana.accessToken, proposalId, change).expect(422)).body.errors[0];
+    };
+
+    it('exists only on an identity with an artist profile', async () => {
+      const entityId = await publishPerson();
+
+      expect((await problem(setDebut(entityId, { year: 2008 }))).code).toBe('no_artist_profile');
+    });
+
+    it('is a real calendar date', async () => {
+      const entityId = await publishArtistProfile(await publishPerson());
+
+      expect((await problem(setDebut(entityId, { year: 2008, month: 2, day: 30 }))).source).toEqual({
+        pointer: '/data/attributes/proposedValue/value/day',
+      });
+    });
+
+    it('cannot be wholly before the birth, and a birth cannot move past it', async () => {
+      const entityId = await publishArtistProfile(await publish({ type: 'person', displayName: 'IU', person: { birthDate: '1993-05-16' } }));
+
+      expect((await problem(setDebut(entityId, { year: 1992 }))).code).toBe('inconsistent_value');
+      await apply((await submitChanges([setDebut(entityId, { year: 1993 })])).changeIds[0]).expect(201);
+
+      const birth: ChangeInput = { entityId, operation: 'set_fields', targetPath: 'people.birth_date', proposedValue: { exists: true, value: '1994-01-01' } };
+      expect((await problem(birth)).code).toBe('inconsistent_value');
+    });
+
+    it('cannot be wholly before the founding, and a founding cannot move past it', async () => {
+      const entityId = await publishArtistProfile(
+        await publish({ type: 'organization', displayName: 'Metallica', organization: { founding: { year: 1981, month: 10 } } }),
+      );
+
+      expect((await problem(setDebut(entityId, { year: 1981, month: 9 }))).code).toBe('inconsistent_value');
+      await apply((await submitChanges([setDebut(entityId, { year: 1981 })])).changeIds[0]).expect(201);
+
+      const founding: ChangeInput = { entityId, operation: 'set_fields', targetPath: 'organizations.founding', proposedValue: { exists: true, value: { year: 1982 } } };
+      expect((await problem(founding)).code).toBe('inconsistent_value');
+    });
+
+    it('does not apply once the profile it belongs to was removed', async () => {
+      const entityId = await publishArtistProfile(await publishPerson());
+      const { changeIds } = await submitChanges([setDebut(entityId, { year: 2008 })]);
+      await apply((await submitChanges([artistProfile(entityId, 'remove_relation')])).changeIds[0]).expect(201);
+
+      const response = await apply(changeIds[0]).expect(422);
+
+      expect(response.body.errors[0].code).toBe('no_artist_profile');
+    });
+
+    it('is added together with the profile in an atomic group', async () => {
+      const entityId = await publishPerson();
+      const atomicGroupId = '7b1f9f0e-6a3c-4c58-9c7e-2d1f4b8a6e10';
+
+      const { changeIds } = await submitChanges([
+        { ...artistProfile(entityId), atomicGroupId },
+        { ...setDebut(entityId, { year: 2008 }), atomicGroupId },
+      ]);
+      await apply(changeIds[0]).expect(201);
+
+      expect(await shownDebut(entityId)).toEqual({ year: 2008, month: null, day: null });
+    });
+
+    it('refuses a group that sets the debut before adding the profile, instead of losing it', async () => {
+      const entityId = await publishPerson();
+      const atomicGroupId = '7b1f9f0e-6a3c-4c58-9c7e-2d1f4b8a6e11';
+
+      const { changeIds } = await submitChanges([
+        { ...setDebut(entityId, { year: 2008 }), atomicGroupId },
+        { ...artistProfile(entityId), atomicGroupId },
+      ]);
+      const response = await apply(changeIds[0]);
+
+      expect(response.status).toBeGreaterThanOrEqual(400);
+      const { body } = await identity(entityId).expect(200);
+      expect(body.data.relationships.artist.data).toBeNull();
+    });
+
+    it('keeps a profile from being removed until the debut is emptied', async () => {
+      const entityId = await publishArtistProfile(await publishPerson());
+      await apply((await submitChanges([setDebut(entityId, { year: 2008 })])).changeIds[0]).expect(201);
+
+      expect((await problem(artistProfile(entityId, 'remove_relation'))).code).toBe('artist_referenced');
+
+      await apply((await submitChanges([setDebut(entityId, null)])).changeIds[0]).expect(201);
+      await apply((await submitChanges([artistProfile(entityId, 'remove_relation')])).changeIds[0]).expect(201);
 
       const { body } = await identity(entityId).expect(200);
       expect(body.data.relationships.artist.data).toBeNull();

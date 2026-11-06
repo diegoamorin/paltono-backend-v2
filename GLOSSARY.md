@@ -50,6 +50,14 @@ _Avoid_: Rate limit, para no confundirlo con los límites por frecuencia de peti
 Periodo en que una persona u organización forma parte, como miembro musical, de una organización. Un miembro puede tener varias en la misma organización, si se fue y volvió, pero solo una actual a la vez.
 _Avoid_: Afiliación, que es la relación de un artista con una agencia, un sello o su mánager.
 
+**Fundación (founding)**:
+Momento en que una organización surgió como tal, según las fuentes. No es su registro legal ni su debut.
+_Avoid_: Registro legal, creación.
+
+**Debut**:
+Momento en que una persona u organización empieza públicamente su carrera musical, según lo reconocen las fuentes. Es una decisión editorial respaldada por fuentes, no un cálculo a partir del catálogo.
+_Avoid_: Inicio artístico, inicio de carrera, fundación artística.
+
 ### Música
 
 **Lanzamiento (release group)**:

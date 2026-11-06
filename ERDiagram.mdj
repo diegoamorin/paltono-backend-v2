@@ -12528,6 +12528,39 @@
 						},
 						{
 							"_type": "ERDColumn",
+							"_id": "a1d3b7c2-5e0f-4a6b-9c41-7f2e8d10b301",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDNID4="
+							},
+							"name": "debut_year",
+							"documentation": "Optional partial Gregorian date: year 1..9999; NULL when unknown. An editorial datum backed by sources, never computed from the catalog.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "a1d3b7c2-5e0f-4a6b-9c41-7f2e8d10b302",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDNID4="
+							},
+							"name": "debut_month",
+							"documentation": "Optional month 1..12; requires the corresponding year. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "a1d3b7c2-5e0f-4a6b-9c41-7f2e8d10b303",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDNID4="
+							},
+							"name": "debut_day",
+							"documentation": "Optional day; requires corresponding year and month; validate actual Gregorian calendar. NULL when unknown.",
+							"type": "SMALLINT",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
 							"_id": "AAAAAAGeD8zCEYDVXqk=",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCEIDNID4="

@@ -148,6 +148,23 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
   return problems;
 }
 
+/** A partial date whose day does not exist in its month, which the JSON Schema cannot say. */
+export function partialDateProblems(field: string, date: PartialDate | null): PayloadProblem[] {
+  if (date?.day === undefined || date.month === undefined || date.day <= daysInMonth(date.year, date.month)) return [];
+  return [{ path: '/value/day', detail: `${field} is not a calendar date` }];
+}
+
+/** Partial dates are intervals; only a debut wholly before the birth or the founding is impossible. */
+export function debutPrecedes(debut: PartialDate, start: PartialDate): boolean {
+  return interval(debut).last < interval(start).first;
+}
+
+/** A complete date, `YYYY-MM-DD`, as a partial date. */
+export function partialDateOf(date: string): PartialDate {
+  const [year, month, day] = date.split('-').map(Number);
+  return { year, month, day };
+}
+
 export function isCalendarDate(date: string): boolean {
   const [year, month, day] = date.split('-').map(Number);
   return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);

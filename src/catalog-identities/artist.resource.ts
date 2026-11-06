@@ -22,6 +22,8 @@ export interface ArtistEntry {
 
 const isWithdrawn = ({ identity }: ArtistEntry) => identity.identity.editorialEntity!.publicationStatus === 'withdrawn';
 
+const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
+
 export const affiliationSchema: ResourceSchema<AffiliationEntry> = defineResource({
   type: 'artist-affiliations',
   id: ({ affiliation }) => String(affiliation.id),
@@ -43,6 +45,7 @@ export const artistSchema: ResourceSchema<ArtistEntry> = defineResource({
   attributes: {
     publicationStatus: ({ identity }) => identity.identity.editorialEntity!.publicationStatus,
     withdrawnAt: ({ identity }) => identity.identity.editorialEntity!.withdrawnAt?.toISOString() ?? null,
+    debut: (entry) => (isWithdrawn(entry) ? undefined : partialDate(entry.artist.debutYear, entry.artist.debutMonth, entry.artist.debutDay)),
     createdAt: (entry) => (isWithdrawn(entry) ? undefined : entry.artist.createdAt.toISOString()),
     updatedAt: (entry) => (isWithdrawn(entry) ? undefined : entry.artist.updatedAt.toISOString()),
   },
@@ -55,12 +58,31 @@ export const artistSchema: ResourceSchema<ArtistEntry> = defineResource({
 
 const WITHDRAWN = 'Ausente si la identidad está retirada';
 
+class PartialDate {
+  @ApiProperty({ example: 2008 })
+  year: number;
+
+  @ApiProperty({ type: Number, nullable: true, example: 9 })
+  month: number | null;
+
+  @ApiProperty({ type: Number, nullable: true, example: null })
+  day: number | null;
+}
+
 class ArtistAttributes {
   @ApiProperty({ enum: ['published', 'withdrawn'], description: 'Estado de la identidad del perfil; retirada, solo muestra el aviso' })
   publicationStatus: string;
 
   @ApiProperty({ type: String, format: 'date-time', nullable: true })
   withdrawnAt: string | null;
+
+  @ApiProperty({
+    type: PartialDate,
+    nullable: true,
+    required: false,
+    description: `Debut del artista, fecha parcial: los nulos marcan la precisión desconocida. ${WITHDRAWN}`,
+  })
+  debut?: PartialDate | null;
 
   @ApiProperty({ format: 'date-time', required: false, description: WITHDRAWN })
   createdAt?: string;

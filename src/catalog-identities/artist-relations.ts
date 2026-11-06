@@ -63,11 +63,13 @@ export async function artistIdOf(manager: EntityManager, catalogIdentityId: numb
   return artist?.id ?? null;
 }
 
-/** What still refers to the artist profile of an identity, which keeps it from being removed. */
+/** What keeps the artist profile of an identity from being removed: its debut and what still refers to it. */
 export async function artistReferences(manager: EntityManager, catalogIdentityId: number): Promise<string[]> {
   const artistId = await artistIdOf(manager, catalogIdentityId);
   if (artistId === null) return [];
   const references: string[] = [];
+  // Emptying it first keeps the date in the history: a removal's revision records the profile without data.
+  if (await findDebut(manager, catalogIdentityId)) references.push('El perfil artístico tiene debut; vacíalo antes de quitar el perfil');
   if (await manager.existsBy(ArtistOrganizationAffiliation, { artistId })) {
     references.push('El perfil artístico tiene afiliaciones; quítalas antes de quitar el perfil');
   }
@@ -95,6 +97,17 @@ export async function insertArtist(manager: EntityManager, catalogIdentityId: nu
 
 export async function deleteArtist(manager: EntityManager, catalogIdentityId: number, now: Date): Promise<void> {
   await manager.delete(Artist, { catalogIdentityId });
+  await touchIdentity(manager, catalogIdentityId, now);
+}
+
+/** The debut of an identity's artist profile; an identity without one has none. */
+export async function findDebut(manager: EntityManager, catalogIdentityId: number): Promise<PartialDateValue | null> {
+  const artist = await manager.findOneBy(Artist, { catalogIdentityId });
+  return artist && partialDate(artist.debutYear, artist.debutMonth, artist.debutDay);
+}
+
+export async function writeDebut(manager: EntityManager, catalogIdentityId: number, debut: PartialDateValue | null, now: Date): Promise<void> {
+  await manager.update(Artist, { catalogIdentityId }, { ...dateColumns('debut', debut), updatedAt: now });
   await touchIdentity(manager, catalogIdentityId, now);
 }
 
@@ -338,7 +351,7 @@ function samePartialDate(a: PartialDateValue | null, b: PartialDateValue | null)
 }
 
 /** The columns of a partial date; a lookup by it matches unknown components with NULL. */
-function dateColumns(prefix: 'joined' | 'left', date: PartialDateValue | null, lookup = false) {
+function dateColumns(prefix: 'joined' | 'left' | 'debut', date: PartialDateValue | null, lookup = false) {
   const column = (value: number | undefined) => (value === undefined ? (lookup ? IsNull() : null) : value);
   return {
     [`${prefix}Year`]: column(date?.year),

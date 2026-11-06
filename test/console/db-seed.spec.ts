@@ -350,6 +350,16 @@ describe('pnpm db:seed', () => {
       expect(organizations).toContain('YG Entertainment');
     });
 
+    it('dates groups by their debut, while agencies keep their founding', async () => {
+      const artist = (await getJsonApi(app, '/v1/artists?filter[q]=BLACKPINK&include=identity,affiliations.organization').expect(200)).body;
+
+      expect(artist.data[0].attributes.debut).toEqual({ year: 2016, month: 8, day: 8 });
+      const founding = (displayName: string) =>
+        artist.included.find(({ attributes }: Resource) => attributes.displayName === displayName).attributes.organization.founding;
+      expect(founding('BLACKPINK')).toBeNull();
+      expect(founding('YG Entertainment')).toEqual({ year: 1996, month: 2, day: 24 });
+    });
+
     it('creates works with their authors and the recordings that perform or sample them', async () => {
       const dynamite = await workTitled('Dynamite');
       const credited = (await getJsonApi(app, `/v1/works/${dynamite}?include=contributions.identity`).expect(200)).body.included

@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm';
+import { findDebut } from '../catalog-identities/artist-relations';
 import { IdentityCreationValue, PartialDateValue as PartialDate, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { IDENTITY_FIELDS, IdentityFieldPath, hasIdentityField, pickIdentityField, writeIdentityField } from '../catalog-identities/identity-fields';
 import { CATALOG_IMAGE_URL, ImageUrlReference, imageUrlAt } from '../images/catalog-image-urls';
@@ -14,9 +15,11 @@ import {
   IMG_PROFILE,
   NAME,
   PARTIAL_DATE,
-  daysInMonth,
+  debutPrecedes,
   interval,
   isCalendarDate,
+  partialDateOf,
+  partialDateProblems,
 } from './identity-creation';
 import { OperationDefinition, PayloadProblem, TargetProblem, VocabularyReference } from './operation-registry';
 
@@ -32,32 +35,38 @@ interface FieldRules {
   check?(value: unknown): PayloadProblem[];
   references?(value: unknown): VocabularyReference[];
   imageUrls?(value: unknown): ImageUrlReference[];
-  /** Rules against the identity's other fields, as they are now. */
-  consistency?(identity: IdentityCreationValue, value: unknown): TargetProblem[];
+  /** Rules against the identity's other fields and its artist's debut, as they are now. */
+  consistency?(identity: IdentityCreationValue, value: unknown, debut: PartialDate | null): TargetProblem[];
 }
 
 const completeDate = (field: 'birthDate' | 'deathDate'): Pick<FieldRules, 'check' | 'consistency'> => ({
   check: (value) => (typeof value === 'string' && !isCalendarDate(value) ? [{ path: '/value', detail: `${field} is not a calendar date` }] : []),
-  consistency: (identity, value) => {
+  consistency: (identity, value, debut) => {
     const birthDate = field === 'birthDate' ? value : identity.person!.birthDate;
     const deathDate = field === 'deathDate' ? value : identity.person!.deathDate;
-    if (typeof birthDate !== 'string' || typeof deathDate !== 'string' || deathDate >= birthDate) return [];
-    return [inconsistent(field === 'birthDate' ? 'birthDate is after the current deathDate' : 'deathDate is before the current birthDate')];
+    if (typeof birthDate === 'string' && typeof deathDate === 'string' && deathDate < birthDate) {
+      return [inconsistent(field === 'birthDate' ? 'birthDate is after the current deathDate' : 'deathDate is before the current birthDate')];
+    }
+    if (field === 'birthDate' && typeof value === 'string' && debut && debutPrecedes(debut, partialDateOf(value))) {
+      return [inconsistent('birthDate is after the current debut')];
+    }
+    return [];
   },
 });
 
 const partialDate = (field: 'founding' | 'dissolution'): Pick<FieldRules, 'check' | 'consistency'> => ({
-  check: (value) => {
-    const date = value as PartialDate | null;
-    if (date?.day === undefined || date.month === undefined || date.day <= daysInMonth(date.year, date.month)) return [];
-    return [{ path: '/value/day', detail: `${field} is not a calendar date` }];
-  },
+  check: (value) => partialDateProblems(field, value as PartialDate | null),
   // Partial dates are intervals; only a dissolution wholly before the founding is impossible.
-  consistency: (identity, value) => {
+  consistency: (identity, value, debut) => {
     const founding = field === 'founding' ? (value as PartialDate | null) : identity.organization!.founding;
     const dissolution = field === 'dissolution' ? (value as PartialDate | null) : identity.organization!.dissolution;
-    if (!founding || !dissolution || interval(dissolution).last >= interval(founding).first) return [];
-    return [inconsistent(field === 'founding' ? 'founding is after the current dissolution' : 'dissolution is before the current founding')];
+    if (founding && dissolution && interval(dissolution).last < interval(founding).first) {
+      return [inconsistent(field === 'founding' ? 'founding is after the current dissolution' : 'dissolution is before the current founding')];
+    }
+    if (field === 'founding' && founding && debut && debutPrecedes(debut, founding)) {
+      return [inconsistent('founding is after the current debut')];
+    }
+    return [];
   },
 });
 
@@ -129,12 +138,12 @@ export const IDENTITY_FIELD_CHANGES: OperationDefinition[] = (Object.keys(IDENTI
     references: (value) => rules.references?.(value) ?? [],
     imageUrls: (value) => rules.imageUrls?.(value) ?? [],
     targetProblems: async (manager, root, value) => {
-      const identity = await currentIdentity(manager, root);
-      if (!identity) return [];
-      if (!hasIdentityField(identity.type, path)) {
-        return [{ code: 'inapplicable_target', detail: `An identity of type ${identity.type} has no ${path}`, member: 'targetPath' }];
+      const created = await findCreatedIdentity(manager, root.id);
+      if (!created) return [];
+      if (!hasIdentityField(created.value.type, path)) {
+        return [{ code: 'inapplicable_target', detail: `An identity of type ${created.value.type} has no ${path}`, member: 'targetPath' }];
       }
-      return rules.consistency?.(identity, value) ?? [];
+      return rules.consistency?.(created.value, value, await findDebut(manager, created.identity.id)) ?? [];
     },
     read: async (manager, root) => {
       const identity = await currentIdentity(manager, root);

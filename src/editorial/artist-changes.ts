@@ -8,17 +8,19 @@ import {
   deleteArtist,
   findAffiliation,
   findAffiliationByStart,
+  findDebut,
   hasArtist,
   insertAffiliation,
   insertArtist,
   updateAffiliation,
+  writeDebut,
 } from '../catalog-identities/artist-relations';
 import { AFFILIATION_RELATIONSHIP_TYPES, ASSOCIATION_STATUSES } from '../catalog-identities/entities/artist.entity';
-import { findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { PartialDateValue, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { BIO, COMPLETE_DATE, isCalendarDate } from './identity-creation';
+import { BIO, COMPLETE_DATE, PARTIAL_DATE, debutPrecedes, isCalendarDate, partialDateOf, partialDateProblems } from './identity-creation';
 import { KEY_ONLY, KEY_ONLY_ROW, ROW_KEY, envelope, noRules, reference } from './identity-relation-changes';
 import type { OperationDefinition, PayloadProblem, RowKey, TargetProblem } from './operation-registry';
 
@@ -26,8 +28,8 @@ import type { OperationDefinition, PayloadProblem, RowKey, TargetProblem } from 
  * The artist profile of an identity and its affiliations.
  *
  * The profile is a component of its root, keyed by the identity itself, so an
- * identity has at most one. A profile something still refers to cannot be
- * removed.
+ * identity has at most one. A profile with a debut, or that something still
+ * refers to, cannot be removed.
  */
 
 const ARTIST_KEY = {
@@ -63,7 +65,7 @@ const ADD_ARTIST: OperationDefinition = {
 const REMOVE_ARTIST: OperationDefinition = {
   ...artistBase,
   operation: 'remove_relation',
-  description: 'Quita el perfil artístico de la identidad. Un perfil al que todavía se refieren afiliaciones o créditos no se puede quitar.',
+  description: 'Quita el perfil artístico de la identidad. Un perfil con debut o al que todavía se refieren afiliaciones o créditos no se puede quitar.',
   valueSchema: null,
   targetProblems: async (manager, root) =>
     (await referencesOf(manager, root)).map((detail) => ({ code: 'artist_referenced', detail, member: 'targetKey' })),
@@ -73,6 +75,48 @@ const REMOVE_ARTIST: OperationDefinition = {
     return { afterValue: ABSENT, resultKey: key };
   },
 };
+
+/*
+ * The debut of an artist: a field of the profile, whose year, month and day
+ * change together. Its base is an empty value while the profile is missing, so
+ * adding the profile in the same atomic group does not put it in conflict.
+ */
+const SET_DEBUT: OperationDefinition = {
+  entityType: 'identity',
+  operation: 'set_fields',
+  targetPath: 'artists.debut',
+  payloadSchemaVersion: 1,
+  description: 'Fecha parcial de debut de un artista: año, mes y día cambian juntos. Solo existe en una identidad con perfil artístico.',
+  valueSchema: PARTIAL_DATE,
+  targetKeySchema: null,
+  check: (value) => partialDateProblems('debut', value as PartialDateValue | null),
+  references: () => [],
+  targetProblems: async (manager, root, value) => {
+    const created = await findCreatedIdentity(manager, root.id);
+    if (!created) return [];
+    if (!(await hasArtist(manager, created.identity.id))) {
+      return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile has a debut', member: 'entity' }];
+    }
+    const { person, organization } = created.value;
+    const start = person?.birthDate ? partialDateOf(person.birthDate) : organization?.founding;
+    if (!start || !value || !debutPrecedes(value as PartialDateValue, start)) return [];
+    return [{ code: 'inconsistent_value', detail: `debut is before the current ${person ? 'birthDate' : 'founding'}`, member: 'proposedValue/value' }];
+  },
+  read: (manager, root) => readDebut(manager, root),
+  // The final state of a group would not notice: a debut written before its profile exists is lost.
+  constraintProblems: async (manager, root) =>
+    (await hasArtist(manager, (await identityIdOf(manager, root.id))!)) ? [] : ['La identidad no tiene perfil artístico; agrégalo antes de su debut'],
+  apply: async (manager, root, value, now) => {
+    await writeDebut(manager, (await identityIdOf(manager, root.id))!, value as PartialDateValue | null, now);
+    return { afterValue: await readDebut(manager, root), resultKey: null };
+  },
+};
+
+async function readDebut(manager: EntityManager, root: EditorialEntity): Promise<ValueEnvelope> {
+  const identityId = await identityIdOf(manager, root.id);
+  const debut = identityId === null ? null : await findDebut(manager, identityId);
+  return { exists: true, value: debut && { ...debut } };
+}
 
 async function referencesOf(manager: EntityManager, root: EditorialEntity): Promise<string[]> {
   const identityId = await identityIdOf(manager, root.id);
@@ -195,6 +239,7 @@ const REMOVE_AFFILIATION: OperationDefinition = {
 export const ARTIST_CHANGES: OperationDefinition[] = [
   ADD_ARTIST,
   REMOVE_ARTIST,
+  SET_DEBUT,
   ADD_AFFILIATION,
   UPDATE_AFFILIATION,
   REMOVE_AFFILIATION,
