@@ -1,7 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { RELEASE_GROUP_TYPES } from '../music/entities/release.entity';
-import { PartialDateValue } from '../music/recordings';
 import {
   RELEASE_FIELDS,
   RELEASE_GROUP_FIELDS,
@@ -27,7 +26,7 @@ import { RELEASE_CREDIT_CHANGES } from './release-credit-changes';
 import { RELEASE_TRACK_CHANGES } from './track-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { PARTIAL_DATE, daysInMonth } from './identity-creation';
+import { PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import type { OperationDefinition, PayloadProblem, RootReference as NamedRoot, TargetProblem } from './operation-registry';
 import { DESCRIPTION, envelope } from './work-changes';
 
@@ -167,16 +166,12 @@ const RELEASE_GROUP_FIELD_CHANGES: OperationDefinition[] = (Object.keys(RELEASE_
 
 /** A date names a real day; the time and its zone go together, only with a complete date, and the zone is an IANA one. */
 function checkReleaseDate({ releaseDate, releaseTime, timezone }: Partial<ReleaseDateValue>, at: string): PayloadProblem[] {
-  const problems: PayloadProblem[] = [];
-  const date = releaseDate as PartialDateValue | null | undefined;
-  if (date?.day !== undefined && date.month !== undefined && date.day > daysInMonth(date.year, date.month)) {
-    problems.push({ path: `${at}/releaseDate/day`, detail: 'releaseDate is not a calendar date' });
-  }
+  const problems = partialDateProblems('releaseDate', releaseDate, `${at}/releaseDate`);
   const hasTime = releaseTime !== undefined && releaseTime !== null;
   const hasZone = timezone !== undefined && timezone !== null;
   if (hasTime !== hasZone) {
     problems.push({ path: `${at}/${hasTime ? 'timezone' : 'releaseTime'}`, detail: 'releaseTime and timezone go together' });
-  } else if (hasTime && date?.day === undefined) {
+  } else if (hasTime && releaseDate?.day === undefined) {
     problems.push({ path: `${at}/releaseTime`, detail: 'releaseTime requires a complete releaseDate' });
   }
   if (hasZone && !isIanaZone(timezone)) problems.push({ path: `${at}/timezone`, detail: 'timezone is not an IANA time zone' });

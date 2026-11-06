@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { EntityManager, Not } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
+import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Work } from './entities/work.entity';
 import { Recording, RecordingGenre, RecordingWork, RecordingWorkRelationType } from './entities/recording.entity';
 
@@ -10,12 +11,6 @@ import { Recording, RecordingGenre, RecordingWork, RecordingWorkRelationType } f
  * calls them inside the transaction that applies a microchange. Every read is
  * scoped to one recording, so a key never reaches the row of another one.
  */
-
-export interface PartialDateValue {
-  year: number;
-  month?: number;
-  day?: number;
-}
 
 /** A recording as its creation proposes it and its revisions record it. */
 export interface RecordingValue {
@@ -59,7 +54,6 @@ export async function recordingIdOf(manager: EntityManager, editorialEntityId: s
 export async function findCreatedRecording(manager: EntityManager, editorialEntityId: string): Promise<{ recording: Recording; value: RecordingValue } | null> {
   const recording = await manager.findOneBy(Recording, { editorialEntityId });
   if (!recording) return null;
-  const { recordingYear: year, recordingMonth: month, recordingDay: day } = recording;
   return {
     recording,
     value: {
@@ -67,7 +61,7 @@ export async function findCreatedRecording(manager: EntityManager, editorialEnti
       description: recording.description,
       isExplicit: recording.isExplicit,
       isrc: recording.isrc,
-      recordingDate: year === null ? null : { year, ...(month !== null ? { month } : {}), ...(day !== null ? { day } : {}) },
+      recordingDate: partialDateValue(recording, 'recording'),
     },
   };
 }
@@ -80,7 +74,7 @@ export async function createRecording(manager: EntityManager, editorialEntityId:
     description: value.description ?? null,
     isExplicit: value.isExplicit ?? false,
     isrc: value.isrc ?? null,
-    ...dateColumns(value.recordingDate),
+    ...partialDateColumns('recording', value.recordingDate),
     createdAt: now,
     updatedAt: now,
     editorialEntityId,
@@ -96,7 +90,7 @@ export async function writeRecordingField(
   now: Date,
 ): Promise<unknown> {
   const field = RECORDING_FIELDS[path];
-  const columns = field === 'recordingDate' ? dateColumns(value as PartialDateValue | null) : { [field]: value };
+  const columns = field === 'recordingDate' ? partialDateColumns('recording', value as PartialDateValue | null) : { [field]: value };
   await manager.update(Recording, { editorialEntityId }, { ...columns, updatedAt: now });
   return (await findCreatedRecording(manager, editorialEntityId))!.value[field];
 }
@@ -194,8 +188,4 @@ async function workIdOfRoot(manager: EntityManager, editorialEntityId: string): 
 
 async function touchRecording(manager: EntityManager, recordingId: number, now: Date): Promise<void> {
   await manager.update(Recording, { id: recordingId }, { updatedAt: now });
-}
-
-function dateColumns(date: PartialDateValue | null | undefined) {
-  return { recordingYear: date?.year ?? null, recordingMonth: date?.month ?? null, recordingDay: date?.day ?? null };
 }

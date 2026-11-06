@@ -1,6 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { EntityManager, IsNull, Not } from 'typeorm';
 import {
+  PartialDateValue,
+  partialDateColumns,
+  partialDateInterval,
+  partialDateLookup,
+  partialDateValue,
+  samePartialDate,
+} from '../common/partial-date/partial-date';
+import {
   AffiliationRelationshipType,
   Artist,
   ArtistOrganizationAffiliation,
@@ -9,7 +17,7 @@ import {
   OrganizationMembershipRole,
 } from './entities/artist.entity';
 import { CatalogIdentity } from './entities/catalog-identity.entity';
-import { PartialDateValue, newPublicId } from './identity-creations';
+import { newPublicId } from './identity-creations';
 
 /*
  * The reads and writes of the artist profile of an identity, the memberships
@@ -103,11 +111,11 @@ export async function deleteArtist(manager: EntityManager, catalogIdentityId: nu
 /** The debut of an identity's artist profile; an identity without one has none. */
 export async function findDebut(manager: EntityManager, catalogIdentityId: number): Promise<PartialDateValue | null> {
   const artist = await manager.findOneBy(Artist, { catalogIdentityId });
-  return artist && partialDate(artist.debutYear, artist.debutMonth, artist.debutDay);
+  return artist && partialDateValue(artist, 'debut');
 }
 
 export async function writeDebut(manager: EntityManager, catalogIdentityId: number, debut: PartialDateValue | null, now: Date): Promise<void> {
-  await manager.update(Artist, { catalogIdentityId }, { ...dateColumns('debut', debut), updatedAt: now });
+  await manager.update(Artist, { catalogIdentityId }, { ...partialDateColumns('debut', debut), updatedAt: now });
   await touchIdentity(manager, catalogIdentityId, now);
 }
 
@@ -126,7 +134,7 @@ export async function findMembershipByStart(
   joined: PartialDateValue | null,
 ): Promise<MembershipValue | null> {
   const row = await manager.findOne(OrganizationMembership, {
-    where: { organizationId, memberIdentityId, ...dateColumns('joined', joined, true) },
+    where: { organizationId, memberIdentityId, ...partialDateLookup('joined', joined) },
     relations: { member: true },
   });
   return row && membershipValue(manager, row);
@@ -151,8 +159,7 @@ export async function membershipClashes(
     ...(replacedId === null ? {} : { id: Not(replacedId) }),
   });
   const clashes: string[] = [];
-  const start = (row: OrganizationMembership) => partialDate(row.joinedYear, row.joinedMonth, row.joinedDay);
-  if (others.some((row) => samePartialDate(start(row), value.joined))) {
+  if (others.some((row) => samePartialDate(partialDateValue(row, 'joined'), value.joined))) {
     clashes.push('El miembro ya tiene una membresía con esa fecha de entrada');
   } else if (value.status === 'current' && others.some((row) => row.status === 'current')) {
     clashes.push('El miembro ya tiene una membresía actual en esta organización');
@@ -228,8 +235,8 @@ async function membershipValue(manager: EntityManager, row: OrganizationMembersh
   });
   return {
     member: { entity_id: row.member!.editorialEntityId },
-    joined: partialDate(row.joinedYear, row.joinedMonth, row.joinedDay),
-    left: partialDate(row.leftYear, row.leftMonth, row.leftDay),
+    joined: partialDateValue(row, 'joined'),
+    left: partialDateValue(row, 'left'),
     status: row.status,
     description: row.description,
     sourceText: row.sourceText,
@@ -240,8 +247,8 @@ async function membershipValue(manager: EntityManager, row: OrganizationMembersh
 
 function membershipColumns(value: MembershipValue) {
   return {
-    ...dateColumns('joined', value.joined),
-    ...dateColumns('left', value.left),
+    ...partialDateColumns('joined', value.joined),
+    ...partialDateColumns('left', value.left),
     status: value.status,
     description: value.description,
     sourceText: value.sourceText,
@@ -339,42 +346,14 @@ function affiliationColumns(value: AffiliationValue) {
   return { relationshipType, startedAt, endedAt, status, description };
 }
 
-// Partial dates and periods
-
-function partialDate(year: number | null, month: number | null, day: number | null): PartialDateValue | null {
-  if (year === null) return null;
-  return { year, ...(month !== null ? { month } : {}), ...(day !== null ? { day } : {}) };
-}
-
-function samePartialDate(a: PartialDateValue | null, b: PartialDateValue | null): boolean {
-  return a?.year === b?.year && a?.month === b?.month && a?.day === b?.day;
-}
-
-/** The columns of a partial date; a lookup by it matches unknown components with NULL. */
-function dateColumns(prefix: 'joined' | 'left' | 'debut', date: PartialDateValue | null, lookup = false) {
-  const column = (value: number | undefined) => (value === undefined ? (lookup ? IsNull() : null) : value);
-  return {
-    [`${prefix}Year`]: column(date?.year),
-    [`${prefix}Month`]: column(date?.month),
-    [`${prefix}Day`]: column(date?.day),
-  };
-}
+// Periods
 
 function rowPeriod(row: OrganizationMembership): Pick<MembershipValue, 'joined' | 'left' | 'status'> {
   return {
-    joined: partialDate(row.joinedYear, row.joinedMonth, row.joinedDay),
-    left: partialDate(row.leftYear, row.leftMonth, row.leftDay),
+    joined: partialDateValue(row, 'joined'),
+    left: partialDateValue(row, 'left'),
     status: row.status,
   };
-}
-
-/** The first and last days a partial date may mean, as comparable `YYYYMMDD` numbers. */
-export function dateBounds({ year, month, day }: PartialDateValue): { first: number; last: number } {
-  const at = (m: number, d: number) => year * 10_000 + m * 100 + d;
-  const days = (m: number) => new Date(Date.UTC(year, m, 0)).getUTCDate();
-  if (month === undefined) return { first: at(1, 1), last: at(12, 31) };
-  if (day === undefined) return { first: at(month, 1), last: at(month, days(month)) };
-  return { first: at(month, day), last: at(month, day) };
 }
 
 /** Today, after any date a partial date can hold. */
@@ -386,8 +365,8 @@ const NOW = 99_999_999;
  * unknown start or departure of a past one may have been at any time.
  */
 function period({ joined, left, status }: Pick<MembershipValue, 'joined' | 'left' | 'status'>): { latestStart: number; earliestEnd: number } {
-  if (status === 'current') return { latestStart: joined ? dateBounds(joined).last : NOW, earliestEnd: NOW + 1 };
-  return { latestStart: joined ? dateBounds(joined).last : Infinity, earliestEnd: left ? dateBounds(left).first : -Infinity };
+  if (status === 'current') return { latestStart: joined ? partialDateInterval(joined).last : NOW, earliestEnd: NOW + 1 };
+  return { latestStart: joined ? partialDateInterval(joined).last : Infinity, earliestEnd: left ? partialDateInterval(left).first : -Infinity };
 }
 
 /** Two periods overlap for certain when both had certainly started before either could have ended. */

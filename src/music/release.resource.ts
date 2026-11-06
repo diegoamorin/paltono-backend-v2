@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { RELEASE_GROUP_TYPES, Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
 import {
   CreditEntry,
   EntryMeta,
-  PartialDate,
   ToManyLinkage,
   ToOneLinkage,
   WITHDRAWN,
@@ -14,7 +14,6 @@ import {
   creditAttributes,
   creditRelationships,
   isWithdrawn,
-  partialDate,
 } from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 import { RELEASE_AVAILABILITIES, ReleaseGroupDates, ReleaseTimes } from './release-dates';
@@ -111,7 +110,7 @@ export const releaseSchema: ResourceSchema<ReleaseEntry> = defineResource({
     // The release group's title is shown, never copied; a withdrawn group's is not shown at all.
     displayTitle: releaseContent(({ release, group }) => release.title ?? (isWithdrawn(group.group) ? null : group.group.title)),
     editionName: releaseContent(({ release }) => release.editionName),
-    releaseDate: releaseContent(({ release }) => partialDate(release.releaseYear, release.releaseMonth, release.releaseDay)),
+    releaseDate: releaseContent(({ release }) => partialDateResponse(release, 'release')),
     releaseTime: releaseContent(({ release }) => release.releaseTime?.slice(0, 5) ?? null),
     timezone: releaseContent(({ release }) => release.timezone),
     releaseInstant: releaseContent(({ times }) => times.instant?.toISOString() ?? null),

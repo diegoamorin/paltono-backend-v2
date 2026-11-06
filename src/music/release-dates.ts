@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm';
+import { PartialDate, partialDateIntervalSql, partialDateResponse } from '../common/partial-date/partial-date';
 
 /*
  * When releases come out, derived on every read from what they store and the
@@ -22,12 +23,6 @@ import { EntityManager } from 'typeorm';
 export const RELEASE_AVAILABILITIES = ['upcoming', 'released', 'cancelled', 'unknown'] as const;
 export type ReleaseAvailability = (typeof RELEASE_AVAILABILITIES)[number];
 
-export interface PartialDate {
-  year: number;
-  month: number | null;
-  day: number | null;
-}
-
 export interface ReleaseTimes {
   availability: ReleaseAvailability;
   /** The instant of its time in its zone, or null without one. */
@@ -47,12 +42,7 @@ export function releaseSql(r: string, now: string) {
   const year = `${r}.release_year`;
   const month = `${r}.release_month`;
   const day = `${r}.release_day`;
-  const start = `CASE WHEN ${year} IS NOT NULL THEN make_date(${year}, coalesce(${month}, 1), coalesce(${day}, 1)) END`;
-  const end = `CASE
-      WHEN ${day} IS NOT NULL THEN make_date(${year}, ${month}, ${day})
-      WHEN ${month} IS NOT NULL THEN (make_date(${year}, ${month}, 1) + interval '1 month - 1 day')::date
-      WHEN ${year} IS NOT NULL THEN make_date(${year}, 12, 31)
-    END`;
+  const { start, end } = partialDateIntervalSql(r, 'release');
   const instant = `CASE WHEN ${r}.release_time IS NOT NULL THEN (make_date(${year}, ${month}, ${day}) + ${r}.release_time) AT TIME ZONE ${r}.timezone END`;
   const arrived = `CASE WHEN ${r}.release_time IS NOT NULL THEN ${instant} <= ${now} ELSE ${start} <= (${now} AT TIME ZONE 'UTC')::date END`;
   const availability = `CASE
@@ -101,9 +91,9 @@ export async function releaseGroupDates(manager: EntityManager, ids: number[], n
   );
   if (ids.length === 0) return dates;
   const { start, instant, arrived } = releaseSql('r', '$2::timestamptz');
-  const rows: { groupId: number; year: number; month: number | null; day: number | null; instant: Date | null; arrived: boolean }[] =
+  const rows: { groupId: number; releaseYear: number; releaseMonth: number | null; releaseDay: number | null; instant: Date | null; arrived: boolean }[] =
     await manager.query(
-      `SELECT r.release_group_id AS "groupId", r.release_year AS year, r.release_month AS month, r.release_day AS day,
+      `SELECT r.release_group_id AS "groupId", r.release_year AS "releaseYear", r.release_month AS "releaseMonth", r.release_day AS "releaseDay",
           ${instant} AS instant, ${arrived} AS arrived
         FROM releases r JOIN editorial_entities root ON root.id = r.editorial_entity_id
         WHERE r.release_group_id = ANY($1) AND NOT r.is_cancelled AND r.release_year IS NOT NULL AND root.publication_status = 'published'
@@ -116,13 +106,11 @@ export async function releaseGroupDates(manager: EntityManager, ids: number[], n
     const toCome = own.filter(({ arrived: out }) => !out);
     const instants = toCome.flatMap(({ instant: at }) => (at ? [new Date(at)] : [])).sort((a, b) => a.getTime() - b.getTime());
     dates.set(id, {
-      releaseDate: partialDate(own[0]),
+      releaseDate: partialDateResponse(own[0], 'release'),
       upcoming: toCome.length === own.length,
-      nextReleaseDate: toCome.length > 0 ? partialDate(toCome[0]) : null,
+      nextReleaseDate: toCome.length > 0 ? partialDateResponse(toCome[0], 'release') : null,
       releaseInstant: instants[0] ?? null,
     });
   }
   return dates;
 }
-
-const partialDate = ({ year, month, day }: { year: number; month: number | null; day: number | null }): PartialDate => ({ year, month, day });

@@ -1,4 +1,4 @@
-import { PartialDateValue } from '../catalog-identities/identity-creations';
+import { PartialDateValue } from '../common/partial-date/partial-date';
 import { EventStatus } from '../live-events/entities/live-event.entity';
 import { EventSpec, RecordingSpec, TrackSpec } from './catalog-writer';
 import { SeedSubmission, wiki } from './kpop-catalog';

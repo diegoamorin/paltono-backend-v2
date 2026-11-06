@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { EntityManager } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
-import { PartialDateValue } from '../music/recordings';
+import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import {
   EventArtist,
   EventLink,
@@ -110,13 +110,6 @@ export interface LinkValue {
 
 export type LiveRoot = 'tour' | 'event';
 
-const partialDate = (year: number | null, month: number | null, day: number | null): PartialDateValue | null =>
-  year === null ? null : { year, ...(month !== null ? { month } : {}), ...(day !== null ? { day } : {}) };
-
-function dateColumns(prefix: 'start' | 'end', date: PartialDateValue | null | undefined) {
-  return { [`${prefix}Year`]: date?.year ?? null, [`${prefix}Month`]: date?.month ?? null, [`${prefix}Day`]: date?.day ?? null };
-}
-
 // Tours
 
 /** The internal id of the tour of an editorial root, or null while it is only reserved. */
@@ -133,8 +126,8 @@ export async function findCreatedTour(manager: EntityManager, editorialEntityId:
     value: {
       title: tour.title,
       status: tour.status,
-      startDate: partialDate(tour.startYear, tour.startMonth, tour.startDay),
-      endDate: partialDate(tour.endYear, tour.endMonth, tour.endDay),
+      startDate: partialDateValue(tour, 'start'),
+      endDate: partialDateValue(tour, 'end'),
       description: tour.description,
       imageUrl: tour.imageUrl,
     },
@@ -152,8 +145,8 @@ export async function createTour(manager: EntityManager, editorialEntityId: stri
     publicId: newPublicId(),
     title: value.title,
     status: value.status,
-    ...dateColumns('start', value.startDate),
-    ...dateColumns('end', value.endDate),
+    ...partialDateColumns('start', value.startDate),
+    ...partialDateColumns('end', value.endDate),
     description: value.description ?? null,
     imageUrl: value.imageUrl ?? null,
     createdAt: now,
@@ -167,7 +160,7 @@ export async function writeTourField(manager: EntityManager, editorialEntityId: 
   let columns: object;
   if (path === 'tours.schedule') {
     const schedule = value as TourScheduleValue;
-    columns = { status: schedule.status, ...dateColumns('start', schedule.startDate), ...dateColumns('end', schedule.endDate) };
+    columns = { status: schedule.status, ...partialDateColumns('start', schedule.startDate), ...partialDateColumns('end', schedule.endDate) };
   } else {
     columns = { [TOUR_FIELDS[path]]: value };
   }
@@ -193,7 +186,7 @@ export async function findCreatedEvent(manager: EntityManager, editorialEntityId
       title: event.title,
       status: event.status,
       tour: tour && { entity_id: tour.editorialEntityId },
-      startDate: partialDate(event.startYear, event.startMonth, event.startDay),
+      startDate: partialDateValue(event, 'start'),
       // Stored with seconds; proposed and shown as HH:MM.
       startTime: event.startTime?.slice(0, 5) ?? null,
       timezone: event.timezone,
@@ -213,7 +206,7 @@ export function eventFieldValue(value: Required<EventValue>, path: EventFieldPat
 }
 
 function scheduleColumns({ status, startDate, startTime, timezone }: Partial<EventScheduleValue>) {
-  return { ...(status ? { status } : {}), ...dateColumns('start', startDate), startTime: startTime ?? null, timezone: timezone ?? null };
+  return { ...(status ? { status } : {}), ...partialDateColumns('start', startDate), startTime: startTime ?? null, timezone: timezone ?? null };
 }
 
 async function tourColumn(manager: EntityManager, tour: RootReference | null | undefined): Promise<number | null> {

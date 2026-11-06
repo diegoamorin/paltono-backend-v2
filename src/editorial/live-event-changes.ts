@@ -1,6 +1,7 @@
 import { EntityManager } from 'typeorm';
 import { hasArtist } from '../catalog-identities/artist-relations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { isWhollyBefore } from '../common/partial-date/partial-date';
 import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { EVENT_STATUSES, LINK_PURPOSES, LIVE_ARTIST_ROLES, TOUR_STATUSES } from '../live-events/entities/live-event.entity';
 import {
@@ -42,11 +43,10 @@ import {
   writeTourField,
 } from '../live-events/live-events';
 import { artistIdOfIdentity } from '../music/releases';
-import { PartialDateValue } from '../music/recordings';
 import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { COUNTRY_ID, PARTIAL_DATE, daysInMonth, interval } from './identity-creation';
+import { COUNTRY_ID, PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import { ROW_KEY, envelope as rowEnvelope, reference } from './identity-relation-changes';
 import type { OperationDefinition, PayloadProblem, RootReference as NamedRoot, RowKey, TargetProblem, VocabularyReference } from './operation-registry';
 import { isIanaZone } from './release-changes';
@@ -137,19 +137,12 @@ const namedTour = (tour: RootReference | null | undefined, path: string): NamedR
 const countryReference = (countryId: number | null | undefined, path: string): VocabularyReference[] =>
   typeof countryId === 'number' ? [{ vocabulary: 'countries', id: countryId, path }] : [];
 
-function checkDate(date: PartialDateValue | null | undefined, path: string, name: string): PayloadProblem[] {
-  if (date?.day !== undefined && date.month !== undefined && date.day > daysInMonth(date.year, date.month)) {
-    return [{ path: `${path}/day`, detail: `${name} is not a calendar date` }];
-  }
-  return [];
-}
-
 /** A tour's dates are real days in a possible order; a scheduled tour has at least its start year. */
 function checkTourSchedule({ status, startDate, endDate }: Partial<TourScheduleValue>, at: string): PayloadProblem[] {
-  const problems = [...checkDate(startDate, `${at}/startDate`, 'startDate'), ...checkDate(endDate, `${at}/endDate`, 'endDate')];
+  const problems = [...partialDateProblems('startDate', startDate, `${at}/startDate`), ...partialDateProblems('endDate', endDate, `${at}/endDate`)];
   if (status === 'scheduled' && !startDate) problems.push({ path: `${at}/startDate`, detail: 'a scheduled tour has at least a known start year' });
   // Partial dates are intervals; only an end wholly before the start is impossible.
-  if (startDate && endDate && interval(endDate).last < interval(startDate).first) {
+  if (startDate && endDate && isWhollyBefore(endDate, startDate)) {
     problems.push({ path: `${at}/endDate`, detail: 'endDate is before startDate' });
   }
   return problems;
@@ -161,7 +154,7 @@ function checkTourSchedule({ status, startDate, endDate }: Partial<TourScheduleV
  * postponed one has neither date nor time.
  */
 function checkEventSchedule({ status, startDate, startTime, timezone }: Partial<EventScheduleValue>, at: string): PayloadProblem[] {
-  const problems = checkDate(startDate, `${at}/startDate`, 'startDate');
+  const problems = partialDateProblems('startDate', startDate, `${at}/startDate`);
   const hasTime = startTime !== undefined && startTime !== null;
   const hasZone = timezone !== undefined && timezone !== null;
   if (hasTime && startDate?.day === undefined) problems.push({ path: `${at}/startTime`, detail: 'startTime requires a complete startDate' });

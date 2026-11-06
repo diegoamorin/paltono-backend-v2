@@ -1,5 +1,5 @@
 import { User } from '../accounts/entities/user.entity';
-import { PartialDateValue } from '../catalog-identities/identity-creations';
+import { PartialDateValue } from '../common/partial-date/partial-date';
 import { EditorialEntityType } from '../editorial/entities/editorial-entity.entity';
 import { EventStatus, LiveArtistRole, TourStatus } from '../live-events/entities/live-event.entity';
 import { ReleaseGroupType } from '../music/entities/release.entity';

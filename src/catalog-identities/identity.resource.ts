@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from './artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
+import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { OrganizationType } from '../vocabularies/entities/organization-type.entity';
@@ -56,9 +57,6 @@ const related =
   ({ relations }: IdentityEntry): unknown =>
     relations === null ? undefined : read(relations);
 
-const partialDate = (year: number | null, month: number | null, day: number | null) =>
-  year === null ? null : { year, month, day };
-
 const isWithdrawn = ({ identity }: IdentityEntry) => identity.editorialEntity!.publicationStatus === 'withdrawn';
 
 /** An attribute of the entry's content, which a withdrawn entry leaves out: it only shows the notice. */
@@ -92,8 +90,8 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
     organization: content(({ organization }) =>
       organization && {
         legalName: organization.legalName,
-        founding: partialDate(organization.foundingYear, organization.foundingMonth, organization.foundingDay),
-        dissolution: partialDate(organization.dissolutionYear, organization.dissolutionMonth, organization.dissolutionDay),
+        founding: partialDateResponse(organization, 'founding'),
+        dissolution: partialDateResponse(organization, 'dissolution'),
         originCountryId: organization.originCountryId,
       },
     ),
@@ -111,17 +109,6 @@ export const identitySchema: ResourceSchema<IdentityEntry> = defineResource({
   },
   meta: ({ identity }) => ({ editorialEntityId: identity.editorialEntityId }),
 });
-
-class PartialDate {
-  @ApiProperty({ example: 2008 })
-  year: number;
-
-  @ApiProperty({ type: Number, nullable: true, example: 9 })
-  month: number | null;
-
-  @ApiProperty({ type: Number, nullable: true, example: null })
-  day: number | null;
-}
 
 class PersonAttributes {
   @ApiProperty({ type: String, nullable: true })

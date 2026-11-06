@@ -1,7 +1,8 @@
 import { EntityManager } from 'typeorm';
 import { findDebut } from '../catalog-identities/artist-relations';
-import { IdentityCreationValue, PartialDateValue as PartialDate, findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { IdentityCreationValue, findCreatedIdentity } from '../catalog-identities/identity-creations';
 import { IDENTITY_FIELDS, IdentityFieldPath, hasIdentityField, pickIdentityField, writeIdentityField } from '../catalog-identities/identity-fields';
+import { PartialDateValue, isWhollyBefore } from '../common/partial-date/partial-date';
 import { CATALOG_IMAGE_URL, ImageUrlReference, imageUrlAt } from '../images/catalog-image-urls';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
@@ -15,8 +16,6 @@ import {
   IMG_PROFILE,
   NAME,
   PARTIAL_DATE,
-  debutPrecedes,
-  interval,
   isCalendarDate,
   partialDateOf,
   partialDateProblems,
@@ -36,7 +35,7 @@ interface FieldRules {
   references?(value: unknown): VocabularyReference[];
   imageUrls?(value: unknown): ImageUrlReference[];
   /** Rules against the identity's other fields and its artist's debut, as they are now. */
-  consistency?(identity: IdentityCreationValue, value: unknown, debut: PartialDate | null): TargetProblem[];
+  consistency?(identity: IdentityCreationValue, value: unknown, debut: PartialDateValue | null): TargetProblem[];
 }
 
 const completeDate = (field: 'birthDate' | 'deathDate'): Pick<FieldRules, 'check' | 'consistency'> => ({
@@ -47,7 +46,7 @@ const completeDate = (field: 'birthDate' | 'deathDate'): Pick<FieldRules, 'check
     if (typeof birthDate === 'string' && typeof deathDate === 'string' && deathDate < birthDate) {
       return [inconsistent(field === 'birthDate' ? 'birthDate is after the current deathDate' : 'deathDate is before the current birthDate')];
     }
-    if (field === 'birthDate' && typeof value === 'string' && debut && debutPrecedes(debut, partialDateOf(value))) {
+    if (field === 'birthDate' && typeof value === 'string' && debut && isWhollyBefore(debut, partialDateOf(value))) {
       return [inconsistent('birthDate is after the current debut')];
     }
     return [];
@@ -55,15 +54,15 @@ const completeDate = (field: 'birthDate' | 'deathDate'): Pick<FieldRules, 'check
 });
 
 const partialDate = (field: 'founding' | 'dissolution'): Pick<FieldRules, 'check' | 'consistency'> => ({
-  check: (value) => partialDateProblems(field, value as PartialDate | null),
+  check: (value) => partialDateProblems(field, value as PartialDateValue | null),
   // Partial dates are intervals; only a dissolution wholly before the founding is impossible.
   consistency: (identity, value, debut) => {
-    const founding = field === 'founding' ? (value as PartialDate | null) : identity.organization!.founding;
-    const dissolution = field === 'dissolution' ? (value as PartialDate | null) : identity.organization!.dissolution;
-    if (founding && dissolution && interval(dissolution).last < interval(founding).first) {
+    const founding = field === 'founding' ? (value as PartialDateValue | null) : identity.organization!.founding;
+    const dissolution = field === 'dissolution' ? (value as PartialDateValue | null) : identity.organization!.dissolution;
+    if (founding && dissolution && isWhollyBefore(dissolution, founding)) {
       return [inconsistent(field === 'founding' ? 'founding is after the current dissolution' : 'dissolution is before the current founding')];
     }
-    if (field === 'founding' && founding && debut && debutPrecedes(debut, founding)) {
+    if (field === 'founding' && founding && debut && isWhollyBefore(debut, founding)) {
       return [inconsistent('founding is after the current debut')];
     }
     return [];

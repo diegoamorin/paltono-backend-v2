@@ -2,8 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
-import { EntryMeta, PartialDate, ToManyLinkage, ToOneLinkage, WITHDRAWN, content, isWithdrawn, partialDate } from '../music/resource-primitives';
+import { EntryMeta, ToManyLinkage, ToOneLinkage, WITHDRAWN, content, isWithdrawn } from '../music/resource-primitives';
 import { COUNTRIES } from '../vocabularies/countries';
 import { Country } from '../vocabularies/entities/country.entity';
 import {
@@ -30,7 +31,7 @@ export interface TourDerived {
   /** The countries of its published events, by name. */
   countries: Country[];
   /** The dates of its published events with a date, in order. */
-  eventDates: { year: number; month: number | null; day: number | null }[];
+  eventDates: PartialDate[];
 }
 
 export interface TourEntry {
@@ -138,8 +139,8 @@ export const tourSchema: ResourceSchema<TourEntry> = defineResource({
     status: tourContent(({ tour }) => tour.status),
     description: tourContent(({ tour }) => tour.description),
     image: tourContent(({ image }) => image),
-    startDate: tourContent(({ tour }) => partialDate(tour.startYear, tour.startMonth, tour.startDay)),
-    endDate: tourContent(({ tour }) => partialDate(tour.endYear, tour.endMonth, tour.endDay)),
+    startDate: tourContent(({ tour }) => partialDateResponse(tour, 'start')),
+    endDate: tourContent(({ tour }) => partialDateResponse(tour, 'end')),
     countries: tourContent(({ derived }) => derived.countries.map(({ code, name }) => ({ code, name }))),
     eventDates: tourContent(({ derived }) => derived.eventDates),
     createdAt: tourContent(({ tour }) => tour.createdAt.toISOString()),
@@ -167,7 +168,7 @@ export const eventSchema: ResourceSchema<EventEntry> = defineResource({
     status: eventContent(({ event }) => event.status),
     description: eventContent(({ event }) => event.description),
     image: eventContent(({ image }) => image),
-    startDate: eventContent(({ event }) => partialDate(event.startYear, event.startMonth, event.startDay)),
+    startDate: eventContent(({ event }) => partialDateResponse(event, 'start')),
     startTime: eventContent(({ event }) => event.startTime?.slice(0, 5) ?? null),
     timezone: eventContent(({ event }) => event.timezone),
     city: eventContent(({ event }) => event.city),

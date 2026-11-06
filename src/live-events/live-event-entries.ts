@@ -1,6 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
+import { partialDateIntervalSql, partialDateResponse } from '../common/partial-date/partial-date';
 import { shownImages } from '../images/shown-images';
 import { Country } from '../vocabularies/entities/country.entity';
 import { EventArtist, EventLink, EventOrganizer, LiveEvent, Tour, TourArtist, TourLink, TourOrganizer } from './entities/live-event.entity';
@@ -16,17 +17,7 @@ import { EventEntry, LiveArtistEntry, OrganizerEntry, TourDerived, TourEntry } f
 const notWithdrawn = (root: Tour | LiveEvent) => root.editorialEntity!.publicationStatus !== 'withdrawn';
 
 /** SQL expressions over an `events` row aliased `e`: the first and last day its partial date may mean. */
-export function eventDateSql(e: string) {
-  const [year, month, day] = [`${e}.start_year`, `${e}.start_month`, `${e}.start_day`];
-  return {
-    start: `CASE WHEN ${year} IS NOT NULL THEN make_date(${year}, coalesce(${month}, 1), coalesce(${day}, 1)) END`,
-    end: `CASE
-      WHEN ${day} IS NOT NULL THEN make_date(${year}, ${month}, ${day})
-      WHEN ${month} IS NOT NULL THEN (make_date(${year}, ${month}, 1) + interval '1 month - 1 day')::date
-      WHEN ${year} IS NOT NULL THEN make_date(${year}, 12, 31)
-    END`,
-  };
-}
+export const eventDateSql = (e: string) => partialDateIntervalSql(e, 'start');
 
 /** The published events of the given tours, by date (undated last). */
 async function publishedEventsOf(manager: EntityManager, tourIds: number[]): Promise<LiveEvent[]> {
@@ -49,7 +40,7 @@ function derive(events: LiveEvent[]): TourDerived {
   for (const { country } of events) if (country) countries.set(country.id, country);
   return {
     countries: [...countries.values()].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id),
-    eventDates: events.flatMap(({ startYear: year, startMonth: month, startDay: day }) => (year === null ? [] : [{ year, month, day }])),
+    eventDates: events.flatMap((event) => partialDateResponse(event, 'start') ?? []),
   };
 }
 
