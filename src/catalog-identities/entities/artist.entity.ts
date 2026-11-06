@@ -1,6 +1,7 @@
 import { Check, Column, Entity, ForeignKey, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { ContributionRole, ContributionRoleScope } from '../../vocabularies/entities/contribution-role.entity';
-import { CatalogIdentity, Organization, partialDateCheck } from './catalog-identity.entity';
+import { CatalogIdentity, Organization } from './catalog-identity.entity';
 
 export const ASSOCIATION_STATUSES = ['current', 'former', 'unknown'] as const;
 export type AssociationStatus = (typeof ASSOCIATION_STATUSES)[number];

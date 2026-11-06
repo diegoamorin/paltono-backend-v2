@@ -1,7 +1,6 @@
 import { EntityManager } from 'typeorm';
 import {
   MembershipValue,
-  dateBounds,
   deleteMembership,
   findMembership,
   findMembershipByStart,
@@ -10,12 +9,12 @@ import {
   updateMembership,
 } from '../catalog-identities/artist-relations';
 import { ASSOCIATION_STATUSES } from '../catalog-identities/entities/artist.entity';
-import { PartialDateValue } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { isWhollyBefore } from '../common/partial-date/partial-date';
 import { ContributionRoleScope } from '../vocabularies/entities/contribution-role.entity';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { BIO, IMG_PROFILE, PARTIAL_DATE, daysInMonth } from './identity-creation';
+import { BIO, IMG_PROFILE, PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import { INT4, ROW_KEY, envelope, onlyFor, readRow, reference } from './identity-relation-changes';
 import type { OperationDefinition, PayloadProblem, TargetProblem } from './operation-registry';
 
@@ -164,13 +163,10 @@ async function identityIds(
 
 /** What the JSON Schema cannot say: calendar dates, a status coherent with the departure, a period that can exist and roles in order. */
 export function checkMembership({ joined, left, status, roles }: MembershipValue): PayloadProblem[] {
-  const problems: PayloadProblem[] = [];
-  for (const [field, date] of [['joined', joined], ['left', left]] as const) {
-    if (date && !isCalendarDay(date)) problems.push({ path: `/value/${field}/day`, detail: `${field} is not a calendar date` });
-  }
+  const problems = [...partialDateProblems('joined', joined, '/value/joined'), ...partialDateProblems('left', left, '/value/left')];
   if (left && status !== 'former') {
     problems.push({ path: '/value/status', detail: 'A known departure requires status former' });
-  } else if (joined && left && dateBounds(left).last < dateBounds(joined).first) {
+  } else if (joined && left && isWhollyBefore(left, joined)) {
     problems.push({ path: '/value/left', detail: 'left is before joined' });
   }
   roles.forEach((role, index) => {
@@ -182,10 +178,6 @@ export function checkMembership({ joined, left, status, roles }: MembershipValue
     }
   });
   return problems;
-}
-
-function isCalendarDay({ year, month, day }: PartialDateValue): boolean {
-  return day === undefined || month === undefined || day <= daysInMonth(year, month);
 }
 
 /** Roles of a membership must allow the `membership` scope; the vocabulary may change, so it is read each time. */

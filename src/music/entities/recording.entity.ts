@@ -1,4 +1,5 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
 import { Genre } from '../../vocabularies/entities/genre.entity';
@@ -22,10 +23,7 @@ export type RecordingWorkRelationType = (typeof RECORDING_WORK_RELATION_TYPES)[n
 @Unique('recordings_editorial_entity_id_key', ['editorialEntityId'])
 @Check('recordings_title_nonblank', `btrim(title) <> ''`)
 @Check('recordings_isrc_format', `isrc ~ '^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$'`)
-@Check(
-  'recordings_recording_date',
-  `(recording_year IS NULL OR recording_year BETWEEN 1 AND 9999) AND (recording_month IS NULL OR (recording_year IS NOT NULL AND recording_month BETWEEN 1 AND 12)) AND (recording_day IS NULL OR (recording_month IS NOT NULL AND recording_day BETWEEN 1 AND extract(day FROM make_date(recording_year, recording_month, 1) + interval '1 month - 1 day')))`,
-)
+@Check('recordings_recording_date', partialDateCheck('recording'))
 export class Recording {
   @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
   id: number;

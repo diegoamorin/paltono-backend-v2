@@ -3,8 +3,8 @@ import { EntityManager, IsNull, Not } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
+import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Release, ReleaseArtistCredit, ReleaseGroup, ReleaseGroupType } from './entities/release.entity';
-import { PartialDateValue } from './recordings';
 
 /*
  * The writes of release groups, their presentation credits and releases. The
@@ -195,14 +195,13 @@ export async function findCreatedRelease(manager: EntityManager, editorialEntity
   const release = await manager.findOneBy(Release, { editorialEntityId });
   if (!release) return null;
   const group = await manager.findOneByOrFail(ReleaseGroup, { id: release.releaseGroupId });
-  const { releaseYear: year, releaseMonth: month, releaseDay: day } = release;
   return {
     release,
     value: {
       releaseGroup: { entity_id: group.editorialEntityId },
       title: release.title,
       editionName: release.editionName,
-      releaseDate: year === null ? null : { year, ...(month !== null ? { month } : {}), ...(day !== null ? { day } : {}) },
+      releaseDate: partialDateValue(release, 'release'),
       // Stored with seconds; proposed and shown as HH:MM.
       releaseTime: release.releaseTime?.slice(0, 5) ?? null,
       timezone: release.timezone,
@@ -268,9 +267,7 @@ export async function editionNameClashes(
 
 function dateColumns({ releaseDate, releaseTime, timezone }: ReleaseDateValue) {
   return {
-    releaseYear: releaseDate?.year ?? null,
-    releaseMonth: releaseDate?.month ?? null,
-    releaseDay: releaseDate?.day ?? null,
+    ...partialDateColumns('release', releaseDate),
     releaseTime,
     timezone,
   };

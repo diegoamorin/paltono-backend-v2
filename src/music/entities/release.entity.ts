@@ -1,5 +1,6 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Artist } from '../../catalog-identities/entities/artist.entity';
+import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 
 /*
@@ -105,10 +106,7 @@ export class ReleaseArtistCredit {
 @Unique('releases_release_group_id_edition_name_key', ['releaseGroupId', 'editionName'])
 @Check('releases_title_nonblank', `title IS NULL OR btrim(title) <> ''`)
 @Check('releases_edition_name_nonblank', `edition_name IS NULL OR btrim(edition_name) <> ''`)
-@Check(
-  'releases_release_date',
-  `(release_year IS NULL OR release_year BETWEEN 1 AND 9999) AND (release_month IS NULL OR (release_year IS NOT NULL AND release_month BETWEEN 1 AND 12)) AND (release_day IS NULL OR (release_month IS NOT NULL AND release_day BETWEEN 1 AND extract(day FROM make_date(release_year, release_month, 1) + interval '1 month - 1 day')))`,
-)
+@Check('releases_release_date', partialDateCheck('release'))
 @Check(
   'releases_release_time',
   `(release_time IS NULL AND timezone IS NULL) OR (release_time IS NOT NULL AND timezone IS NOT NULL AND release_day IS NOT NULL)`,

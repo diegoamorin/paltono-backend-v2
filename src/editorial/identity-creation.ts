@@ -1,4 +1,5 @@
-import { IdentityCreationValue as IdentityCreation, PartialDateValue as PartialDate, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { IdentityCreationValue as IdentityCreation, createIdentity, findCreatedIdentity } from '../catalog-identities/identity-creations';
+import { PartialDateValue, isRealDay, isWhollyBefore } from '../common/partial-date/partial-date';
 import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
 import { OperationDefinition, PayloadProblem } from './operation-registry';
 
@@ -134,14 +135,11 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
   }
   if (organization) {
     for (const field of ['founding', 'dissolution'] as const) {
-      const date = organization[field];
-      if (date?.day !== undefined && date.month !== undefined && date.day > daysInMonth(date.year, date.month)) {
-        problems.push({ path: `/value/organization/${field}/day`, detail: `${field} is not a calendar date` });
-      }
+      problems.push(...partialDateProblems(field, organization[field], `/value/organization/${field}`));
     }
     const { founding, dissolution } = organization;
     // Partial dates are intervals; only a dissolution wholly before the founding is impossible.
-    if (founding && dissolution && interval(dissolution).last < interval(founding).first) {
+    if (founding && dissolution && isWhollyBefore(dissolution, founding)) {
       problems.push({ path: '/value/organization/dissolution', detail: 'dissolution is before founding' });
     }
   }
@@ -149,35 +147,18 @@ function checkIdentity(identity: IdentityCreation): PayloadProblem[] {
 }
 
 /** A partial date whose day does not exist in its month, which the JSON Schema cannot say. */
-export function partialDateProblems(field: string, date: PartialDate | null): PayloadProblem[] {
-  if (date?.day === undefined || date.month === undefined || date.day <= daysInMonth(date.year, date.month)) return [];
-  return [{ path: '/value/day', detail: `${field} is not a calendar date` }];
-}
-
-/** Partial dates are intervals; only a debut wholly before the birth or the founding is impossible. */
-export function debutPrecedes(debut: PartialDate, start: PartialDate): boolean {
-  return interval(debut).last < interval(start).first;
+export function partialDateProblems(field: string, date: PartialDateValue | null | undefined, at = '/value'): PayloadProblem[] {
+  if (!date || isRealDay(date)) return [];
+  return [{ path: `${at}/day`, detail: `${field} is not a calendar date` }];
 }
 
 /** A complete date, `YYYY-MM-DD`, as a partial date. */
-export function partialDateOf(date: string): PartialDate {
+export function partialDateOf(date: string): PartialDateValue {
   const [year, month, day] = date.split('-').map(Number);
   return { year, month, day };
 }
 
 export function isCalendarDate(date: string): boolean {
   const [year, month, day] = date.split('-').map(Number);
-  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
-}
-
-export function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
-
-/** The first and last days a partial date may mean, as comparable `YYYYMMDD` numbers. */
-export function interval({ year, month, day }: PartialDate): { first: number; last: number } {
-  const at = (m: number, d: number) => year * 10_000 + m * 100 + d;
-  if (month === undefined) return { first: at(1, 1), last: at(12, 31) };
-  if (day === undefined) return { first: at(month, 1), last: at(month, daysInMonth(year, month)) };
-  return { first: at(month, day), last: at(month, day) };
+  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && isRealDay({ year, month, day });
 }

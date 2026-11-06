@@ -1,4 +1,5 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { Country } from '../../vocabularies/entities/country.entity';
 
@@ -99,9 +100,6 @@ export class Person {
   @Column({ name: 'img_full_body', type: 'varchar', length: 2048, nullable: true })
   imgFullBody: string | null;
 }
-
-export const partialDateCheck = (prefix: string) =>
-  `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
 
 @Entity('organizations')
 @Index('organizations_origin_country_id_idx', ['originCountryId'])

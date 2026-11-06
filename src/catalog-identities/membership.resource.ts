@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { ResourceIdentifier } from '../common/json-api/swagger';
+import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { CONTRIBUTION_ROLES } from '../vocabularies/contribution-roles';
 import { ASSOCIATION_STATUSES, OrganizationMembership, OrganizationMembershipRole } from './entities/artist.entity';
 import { IdentityEntry, identitySchema } from './identity.resource';
@@ -13,8 +14,6 @@ export interface MembershipEntry {
   roles: OrganizationMembershipRole[];
 }
 
-const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
-
 export const membershipRoleSchema = defineResource<OrganizationMembershipRole>({
   type: 'membership-roles',
   id: (role) => String(role.id),
@@ -26,8 +25,8 @@ export const membershipSchema: ResourceSchema<MembershipEntry> = defineResource<
   type: 'organization-memberships',
   id: ({ membership }) => String(membership.id),
   attributes: {
-    joined: ({ membership }) => partialDate(membership.joinedYear, membership.joinedMonth, membership.joinedDay),
-    left: ({ membership }) => partialDate(membership.leftYear, membership.leftMonth, membership.leftDay),
+    joined: ({ membership }) => partialDateResponse(membership, 'joined'),
+    left: ({ membership }) => partialDateResponse(membership, 'left'),
     status: ({ membership }) => membership.status,
     description: ({ membership }) => membership.description,
     sourceText: ({ membership }) => membership.sourceText,
@@ -41,17 +40,6 @@ export const membershipSchema: ResourceSchema<MembershipEntry> = defineResource<
     roles: { schema: () => membershipRoleSchema, get: ({ roles }) => roles },
   },
 });
-
-class PartialDate {
-  @ApiProperty({ example: 2016 })
-  year: number;
-
-  @ApiProperty({ type: Number, nullable: true, example: 8 })
-  month: number | null;
-
-  @ApiProperty({ type: Number, nullable: true, example: 8 })
-  day: number | null;
-}
 
 class MembershipAttributes {
   @ApiProperty({ type: PartialDate, nullable: true, description: 'Fecha parcial de entrada; los nulos marcan la precisión desconocida' })

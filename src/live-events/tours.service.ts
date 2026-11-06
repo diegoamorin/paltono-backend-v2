@@ -5,6 +5,7 @@ import { CatalogIdentity } from '../catalog-identities/entities/catalog-identity
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
+import { partialDateIntervalSql } from '../common/partial-date/partial-date';
 import { containsPattern } from '../database/like-pattern';
 import { TOUR_STATUSES, Tour } from './entities/live-event.entity';
 import { tourEntries } from './live-event-entries';
@@ -12,7 +13,7 @@ import { TourEntry } from './live-event.resource';
 
 /** The expression behind each sort field of the list; tours without an announced start go last either way. */
 const SORT_EXPRESSIONS: Record<string, string> = {
-  startDate: `CASE WHEN tour.start_year IS NOT NULL THEN make_date(tour.start_year, coalesce(tour.start_month, 1), coalesce(tour.start_day, 1)) END`,
+  startDate: partialDateIntervalSql('tour', 'start').start,
   title: 'tour.title',
   id: 'tour.public_id',
 };

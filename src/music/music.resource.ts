@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
+import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { Genre } from '../vocabularies/entities/genre.entity';
 import { GENRES } from '../vocabularies/genres';
 import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingWork } from './entities/recording.entity';
@@ -7,14 +8,12 @@ import { Work } from './entities/work.entity';
 import {
   CreditEntry,
   EntryMeta,
-  PartialDate,
   ToManyLinkage,
   ToOneLinkage,
   WITHDRAWN,
   content,
   creditAttributes,
   creditRelationships,
-  partialDate,
 } from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 
@@ -114,7 +113,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     description: recordingContent(({ recording }) => recording.description),
     isExplicit: recordingContent(({ recording }) => recording.isExplicit),
     isrc: recordingContent(({ recording }) => recording.isrc),
-    recordingDate: recordingContent(({ recording }) => partialDate(recording.recordingYear, recording.recordingMonth, recording.recordingDay)),
+    recordingDate: recordingContent(({ recording }) => partialDateResponse(recording, 'recording')),
     primaryGenreId: recordingContent(({ relations }) => (relations ? (relations.primaryGenreId === null ? null : String(relations.primaryGenreId)) : undefined)),
     createdAt: recordingContent(({ recording }) => recording.createdAt.toISOString()),
     updatedAt: recordingContent(({ recording }) => recording.updatedAt.toISOString()),

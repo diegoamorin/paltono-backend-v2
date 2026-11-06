@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { EntityManager } from 'typeorm';
+import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { CatalogIdentity, CatalogIdentityType, Organization, Person, PersonGender } from './entities/catalog-identity.entity';
 
 /*
@@ -7,12 +8,6 @@ import { CatalogIdentity, CatalogIdentityType, Organization, Person, PersonGende
  * flow calls them inside the transaction that applies a `create_entity`, so
  * the domain rows, the decision and the revision commit together.
  */
-
-export interface PartialDateValue {
-  year: number;
-  month?: number;
-  day?: number;
-}
 
 /** The value of an identity's creation, as its payload proposes it and its revision records it. */
 export interface IdentityCreationValue {
@@ -105,25 +100,12 @@ export async function findCreatedIdentity(manager: EntityManager, editorialEntit
       ...base,
       organization: {
         legalName: organization.legalName,
-        founding: partialDateValue(organization.foundingYear, organization.foundingMonth, organization.foundingDay),
-        dissolution: partialDateValue(organization.dissolutionYear, organization.dissolutionMonth, organization.dissolutionDay),
+        founding: partialDateValue(organization, 'founding'),
+        dissolution: partialDateValue(organization, 'dissolution'),
         originCountryId: organization.originCountryId,
       },
     },
   };
-}
-
-export function partialDateColumns(prefix: 'founding' | 'dissolution', date: PartialDateValue | null | undefined) {
-  return {
-    [`${prefix}Year`]: date?.year ?? null,
-    [`${prefix}Month`]: date?.month ?? null,
-    [`${prefix}Day`]: date?.day ?? null,
-  };
-}
-
-function partialDateValue(year: number | null, month: number | null, day: number | null): PartialDateValue | null {
-  if (year === null) return null;
-  return { year, ...(month !== null ? { month } : {}), ...(day !== null ? { day } : {}) };
 }
 
 const PUBLIC_ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';

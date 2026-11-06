@@ -1,11 +1,11 @@
 import { EntityManager } from 'typeorm';
+import { PartialDateValue } from '../common/partial-date/partial-date';
 import {
   RECORDING_FIELDS,
   RecordingFieldPath,
   RecordingGenreValue,
   RecordingValue,
   RecordingWorkValue,
-  PartialDateValue,
   createRecording,
   deleteRecordingGenre,
   deleteRecordingWork,
@@ -25,9 +25,9 @@ import { RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entit
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { PARTIAL_DATE, daysInMonth } from './identity-creation';
+import { PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import { INT4, ROW_KEY, reference } from './identity-relation-changes';
-import type { OperationDefinition, PayloadProblem, RowKey } from './operation-registry';
+import type { OperationDefinition, RowKey } from './operation-registry';
 import { DESCRIPTION, TITLE, envelope } from './work-changes';
 
 /*
@@ -47,12 +47,6 @@ const RECORDING = {
   properties: { title: TITLE, description: DESCRIPTION, isExplicit: IS_EXPLICIT, isrc: ISRC, recordingDate: PARTIAL_DATE },
 };
 
-/** A partial date names a real day of its month. */
-function checkDate(date: PartialDateValue | null | undefined, path: string): PayloadProblem[] {
-  if (date?.day === undefined || date.month === undefined || date.day <= daysInMonth(date.year, date.month)) return [];
-  return [{ path: `${path}/day`, detail: 'recordingDate is not a calendar date' }];
-}
-
 const noReferences = { references: () => [] } satisfies Pick<OperationDefinition, 'references'>;
 
 const RECORDING_CREATION: OperationDefinition = {
@@ -64,7 +58,7 @@ const RECORDING_CREATION: OperationDefinition = {
     'Alta mínima de una grabación: su título. El contenido explícito es `false` si no se indica; la fecha de grabación es parcial.',
   valueSchema: RECORDING,
   targetKeySchema: null,
-  check: (value) => checkDate((value as RecordingValue).recordingDate, '/value/recordingDate'),
+  check: (value) => partialDateProblems('recordingDate', (value as RecordingValue).recordingDate, '/value/recordingDate'),
   ...noReferences,
   read: async (manager, root) => {
     const created = await findCreatedRecording(manager, root.id);
@@ -93,7 +87,7 @@ const RECORDING_FIELD_CHANGES: OperationDefinition[] = (Object.keys(RECORDING_FI
   description: FIELD_RULES[path].description,
   valueSchema: FIELD_RULES[path].schema,
   targetKeySchema: null,
-  check: (value) => (path === 'recordings.recording_date' ? checkDate(value as PartialDateValue | null, '/value') : []),
+  check: (value) => (path === 'recordings.recording_date' ? partialDateProblems('recordingDate', value as PartialDateValue | null) : []),
   ...noReferences,
   read: async (manager, root) => {
     const created = await findCreatedRecording(manager, root.id);

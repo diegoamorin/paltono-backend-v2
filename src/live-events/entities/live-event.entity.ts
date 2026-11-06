@@ -1,6 +1,7 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
+import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { Country } from '../../vocabularies/entities/country.entity';
 
@@ -20,8 +21,6 @@ export type LiveArtistRole = (typeof LIVE_ARTIST_ROLES)[number];
 export const LINK_PURPOSES = ['official', 'tickets'] as const;
 export type LinkPurpose = (typeof LINK_PURPOSES)[number];
 
-const partialDateCheck = (prefix: string) =>
-  `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
 const urlCheck = (column: string) => `${column} ~* '^https?://[^\\s]+$'`;
 
 // Mirrors the CreateToursAndEvents migration, so `migration:generate` finds no drift.

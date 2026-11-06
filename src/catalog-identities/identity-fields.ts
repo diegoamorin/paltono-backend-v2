@@ -1,6 +1,7 @@
 import { EntityManager } from 'typeorm';
+import { PartialDateValue, partialDateColumns } from '../common/partial-date/partial-date';
 import { CatalogIdentity, CatalogIdentityType, Organization, Person } from './entities/catalog-identity.entity';
-import { IdentityCreationValue, PartialDateValue, findCreatedIdentity, partialDateColumns } from './identity-creations';
+import { IdentityCreationValue, findCreatedIdentity } from './identity-creations';
 
 /*
  * The fields of a published identity that `set_fields` can change, which this

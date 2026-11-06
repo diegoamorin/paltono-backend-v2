@@ -23,8 +23,6 @@ export const content =
   (entry: T): unknown =>
     isWithdrawn(root(entry)) ? undefined : read(entry);
 
-export const partialDate = (year: number | null, month: number | null, day: number | null) => (year === null ? null : { year, month, day });
-
 export type CreditScope = 'work' | 'recording' | 'release';
 
 export interface CreditEntry {
@@ -55,17 +53,6 @@ export const creditRelationships = {
 // Swagger descriptions shared by the resource objects.
 
 export const WITHDRAWN = 'Ausente en una ficha retirada';
-
-export class PartialDate {
-  @ApiProperty({ example: 2021 })
-  year: number;
-
-  @ApiProperty({ type: Number, nullable: true, example: 5 })
-  month: number | null;
-
-  @ApiProperty({ type: Number, nullable: true, example: null })
-  day: number | null;
-}
 
 export class EntryMeta {
   @ApiProperty({ format: 'uuid', description: 'UUID editorial con el que se proponen cambios a la ficha' })
