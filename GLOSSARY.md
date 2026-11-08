@@ -92,6 +92,22 @@ _Avoid_: Versión, que puede referirse a una edición, a una grabación alternat
 Posición de una grabación dentro de una edición.
 _Avoid_: Canción, que puede referirse a la obra, a la grabación o a la pista.
 
+**Crédito de artista (artist credit)**:
+Artistas de quienes es una grabación o un lanzamiento, cada uno como principal, invitado o remezclador. Es un hecho del catálogo, independiente de cómo lo imprima cada edición.
+_Avoid_: Crédito de presentación; crédito técnico, que es la autoría, interpretación o producción.
+
+**Crédito impreso (printed credit)**:
+Forma en que una edición acreditó a los artistas de una pista cuando se aparta del crédito de artista de su grabación, como "Becky G" sola en un recopilatorio o "JENNIE (BLACKPINK)" en el álbum del grupo. Si existe, sustituye entero al de la grabación en esa pista; si no, la pista muestra el de su grabación.
+_Avoid_: Crédito de artista de la pista como algo que toda pista tiene.
+
+**Fecha de lanzamiento de una grabación (recording release date)**:
+Fecha de la primera edición publicada y no cancelada que incluye la grabación, aunque esté anunciada a futuro. Se deduce de sus ediciones; es distinta de la fecha de grabación.
+_Avoid_: Fecha de grabación, que es cuándo se grabó.
+
+**Primera grabación (first recording)**:
+Grabación publicada que interpreta una obra con la fecha de lanzamiento más temprana del catálogo. Se deduce, así que puede ser un cover mientras la grabación original no esté en el catálogo; los samples y las interpolaciones no cuentan.
+_Avoid_: Grabación original, que es un hecho histórico que el catálogo no registra.
+
 **Repackage**:
 Lanzamiento propio que relanza el contenido de otro con material nuevo y suele tener otro título. Se vincula con el lanzamiento original.
 _Avoid_: Edición para referirse a un repackage.
