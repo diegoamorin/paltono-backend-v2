@@ -67,16 +67,22 @@ export class RecordingsService {
         { work },
       );
     }
-    // Artists are credited on the tracks of published releases that use the recording.
+    // In the recording's artist credit, or printed on a track of a published release that uses it.
     if (artist !== undefined) {
       builder.andWhere(
-        `EXISTS (
-          SELECT 1 FROM tracks track
-          JOIN releases release ON release.id = track.release_id
-          JOIN editorial_entities release_root ON release_root.id = release.editorial_entity_id
-          JOIN track_artist_credits credit ON credit.track_id = track.id
-          JOIN artists credited ON credited.id = credit.artist_id
-          WHERE track.recording_id = recording.id AND release_root.publication_status = 'published' AND credited.public_id = :artist
+        `(
+          EXISTS (
+            SELECT 1 FROM recording_artist_credits credit JOIN artists credited ON credited.id = credit.artist_id
+            WHERE credit.recording_id = recording.id AND credited.public_id = :artist
+          )
+          OR EXISTS (
+            SELECT 1 FROM tracks track
+            JOIN releases release ON release.id = track.release_id
+            JOIN editorial_entities release_root ON release_root.id = release.editorial_entity_id
+            JOIN track_artist_credits credit ON credit.track_id = track.id
+            JOIN artists credited ON credited.id = credit.artist_id
+            WHERE track.recording_id = recording.id AND release_root.publication_status = 'published' AND credited.public_id = :artist
+          )
         )`,
         { artist },
       );

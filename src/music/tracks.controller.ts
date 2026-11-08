@@ -22,8 +22,10 @@ const TRACKS_QUERY = collectionQuery(trackSchema, TRACKS_OPTIONS);
 const ARTIST_TRACKS_QUERY = collectionQuery(trackSchema, { ...TRACKS_OPTIONS, filters: ['rank'] });
 
 const TRACK =
-  '`displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `include` admite ' +
-  '`recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`.';
+  '`displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` ' +
+  'muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación ' +
+  '(`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, ' +
+  '`artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`.';
 
 /**
  * Tracks of the catalog (M6, M9, M10 and C9). A track has no editorial root:
@@ -82,8 +84,9 @@ export class TracksController {
   @ApiOperation({
     summary: 'Pistas acreditadas a un artista',
     description:
-      'Pistas de ediciones publicadas con crédito de presentación del artista, por disco y número. `filter[rank]` admite `main`, ' +
-      `\`featured\` y \`remixer\`. ${TRACK} Un artista cuya identidad está retirada no muestra pistas.`,
+      'Pistas de ediciones publicadas que muestran al artista, por disco y número: en su crédito impreso o, si no tienen, en el ' +
+      'crédito de artista de su grabación publicada. `filter[rank]` admite `main`, `featured` y `remixer`, y se aplica a ese ' +
+      `mismo crédito. ${TRACK} Un artista cuya identidad está retirada no muestra pistas.`,
   })
   @ApiParam({ name: 'id', description: 'public_id del perfil artístico' })
   @ApiJsonApiQuery(ARTIST_TRACKS_QUERY)

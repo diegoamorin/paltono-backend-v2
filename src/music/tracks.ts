@@ -6,7 +6,7 @@ import { recordingIdOf } from './recordings';
 import { RootReference } from './releases';
 
 /*
- * The writes of the tracks of a release, with their presentation credits and
+ * The writes of the tracks of a release, with their printed credits and
  * platform links. The editorial flow calls them inside the transaction that
  * applies a microchange of the release. Every read is scoped to one release,
  * so a key never reaches the track of another one.
@@ -20,7 +20,7 @@ export interface TrackValue {
   title?: string | null;
 }
 
-/** A presentation credit of a track, keyed by the track and the artist. */
+/** An artist of the printed credit of a track (ADR 0008), keyed by the track and the artist. */
 export interface TrackArtistCreditValue {
   rank: TrackArtistRank;
   position: number;
@@ -71,7 +71,7 @@ export async function deleteTrack(manager: EntityManager, releaseId: number, id:
 export async function trackReferences(manager: EntityManager, releaseId: number, id: number): Promise<string[]> {
   if (!(await manager.existsBy(Track, { id, releaseId }))) return [];
   const references: string[] = [];
-  if (await manager.existsBy(TrackArtistCredit, { trackId: id })) references.push('La pista tiene créditos de presentación; quítalos antes de quitar la pista');
+  if (await manager.existsBy(TrackArtistCredit, { trackId: id })) references.push('La pista tiene crédito impreso; quítalo antes de quitar la pista');
   if (await manager.existsBy(TrackPlatformLink, { trackId: id })) references.push('La pista tiene enlaces a plataformas; quítalos antes de quitar la pista');
   return references;
 }

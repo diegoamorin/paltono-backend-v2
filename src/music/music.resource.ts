@@ -1,9 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { Genre } from '../vocabularies/entities/genre.entity';
 import { GENRES } from '../vocabularies/genres';
-import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingWork } from './entities/recording.entity';
+import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingArtistCredit, RecordingWork } from './entities/recording.entity';
 import { Work } from './entities/work.entity';
 import {
   CreditEntry,
@@ -14,6 +15,7 @@ import {
   content,
   creditAttributes,
   creditRelationships,
+  creditedName,
 } from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 
@@ -33,6 +35,8 @@ export interface RecordingEntry {
   /** With its editorial root. */
   recording: Recording;
   relations?: {
+    /** By position. */
+    artistCredits: RecordingArtistCreditEntry[];
     contributions: CreditEntry[];
     /** The primary genre first. */
     genres: Genre[];
@@ -48,6 +52,25 @@ export interface RecordingWorkEntry {
   work: WorkEntry;
   recording: RecordingEntry;
 }
+
+/** An artist of a recording (ADR 0008), with the recording it credits, without its relations. */
+export interface RecordingArtistCreditEntry {
+  credit: RecordingArtistCredit;
+  recording: Recording;
+  artist: ArtistEntry;
+}
+
+export const recordingArtistCreditSchema: ResourceSchema<RecordingArtistCreditEntry> = defineResource({
+  type: 'recording-artist-credits',
+  id: ({ recording, artist }) => `${recording.publicId}.${artist.artist.publicId}`,
+  attributes: {
+    rank: ({ credit }) => credit.rank,
+    position: ({ credit }) => credit.position,
+    creditedAs: ({ credit }) => credit.creditedAs,
+    displayName: ({ credit, artist }) => creditedName(credit.creditedAs, artist),
+  },
+  relationships: { artist: { schema: () => artistSchema, get: ({ artist }) => artist } },
+});
 
 export const workContributionSchema: ResourceSchema<CreditEntry> = defineResource({
   type: 'work-contributions',
@@ -119,6 +142,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     updatedAt: recordingContent(({ recording }) => recording.updatedAt.toISOString()),
   },
   relationships: {
+    artistCredits: { schema: () => recordingArtistCreditSchema, get: ({ relations }) => relations?.artistCredits },
     contributions: { schema: () => recordingContributionSchema, get: ({ relations }) => relations?.contributions },
     genres: { schema: () => GENRES.schema, get: ({ relations }) => relations?.genres },
     recordingWorks: { schema: () => recordingWorkSchema, get: ({ relations }) => relations?.recordingWorks },
@@ -213,6 +237,9 @@ class RecordingAttributes {
 }
 
 class RecordingRelationships {
+  @ApiProperty({ type: ToManyLinkage, description: '`recording-artist-credits`: su crédito de artista, por `position`' })
+  artistCredits: ToManyLinkage;
+
   @ApiProperty({ type: ToManyLinkage, description: '`recording-contributions`, por `position`' })
   contributions: ToManyLinkage;
 

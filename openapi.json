@@ -6488,7 +6488,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -6700,7 +6700,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -6802,7 +6802,25 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -6883,7 +6901,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
             "schema": {
               "type": "string"
             }
@@ -7003,14 +7021,32 @@
     },
     "/v1/recordings": {
       "get": {
-        "description": "Grabaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista acreditado en una pista; `filter[year]`, el año de grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate` (fechas desconocidas al final) o `-createdAt`.",
+        "description": "Grabaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate` (fechas desconocidas al final) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`.",
         "operationId": "RecordingsController_list",
         "parameters": [
           {
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -7091,7 +7127,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
             "schema": {
               "type": "string"
             }
@@ -7257,7 +7293,7 @@
     },
     "/v1/recordings/{id}": {
       "get": {
-        "description": "Título, contenido explícito, ISRC y fecha parcial de grabación, con sus créditos, géneros, obras y apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
+        "description": "Título, contenido explícito, ISRC y fecha parcial de grabación, con su crédito de artista, sus créditos, géneros, obras y apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
         "operationId": "RecordingsController_show",
         "parameters": [
           {
@@ -7273,7 +7309,25 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -7354,7 +7408,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, tracks, tracks.release",
             "schema": {
               "type": "string"
             }
@@ -7483,7 +7537,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -7654,7 +7708,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -7856,7 +7910,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -7994,7 +8048,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -8012,7 +8066,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8208,7 +8262,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -8372,7 +8426,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -8390,7 +8444,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8601,7 +8655,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -8619,7 +8673,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8748,7 +8802,7 @@
             "name": "fields[release-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, artist",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -8895,7 +8949,7 @@
     },
     "/v1/tracks/{id}": {
       "get": {
-        "description": "Disco, número y título de una pista, con su edición y su grabación. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una pista de una edición retirada responde 404.",
+        "description": "Disco, número y título de una pista, con su edición y su grabación. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación (`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una pista de una edición retirada responde 404.",
         "operationId": "TracksController_show",
         "parameters": [
           {
@@ -8920,7 +8974,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8929,7 +8983,16 @@
             "name": "fields[track-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, artist",
+            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -9043,7 +9106,7 @@
     },
     "/v1/releases/{id}/tracks": {
       "get": {
-        "description": "Tracklist de la edición, por disco y número. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una edición retirada no muestra pistas.",
+        "description": "Tracklist de la edición, por disco y número. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación (`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una edición retirada no muestra pistas.",
         "operationId": "TracksController_ofRelease",
         "parameters": [
           {
@@ -9068,7 +9131,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9077,7 +9140,16 @@
             "name": "fields[track-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, artist",
+            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -9226,7 +9298,7 @@
     },
     "/v1/recordings/{id}/tracks": {
       "get": {
-        "description": "Pistas de ediciones publicadas que usan la grabación, por disco y número. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una grabación retirada no muestra apariciones.",
+        "description": "Pistas de ediciones publicadas que usan la grabación, por disco y número. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación (`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Una grabación retirada no muestra apariciones.",
         "operationId": "TracksController_ofRecording",
         "parameters": [
           {
@@ -9251,7 +9323,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9260,7 +9332,16 @@
             "name": "fields[track-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, artist",
+            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -9409,7 +9490,7 @@
     },
     "/v1/artists/{id}/tracks": {
       "get": {
-        "description": "Pistas de ediciones publicadas con crédito de presentación del artista, por disco y número. `filter[rank]` admite `main`, `featured` y `remixer`. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Un artista cuya identidad está retirada no muestra pistas.",
+        "description": "Pistas de ediciones publicadas que muestran al artista, por disco y número: en su crédito impreso o, si no tienen, en el crédito de artista de su grabación publicada. `filter[rank]` admite `main`, `featured` y `remixer`, y se aplica a ese mismo crédito. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación (`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`. Un artista cuya identidad está retirada no muestra pistas.",
         "operationId": "TracksController_ofArtist",
         "parameters": [
           {
@@ -9434,7 +9515,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9443,7 +9524,16 @@
             "name": "fields[track-artist-credits]",
             "required": false,
             "in": "query",
-            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, artist",
+            "description": "Campos de track-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
             "schema": {
               "type": "string"
             }
@@ -16222,7 +16312,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -19553,6 +19643,14 @@
       "RecordingRelationships": {
         "type": "object",
         "properties": {
+          "artistCredits": {
+            "description": "`recording-artist-credits`: su crédito de artista, por `position`",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToManyLinkage"
+              }
+            ]
+          },
           "contributions": {
             "description": "`recording-contributions`, por `position`",
             "allOf": [
@@ -19587,6 +19685,7 @@
           }
         },
         "required": [
+          "artistCredits",
           "contributions",
           "genres",
           "recordingWorks",
@@ -20112,7 +20211,7 @@
             ]
           },
           "artistCredits": {
-            "description": "`track-artist-credits`, por `position`",
+            "description": "Los artistas que muestra, por `position`: su crédito impreso (`track-artist-credits`) si lo tiene y, si no, el crédito de artista de su grabación (`recording-artist-credits`), leído al mostrarla; vacío si la grabación está retirada",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToManyLinkage"

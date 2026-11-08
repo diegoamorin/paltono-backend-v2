@@ -3,15 +3,15 @@ import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { PLATFORMS } from '../vocabularies/platforms';
 import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
-import { RecordingEntry, recordingSchema } from './music.resource';
+import { RecordingArtistCreditEntry, RecordingEntry, recordingArtistCreditSchema, recordingSchema } from './music.resource';
 import { ReleaseEntry, releaseSchema } from './release.resource';
-import { ToManyLinkage, ToOneLinkage, isWithdrawn } from './resource-primitives';
+import { ToManyLinkage, ToOneLinkage, creditedName, isWithdrawn } from './resource-primitives';
 
 /*
- * The public resources of tracks, their presentation credits and platform
- * links. A track is no editorial root: it is shown while its release is
- * published. Reached as the target of a relationship it carries no credits
- * nor links (`relations` undefined).
+ * The public resources of tracks, their printed credits and platform links. A
+ * track is no editorial root: it is shown while its release is published.
+ * Reached as the target of a relationship it carries no credits nor links
+ * (`relations` undefined).
  */
 
 export interface TrackEntry {
@@ -19,9 +19,14 @@ export interface TrackEntry {
   /** Its release and recording, without relations; either may show only its withdrawal notice. */
   release: ReleaseEntry;
   recording: RecordingEntry;
-  relations?: { artistCredits: TrackArtistCreditEntry[]; platformLinks: TrackPlatformLink[] };
+  relations?: {
+    /** The credit it shows (ADR 0008): its printed credit, or else the artist credit of its recording, by position. */
+    artistCredits: (TrackArtistCreditEntry | RecordingArtistCreditEntry)[];
+    platformLinks: TrackPlatformLink[];
+  };
 }
 
+/** A printed credit of a track. */
 export interface TrackArtistCreditEntry {
   credit: TrackArtistCredit;
   artist: ArtistEntry;
@@ -34,9 +39,12 @@ export const trackArtistCreditSchema: ResourceSchema<TrackArtistCreditEntry> = d
     rank: ({ credit }) => credit.rank,
     position: ({ credit }) => credit.position,
     creditedAs: ({ credit }) => credit.creditedAs,
+    displayName: ({ credit, artist }) => creditedName(credit.creditedAs, artist),
   },
   relationships: { artist: { schema: () => artistSchema, get: ({ artist }) => artist } },
 });
+
+const isPrinted = (entry: unknown): entry is TrackArtistCreditEntry => (entry as TrackArtistCreditEntry).credit instanceof TrackArtistCredit;
 
 export const trackPlatformLinkSchema: ResourceSchema<TrackPlatformLink> = defineResource({
   type: 'track-platform-links',
@@ -58,7 +66,12 @@ export const trackSchema: ResourceSchema<TrackEntry> = defineResource({
   relationships: {
     release: { schema: () => releaseSchema, get: ({ release }) => release },
     recording: { schema: () => recordingSchema, get: ({ recording }) => recording },
-    artistCredits: { schema: () => trackArtistCreditSchema, get: ({ relations }) => relations?.artistCredits },
+    artistCredits: {
+      schema: () => trackArtistCreditSchema,
+      // The type of each credit tells a printed one from one the recording lends.
+      polymorphic: { others: () => [recordingArtistCreditSchema], of: (credit) => (isPrinted(credit) ? trackArtistCreditSchema : recordingArtistCreditSchema) },
+      get: ({ relations }) => relations?.artistCredits,
+    },
     platformLinks: { schema: () => trackPlatformLinkSchema, get: ({ relations }) => relations?.platformLinks },
   },
 });
@@ -86,7 +99,13 @@ class TrackRelationships {
   @ApiProperty({ type: ToOneLinkage, description: '`recordings`' })
   recording: ToOneLinkage;
 
-  @ApiProperty({ type: ToManyLinkage, required: false, description: '`track-artist-credits`, por `position`' })
+  @ApiProperty({
+    type: ToManyLinkage,
+    required: false,
+    description:
+      'Los artistas que muestra, por `position`: su crédito impreso (`track-artist-credits`) si lo tiene y, si no, el crédito de ' +
+      'artista de su grabación (`recording-artist-credits`), leído al mostrarla; vacío si la grabación está retirada',
+  })
   artistCredits?: ToManyLinkage;
 
   @ApiProperty({ type: ToManyLinkage, required: false, description: '`track-platform-links`' })

@@ -19,6 +19,12 @@ export interface RelationshipSchema<T> {
   /** Lazy, so schemas can refer to each other. */
   schema(): AnyResourceSchema;
   /**
+   * For a relationship whose related models have different types: the schemas
+   * they may have besides `schema()`, and the one of each model. Its include
+   * paths are checked against `schema()`.
+   */
+  polymorphic?: { others(): AnyResourceSchema[]; of(related: unknown): AnyResourceSchema };
+  /**
    * The related model, models, or `null` for an empty to-one relationship.
    * Returns `undefined` when the relationship was not loaded; it is then omitted.
    */
@@ -27,6 +33,16 @@ export interface RelationshipSchema<T> {
 
 export function defineResource<T>(schema: ResourceSchema<T>): ResourceSchema<T> {
   return schema;
+}
+
+/** The schema of a model a relationship relates to. */
+export function relatedSchema(relationship: RelationshipSchema<any>, related: unknown): AnyResourceSchema {
+  return relationship.polymorphic?.of(related) ?? relationship.schema();
+}
+
+/** Every schema the models a relationship relates to may have. */
+export function relatedSchemas(relationship: RelationshipSchema<any>): AnyResourceSchema[] {
+  return [relationship.schema(), ...(relationship.polymorphic?.others() ?? [])];
 }
 
 /** Attribute and relationship names, which share one namespace in JSON:API. */

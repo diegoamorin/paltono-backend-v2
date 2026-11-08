@@ -296,8 +296,8 @@ describe('release groups and releases in the editorial flow', () => {
       const { body } = await getJsonApi(app, `/v1/release-groups/${group.id}?include=artistCredits.artist`).expect(200);
       const credits = body.included.filter(({ type }: { type: string }) => type === 'release-artist-credits');
       expect(credits.map(({ attributes }: { attributes: object }) => attributes)).toEqual([
-        { position: 0, creditedAs: '방탄소년단' },
-        { position: 1, creditedAs: null },
+        { position: 0, creditedAs: '방탄소년단', displayName: '방탄소년단' },
+        { position: 1, creditedAs: null, displayName: 'Halsey' },
       ]);
       expect(credits.map(({ relationships }: { relationships: { artist: { data: { id: string } } } }) => relationships.artist.data.id)).toEqual([bts.id, halsey.id]);
       const discography = await getJsonApi(app, `/v1/artists/${bts.id}/release-groups`).expect(200);

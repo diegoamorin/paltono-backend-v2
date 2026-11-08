@@ -3,6 +3,7 @@ import { EditorialEntity } from '../editorial/entities/editorial-entity.entity';
 import { Release } from './entities/release.entity';
 import { Track } from './entities/track.entity';
 import { trackEntries } from './track-entries';
+import { recordingArtistCreditEntries } from './artist-credit-entries';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
@@ -41,6 +42,7 @@ export async function workEntries(manager: EntityManager, works: Work[]): Promis
 export async function recordingEntries(manager: EntityManager, recordings: Recording[], now: Date): Promise<RecordingEntry[]> {
   const ids = recordings.filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return recordings.map((recording) => ({ recording, relations: null }));
+  const artistCredits = await recordingArtistCreditEntries(manager, recordings.filter(notWithdrawn));
   const credits = await manager.find(RecordingContribution, { where: { recordingId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });
   const contributions = await creditEntries(manager, 'recording', credits);
   const genres = await manager.find(RecordingGenre, {
@@ -69,6 +71,7 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
     return {
       recording,
       relations: {
+        artistCredits: artistCredits.filter(({ credit }) => credit.recordingId === recording.id),
         contributions: contributions.filter(({ credit }) => (credit as RecordingContribution).recordingId === recording.id),
         genres: own.map(({ genre }) => genre!),
         primaryGenreId: own.find(({ isPrimary }) => isPrimary)?.genreId ?? null,

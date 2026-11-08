@@ -1,4 +1,5 @@
 import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
@@ -9,9 +10,13 @@ import { Credit, Work, applyAll, creditChecks, creditJoins } from './work.entity
 
 /*
  * The recording editorial root's domain rows and the rows it owns: its
- * credits, genres and the works it relates to. Only applied microchanges
- * write them.
+ * credits, artist credit, genres and the works it relates to. Only applied
+ * microchanges write them.
  */
+
+/** The ranks of an artist credit, of a recording or printed on a track. */
+export const TRACK_ARTIST_RANKS = ['main', 'featured', 'remixer'] as const;
+export type TrackArtistRank = (typeof TRACK_ARTIST_RANKS)[number];
 
 export const RECORDING_WORK_RELATION_TYPES = ['performance', 'interpolation', 'sample'] as const;
 export type RecordingWorkRelationType = (typeof RECORDING_WORK_RELATION_TYPES)[number];
@@ -93,6 +98,47 @@ export class RecordingContribution extends Credit {
 
   @applyAll(recordingCreditJoins.role)
   roleInScope?: ContributionRoleScope;
+}
+
+/**
+ * An artist of a recording: main, featured or remixer, in order (ADR 0008).
+ * A track without a printed credit shows these. A recording may have none.
+ */
+// Mirrors the CreateRecordingArtistCredits migration.
+@Entity('recording_artist_credits')
+@Index('recording_artist_credits_recording_id_idx', ['recordingId'])
+@Check('recording_artist_credits_position_nonnegative', `position >= 0`)
+@Check('recording_artist_credits_credited_as_nonblank', `credited_as IS NULL OR btrim(credited_as) <> ''`)
+export class RecordingArtistCredit {
+  @PrimaryColumn({ name: 'artist_id', type: 'integer', primaryKeyConstraintName: 'recording_artist_credits_pkey' })
+  artistId: number;
+
+  @ManyToOne(() => Artist, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'artist_id', foreignKeyConstraintName: 'recording_artist_credits_artist_id_fkey' })
+  artist?: Artist;
+
+  @PrimaryColumn({ name: 'recording_id', type: 'integer', primaryKeyConstraintName: 'recording_artist_credits_pkey' })
+  recordingId: number;
+
+  @ManyToOne(() => Recording, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'recording_id', foreignKeyConstraintName: 'recording_artist_credits_recording_id_fkey' })
+  recording?: Recording;
+
+  @Column({ type: 'enum', enum: TRACK_ARTIST_RANKS, enumName: 'track_artist_rank' })
+  rank: TrackArtistRank;
+
+  @Column({ type: 'smallint' })
+  position: number;
+
+  /** The literal name in the source; null shows the identity's display name. */
+  @Column({ name: 'credited_as', type: 'varchar', length: 200, nullable: true })
+  creditedAs: string | null;
+
+  @Column({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
+
+  @Column({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
 }
 
 /** A work a recording performs, interpolates or samples; `position` orders the works of a medley. */

@@ -3857,6 +3857,93 @@
     },
     "targetKeySchema": null
   },
+  "recording.add_relation.recording_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y grabación"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "artist_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
   "recording.add_relation.recording_contributions.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -4167,6 +4254,59 @@
     },
     "targetKeySchema": null
   },
+  "recording.remove_relation.recording_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "artist_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
   "recording.remove_relation.recording_contributions.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -4451,6 +4591,93 @@
       }
     },
     "targetKeySchema": null
+  },
+  "recording.update_relation.recording_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y grabación"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "artist_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
   },
   "recording.update_relation.recording_contributions.v1": {
     "payloadSchema": {

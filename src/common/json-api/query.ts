@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { JsonApiException } from './json-api.exception';
-import { AnyResourceSchema, fieldNames } from './resource-schema';
+import { AnyResourceSchema, fieldNames, relatedSchemas } from './resource-schema';
 
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
@@ -199,8 +199,16 @@ function allowedIncludes(schemas: AnyResourceSchema[], paths: string[]): Set<str
 }
 
 function fieldsByType(schemas: AnyResourceSchema[], include: ReadonlySet<string>): Map<string, Set<string>> {
-  const all = [...schemas, ...[...include].flatMap((path) => resolvedPaths(schemas, path.split('.')))];
+  const all = [...schemas, ...[...include].flatMap((path) => reachedSchemas(schemas, path.split('.')))];
   return new Map(all.map((each) => [each.type, new Set(fieldNames(each))]));
+}
+
+/** Every schema a relationship path may reach from the given ones, through each type a polymorphic relationship relates to. */
+function reachedSchemas(schemas: AnyResourceSchema[], segments: string[]): AnyResourceSchema[] {
+  return segments.reduce(
+    (current, segment) => current.flatMap((each) => (each.relationships?.[segment] ? relatedSchemas(each.relationships[segment]) : [])),
+    schemas,
+  );
 }
 
 /** The schemas at the end of a relationship path from each of the given ones that has it. */

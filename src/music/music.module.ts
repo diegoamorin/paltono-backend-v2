@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
+import { Recording, RecordingArtistCredit, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
 import { Work, WorkContribution } from './entities/work.entity';
 import { ArtistReleaseGroupsController } from './artist-release-groups.controller';
 import { Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
@@ -32,6 +32,7 @@ import { WorksService } from './works.service';
       WorkContribution,
       Recording,
       RecordingContribution,
+      RecordingArtistCredit,
       RecordingWork,
       RecordingGenre,
       ReleaseGroup,

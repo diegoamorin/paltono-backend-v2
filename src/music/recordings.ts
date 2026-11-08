@@ -3,11 +3,11 @@ import { EntityManager, Not } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Work } from './entities/work.entity';
-import { Recording, RecordingGenre, RecordingWork, RecordingWorkRelationType } from './entities/recording.entity';
+import { Recording, RecordingArtistCredit, RecordingGenre, RecordingWork, RecordingWorkRelationType, TrackArtistRank } from './entities/recording.entity';
 
 /*
  * The writes of a recording and of the rows it owns besides its credits
- * (`credits.ts`): its genres and the works it relates to. The editorial flow
+ * (`credits.ts`): its artist credit, its genres and the works it relates to. The editorial flow
  * calls them inside the transaction that applies a microchange. Every read is
  * scoped to one recording, so a key never reaches the row of another one.
  */
@@ -93,6 +93,39 @@ export async function writeRecordingField(
   const columns = field === 'recordingDate' ? partialDateColumns('recording', value as PartialDateValue | null) : { [field]: value };
   await manager.update(Recording, { editorialEntityId }, { ...columns, updatedAt: now });
   return (await findCreatedRecording(manager, editorialEntityId))!.value[field];
+}
+
+/** An artist of a recording, keyed by the recording and the artist. */
+export interface RecordingArtistCreditValue {
+  rank: TrackArtistRank;
+  position: number;
+  creditedAs?: string | null;
+}
+
+export async function findRecordingArtistCredit(manager: EntityManager, recordingId: number, artistId: number): Promise<Required<RecordingArtistCreditValue> | null> {
+  const row = await manager.findOneBy(RecordingArtistCredit, { recordingId, artistId });
+  return row && { rank: row.rank, position: row.position, creditedAs: row.creditedAs };
+}
+
+export async function writeRecordingArtistCredit(
+  manager: EntityManager,
+  recordingId: number,
+  artistId: number,
+  value: RecordingArtistCreditValue,
+  now: Date,
+): Promise<void> {
+  const columns = { rank: value.rank, position: value.position, creditedAs: value.creditedAs ?? null };
+  if (await manager.existsBy(RecordingArtistCredit, { recordingId, artistId })) {
+    await manager.update(RecordingArtistCredit, { recordingId, artistId }, { ...columns, updatedAt: now });
+  } else {
+    await manager.insert(RecordingArtistCredit, { recordingId, artistId, ...columns, createdAt: now, updatedAt: now });
+  }
+  await touchRecording(manager, recordingId, now);
+}
+
+export async function deleteRecordingArtistCredit(manager: EntityManager, recordingId: number, artistId: number, now: Date): Promise<void> {
+  await manager.delete(RecordingArtistCredit, { recordingId, artistId });
+  await touchRecording(manager, recordingId, now);
 }
 
 export async function findRecordingGenre(manager: EntityManager, recordingId: number, genreId: number): Promise<RecordingGenreValue | null> {

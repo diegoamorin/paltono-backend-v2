@@ -113,7 +113,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C6 | `GET /v1/artists` | Perfiles artísticos | ok val |
 | C7 | `GET /v1/artists/{id}` | Perfil y su identidad | ok authz |
 | C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de presentación, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
-| C9 | `GET /v1/artists/{id}/tracks` | Pistas acreditadas (`filter[rank]`) | ok val |
+| C9 | `GET /v1/artists/{id}/tracks` | Pistas cuyo crédito mostrado incluye al artista: el impreso si existe; si no, el de su grabación publicada (`filter[rank]`, sobre ese mismo crédito) | ok val |
 | C10 | `GET /v1/artists/{id}/events` y `/tours` | Anunciado en eventos y tours | ok val |
 | C11 | `GET /v1/anniversaries` | Aniversarios: una fila por cada fecha con mes conocido (`birth`, `death`, `debut`, `founding`, `dissolution`) de una identidad publicada. Sin consulta individual | ok val |
 
@@ -147,10 +147,12 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
 | `works` | `q` (título), `slug`, `iswc`, `contributor` (identidad), `role` | `title` (defecto), `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `recordingWorks`, `recordingWorks.recording` |
-| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de pista), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release` |
+| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de artista de la grabación, o crédito impreso de una pista en una edición publicada), `year`, `isExplicit` | `title` (defecto), `-recordingDate`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release` |
 | `release-groups` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `releases`, `repackageOf` |
 | `releases` | `q`, `releaseGroup`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `releaseGroup`, `releaseGroup.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
 | `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks`, `platformLinks.platform` |
+
+Créditos de artista (ADR 0008): `recording-artist-credits` (id `{grabación}.{artista}`) es el crédito de artista de una grabación; `track-artist-credits` (id `{pista}.{artista}`), el crédito impreso de una pista; `release-artist-credits`, el de un lanzamiento. Los tres tienen `displayName`: `creditedAs` o, si falta, el nombre visible de la identidad del artista, y la relación `artist` con el perfil artístico. La relación `artistCredits` de `tracks` apunta al crédito impreso si la pista lo tiene y, si no, al de su grabación, leído al mostrarla; el `type` de cada elemento dice cuál es. Una grabación retirada no presta su crédito.
 
 ## 6. Catálogo: eventos y tours (módulo `live-events`)
 

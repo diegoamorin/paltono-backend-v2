@@ -55,7 +55,11 @@ export class TracksService {
     return this.page(publishedTracksOf(this.dataSource.manager).andWhere('track.recording_id = :recordingId', { recordingId: recording.recording.id }), query);
   }
 
-  /** The tracks of published releases an artist is credited on, optionally with one rank only. */
+  /**
+   * The tracks of published releases whose shown credit has the artist,
+   * optionally with one rank only: their printed credit or, without one, the
+   * credit of their published recording (ADR 0008).
+   */
   async ofArtist(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
     const { rank } = query.filter;
     if (rank !== undefined) requireOneOf('filter[rank]', rank, TRACK_ARTIST_RANKS);
@@ -64,10 +68,19 @@ export class TracksService {
     // The profile of a withdrawn identity shows only its notice.
     if (artist.identity!.editorialEntity!.publicationStatus === 'withdrawn') return { entries: [], total: 0 };
     const builder = publishedTracksOf(this.dataSource.manager).andWhere(
-      `EXISTS (
-        SELECT 1 FROM track_artist_credits credit
-        WHERE credit.track_id = track.id AND credit.artist_id = :artistId
-          AND (CAST(:rank AS track_artist_rank) IS NULL OR credit.rank = :rank)
+      `(
+        EXISTS (
+          SELECT 1 FROM track_artist_credits credit
+          WHERE credit.track_id = track.id AND credit.artist_id = :artistId
+            AND (CAST(:rank AS track_artist_rank) IS NULL OR credit.rank = :rank)
+        )
+        OR NOT EXISTS (SELECT 1 FROM track_artist_credits printed WHERE printed.track_id = track.id) AND EXISTS (
+          SELECT 1 FROM recording_artist_credits credit
+          JOIN recordings lender ON lender.id = credit.recording_id
+          JOIN editorial_entities lender_root ON lender_root.id = lender.editorial_entity_id
+          WHERE credit.recording_id = track.recording_id AND credit.artist_id = :artistId AND lender_root.publication_status = 'published'
+            AND (CAST(:rank AS track_artist_rank) IS NULL OR credit.rank = :rank)
+        )
       )`,
       { artistId: artist.id, rank: rank ?? null },
     );

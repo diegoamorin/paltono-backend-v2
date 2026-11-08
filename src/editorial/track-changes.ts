@@ -34,7 +34,7 @@ import { artistProblems } from './release-credit-changes';
 
 /*
  * Relation changes of the tracks of a release, which owns them: the tracks,
- * keyed by their generated id, the presentation credits of each track, keyed
+ * keyed by their generated id, the printed credits of each track, keyed
  * by the track and the artist, and its platform links. An insertion names the
  * release in its key, so a release created by the same proposal can receive
  * its tracks; a credit or a link names its track by id or by the insertion of
@@ -161,7 +161,7 @@ async function trackGone(manager: EntityManager, root: EditorialEntity, key: Row
   return (await isTrackOf(manager, await releaseOrFail(manager, root), key!.track_id)) ? [] : ['La pista ya no existe'];
 }
 
-// Presentation credits of a track
+// Printed credits of a track (ADR 0008): the payload keeps its v1, only its meaning changed
 
 const TRACK_CREDIT_KEY = {
   type: 'object',
@@ -224,14 +224,17 @@ const creditWrite = (operation: 'add_relation' | 'update_relation', description:
 const TRACK_CREDIT_CHANGES: OperationDefinition[] = [
   creditWrite(
     'add_relation',
-    'Presenta una pista con un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`). Su clave es la pista y ' +
-      'la identidad del artista. No atribuye autoría, interpretación ni producción.',
+    'Añade un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`) al crédito impreso de una pista, solo ' +
+      'cuando la edición acredita la grabación de otra forma. Una pista con crédito impreso lo muestra entero en lugar del crédito ' +
+      'de artista de su grabación. Su clave es la pista y la identidad del artista. No atribuye autoría, interpretación ni producción.',
   ),
-  creditWrite('update_relation', 'Cambia la clase, la posición o el nombre acreditado de un artista de la pista.'),
+  creditWrite('update_relation', 'Cambia la clase, la posición o el nombre acreditado de un artista del crédito impreso de la pista.'),
   {
     ...creditBase,
     operation: 'remove_relation',
-    description: 'Quita un artista de la presentación de la pista; la revisión guarda sus valores anteriores.',
+    description:
+      'Quita un artista del crédito impreso de la pista; sin ninguno, la pista muestra el crédito de su grabación. La revisión ' +
+      'guarda sus valores anteriores.',
     valueSchema: null,
     apply: async (manager, root, _value, now, key) => {
       await deleteTrackArtistCredit(manager, await releaseOrFail(manager, root), key!.track_id, key!.artist_id, now);

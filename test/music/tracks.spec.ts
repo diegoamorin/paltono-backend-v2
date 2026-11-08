@@ -153,8 +153,8 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
       expect(body.data.attributes).toEqual({ discNumber: 2, trackNumber: 1, title: null, displayTitle: 'Butter (feat. Megan Thee Stallion)' });
       const credits = body.included.filter(({ type }: { type: string }) => type === 'track-artist-credits');
       expect(credits.map(({ attributes }: { attributes: object }) => attributes)).toEqual([
-        { rank: 'main', position: 0, creditedAs: null },
-        { rank: 'featured', position: 1, creditedAs: null },
+        { rank: 'main', position: 0, creditedAs: null, displayName: 'BTS' },
+        { rank: 'featured', position: 1, creditedAs: null, displayName: 'Megan Thee Stallion' },
       ]);
     });
 

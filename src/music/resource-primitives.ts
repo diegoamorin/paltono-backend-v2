@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import type { ArtistEntry } from '../catalog-identities/artist.resource';
 import { IdentityEntry, identitySchema } from '../catalog-identities/identity.resource';
 import { ResourceIdentifier } from '../common/json-api/swagger';
 import { CONTRIBUTION_ROLES } from '../vocabularies/contribution-roles';
@@ -22,6 +23,13 @@ export const content =
   <T>(root: (entry: T) => Root, read: (entry: T) => unknown) =>
   (entry: T): unknown =>
     isWithdrawn(root(entry)) ? undefined : read(entry);
+
+/**
+ * The name an artist credit shows: its credited name or, without one, the
+ * display name of the artist's identity, which a withdrawn identity does not show.
+ */
+export const creditedName = (creditedAs: string | null, { identity }: ArtistEntry): string | null =>
+  creditedAs ?? (identity.identity.editorialEntity!.publicationStatus === 'withdrawn' ? null : identity.identity.displayName);
 
 export type CreditScope = 'work' | 'recording' | 'release';
 

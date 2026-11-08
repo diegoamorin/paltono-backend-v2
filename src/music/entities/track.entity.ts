@@ -3,19 +3,18 @@ import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScope, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
 import { Platform } from '../../vocabularies/entities/platform.entity';
-import { Recording } from './recording.entity';
+import { Recording, TRACK_ARTIST_RANKS, TrackArtistRank } from './recording.entity';
 import { Release } from './release.entity';
 import { Credit, applyAll, creditChecks, creditJoins } from './work.entity';
 
 /*
- * The rows a release owns besides its fields: its tracks, with their
- * presentation credits and platform links, and the credits of the release.
- * A track has no editorial root of its own; only applied microchanges of its
- * release write them.
+ * The rows a release owns besides its fields: its tracks, with their printed
+ * credits and platform links, and the credits of the release. A track has no
+ * editorial root of its own; only applied microchanges of its release write
+ * them.
  */
 
-export const TRACK_ARTIST_RANKS = ['main', 'featured', 'remixer'] as const;
-export type TrackArtistRank = (typeof TRACK_ARTIST_RANKS)[number];
+export { TRACK_ARTIST_RANKS, TrackArtistRank };
 
 // Mirrors the CreateTracksAndReleaseContributions migration, so `migration:generate` finds no drift.
 @Entity('tracks')
@@ -58,7 +57,12 @@ export class Track {
   updatedAt: Date;
 }
 
-/** An artist a track is presented with: main, featured or remixer, in order. It credits no authorship nor performance. */
+/**
+ * An artist a track is presented with: main, featured or remixer, in order.
+ * It is a printed credit (ADR 0008): when a track has any, they replace the
+ * artist credit of its recording on that track. It credits no authorship nor
+ * performance.
+ */
 @Entity('track_artist_credits')
 @Index('track_artist_credits_track_id_idx', ['trackId'])
 @Check('track_artist_credits_position_nonnegative', `position >= 0`)

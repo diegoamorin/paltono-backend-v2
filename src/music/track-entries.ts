@@ -1,17 +1,17 @@
 import { EntityManager, In } from 'typeorm';
-import { Artist } from '../catalog-identities/entities/artist.entity';
-import { identityEntriesById } from '../catalog-identities/identities.service';
+import { recordingArtistCreditEntries, trackArtistCreditEntries } from './artist-credit-entries';
 import { Recording } from './entities/recording.entity';
 import { Release } from './entities/release.entity';
-import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
+import { Track, TrackPlatformLink } from './entities/track.entity';
 import { releaseEntries } from './release-entries';
+import { isWithdrawn } from './resource-primitives';
 import { TrackEntry } from './track.resource';
 
 /*
  * Loads tracks as entries with their release and recording, and, for the
- * primary data, their presentation credits and platform links. The release
- * and the recording carry no relations of their own, as an include reaches at
- * most two levels.
+ * primary data, the artist credit each shows and their platform links. The
+ * release and the recording carry no relations of their own, as an include
+ * reaches at most two levels.
  */
 
 export async function trackEntries(manager: EntityManager, tracks: Track[], now: Date, withRelations = true): Promise<TrackEntry[]> {
@@ -27,33 +27,30 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
     now,
     false,
   );
-  const credits = withRelations ? await artistCreditEntries(manager, ids) : [];
+  const printed = withRelations ? await trackArtistCreditEntries(manager, ids) : [];
+  // A track without a printed credit shows its recording's, read now and never copied; a withdrawn recording lends none.
+  const unprinted = new Set(tracks.filter(({ id }) => !printed.some(({ credit }) => credit.trackId === id)).map(({ recordingId }) => recordingId));
+  const lent = withRelations ? await recordingArtistCreditEntries(manager, recordings.filter((recording) => unprinted.has(recording.id) && !isWithdrawn(recording))) : [];
   const links = withRelations
     ? await manager.find(TrackPlatformLink, { where: { trackId: In(ids) }, relations: { platform: true }, order: { id: 'ASC' } })
     : [];
-  return tracks.map((track) => ({
-    track,
-    release: releases.find(({ release }) => release.id === track.releaseId)!,
-    recording: { recording: recordings.find(({ id }) => id === track.recordingId)! },
-    ...(withRelations
-      ? {
-          relations: {
-            artistCredits: credits.filter(({ credit }) => credit.trackId === track.id),
-            platformLinks: links.filter(({ trackId }) => trackId === track.id),
-          },
-        }
-      : {}),
-  }));
-}
-
-/** The presentation credits of the tracks, by position, with their artists and identities. */
-async function artistCreditEntries(manager: EntityManager, trackIds: number[]) {
-  const credits = await manager.find(TrackArtistCredit, { where: { trackId: In(trackIds) }, order: { position: 'ASC', artistId: 'ASC' } });
-  if (credits.length === 0) return [];
-  const artists = await manager.find(Artist, { where: { id: In([...new Set(credits.map(({ artistId }) => artistId))]) } });
-  const identities = await identityEntriesById(manager, artists.map(({ catalogIdentityId }) => catalogIdentityId));
-  return credits.map((credit) => {
-    const artist = artists.find(({ id }) => id === credit.artistId)!;
-    return { credit, artist: { artist, identity: identities.get(artist.catalogIdentityId)! } };
+  return tracks.map((track) => {
+    if (!withRelations) return { track, ...ends(track) };
+    const own = printed.filter(({ credit }) => credit.trackId === track.id);
+    return {
+      track,
+      ...ends(track),
+      relations: {
+        artistCredits: own.length > 0 ? own : lent.filter(({ credit }) => credit.recordingId === track.recordingId),
+        platformLinks: links.filter(({ trackId }) => trackId === track.id),
+      },
+    };
   });
+
+  function ends(track: Track) {
+    return {
+      release: releases.find(({ release }) => release.id === track.releaseId)!,
+      recording: { recording: recordings.find(({ id }) => id === track.recordingId)! },
+    };
+  }
 }

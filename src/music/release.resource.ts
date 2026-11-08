@@ -13,6 +13,7 @@ import {
   content,
   creditAttributes,
   creditRelationships,
+  creditedName,
   isWithdrawn,
 } from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
@@ -61,6 +62,7 @@ export const releaseArtistCreditSchema: ResourceSchema<ReleaseArtistCreditEntry>
   attributes: {
     position: ({ credit }) => credit.position,
     creditedAs: ({ credit }) => credit.creditedAs,
+    displayName: ({ credit, artist }) => creditedName(credit.creditedAs, artist),
   },
   relationships: { artist: { schema: () => artistSchema, get: ({ artist }) => artist } },
 });

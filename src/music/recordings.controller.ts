@@ -14,6 +14,8 @@ import { RecordingsService } from './recordings.service';
 
 // `include` stops at two levels: the linkage of each included release names its release group.
 const INCLUDE = [
+  'artistCredits',
+  'artistCredits.artist',
   'contributions',
   'contributions.identity',
   'contributions.role',
@@ -46,8 +48,10 @@ export class RecordingsController {
       'Grabaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir ' +
       'mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id ' +
       'de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista ' +
-      'acreditado en una pista; `filter[year]`, el año de grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` ' +
-      '(por defecto), `-recordingDate` (fechas desconocidas al final) o `-createdAt`.',
+      'de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de ' +
+      'grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate` (fechas desconocidas al ' +
+      'final) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en ' +
+      '`displayName`.',
   })
   @ApiJsonApiQuery(RECORDINGS_QUERY)
   @ApiJsonApiCollectionResponse(RecordingResource)
@@ -61,8 +65,8 @@ export class RecordingsController {
   @ApiOperation({
     summary: 'Ver una grabación',
     description:
-      'Título, contenido explícito, ISRC y fecha parcial de grabación, con sus créditos, géneros, obras y apariciones en ' +
-      'ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo ' +
+      'Título, contenido explícito, ISRC y fecha parcial de grabación, con su crédito de artista, sus créditos, géneros, obras y ' +
+      'apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo ' +
       'muestra su aviso.',
   })
   @ApiParam({ name: 'id', description: 'public_id de la grabación' })

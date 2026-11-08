@@ -292,4 +292,111 @@ describe('recordings in the editorial flow', () => {
       ]);
     });
   });
+
+  describe('artist credits', () => {
+    const artistCreation = (entityId: string, displayName: string): ChangeInput[] => [
+      { entityId, operation: 'create_entity', targetPath: 'catalog_identities', proposedValue: present({ type: 'person', displayName, person: {} }) },
+      { entityId, operation: 'add_relation', targetPath: 'artists', targetKey: { catalog_identity_id: { entity_id: entityId } }, proposedValue: present({}) },
+    ];
+
+    const artistCredit = (recording: string, artist: string, value: object | null, operation = 'add_relation'): ChangeInput => ({
+      entityId: recording,
+      operation,
+      targetPath: 'recording_artist_credits',
+      targetKey: { recording_id: { entity_id: recording }, artist_id: { entity_id: artist } },
+      proposedValue: value === null ? { exists: false } : present(value),
+    });
+
+    /** Submits the changes and applies each in order. */
+    async function publish(changes: ChangeInput[]): Promise<void> {
+      for (const changeId of await submitChanges(changes)) await apply(changeId).expect(201);
+    }
+
+    async function publishArtist(displayName: string): Promise<string> {
+      const entityId = await reserve('identity');
+      await publish(artistCreation(entityId, displayName));
+      return entityId;
+    }
+
+    const creditsOf = async (id: string) => {
+      const { body } = await getJsonApi(app, `/v1/recordings/${id}?include=artistCredits.artist`).expect(200);
+      return { body, credits: (body.included ?? []).filter(({ type }: { type: string }) => type === 'recording-artist-credits') };
+    };
+
+    it('credits a recording and an artist created in the same proposal, after both', async () => {
+      const recording = await reserve('recording');
+      const becky = await reserve('identity');
+      const natti = await publishArtist('Natti Natasha');
+      const [identity, profile, created, main, featured] = await submitChanges([
+        ...artistCreation(becky, 'Becky G'),
+        recordingCreation(recording, { title: 'Sin Pijama' }),
+        artistCredit(recording, becky, { rank: 'main', position: 0 }),
+        artistCredit(recording, natti, { rank: 'main', position: 1, creditedAs: 'NATTI NATASHA' }),
+      ]);
+
+      expect((await apply(main).expect(409)).body.errors[0].code).toBe('dependency_unresolved');
+      await apply(identity).expect(201);
+      await apply(profile).expect(201);
+      const id = (await apply(created).expect(201)).body.included[0].attributes.resultKey.publicId;
+      await apply(main).expect(201);
+      await apply(featured).expect(201);
+
+      const { body, credits } = await creditsOf(id);
+      const artists = body.included.filter(({ type }: { type: string }) => type === 'artists');
+      expect(body.data.relationships.artistCredits.data).toEqual([
+        { type: 'recording-artist-credits', id: `${id}.${artists[0].id}` },
+        { type: 'recording-artist-credits', id: `${id}.${artists[1].id}` },
+      ]);
+      expect(credits.map(({ attributes }: { attributes: object }) => attributes)).toEqual([
+        { rank: 'main', position: 0, creditedAs: null, displayName: 'Becky G' },
+        { rank: 'main', position: 1, creditedAs: 'NATTI NATASHA', displayName: 'NATTI NATASHA' },
+      ]);
+      expect(credits[0].relationships.artist.data).toEqual({ type: 'artists', id: artists[0].id });
+    });
+
+    it('refuses an identity without an artist profile, or one neither published nor created by the proposal', async () => {
+      const recording = await publishRecording();
+      const person = await reserve('identity');
+      await publish([{ entityId: person, operation: 'create_entity', targetPath: 'catalog_identities', proposedValue: present({ type: 'person', displayName: 'Becky G', person: {} }) }]);
+      const reserved = await reserve('identity');
+      const artist = await publishArtist('Natti Natasha');
+      const proposalId = await createDraft(app, ana.accessToken);
+      const refused = async (change: ChangeInput) => (await addChange(app, ana.accessToken, proposalId, change).expect(422)).body.errors[0];
+
+      expect(await refused(artistCredit(recording.entityId, person, { rank: 'main', position: 0 }))).toEqual(
+        expect.objectContaining({ code: 'no_artist_profile', source: { pointer: '/data/attributes/targetKey/artist_id' } }),
+      );
+      expect((await refused(artistCredit(recording.entityId, reserved, { rank: 'main', position: 0 }))).code).toBe('invalid_reference');
+      expect((await refused(artistCredit(recording.entityId, artist, { rank: 'lead', position: 0 }))).source.pointer).toBe('/data/attributes/proposedValue/value/rank');
+    });
+
+    it('changes and removes an artist, keeps one credit per artist, and keeps the profile while it is credited', async () => {
+      const recording = await publishRecording({ title: 'Sin Pijama' });
+      const becky = await publishArtist('Becky G');
+      const [first] = await submitChanges([artistCredit(recording.entityId, becky, { rank: 'featured', position: 0 })]);
+      const [repeated] = await submitChanges([artistCredit(recording.entityId, becky, { rank: 'main', position: 1 })]);
+      await apply(first).expect(201);
+
+      expect((await apply(repeated).expect(409)).body.errors[0].code).toBe('base_changed');
+      const proposalId = await createDraft(app, ana.accessToken);
+      const profileRemoval = await addChange(app, ana.accessToken, proposalId, {
+        entityId: becky,
+        operation: 'remove_relation',
+        targetPath: 'artists',
+        targetKey: { catalog_identity_id: { entity_id: becky } },
+        proposedValue: { exists: false },
+      }).expect(422);
+      expect(profileRemoval.body.errors[0].code).toBe('artist_referenced');
+
+      await publish([artistCredit(recording.entityId, becky, { rank: 'main', position: 0, creditedAs: 'BECKY G' }, 'update_relation')]);
+      expect((await creditsOf(recording.id)).credits.map(({ attributes }: { attributes: object }) => attributes)).toEqual([
+        { rank: 'main', position: 0, creditedAs: 'BECKY G', displayName: 'BECKY G' },
+      ]);
+
+      await publish([artistCredit(recording.entityId, becky, null, 'remove_relation')]);
+      const { body, credits } = await creditsOf(recording.id);
+      expect(credits).toEqual([]);
+      expect(body.data.relationships.artistCredits.data).toEqual([]);
+    });
+  });
 });

@@ -2571,6 +2571,184 @@
 						},
 						{
 							"_type": "ERDEntityView",
+							"_id": "678bbb86-13e0-4efc-80ff-5c7f68beb1f3",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"subViews": [
+								{
+									"_type": "LabelView",
+									"_id": "6c8e19f3-416e-4998-b7b4-8e6a74eded1f",
+									"_parent": {
+										"$ref": "678bbb86-13e0-4efc-80ff-5c7f68beb1f3"
+									},
+									"fillColor": "#91FFEC",
+									"font": "Arial;12;1",
+									"parentStyle": true,
+									"left": 5736,
+									"top": 4069,
+									"width": 480,
+									"height": 12,
+									"text": "recording_artist_credits"
+								},
+								{
+									"_type": "ERDColumnCompartmentView",
+									"_id": "093491e1-a6c6-45f2-b8db-cbcc385f757e",
+									"_parent": {
+										"$ref": "678bbb86-13e0-4efc-80ff-5c7f68beb1f3"
+									},
+									"model": {
+										"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+									},
+									"subViews": [
+										{
+											"_type": "ERDColumnView",
+											"_id": "597663aa-8a5b-4518-af42-fd1e8c22583a",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "86c99c07-0615-4599-a2e1-fca59a301df0"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4091,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "f22d6286-fc95-48dc-8113-a0392f778f8b",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "9d3db2d1-a94a-45ec-986e-599d0a008ac2"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4105,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "69d1351d-6ce7-4413-b5e9-7bb0cb4c1b5b",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "280b44f7-f796-4115-8133-6eb99fd0caf7"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4119,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "9f4e2ab8-08c8-4244-974d-8b92f86eac5e",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "d7957629-2d14-4f7c-aee0-bfab931bc1b9"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4133,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "977edfb7-7681-438c-bdc0-fb4dd2f89e85",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "4c267629-02fd-4d2b-a98d-ceb907363344"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4147,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "c80525be-28c8-4168-a2ba-2efa51d2efe6",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "fe0d0561-6caf-4e52-85c8-6949524d53de"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4161,
+											"width": 470,
+											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "4f871ea3-bfb4-4346-b25a-24753938e89d",
+											"_parent": {
+												"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+											},
+											"model": {
+												"$ref": "2c237391-6aac-4dbc-8e40-37c234e11179"
+											},
+											"fillColor": "#91FFEC",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 5741,
+											"top": 4175,
+											"width": 470,
+											"height": 12
+										}
+									],
+									"fillColor": "#91FFEC",
+									"font": "Arial;12;0",
+									"parentStyle": true,
+									"left": 5736,
+									"top": 4086,
+									"width": 480,
+									"height": 106
+								}
+							],
+							"fillColor": "#91FFEC",
+							"font": "Arial;12;0",
+							"parentStyle": false,
+							"left": 5736,
+							"top": 4064,
+							"width": 480,
+							"height": 200,
+							"nameLabel": {
+								"$ref": "6c8e19f3-416e-4998-b7b4-8e6a74eded1f"
+							},
+							"columnCompartment": {
+								"$ref": "093491e1-a6c6-45f2-b8db-cbcc385f757e"
+							}
+						},
+						{
+							"_type": "ERDEntityView",
 							"_id": "AAAAAAGeD8zCFYFLEuc=",
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCEIDM14Y="
@@ -12565,6 +12743,184 @@
 							"headNameLabel": {
 								"$ref": "viWIQk0M8FJJGMYUFT6dY/TW"
 							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "684c4155-0858-47b7-8b44-d36b87b00c1b",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "77384d38-30c3-4bf5-b9d9-45884f7da4e1"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "e7a1a6c7-739b-4f8c-94bb-7af0f0fc8f0d",
+									"_parent": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									},
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 6104,
+									"top": 4024,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									},
+									"edgePosition": 1,
+									"text": "artist credit"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "772d05d8-d864-4d4b-968c-ec24e961679b",
+									"_parent": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 6104,
+									"top": 4012,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "0014fdbd-8c8d-461c-959d-496cd7f6d264",
+									"_parent": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 6104,
+									"top": 4000,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "684c4155-0858-47b7-8b44-d36b87b00c1b"
+									}
+								}
+							],
+							"font": "Arial;10;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "678bbb86-13e0-4efc-80ff-5c7f68beb1f3"
+							},
+							"tail": {
+								"$ref": "AAAAAAGeD8zCE4EF4sI="
+							},
+							"points": "5964:2880;5964:4004;6096:4004;6096:4064",
+							"nameLabel": {
+								"$ref": "e7a1a6c7-739b-4f8c-94bb-7af0f0fc8f0d"
+							},
+							"tailNameLabel": {
+								"$ref": "772d05d8-d864-4d4b-968c-ec24e961679b"
+							},
+							"headNameLabel": {
+								"$ref": "0014fdbd-8c8d-461c-959d-496cd7f6d264"
+							}
+						},
+						{
+							"_type": "ERDRelationshipView",
+							"_id": "df2c68c2-4a2c-4142-ab19-12ec1d998e18",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDM14Y="
+							},
+							"model": {
+								"$ref": "9159c811-5194-4437-a65f-3c643c70f8e2"
+							},
+							"subViews": [
+								{
+									"_type": "EdgeLabelView",
+									"_id": "f966ff91-7445-4945-9459-64e185d7680e",
+									"_parent": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									},
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 5864,
+									"top": 4024,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									},
+									"edgePosition": 1,
+									"text": "credited in"
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "0f32561e-6c17-4dd5-a2d4-64a1e5888261",
+									"_parent": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 5864,
+									"top": 4012,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									},
+									"edgePosition": 2
+								},
+								{
+									"_type": "EdgeLabelView",
+									"_id": "bc3ebe7b-d37d-4731-b133-033a981961fa",
+									"_parent": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									},
+									"visible": false,
+									"font": "Arial;10;0",
+									"parentStyle": false,
+									"left": 5864,
+									"top": 4000,
+									"width": 80,
+									"height": 10,
+									"alpha": 1.5707963267948966,
+									"distance": 15,
+									"hostEdge": {
+										"$ref": "df2c68c2-4a2c-4142-ab19-12ec1d998e18"
+									}
+								}
+							],
+							"font": "Arial;10;0",
+							"parentStyle": false,
+							"head": {
+								"$ref": "678bbb86-13e0-4efc-80ff-5c7f68beb1f3"
+							},
+							"tail": {
+								"$ref": "AAAAAAGeD8zCEoDXa8k="
+							},
+							"points": "3236:1952;3236:4004;5856:4004;5856:4064",
+							"nameLabel": {
+								"$ref": "f966ff91-7445-4945-9459-64e185d7680e"
+							},
+							"tailNameLabel": {
+								"$ref": "0f32561e-6c17-4dd5-a2d4-64a1e5888261"
+							},
+							"headNameLabel": {
+								"$ref": "bc3ebe7b-d37d-4731-b133-033a981961fa"
+							}
 						}
 					]
 				},
@@ -12663,6 +13019,36 @@
 									"$ref": "AAAAAAGeD8zCEIDNID4="
 								},
 								"cardinality": "0..1"
+							},
+							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "9159c811-5194-4437-a65f-3c643c70f8e2",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCEIDNID4="
+							},
+							"name": "credited in",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "7d84a373-bb11-4668-acdb-a48a266e7593",
+								"_parent": {
+									"$ref": "9159c811-5194-4437-a65f-3c643c70f8e2"
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCEIDNID4="
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "349c4a25-1231-494f-ae1a-301d473d1d3e",
+								"_parent": {
+									"$ref": "9159c811-5194-4437-a65f-3c643c70f8e2"
+								},
+								"reference": {
+									"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+								},
+								"cardinality": "0..*"
 							},
 							"identifying": false
 						}
@@ -13728,6 +14114,36 @@
 								"cardinality": "1..*"
 							},
 							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "77384d38-30c3-4bf5-b9d9-45884f7da4e1",
+							"_parent": {
+								"$ref": "AAAAAAGeD8zCE4D9upI="
+							},
+							"name": "artist credit",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "543e8fdf-27bd-4d3c-afdf-7e73b83a2a1b",
+								"_parent": {
+									"$ref": "77384d38-30c3-4bf5-b9d9-45884f7da4e1"
+								},
+								"reference": {
+									"$ref": "AAAAAAGeD8zCE4D9upI="
+								}
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "b36adf4b-3ceb-48fd-8f47-81cdec4af48a",
+								"_parent": {
+									"$ref": "77384d38-30c3-4bf5-b9d9-45884f7da4e1"
+								},
+								"reference": {
+									"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
 						}
 					],
 					"documentation": " Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/editorial-contributions.md.",
@@ -14625,7 +15041,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "track_artist_credits",
-					"documentation": "Creditos de presentacion de una pista (main/featured/remixer). track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"documentation": "Credito impreso de una pista (main/featured/remixer), ADR 0008: solo existe si la edicion acredita la grabacion de otra forma, y entonces sustituye entero al credito de artista de la grabacion (recording_artist_credits) en esa pista. track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14695,6 +15111,88 @@
 							},
 							"name": "credited_as",
 							"documentation": "Literal presentation name in source; NULL uses catalog_identities.display_name through the artist profile.",
+							"type": "VARCHAR",
+							"nullable": true
+						}
+					]
+				},
+				{
+					"_type": "ERDEntity",
+					"_id": "7139db40-7bd1-4950-8014-7d53bba9e4ff",
+					"_parent": {
+						"$ref": "AAAAAAGeD8zCEIDLyT4="
+					},
+					"name": "recording_artist_credits",
+					"documentation": "Credito de artista de una grabacion (main/featured/remixer), ADR 0008. Propiedad editorial: la grabacion. Las pistas sin credito impreso (track_artist_credits) muestran este credito al leerse, sin copiarlo; una grabacion retirada no lo presta. No tiene minimo de filas. PK (artist_id, recording_id); rank es una clase por artista y grabacion; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"columns": [
+						{
+							"_type": "ERDColumn",
+							"_id": "86c99c07-0615-4599-a2e1-fca59a301df0",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "artist_id",
+							"type": "INTEGER",
+							"primaryKey": true,
+							"foreignKey": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "9d3db2d1-a94a-45ec-986e-599d0a008ac2",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "recording_id",
+							"type": "INTEGER",
+							"length": 0,
+							"primaryKey": true,
+							"foreignKey": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "280b44f7-f796-4115-8133-6eb99fd0caf7",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "rank",
+							"documentation": "main|featured|remixer",
+							"type": "enum"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "d7957629-2d14-4f7c-aee0-bfab931bc1b9",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "position",
+							"type": "SMALLINT"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "4c267629-02fd-4d2b-a98d-ceb907363344",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "created_at",
+							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "fe0d0561-6caf-4e52-85c8-6949524d53de",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "updated_at",
+							"type": "TIMESTAMPTZ"
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "2c237391-6aac-4dbc-8e40-37c234e11179",
+							"_parent": {
+								"$ref": "7139db40-7bd1-4950-8014-7d53bba9e4ff"
+							},
+							"name": "credited_as",
+							"documentation": "Literal name in source; NULL uses catalog_identities.display_name through the artist profile.",
 							"type": "VARCHAR",
 							"nullable": true
 						}

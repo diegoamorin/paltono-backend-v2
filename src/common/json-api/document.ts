@@ -1,6 +1,6 @@
 import { JSON_API_VERSION } from './media-type';
 import { CollectionQuery, ResourceQuery } from './query';
-import { AnyResourceSchema, ResourceSchema } from './resource-schema';
+import { AnyResourceSchema, RelationshipSchema, ResourceSchema, relatedSchema } from './resource-schema';
 
 export interface ResourceIdentifier {
   type: string;
@@ -96,19 +96,22 @@ function toResourceObject<T>(schema: ResourceSchema<T>, model: T, fields: Map<st
 
   const relationships = Object.entries(schema.relationships ?? {})
     .filter(([name]) => visible(name))
-    .map(([name, relationship]) => [name, relationship.schema(), relationship.get(model)] as const)
+    .map(([name, relationship]) => [name, relationship, relationship.get(model)] as const)
     .filter(([, , related]) => related !== undefined)
-    .map(([name, relatedSchema, related]) => [name, { data: linkage(relatedSchema, related) }] as const);
+    .map(([name, relationship, related]) => [name, { data: linkage(relationship, related) }] as const);
   if (relationships.length > 0) object.relationships = Object.fromEntries(relationships);
   if (schema.meta) object.meta = schema.meta(model);
 
   return object;
 }
 
-function linkage(schema: AnyResourceSchema, related: unknown): ResourceIdentifier | ResourceIdentifier[] | null {
+function linkage(relationship: RelationshipSchema<unknown>, related: unknown): ResourceIdentifier | ResourceIdentifier[] | null {
   if (related === null) return null;
-  if (Array.isArray(related)) return related.map((model) => ({ type: schema.type, id: schema.id(model) }));
-  return { type: schema.type, id: schema.id(related) };
+  const identifier = (model: unknown) => {
+    const schema = relatedSchema(relationship, model);
+    return { type: schema.type, id: schema.id(model) };
+  };
+  return Array.isArray(related) ? related.map(identifier) : identifier(related);
 }
 
 function withIncluded<D extends JsonApiDocument<ResourceObject | ResourceObject[]>, T>(
@@ -134,16 +137,17 @@ function withIncluded<D extends JsonApiDocument<ResourceObject | ResourceObject[
 
 /** Follows a relationship path from the given models and returns the models at its end. */
 function walk(schema: AnyResourceSchema, models: unknown[], segments: string[]): [AnyResourceSchema, unknown][] {
-  let current: [AnyResourceSchema, unknown[]] = [schema, models];
+  let current: [AnyResourceSchema, unknown][] = models.map((model) => [schema, model]);
   for (const segment of segments) {
-    // In a heterogeneous collection, a path may exist on some of its types only.
-    const relationship = current[0].relationships?.[segment];
-    if (!relationship) return [];
-    const related = current[1].flatMap((model) => relationship.get(model) ?? []);
-    current = [relationship.schema(), related];
+    current = current.flatMap(([each, model]): [AnyResourceSchema, unknown][] => {
+      // In a heterogeneous collection or relationship, a path may exist on some of its types only.
+      const relationship = each.relationships?.[segment];
+      if (!relationship) return [];
+      const related = relationship.get(model) ?? [];
+      return (Array.isArray(related) ? related : [related]).map((target) => [relatedSchema(relationship, target), target]);
+    });
   }
-  const [endSchema, endModels] = current;
-  return endModels.map((model) => [endSchema, model]);
+  return current;
 }
 
 function key(type: string, id: string): string {

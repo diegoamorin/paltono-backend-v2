@@ -74,9 +74,11 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 | `recording_contributions` | `recording` | Interpretación, producción, arreglo de grabación, grabación y mezcla | Grabación |
 | `release_contributions` | `release` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
 | `release_artist_credits` | Presentación | Artistas con que se presenta el lanzamiento, en orden | Lanzamiento |
-| `track_artist_credits` | Presentación | Artistas de una pista: `main`, `featured` o `remixer` | Edición de la pista |
+| `recording_artist_credits` | Presentación | Crédito de artista de la grabación: `main`, `featured` o `remixer`, en orden | Grabación |
+| `track_artist_credits` | Presentación | Crédito impreso de una pista, solo si la edición acredita la grabación de otra forma | Edición de la pista |
 
 - Los créditos de presentación referencian `artists` y no atribuyen autoría, interpretación ni producción. `credited_as` conserva el nombre literal de la fuente; NULL muestra el nombre visible de la identidad.
+- Una pista con crédito impreso lo muestra entero; sin él, muestra el crédito de artista de su grabación, leído al mostrarla y sin copiarlo (ADR 0008). Una grabación retirada no presta su crédito. Ninguno de los dos tiene un mínimo de filas.
 - Los créditos de participación referencian `catalog_identities` y un rol de `contribution_roles` válido para su ámbito mediante una FK compuesta con `contribution_role_scopes`. Una persona u organización puede recibir créditos sin perfil artístico.
 - `position` es un orden editorial, no importancia ni porcentaje. `details` describe instrumentos o funciones adicionales; `source_text`/`source_url` conservan la referencia del crédito.
 

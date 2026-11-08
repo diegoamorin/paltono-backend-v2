@@ -313,8 +313,8 @@ describe('tracks and credits of releases in the editorial flow', () => {
       const { body } = await getJsonApi(app, `/v1/tracks/${trackId}?include=artistCredits.artist`).expect(200);
       const credits = body.included.filter(({ type }: { type: string }) => type === 'track-artist-credits');
       expect(credits.map(({ attributes }: { attributes: object }) => attributes)).toEqual([
-        { rank: 'main', position: 0, creditedAs: null },
-        { rank: 'featured', position: 1, creditedAs: 'Halsey' },
+        { rank: 'main', position: 0, creditedAs: null, displayName: 'BTS' },
+        { rank: 'featured', position: 1, creditedAs: 'Halsey', displayName: 'Halsey' },
       ]);
     });
 
