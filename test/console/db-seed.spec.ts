@@ -199,7 +199,21 @@ describe('pnpm db:seed', () => {
       expect(await trackTitles(edition(ruby.releases, 'Clean'))).not.toContain('F.T.S.');
       expect(await trackTitles(edition(ruby.releases, 'The Complete Collection'))).toHaveLength(21);
       const handlebars = await getJsonApi(app, `/v1/releases/${edition(ruby.releases, null).id}/tracks?include=artistCredits&page[size]=100`).expect(200);
-      expect(handlebars.body.included.filter(({ type, attributes }: Resource) => type === 'track-artist-credits' && attributes.rank === 'featured')).toHaveLength(6);
+      // Ruby credits its recordings as they are, so its tracks show their recordings' credits.
+      expect(handlebars.body.included.filter(({ type }: Resource) => type === 'track-artist-credits')).toEqual([]);
+      expect(handlebars.body.included.filter(({ type, attributes }: Resource) => type === 'recording-artist-credits' && attributes.rank === 'featured')).toHaveLength(6);
+
+      // The compilation prints Verbal with his band, and the cancelled single prints Park Bom as «BOM».
+      const printedNames = async (release: Resource) =>
+        (await getJsonApi(app, `/v1/releases/${release.id}/tracks?include=artistCredits&page[size]=100`).expect(200)).body.included
+          .filter(({ type }: Resource) => type === 'track-artist-credits')
+          .map(({ attributes }: Resource) => attributes.displayName);
+      const bestAndUsa = await group('Best & USA');
+      expect(bestAndUsa.group.attributes.type).toBe('compilation');
+      expect(await printedNames(edition(bestAndUsa.releases, null))).toEqual(
+        expect.arrayContaining(['BoA', 'Crystal Kay', 'Verbal from M-Flo', 'Yutaka Furukawa from Doping Panda']),
+      );
+      expect(await printedNames(edition((await group('OH YEAH feat BOM (from 2NE1)')).releases, null))).toEqual(['GD & TOP', 'BOM']);
 
       const cupid = await group('Cupid');
       expect(await trackTitles(edition(cupid.releases, 'Sped Up'))).toEqual(['Cupid (Twin Ver.) (Sped Up)']);

@@ -511,6 +511,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'dynamite-recording',
         title: 'Dynamite',
+        artists: [{ artist: 'bts', rank: 'main' }],
         description: 'Primera canción de BTS grabada íntegramente en inglés, publicada el 21 de agosto de 2020.',
         recordingDate: { year: 2020, month: 7 },
         genres: ['disco', 'pop'],
@@ -533,6 +534,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'butter-recording',
         title: 'Butter',
+        artists: [{ artist: 'bts', rank: 'main' }],
         description: 'Sencillo de BTS publicado el 21 de mayo de 2021.',
         genres: ['dance-pop', 'disco-pop', 'edm'],
         works: [{ work: 'butter', relationType: 'performance' }],
@@ -610,6 +612,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'cheer-up-recording',
         title: 'Cheer Up',
+        artists: [{ artist: 'twice', rank: 'main' }],
         description: 'Sencillo principal de TWICE publicado por JYP Entertainment el 25 de abril de 2016.',
         genres: ['k-pop', 'dance-pop'],
         works: [{ work: 'cheer-up', relationType: 'performance' }],
@@ -617,6 +620,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'tt-recording',
         title: 'TT',
+        artists: [{ artist: 'twice', rank: 'main' }],
         description: 'Sencillo de TWICE publicado el 24 de octubre de 2016.',
         genres: ['k-pop', 'electropop', 'dance-pop'],
         works: [{ work: 'tt', relationType: 'performance' }],
@@ -678,6 +682,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'how-you-like-that-recording',
         title: 'How You Like That',
+        artists: [{ artist: 'blackpink', rank: 'main' }],
         description: 'Sencillo de BLACKPINK publicado el 26 de junio de 2020, grabado en The Black Label.',
         genres: ['pop', 'hip-hop', 'trap', 'edm'],
         works: [{ work: 'how-you-like-that', relationType: 'performance' }],
@@ -690,6 +695,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'shut-down-recording',
         title: 'Shut Down',
+        artists: [{ artist: 'blackpink', rank: 'main' }],
         description: 'Sencillo de BLACKPINK publicado el 16 de septiembre de 2022, que samplea «La Campanella» de Paganini.',
         genres: ['hip-hop'],
         works: [
@@ -724,6 +730,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'good-day-recording',
         title: 'Good Day',
+        artists: [{ artist: 'iu', rank: 'main' }],
         description: 'Sencillo de IU publicado el 9 de diciembre de 2010.',
         works: [{ work: 'good-day', relationType: 'performance' }],
         credits: [{ identity: 'lee-min-soo', role: 'producer' }],
@@ -758,6 +765,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
       {
         key: 'gangnam-style-recording',
         title: 'Gangnam Style',
+        artists: [{ artist: 'psy', rank: 'main' }],
         description: 'Sencillo de Psy publicado el 15 de julio de 2012.',
         genres: ['k-pop', 'hip-hop', 'dance-pop', 'edm'],
         works: [{ work: 'gangnam-style', relationType: 'performance' }],

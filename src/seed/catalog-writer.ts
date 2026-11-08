@@ -86,6 +86,12 @@ export interface WorkSpec {
   credits?: CreditSpec[];
 }
 
+export interface ArtistCreditSpec {
+  artist: string;
+  rank: TrackArtistRank;
+  creditedAs?: string;
+}
+
 export interface RecordingSpec {
   key: string;
   title: string;
@@ -93,6 +99,8 @@ export interface RecordingSpec {
   recordingDate?: PartialDateValue;
   /** The first is the primary genre. */
   genres?: GenreSlug[];
+  /** Its artist credit, in order; a track shows it unless the track has a printed credit. */
+  artists?: ArtistCreditSpec[];
   credits?: CreditSpec[];
   works: { work: string; relationType: 'performance' | 'interpolation' | 'sample' }[];
 }
@@ -105,7 +113,8 @@ export interface TrackSpec {
   number?: number;
   /** The literal title on this edition, when it differs from the recording's. */
   title?: string;
-  artists?: { artist: string; rank: TrackArtistRank; creditedAs?: string }[];
+  /** Its printed credit, only when this edition credits the recording otherwise; it replaces the recording's whole. */
+  artists?: ArtistCreditSpec[];
 }
 
 export interface ReleaseSpec {
@@ -427,6 +436,15 @@ export class CatalogWriter {
         targetPath: 'recording_genres',
         targetKey: { recording_id: entity(id), genre_id: this.vocabularies.genres[genre] },
         value: { isPrimary: index === 0 },
+      });
+    }
+    for (const [position, { artist, rank, creditedAs }] of (spec.artists ?? []).entries()) {
+      plan.creations.push({
+        entityId: id,
+        operation: 'add_relation',
+        targetPath: 'recording_artist_credits',
+        targetKey: { recording_id: entity(id), artist_id: entity(this.root(artist)) },
+        value: { rank, position, creditedAs: creditedAs ?? null },
       });
     }
     for (const { work, relationType } of spec.works) {

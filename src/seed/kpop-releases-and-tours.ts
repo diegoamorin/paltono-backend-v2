@@ -14,6 +14,9 @@ import { SeedSubmission, wiki } from './kpop-catalog';
 /** A recording known only by its title, such as an album track. */
 const recording = (key: string, title: string, works: RecordingSpec['works'] = []): RecordingSpec => ({ key, title, works });
 
+/** The recording credited to these main artists, in order. */
+const by = (spec: RecordingSpec, ...artists: string[]): RecordingSpec => ({ ...spec, artists: artists.map((artist) => ({ artist, rank: 'main' as const })) });
+
 /** Consecutive tracks of disc 1, from its first position, by recording key. */
 const tracks = (...keys: string[]): TrackSpec[] => keys.map((key) => ({ recording: key }));
 
@@ -26,11 +29,11 @@ const JENNIE_FEATURES: Record<string, string> = {
   'ruby/love-hangover': 'dominic-fike',
 };
 
-/** A track of Ruby, presented with Jennie and, when it has one, its featured artists. */
-const rubyTrack = (key: string): TrackSpec => {
+/** A recording of Ruby, credited to Jennie and, when it has one, its featured artists. */
+const rubyRecording = (key: string, title: string): RecordingSpec => {
   const featured = key === 'ruby/damn-right' ? ['childish-gambino', 'kali-uchis'] : JENNIE_FEATURES[key] ? [JENNIE_FEATURES[key]] : [];
   return {
-    recording: key,
+    ...recording(key, title),
     artists: [{ artist: 'jennie', rank: 'main' }, ...featured.map((artist) => ({ artist, rank: 'featured' as const }))],
   };
 };
@@ -91,13 +94,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     description: 'Alta de Born Pink, segundo álbum de estudio de BLACKPINK, con sus pistas y su productor',
     sources: [wiki('Born_Pink')],
     recordings: [
-      recording('born-pink/pink-venom', 'Pink Venom'),
-      recording('born-pink/typa-girl', 'Typa Girl'),
-      recording('born-pink/yeah-yeah-yeah', 'Yeah Yeah Yeah'),
-      recording('born-pink/hard-to-love', 'Hard to Love'),
-      recording('born-pink/the-happiest-girl', 'The Happiest Girl'),
-      recording('born-pink/tally', 'Tally'),
-      recording('born-pink/ready-for-love', 'Ready for Love'),
+      by(recording('born-pink/pink-venom', 'Pink Venom'), 'blackpink'),
+      by(recording('born-pink/typa-girl', 'Typa Girl'), 'blackpink'),
+      by(recording('born-pink/yeah-yeah-yeah', 'Yeah Yeah Yeah'), 'blackpink'),
+      by(recording('born-pink/hard-to-love', 'Hard to Love'), 'blackpink'),
+      by(recording('born-pink/the-happiest-girl', 'The Happiest Girl'), 'blackpink'),
+      by(recording('born-pink/tally', 'Tally'), 'blackpink'),
+      by(recording('born-pink/ready-for-love', 'Ready for Love'), 'blackpink'),
     ],
     releaseGroups: [
       {
@@ -130,12 +133,12 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     description: 'Alta de Twicecoaster: Lane 1, tercer EP de TWICE, con su edición tailandesa',
     sources: [wiki('Twicecoaster:_Lane_1')],
     recordings: [
-      recording('lane/1-to-10', '1 to 10'),
-      recording('lane/ponytail', 'Ponytail'),
-      recording('lane/jelly-jelly', 'Jelly Jelly'),
-      recording('lane/pit-a-pat', 'Pit-A-Pat'),
-      recording('lane/next-page', 'Next Page'),
-      recording('lane/one-in-a-million', 'One in a Million'),
+      by(recording('lane/1-to-10', '1 to 10'), 'twice'),
+      by(recording('lane/ponytail', 'Ponytail'), 'twice'),
+      by(recording('lane/jelly-jelly', 'Jelly Jelly'), 'twice'),
+      by(recording('lane/pit-a-pat', 'Pit-A-Pat'), 'twice'),
+      by(recording('lane/next-page', 'Next Page'), 'twice'),
+      by(recording('lane/one-in-a-million', 'One in a Million'), 'twice'),
     ],
     releaseGroups: [
       {
@@ -155,7 +158,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     author: 'contributor',
     description: 'Alta de Twicecoaster: Lane 2, reedición de Twicecoaster: Lane 1 con «Knock Knock»',
     sources: [wiki('Twicecoaster:_Lane_2')],
-    recordings: [recording('lane/knock-knock', 'Knock Knock'), recording('lane/ice-cream', 'Ice Cream')],
+    recordings: [by(recording('lane/knock-knock', 'Knock Knock'), 'twice'), by(recording('lane/ice-cream', 'Ice Cream'), 'twice')],
     releaseGroups: [
       {
         key: 'twicecoaster-lane-2',
@@ -180,27 +183,27 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       { key: 'kali-uchis', displayName: 'Kali Uchis', artist: true },
     ],
     recordings: [
-      recording('ruby/intro-jane', 'Intro: Jane'),
-      recording('ruby/like-jennie', 'Like Jennie'),
-      recording('ruby/start-a-war', 'Start a War'),
-      recording('ruby/handlebars', 'Handlebars'),
-      recording('ruby/with-the-ie', 'With the IE (Way Up)'),
-      recording('ruby/extral', 'ExtraL'),
-      recording('ruby/mantra', 'Mantra'),
-      recording('ruby/love-hangover', 'Love Hangover'),
-      recording('ruby/zen', 'Zen'),
-      recording('ruby/damn-right', 'Damn Right'),
-      recording('ruby/fts', 'F.T.S.'),
-      recording('ruby/filter', 'Filter'),
-      recording('ruby/seoul-city', 'Seoul City'),
-      recording('ruby/starlight', 'Starlight'),
-      recording('ruby/twin', 'Twin'),
-      recording('ruby/like-jennie-extended-remix', 'Like Jennie (Extended Remix)'),
-      recording('ruby/like-jennie-edm-remix', 'Like Jennie (EDM Remix)'),
-      recording('ruby/handlebars-just-jennie', 'Handlebars (Just Jennie)'),
-      recording('ruby/extral-just-jennie', 'ExtraL (Just Jennie)'),
-      recording('ruby/love-hangover-just-jennie', 'Love Hangover (Just Jennie)'),
-      recording('ruby/damn-right-just-jennie', 'Damn Right (Just Jennie)'),
+      rubyRecording('ruby/intro-jane', 'Intro: Jane'),
+      rubyRecording('ruby/like-jennie', 'Like Jennie'),
+      rubyRecording('ruby/start-a-war', 'Start a War'),
+      rubyRecording('ruby/handlebars', 'Handlebars'),
+      rubyRecording('ruby/with-the-ie', 'With the IE (Way Up)'),
+      rubyRecording('ruby/extral', 'ExtraL'),
+      rubyRecording('ruby/mantra', 'Mantra'),
+      rubyRecording('ruby/love-hangover', 'Love Hangover'),
+      rubyRecording('ruby/zen', 'Zen'),
+      rubyRecording('ruby/damn-right', 'Damn Right'),
+      rubyRecording('ruby/fts', 'F.T.S.'),
+      rubyRecording('ruby/filter', 'Filter'),
+      rubyRecording('ruby/seoul-city', 'Seoul City'),
+      rubyRecording('ruby/starlight', 'Starlight'),
+      rubyRecording('ruby/twin', 'Twin'),
+      rubyRecording('ruby/like-jennie-extended-remix', 'Like Jennie (Extended Remix)'),
+      rubyRecording('ruby/like-jennie-edm-remix', 'Like Jennie (EDM Remix)'),
+      rubyRecording('ruby/handlebars-just-jennie', 'Handlebars (Just Jennie)'),
+      rubyRecording('ruby/extral-just-jennie', 'ExtraL (Just Jennie)'),
+      rubyRecording('ruby/love-hangover-just-jennie', 'Love Hangover (Just Jennie)'),
+      rubyRecording('ruby/damn-right-just-jennie', 'Damn Right (Just Jennie)'),
     ],
     releaseGroups: [
       {
@@ -209,9 +212,9 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         type: 'album',
         artists: ['jennie'],
         releases: [
-          { releaseDate: day(2025, 3, 7), tracks: RUBY.map(rubyTrack) },
+          { releaseDate: day(2025, 3, 7), tracks: tracks(...RUBY) },
           // Without «F.T.S.»; the article gives no date.
-          { editionName: 'Clean', tracks: RUBY.filter((key) => key !== 'ruby/fts').map(rubyTrack) },
+          { editionName: 'Clean', tracks: tracks(...RUBY.filter((key) => key !== 'ruby/fts')) },
           {
             editionName: 'The Complete Collection',
             releaseDate: day(2026, 3, 6),
@@ -224,8 +227,8 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
                 'ruby/extral-just-jennie',
                 'ruby/love-hangover-just-jennie',
                 'ruby/damn-right-just-jennie',
+                ...RUBY,
               ),
-              ...RUBY.map(rubyTrack),
             ],
           },
         ],
@@ -268,7 +271,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     ],
     recordings: [
       {
-        ...recording('cupid/original', 'Cupid', [{ work: 'cupid', relationType: 'performance' }]),
+        ...by(recording('cupid/original', 'Cupid', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'),
         description: 'Versión original, en coreano.',
         credits: [
           { identity: 'adam-von-mentzer', role: 'producer' },
@@ -276,9 +279,9 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
           { identity: 'louise-udin', role: 'producer' },
         ],
       },
-      { ...recording('cupid/twin', 'Cupid (Twin Ver.)', [{ work: 'cupid', relationType: 'performance' }]), description: 'Versión en inglés.' },
-      recording('cupid/instrumental', 'Cupid (Instrumental)', [{ work: 'cupid', relationType: 'performance' }]),
-      recording('cupid/twin-sped-up', 'Cupid (Twin Ver.) (Sped Up)', [{ work: 'cupid', relationType: 'performance' }]),
+      { ...by(recording('cupid/twin', 'Cupid (Twin Ver.)', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'), description: 'Versión en inglés.' },
+      by(recording('cupid/instrumental', 'Cupid (Instrumental)', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'),
+      by(recording('cupid/twin-sped-up', 'Cupid (Twin Ver.) (Sped Up)', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'),
     ],
     releaseGroups: [
       {
@@ -342,27 +345,33 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       { key: 'crazy-about', title: 'Crazy About', credits: [{ identity: 'sean-garrett', role: 'songwriter' }] },
     ],
     recordings: [
-      recording('boa/i-did-it-for-love', 'I Did It for Love'),
-      recording('boa/energetic', 'Energetic', [{ work: 'energetic', relationType: 'performance' }]),
-      recording('boa/did-ya', 'Did Ya'),
-      recording('boa/look-whos-talking', "Look Who's Talking"),
-      recording('boa/eat-you-up', 'Eat You Up'),
-      recording('boa/obsessed', 'Obsessed'),
-      recording('boa/touched', 'Touched'),
-      recording('boa/scream', 'Scream'),
-      recording('boa/girls-on-top', 'Girls on Top'),
-      recording('boa/dress-off', 'Dress Off'),
-      recording('boa/hypnotic-dancefloor', 'Hypnotic Dancefloor'),
       {
-        ...recording('boa/energetic-radio-edit', 'Energetic (Radio Edit)', [{ work: 'energetic', relationType: 'performance' }]),
+        ...recording('boa/i-did-it-for-love', 'I Did It for Love'),
+        artists: [
+          { artist: 'boa', rank: 'main' },
+          { artist: 'sean-garrett', rank: 'featured' },
+        ],
+      },
+      by(recording('boa/energetic', 'Energetic', [{ work: 'energetic', relationType: 'performance' }]), 'boa'),
+      by(recording('boa/did-ya', 'Did Ya'), 'boa'),
+      by(recording('boa/look-whos-talking', "Look Who's Talking"), 'boa'),
+      by(recording('boa/eat-you-up', 'Eat You Up'), 'boa'),
+      by(recording('boa/obsessed', 'Obsessed'), 'boa'),
+      by(recording('boa/touched', 'Touched'), 'boa'),
+      by(recording('boa/scream', 'Scream'), 'boa'),
+      by(recording('boa/girls-on-top', 'Girls on Top'), 'boa'),
+      by(recording('boa/dress-off', 'Dress Off'), 'boa'),
+      by(recording('boa/hypnotic-dancefloor', 'Hypnotic Dancefloor'), 'boa'),
+      {
+        ...by(recording('boa/energetic-radio-edit', 'Energetic (Radio Edit)', [{ work: 'energetic', relationType: 'performance' }]), 'boa'),
         credits: [
           { identity: 'sean-garrett', role: 'producer' },
           { identity: 'clubba-langg', role: 'producer' },
         ],
       },
-      { ...recording('boa/control', 'Control', [{ work: 'control', relationType: 'performance' }]), credits: [{ identity: 'brian-kennedy', role: 'producer' }] },
+      { ...by(recording('boa/control', 'Control', [{ work: 'control', relationType: 'performance' }]), 'boa'), credits: [{ identity: 'brian-kennedy', role: 'producer' }] },
       {
-        ...recording('boa/crazy-about', 'Crazy About', [{ work: 'crazy-about', relationType: 'performance' }]),
+        ...by(recording('boa/crazy-about', 'Crazy About', [{ work: 'crazy-about', relationType: 'performance' }]), 'boa'),
         credits: [
           { identity: 'sean-garrett', role: 'producer' },
           { identity: 'davenport-and-spencer', role: 'producer' },
@@ -379,14 +388,8 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
           {
             releaseDate: day(2009, 3, 17),
             tracks: [
-              {
-                recording: 'boa/i-did-it-for-love',
-                artists: [
-                  { artist: 'boa', rank: 'main' },
-                  { artist: 'sean-garrett', rank: 'featured' },
-                ],
-              },
               ...tracks(
+                'boa/i-did-it-for-love',
                 'boa/energetic',
                 'boa/did-ya',
                 'boa/look-whos-talking',
@@ -397,7 +400,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
                 'boa/girls-on-top',
                 'boa/dress-off',
                 'boa/hypnotic-dancefloor',
-              ).map((track, index) => ({ ...track, number: index + 2 })),
+              ),
             ],
           },
           {
@@ -405,15 +408,11 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
             releaseDate: day(2009, 8, 31),
             // Released digitally on iTunes: the three bonus tracks first, then the album with the original «Energetic» moved to the end.
             tracks: [
-              ...tracks('boa/energetic-radio-edit', 'boa/control', 'boa/crazy-about'),
-              {
-                recording: 'boa/i-did-it-for-love',
-                artists: [
-                  { artist: 'boa', rank: 'main' },
-                  { artist: 'sean-garrett', rank: 'featured' },
-                ],
-              },
               ...tracks(
+                'boa/energetic-radio-edit',
+                'boa/control',
+                'boa/crazy-about',
+                'boa/i-did-it-for-love',
                 'boa/did-ya',
                 'boa/look-whos-talking',
                 'boa/eat-you-up',
@@ -425,6 +424,90 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
                 'boa/hypnotic-dancefloor',
                 'boa/energetic',
               ),
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    author: 'editor',
+    description: 'Alta de Best & USA, recopilatorio de BoA que reúne sus éxitos japoneses y canciones de su álbum en inglés',
+    sources: [wiki('Best_%26_USA')],
+    people: [
+      { key: 'crystal-kay', displayName: 'Crystal Kay', artist: true },
+      { key: 'verbal', displayName: 'Verbal', artist: true },
+      { key: 'yutaka-furukawa', displayName: 'Yutaka Furukawa', artist: true },
+    ],
+    recordings: [
+      {
+        ...recording('best-usa/universe', 'Universe'),
+        artists: [
+          { artist: 'boa', rank: 'main' },
+          { artist: 'crystal-kay', rank: 'featured' },
+          { artist: 'verbal', rank: 'featured' },
+        ],
+      },
+      by(recording('best-usa/do-the-motion', 'Do the Motion'), 'boa'),
+      by(recording('best-usa/eien', 'Eien'), 'boa'),
+      by(recording('best-usa/nanairo-no-ashita', 'Nanairo no Ashita: Brand New Beat'), 'boa'),
+      by(recording('best-usa/winter-love', 'Winter Love'), 'boa'),
+      by(recording('best-usa/meri-kuri', 'Meri Kuri: Best & USA Version'), 'boa'),
+      by(recording('best-usa/sweet-impact', 'Sweet Impact'), 'boa'),
+      by(recording('best-usa/dakishimeru', 'Dakishimeru'), 'boa'),
+      by(recording('best-usa/love-letter', 'Love Letter'), 'boa'),
+      by(recording('best-usa/make-a-secret', 'Make a Secret'), 'boa'),
+      by(recording('best-usa/everlasting', 'Everlasting'), 'boa'),
+      {
+        ...recording('best-usa/lose-your-mind', 'Lose Your Mind'),
+        artists: [
+          { artist: 'boa', rank: 'main' },
+          { artist: 'yutaka-furukawa', rank: 'featured' },
+        ],
+      },
+      // The article prints «feat. BoA» in its title without naming the main artist: it stays uncredited.
+      recording('best-usa/believe-in-love', 'Believe in Love feat. BoA (Acoustic Version)'),
+      by(recording('best-usa/valenti', 'Valenti: Best & USA version'), 'boa'),
+    ],
+    releaseGroups: [
+      {
+        key: 'best-and-usa',
+        title: 'Best & USA',
+        type: 'compilation',
+        artists: ['boa'],
+        releases: [
+          {
+            releaseDate: day(2009, 3, 18),
+            // The CD-only edition. The compilation prints Verbal and Yutaka Furukawa with their bands.
+            tracks: [
+              {
+                recording: 'best-usa/universe',
+                artists: [
+                  { artist: 'boa', rank: 'main' },
+                  { artist: 'crystal-kay', rank: 'featured' },
+                  { artist: 'verbal', rank: 'featured', creditedAs: 'Verbal from M-Flo' },
+                ],
+              },
+              ...tracks(
+                'best-usa/do-the-motion',
+                'best-usa/eien',
+                'best-usa/nanairo-no-ashita',
+                'best-usa/winter-love',
+                'best-usa/meri-kuri',
+                'best-usa/sweet-impact',
+                'best-usa/dakishimeru',
+                'best-usa/love-letter',
+                'best-usa/make-a-secret',
+                'best-usa/everlasting',
+              ),
+              {
+                recording: 'best-usa/lose-your-mind',
+                artists: [
+                  { artist: 'boa', rank: 'main' },
+                  { artist: 'yutaka-furukawa', rank: 'featured', creditedAs: 'Yutaka Furukawa from Doping Panda' },
+                ],
+              },
+              ...tracks('best-usa/believe-in-love', 'best-usa/valenti', 'boa/i-did-it-for-love', 'boa/eat-you-up'),
             ],
           },
         ],
@@ -459,8 +542,15 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     ],
     people: [{ key: 'park-bom', displayName: 'Park Bom', artist: true, aliases: ['박봄', 'Bom'] }],
     recordings: [
-      { ...recording('gd-top/oh-yeah-japanese', 'OH YEAH feat BOM (from 2NE1)'), description: 'Versión en japonés de «Oh Yeah».' },
-      { ...recording('gd-top/high-high-japanese', 'HIGH HIGH'), description: 'Versión en japonés de «High High».' },
+      {
+        ...recording('gd-top/oh-yeah-japanese', 'OH YEAH feat BOM (from 2NE1)'),
+        description: 'Versión en japonés de «Oh Yeah».',
+        artists: [
+          { artist: 'gd-top', rank: 'main' },
+          { artist: 'park-bom', rank: 'featured' },
+        ],
+      },
+      { ...by(recording('gd-top/high-high-japanese', 'HIGH HIGH'), 'gd-top'), description: 'Versión en japonés de «High High».' },
     ],
     releaseGroups: [
       {
@@ -476,6 +566,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
             tracks: [
               {
                 recording: 'gd-top/oh-yeah-japanese',
+                // The single prints Park Bom as «BOM».
                 artists: [
                   { artist: 'gd-top', rank: 'main' },
                   { artist: 'park-bom', rank: 'featured', creditedAs: 'BOM' },
