@@ -7,8 +7,11 @@ import { CollectionQuery, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
 import { RECORDING_WORK_RELATION_TYPES, Recording } from './entities/recording.entity';
 import { recordingEntries } from './music-entries';
+import { recordingReleaseSql } from './release-dates';
 import { RecordingEntry } from './music.resource';
 import { WorksService } from './works.service';
+
+const released = recordingReleaseSql('recording');
 
 /** The columns behind each sort field of the list; unknown recording dates go last either way. */
 const SORT_COLUMNS: Record<string, string[]> = {
@@ -17,6 +20,9 @@ const SORT_COLUMNS: Record<string, string[]> = {
   createdAt: ['recording.created_at'],
   id: ['recording.public_id'],
 };
+
+/** The derived values behind the other sort fields; unknown release dates go last either way. */
+const SORT_EXPRESSIONS: Record<string, string> = { releaseDate: released.start };
 
 /**
  * Public reads of recordings. A row only exists once its creation is applied,
@@ -40,7 +46,7 @@ export class RecordingsService {
   /** Published recordings only: a withdrawn one is reached by its id. */
   async list(query: CollectionQuery): Promise<{ entries: RecordingEntry[]; total: number }> {
     const builder = this.published();
-    const { q, isrc, genre, contributor, work, artist, year, isExplicit } = query.filter;
+    const { q, isrc, genre, contributor, work, artist, year, releaseYear, isExplicit } = query.filter;
     if (q !== undefined) builder.andWhere('unaccent(lower(recording.title)) LIKE unaccent(lower(:pattern))', { pattern: containsPattern(q) });
     if (isrc !== undefined) builder.andWhere('recording.isrc = :isrc', { isrc: isrc.replace(/-/g, '').toUpperCase() });
     if (genre !== undefined) {
@@ -87,10 +93,8 @@ export class RecordingsService {
         { artist },
       );
     }
-    if (year !== undefined) {
-      if (!/^\d{1,4}$/.test(year)) throw badFilter('filter[year]', 'must be a year from 1 to 9999');
-      builder.andWhere('recording.recording_year = :year', { year: Number(year) });
-    }
+    if (year !== undefined) builder.andWhere('recording.recording_year = :year', { year: yearFilter('filter[year]', year) });
+    if (releaseYear !== undefined) builder.andWhere(`${released.year} = :releaseYear`, { releaseYear: yearFilter('filter[releaseYear]', releaseYear) });
     if (isExplicit !== undefined) {
       requireOneOf('filter[isExplicit]', isExplicit, ['true', 'false']);
       builder.andWhere('recording.is_explicit = :isExplicit', { isExplicit: isExplicit === 'true' });
@@ -126,15 +130,18 @@ export class RecordingsService {
   }
 
   private async page(builder: SelectQueryBuilder<Recording>, query: CollectionQuery): Promise<{ entries: RecordingEntry[]; total: number }> {
-    for (const { field, direction } of query.sort) {
-      for (const column of SORT_COLUMNS[field]) builder.addOrderBy(column, direction, 'NULLS LAST');
-    }
+    query.sort.forEach(({ field, direction }, index) => {
+      // A derived value is selected under an alias of its own, as the order of a page needs.
+      if (field in SORT_EXPRESSIONS) builder.addSelect(SORT_EXPRESSIONS[field], `sort_${index}`).addOrderBy(`sort_${index}`, direction, 'NULLS LAST');
+      else for (const column of SORT_COLUMNS[field]) builder.addOrderBy(column, direction, 'NULLS LAST');
+    });
     const { skip, take } = pageWindow(query);
     const [page, total] = await builder.offset(skip).limit(take).getManyAndCount();
     return { entries: await recordingEntries(this.dataSource.manager, page, this.clock.now()), total };
   }
 }
 
-function badFilter(parameter: string, detail: string): JsonApiException {
-  return new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} ${detail}`, source: { parameter } }]);
+function yearFilter(parameter: string, value: string): number {
+  if (!/^\d{1,4}$/.test(value)) throw new JsonApiException(HttpStatus.BAD_REQUEST, [{ detail: `${parameter} must be a year from 1 to 9999`, source: { parameter } }]);
+  return Number(value);
 }

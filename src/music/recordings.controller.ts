@@ -27,13 +27,13 @@ const INCLUDE = [
 ];
 
 /** What lists of recordings accept, besides their filters. */
-export const RECORDINGS_OPTIONS: CollectionQueryOptions = { include: INCLUDE, sort: ['title', 'recordingDate', 'createdAt'], defaultSort: 'title' };
+export const RECORDINGS_OPTIONS: CollectionQueryOptions = { include: INCLUDE, sort: ['title', 'recordingDate', 'releaseDate', 'createdAt'], defaultSort: 'title' };
 
 const RECORDING_QUERY = resourceQuery(recordingSchema, { include: INCLUDE });
 
 const RECORDINGS_QUERY = collectionQuery(recordingSchema, {
   ...RECORDINGS_OPTIONS,
-  filters: ['q', 'isrc', 'genre', 'contributor', 'work', 'artist', 'year', 'isExplicit'],
+  filters: ['q', 'isrc', 'genre', 'contributor', 'work', 'artist', 'year', 'releaseYear', 'isExplicit'],
 });
 
 @ApiTags('music')
@@ -49,8 +49,8 @@ export class RecordingsController {
       'mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id ' +
       'de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista ' +
       'de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de ' +
-      'grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate` (fechas desconocidas al ' +
-      'final) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en ' +
+      'grabación; `filter[releaseYear]`, el año de su fecha de lanzamiento; `filter[isExplicit]`, `true` o `false`. Orden ' +
+      '`title` (por defecto), `-recordingDate`, `-releaseDate` (fechas desconocidas al final en ambos) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en ' +
       '`displayName`.',
   })
   @ApiJsonApiQuery(RECORDINGS_QUERY)
@@ -65,7 +65,8 @@ export class RecordingsController {
   @ApiOperation({
     summary: 'Ver una grabación',
     description:
-      'Título, contenido explícito, ISRC y fecha parcial de grabación, con su crédito de artista, sus créditos, géneros, obras y ' +
+      'Título, contenido explícito, ISRC, fecha parcial de grabación y fecha de lanzamiento (la más temprana de sus ediciones ' +
+      'publicadas y no canceladas con fecha, incluidas las futuras), con su crédito de artista, sus créditos, géneros, obras y ' +
       'apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo ' +
       'muestra su aviso.',
   })

@@ -10,7 +10,7 @@ import { Work, WorkContribution } from './entities/work.entity';
 import { Release } from './entities/release.entity';
 import { ReleaseContribution } from './entities/track.entity';
 import { Clock } from '../common/clock/clock';
-import { creditEntries } from './music-entries';
+import { creditEntries, plainRecordingEntries, plainWorkEntries } from './music-entries';
 import { CreditEntry, CreditScope } from './resource-primitives';
 import { releaseEntries } from './release-entries';
 
@@ -65,11 +65,14 @@ export class IdentityCreditsService {
     const idsOf = (scope: string) => page.filter((row) => row.scope === scope).map(({ id }) => id);
     const workCredits = await manager.findBy(WorkContribution, { id: In(idsOf('work')) });
     const recordingCredits = await manager.findBy(RecordingContribution, { id: In(idsOf('recording')) });
-    const works = await manager.find(Work, { where: { id: In(workCredits.map(({ workId }) => workId)) }, relations: { editorialEntity: true } });
-    const recordings = await manager.find(Recording, {
-      where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) },
-      relations: { editorialEntity: true },
-    });
+    const works = await plainWorkEntries(
+      manager,
+      await manager.find(Work, { where: { id: In(workCredits.map(({ workId }) => workId)) }, relations: { editorialEntity: true } }),
+    );
+    const recordings = await plainRecordingEntries(
+      manager,
+      await manager.find(Recording, { where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } }),
+    );
     const releaseCredits = await manager.findBy(ReleaseContribution, { id: In(idsOf('release')) });
     const releases = await releaseEntries(
       manager,
@@ -80,11 +83,11 @@ export class IdentityCreditsService {
     const entries = [
       ...(await creditEntries(manager, 'work', workCredits)).map((entry) => ({
         ...entry,
-        work: { work: works.find(({ id }) => id === (entry.credit as WorkContribution).workId)! },
+        work: works.find(({ work }) => work.id === (entry.credit as WorkContribution).workId)!,
       })),
       ...(await creditEntries(manager, 'recording', recordingCredits)).map((entry) => ({
         ...entry,
-        recording: { recording: recordings.find(({ id }) => id === (entry.credit as RecordingContribution).recordingId)! },
+        recording: recordings.find(({ recording }) => recording.id === (entry.credit as RecordingContribution).recordingId)!,
       })),
       ...(await creditEntries(manager, 'release', releaseCredits)).map((entry) => ({
         ...entry,

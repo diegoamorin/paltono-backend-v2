@@ -14,7 +14,16 @@ import { RECORDINGS_OPTIONS } from './recordings.controller';
 import { RecordingsService } from './recordings.service';
 import { WorksService } from './works.service';
 
-const INCLUDE = ['contributions', 'contributions.identity', 'contributions.role', 'recordingWorks', 'recordingWorks.recording'];
+const INCLUDE = [
+  'contributions',
+  'contributions.identity',
+  'contributions.role',
+  'recordingWorks',
+  'recordingWorks.recording',
+  'firstRecording',
+  'firstRecordingArtistCredits',
+  'firstRecordingArtistCredits.artist',
+];
 
 const WORK_QUERY = resourceQuery(workSchema, { include: INCLUDE });
 
@@ -42,7 +51,8 @@ export class WorksController {
       'Obras publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni ' +
       'acentos; `filter[slug]` resuelve una obra por su slug; `filter[iswc]` toma el ISWC canónico; `filter[contributor]`, el ' +
       'public_id de una identidad acreditada, y `filter[role]`, el slug de un rol musical (juntos, en el mismo crédito). ' +
-      'Orden `title` (por defecto) o `-createdAt`.',
+      'Orden `title` (por defecto) o `-createdAt`. `include` admite `firstRecording`, `firstRecordingArtistCredits` y ' +
+      '`firstRecordingArtistCredits.artist`: la primera grabación de cada obra y sus artistas, con el nombre listo para mostrar.',
   })
   @ApiJsonApiQuery(WORKS_QUERY)
   @ApiJsonApiCollectionResponse(WorkResource)
@@ -57,6 +67,8 @@ export class WorksController {
     summary: 'Ver una obra',
     description:
       'Título, slug, descripción e ISWC, con sus créditos y las grabaciones que la interpretan, interpolan o samplean. ' +
+      '`firstReleaseDate`, `firstRecording` y `firstRecordingArtistCredits` muestran su primera grabación: la que la ' +
+      'interpreta con la fecha de lanzamiento más temprana. ' +
       '`meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.',
   })
   @ApiParam({ name: 'id', description: 'id de la obra' })

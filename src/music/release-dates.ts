@@ -37,13 +37,17 @@ export interface ReleaseGroupDates {
   releaseInstant: Date | null;
 }
 
+/** SQL expressions over a `releases` row aliased `r` that do not depend on the current time. */
+function releaseDateSql(r: string) {
+  const { start, end } = partialDateIntervalSql(r, 'release');
+  const instant = `CASE WHEN ${r}.release_time IS NOT NULL THEN (make_date(${r}.release_year, ${r}.release_month, ${r}.release_day) + ${r}.release_time) AT TIME ZONE ${r}.timezone END`;
+  return { start, end, instant };
+}
+
 /** SQL expressions over a `releases` row aliased `r`; `now` is an SQL expression of a timestamptz. */
 export function releaseSql(r: string, now: string) {
   const year = `${r}.release_year`;
-  const month = `${r}.release_month`;
-  const day = `${r}.release_day`;
-  const { start, end } = partialDateIntervalSql(r, 'release');
-  const instant = `CASE WHEN ${r}.release_time IS NOT NULL THEN (make_date(${year}, ${month}, ${day}) + ${r}.release_time) AT TIME ZONE ${r}.timezone END`;
+  const { start, end, instant } = releaseDateSql(r);
   const arrived = `CASE WHEN ${r}.release_time IS NOT NULL THEN ${instant} <= ${now} ELSE ${start} <= (${now} AT TIME ZONE 'UTC')::date END`;
   const availability = `CASE
       WHEN ${r}.is_cancelled THEN 'cancelled'
@@ -71,6 +75,48 @@ export function releaseGroupSql(g: string, now: string) {
     end: first(end),
     upcoming: `(EXISTS (SELECT 1 ${datedReleasesSql(r, `${g}.id`)}) AND NOT EXISTS (SELECT 1 ${datedReleasesSql(r, `${g}.id`)} AND ${arrived}))`,
   };
+}
+
+/**
+ * The releases a recording's release date comes from: those with a track of
+ * it, under the same rule as a release group's.
+ */
+function releasesOfRecordingSql(r: string, recording: string): string {
+  return `FROM releases ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
+      JOIN tracks ${r}_track ON ${r}_track.release_id = ${r}.id
+    WHERE ${r}_track.recording_id = ${recording} AND NOT ${r}.is_cancelled AND ${r}.release_year IS NOT NULL
+      AND ${r}_root.publication_status = 'published'`;
+}
+
+/**
+ * SQL expressions over a `recordings` row aliased `rec`, for filters and
+ * sorts: the first day of its release date and the year of it, null without one.
+ */
+export function recordingReleaseSql(rec: string) {
+  const r = `${rec}_release`;
+  const { start, instant } = releaseDateSql(r);
+  const first = (column: string) => `(SELECT ${column} ${releasesOfRecordingSql(r, `${rec}.id`)} ORDER BY ${start}, ${instant} NULLS LAST, ${r}.id LIMIT 1)`;
+  return { start: first(start), year: first(`${r}.release_year`) };
+}
+
+/**
+ * The release date of each recording, by id: the earliest date of the
+ * releases it is on, as a release group's date is the earliest of its
+ * releases. Future releases count; null without any.
+ */
+export async function recordingReleaseDates(manager: EntityManager, ids: number[]): Promise<Map<number, PartialDate | null>> {
+  const dates = new Map<number, PartialDate | null>(ids.map((id) => [id, null]));
+  if (ids.length === 0) return dates;
+  const { start, instant } = releaseDateSql('r');
+  const rows: { recordingId: number; releaseYear: number; releaseMonth: number | null; releaseDay: number | null }[] = await manager.query(
+    `SELECT DISTINCT ON (r_track.recording_id) r_track.recording_id AS "recordingId",
+        r.release_year AS "releaseYear", r.release_month AS "releaseMonth", r.release_day AS "releaseDay"
+      ${releasesOfRecordingSql('r', 'ANY($1)')}
+      ORDER BY r_track.recording_id, ${start}, ${instant} NULLS LAST, r.id`,
+    [ids],
+  );
+  for (const row of rows) dates.set(row.recordingId, partialDateResponse(row, 'release'));
+  return dates;
 }
 
 /** The availability and instant of each release, by id. */

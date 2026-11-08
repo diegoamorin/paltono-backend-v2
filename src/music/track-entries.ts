@@ -3,6 +3,7 @@ import { recordingArtistCreditEntries, trackArtistCreditEntries } from './artist
 import { Recording } from './entities/recording.entity';
 import { Release } from './entities/release.entity';
 import { Track, TrackPlatformLink } from './entities/track.entity';
+import { recordingReleaseDates } from './release-dates';
 import { releaseEntries } from './release-entries';
 import { isWithdrawn } from './resource-primitives';
 import { TrackEntry } from './track.resource';
@@ -21,6 +22,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
     where: { id: In([...new Set(tracks.map(({ recordingId }) => recordingId))]) },
     relations: { editorialEntity: true },
   });
+  const releaseDates = await recordingReleaseDates(manager, recordings.map(({ id }) => id));
   const releases = await releaseEntries(
     manager,
     await manager.find(Release, { where: { id: In([...new Set(tracks.map(({ releaseId }) => releaseId))]) }, relations: { editorialEntity: true } }),
@@ -50,7 +52,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
   function ends(track: Track) {
     return {
       release: releases.find(({ release }) => release.id === track.releaseId)!,
-      recording: { recording: recordings.find(({ id }) => id === track.recordingId)! },
+      recording: { recording: recordings.find(({ id }) => id === track.recordingId)!, releaseDate: releaseDates.get(track.recordingId)! },
     };
   }
 }

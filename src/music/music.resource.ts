@@ -16,6 +16,7 @@ import {
   creditAttributes,
   creditRelationships,
   creditedName,
+  isWithdrawn,
 } from './resource-primitives';
 import { TrackEntry, trackSchema } from './track.resource';
 
@@ -28,12 +29,16 @@ import { TrackEntry, trackSchema } from './track.resource';
 export interface WorkEntry {
   /** With its editorial root. */
   work: Work;
+  /** Derived on each read, whether the work is the primary data or the target of a relationship. */
+  firstRecording: FirstRecordingEntry | null;
   relations?: { contributions: CreditEntry[]; recordingWorks: RecordingWorkEntry[] } | null;
 }
 
 export interface RecordingEntry {
   /** With its editorial root. */
   recording: Recording;
+  /** Derived from its releases on each read, never stored. */
+  releaseDate: PartialDate | null;
   relations?: {
     /** By position. */
     artistCredits: RecordingArtistCreditEntry[];
@@ -45,6 +50,18 @@ export interface RecordingEntry {
     /** Its appearances in published releases, without credits nor links. */
     tracks: TrackEntry[];
   } | null;
+}
+
+/**
+ * The first recording of a work: of the published recordings that perform it,
+ * the one with the earliest release date, those without one after, and by
+ * public id on a tie. Samples and interpolations do not count.
+ */
+export interface FirstRecordingEntry {
+  /** Without relations. */
+  recording: RecordingEntry;
+  /** Its artist credit, by position. */
+  artistCredits: RecordingArtistCreditEntry[];
 }
 
 export interface RecordingWorkEntry {
@@ -114,12 +131,18 @@ export const workSchema: ResourceSchema<WorkEntry> = defineResource({
     slug: workContent(({ work }) => work.slug),
     description: workContent(({ work }) => work.description),
     iswc: workContent(({ work }) => work.iswc),
+    firstReleaseDate: workContent(({ firstRecording }) => firstRecording?.recording.releaseDate ?? null),
     createdAt: workContent(({ work }) => work.createdAt.toISOString()),
     updatedAt: workContent(({ work }) => work.updatedAt.toISOString()),
   },
   relationships: {
     contributions: { schema: () => workContributionSchema, get: ({ relations }) => relations?.contributions },
     recordingWorks: { schema: () => recordingWorkSchema, get: ({ relations }) => relations?.recordingWorks },
+    firstRecording: { schema: () => recordingSchema, get: (entry) => (isWithdrawn(entry.work) ? undefined : (entry.firstRecording?.recording ?? null)) },
+    firstRecordingArtistCredits: {
+      schema: () => recordingArtistCreditSchema,
+      get: (entry) => (isWithdrawn(entry.work) ? undefined : (entry.firstRecording?.artistCredits ?? [])),
+    },
   },
   meta: ({ work }) => ({ editorialEntityId: work.editorialEntityId }),
 });
@@ -137,6 +160,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     isExplicit: recordingContent(({ recording }) => recording.isExplicit),
     isrc: recordingContent(({ recording }) => recording.isrc),
     recordingDate: recordingContent(({ recording }) => partialDateResponse(recording, 'recording')),
+    releaseDate: recordingContent(({ releaseDate }) => releaseDate),
     primaryGenreId: recordingContent(({ relations }) => (relations ? (relations.primaryGenreId === null ? null : String(relations.primaryGenreId)) : undefined)),
     createdAt: recordingContent(({ recording }) => recording.createdAt.toISOString()),
     updatedAt: recordingContent(({ recording }) => recording.updatedAt.toISOString()),
@@ -172,6 +196,14 @@ class WorkAttributes {
   @ApiProperty({ type: String, nullable: true, required: false, example: 'T0345246801', description: WITHDRAWN })
   iswc?: string | null;
 
+  @ApiProperty({
+    type: PartialDate,
+    nullable: true,
+    required: false,
+    description: `Fecha de lanzamiento de su primera grabación (\`firstRecording\`); null sin ella o si no tiene fecha. ${WITHDRAWN}`,
+  })
+  firstReleaseDate?: PartialDate | null;
+
   @ApiProperty({ format: 'date-time', required: false, description: WITHDRAWN })
   createdAt?: string;
 
@@ -185,6 +217,21 @@ class WorkRelationships {
 
   @ApiProperty({ type: ToManyLinkage, description: '`recording-works`: grabaciones que interpretan, interpolan o samplean la obra' })
   recordingWorks: ToManyLinkage;
+
+  @ApiProperty({
+    type: ToOneLinkage,
+    description:
+      '`recordings`: su primera grabación. Entre las grabaciones publicadas que la interpretan (no samples ni interpolaciones), ' +
+      'la de fecha de lanzamiento más temprana; las que no tienen fecha van después y el empate se resuelve por id público. ' +
+      'null si ninguna la interpreta.',
+  })
+  firstRecording: ToOneLinkage;
+
+  @ApiProperty({
+    type: ToManyLinkage,
+    description: '`recording-artist-credits`: el crédito de artista de su primera grabación, por `position`; vacío sin ella',
+  })
+  firstRecordingArtistCredits: ToManyLinkage;
 }
 
 export class WorkResource {
@@ -225,6 +272,16 @@ class RecordingAttributes {
 
   @ApiProperty({ type: PartialDate, nullable: true, required: false, description: `Fecha parcial de grabación. ${WITHDRAWN}` })
   recordingDate?: PartialDate | null;
+
+  @ApiProperty({
+    type: PartialDate,
+    nullable: true,
+    required: false,
+    description:
+      'Fecha de lanzamiento: la fecha parcial más temprana de sus ediciones publicadas y no canceladas que tienen fecha, ' +
+      `incluidas las futuras; null si no tiene. Se calcula al leer. ${WITHDRAWN}`,
+  })
+  releaseDate?: PartialDate | null;
 
   @ApiProperty({ type: String, nullable: true, required: false, description: `id del género primario, entre \`genres\`. ${WITHDRAWN}` })
   primaryGenreId?: string | null;

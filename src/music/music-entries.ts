@@ -8,8 +8,9 @@ import { identityEntriesById } from '../catalog-identities/identities.service';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
 import { Credit, Work, WorkContribution } from './entities/work.entity';
-import { RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
+import { FirstRecordingEntry, RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
 import { CreditEntry, CreditScope } from './resource-primitives';
+import { recordingReleaseDates, recordingReleaseSql } from './release-dates';
 
 /*
  * Loads works and recordings as entries with their relations. The targets of
@@ -19,17 +20,53 @@ import { CreditEntry, CreditScope } from './resource-primitives';
 
 const notWithdrawn = (root: Work | Recording) => root.editorialEntity!.publicationStatus !== 'withdrawn';
 
+/** Works, each with its editorial root loaded, as entries without relations but with their first recording. */
+export async function plainWorkEntries(manager: EntityManager, works: Work[]): Promise<WorkEntry[]> {
+  const firsts = await firstRecordings(manager, works.filter(notWithdrawn).map(({ id }) => id));
+  return works.map((work) => ({ work, firstRecording: firsts.get(work.id) ?? null }));
+}
+
+/**
+ * The first recording of each work, by id: of the published recordings that
+ * perform it, the one with the earliest release date; those without one go
+ * after, and a tie goes to the lower public id.
+ */
+async function firstRecordings(manager: EntityManager, workIds: string[]): Promise<Map<string, FirstRecordingEntry>> {
+  if (workIds.length === 0) return new Map();
+  const rows: { workId: string; recordingId: number }[] = await manager.query(
+    `SELECT DISTINCT ON (link.work_id) link.work_id AS "workId", recording.id AS "recordingId"
+      FROM recording_works link
+      JOIN recordings recording ON recording.id = link.recording_id
+      JOIN editorial_entities root ON root.id = recording.editorial_entity_id
+      WHERE link.work_id = ANY($1) AND link.relation_type = 'performance' AND root.publication_status = 'published'
+      ORDER BY link.work_id, ${recordingReleaseSql('recording').start} NULLS LAST, recording.public_id`,
+    [workIds],
+  );
+  if (rows.length === 0) return new Map();
+  const recordings = await manager.find(Recording, { where: { id: In(rows.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } });
+  const entries = await plainRecordingEntries(manager, recordings);
+  const credits = await recordingArtistCreditEntries(manager, recordings);
+  return new Map(
+    rows.map(({ workId, recordingId }) => [
+      String(workId),
+      { recording: entries.find(({ recording }) => recording.id === recordingId)!, artistCredits: credits.filter(({ credit }) => credit.recordingId === recordingId) },
+    ]),
+  );
+}
+
 export async function workEntries(manager: EntityManager, works: Work[]): Promise<WorkEntry[]> {
+  const plain = await plainWorkEntries(manager, works);
   const ids = works.filter(notWithdrawn).map(({ id }) => id);
-  if (ids.length === 0) return works.map((work) => ({ work, relations: null }));
+  if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
   const credits = await manager.find(WorkContribution, { where: { workId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });
   const contributions = await creditEntries(manager, 'work', credits);
   const recordingWorks = await recordingWorkEntries(
     manager,
     await manager.find(RecordingWork, { where: { workId: In(ids) }, order: { recordingId: 'ASC', position: 'ASC', id: 'ASC' } }),
   );
-  return works.map((work) => ({
+  return plain.map(({ work, ...entry }) => ({
     work,
+    ...entry,
     relations: ids.includes(work.id)
       ? {
           contributions: contributions.filter(({ credit }) => (credit as WorkContribution).workId === work.id),
@@ -39,9 +76,16 @@ export async function workEntries(manager: EntityManager, works: Work[]): Promis
   }));
 }
 
+/** Recordings, each with its editorial root loaded, as entries without relations. */
+export async function plainRecordingEntries(manager: EntityManager, recordings: Recording[]): Promise<RecordingEntry[]> {
+  const dates = await recordingReleaseDates(manager, recordings.map(({ id }) => id));
+  return recordings.map((recording) => ({ recording, releaseDate: dates.get(recording.id)! }));
+}
+
 export async function recordingEntries(manager: EntityManager, recordings: Recording[], now: Date): Promise<RecordingEntry[]> {
+  const plain = await plainRecordingEntries(manager, recordings);
   const ids = recordings.filter(notWithdrawn).map(({ id }) => id);
-  if (ids.length === 0) return recordings.map((recording) => ({ recording, relations: null }));
+  if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
   const artistCredits = await recordingArtistCreditEntries(manager, recordings.filter(notWithdrawn));
   const credits = await manager.find(RecordingContribution, { where: { recordingId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });
   const contributions = await creditEntries(manager, 'recording', credits);
@@ -65,11 +109,12 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
     now,
     false,
   );
-  return recordings.map((recording) => {
-    if (!ids.includes(recording.id)) return { recording, relations: null };
+  return plain.map((entry) => {
+    const { recording } = entry;
+    if (!ids.includes(recording.id)) return { ...entry, relations: null };
     const own = genres.filter(({ recordingId }) => recordingId === recording.id);
     return {
-      recording,
+      ...entry,
       relations: {
         artistCredits: artistCredits.filter(({ credit }) => credit.recordingId === recording.id),
         contributions: contributions.filter(({ credit }) => (credit as RecordingContribution).recordingId === recording.id),
@@ -110,14 +155,17 @@ export async function creditEntries(manager: EntityManager, scope: CreditScope, 
 /** Links between recordings and works, with both ends as entries without relations. */
 async function recordingWorkEntries(manager: EntityManager, rows: RecordingWork[]): Promise<RecordingWorkEntry[]> {
   if (rows.length === 0) return [];
-  const works = await manager.find(Work, { where: { id: In([...new Set(rows.map(({ workId }) => workId))]) }, relations: { editorialEntity: true } });
-  const recordings = await manager.find(Recording, {
-    where: { id: In([...new Set(rows.map(({ recordingId }) => recordingId))]) },
-    relations: { editorialEntity: true },
-  });
+  const works = await plainWorkEntries(
+    manager,
+    await manager.find(Work, { where: { id: In([...new Set(rows.map(({ workId }) => workId))]) }, relations: { editorialEntity: true } }),
+  );
+  const recordings = await plainRecordingEntries(
+    manager,
+    await manager.find(Recording, { where: { id: In([...new Set(rows.map(({ recordingId }) => recordingId))]) }, relations: { editorialEntity: true } }),
+  );
   return rows.map((row) => ({
     row,
-    work: { work: works.find(({ id }) => id === row.workId)! },
-    recording: { recording: recordings.find(({ id }) => id === row.recordingId)! },
+    work: works.find(({ work }) => work.id === row.workId)!,
+    recording: recordings.find(({ recording }) => recording.id === row.recordingId)!,
   }));
 }

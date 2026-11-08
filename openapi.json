@@ -6436,14 +6436,14 @@
     },
     "/v1/works": {
       "get": {
-        "description": "Obras publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[slug]` resuelve una obra por su slug; `filter[iswc]` toma el ISWC canónico; `filter[contributor]`, el public_id de una identidad acreditada, y `filter[role]`, el slug de un rol musical (juntos, en el mismo crédito). Orden `title` (por defecto) o `-createdAt`.",
+        "description": "Obras publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[slug]` resuelve una obra por su slug; `filter[iswc]` toma el ISWC canónico; `filter[contributor]`, el public_id de una identidad acreditada, y `filter[role]`, el slug de un rol musical (juntos, en el mismo crédito). Orden `title` (por defecto) o `-createdAt`. `include` admite `firstRecording`, `firstRecordingArtistCredits` y `firstRecordingArtistCredits.artist`: la primera grabación de cada obra y sus artistas, con el nombre listo para mostrar.",
         "operationId": "WorksController_list",
         "parameters": [
           {
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -6488,7 +6488,25 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -6497,7 +6515,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, recordingWorks, recordingWorks.recording",
+            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, recordingWorks, recordingWorks.recording, firstRecording, firstRecordingArtistCredits, firstRecordingArtistCredits.artist",
             "schema": {
               "type": "string"
             }
@@ -6639,7 +6657,7 @@
     },
     "/v1/works/{id}": {
       "get": {
-        "description": "Título, slug, descripción e ISWC, con sus créditos y las grabaciones que la interpretan, interpolan o samplean. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
+        "description": "Título, slug, descripción e ISWC, con sus créditos y las grabaciones que la interpretan, interpolan o samplean. `firstReleaseDate`, `firstRecording` y `firstRecordingArtistCredits` muestran su primera grabación: la que la interpreta con la fecha de lanzamiento más temprana. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
         "operationId": "WorksController_show",
         "parameters": [
           {
@@ -6655,7 +6673,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -6700,7 +6718,25 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
@@ -6709,7 +6745,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, recordingWorks, recordingWorks.recording",
+            "description": "Relaciones separadas por comas: contributions, contributions.identity, contributions.role, recordingWorks, recordingWorks.recording, firstRecording, firstRecordingArtistCredits, firstRecordingArtistCredits.artist",
             "schema": {
               "type": "string"
             }
@@ -6802,7 +6838,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -6874,7 +6910,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -6928,7 +6964,7 @@
             "name": "sort",
             "required": false,
             "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: title, recordingDate, createdAt, id. Por defecto title; el id desempata",
+            "description": "Campos separados por comas, con - para orden descendente: title, recordingDate, releaseDate, createdAt, id. Por defecto title; el id desempata",
             "schema": {
               "type": "string"
             }
@@ -7021,14 +7057,14 @@
     },
     "/v1/recordings": {
       "get": {
-        "description": "Grabaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de grabación; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate` (fechas desconocidas al final) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`.",
+        "description": "Grabaciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[isrc]`, el ISRC; `filter[genre]`, el slug de un género; `filter[contributor]`, el public_id de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de grabación; `filter[releaseYear]`, el año de su fecha de lanzamiento; `filter[isExplicit]`, `true` o `false`. Orden `title` (por defecto), `-recordingDate`, `-releaseDate` (fechas desconocidas al final en ambos) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`.",
         "operationId": "RecordingsController_list",
         "parameters": [
           {
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -7100,7 +7136,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -7154,7 +7190,7 @@
             "name": "sort",
             "required": false,
             "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: title, recordingDate, createdAt, id. Por defecto title; el id desempata",
+            "description": "Campos separados por comas, con - para orden descendente: title, recordingDate, releaseDate, createdAt, id. Por defecto title; el id desempata",
             "schema": {
               "type": "string"
             }
@@ -7209,6 +7245,14 @@
           },
           {
             "name": "filter[year]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[releaseYear]",
             "required": false,
             "in": "query",
             "schema": {
@@ -7293,7 +7337,7 @@
     },
     "/v1/recordings/{id}": {
       "get": {
-        "description": "Título, contenido explícito, ISRC y fecha parcial de grabación, con su crédito de artista, sus créditos, géneros, obras y apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
+        "description": "Título, contenido explícito, ISRC, fecha parcial de grabación y fecha de lanzamiento (la más temprana de sus ediciones publicadas y no canceladas con fecha, incluidas las futuras), con su crédito de artista, sus créditos, géneros, obras y apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo muestra su aviso.",
         "operationId": "RecordingsController_show",
         "parameters": [
           {
@@ -7309,7 +7353,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -7381,7 +7425,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -7528,7 +7572,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -7537,7 +7581,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8066,7 +8110,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8444,7 +8488,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8673,7 +8717,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -8974,7 +9018,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9131,7 +9175,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9323,7 +9367,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -9515,7 +9559,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -16303,7 +16347,7 @@
             "name": "fields[works]",
             "required": false,
             "in": "query",
-            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, createdAt, updatedAt, contributions, recordingWorks",
+            "description": "Campos de works separados por comas: publicationStatus, withdrawnAt, title, slug, description, iswc, firstReleaseDate, createdAt, updatedAt, contributions, recordingWorks, firstRecording, firstRecordingArtistCredits",
             "schema": {
               "type": "string"
             }
@@ -16312,7 +16356,7 @@
             "name": "fields[recordings]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, tracks",
             "schema": {
               "type": "string"
             }
@@ -19497,6 +19541,16 @@
             "example": "T0345246801",
             "description": "Ausente en una ficha retirada"
           },
+          "firstReleaseDate": {
+            "nullable": true,
+            "description": "Fecha de lanzamiento de su primera grabación (`firstRecording`); null sin ella o si no tiene fecha. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -19531,11 +19585,29 @@
                 "$ref": "#/components/schemas/ToManyLinkage"
               }
             ]
+          },
+          "firstRecording": {
+            "description": "`recordings`: su primera grabación. Entre las grabaciones publicadas que la interpretan (no samples ni interpolaciones), la de fecha de lanzamiento más temprana; las que no tienen fecha van después y el empate se resuelve por id público. null si ninguna la interpreta.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToOneLinkage"
+              }
+            ]
+          },
+          "firstRecordingArtistCredits": {
+            "description": "`recording-artist-credits`: el crédito de artista de su primera grabación, por `position`; vacío sin ella",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToManyLinkage"
+              }
+            ]
           }
         },
         "required": [
           "contributions",
-          "recordingWorks"
+          "recordingWorks",
+          "firstRecording",
+          "firstRecordingArtistCredits"
         ]
       },
       "WorkResource": {
@@ -19612,6 +19684,16 @@
           "recordingDate": {
             "nullable": true,
             "description": "Fecha parcial de grabación. Ausente en una ficha retirada",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              }
+            ]
+          },
+          "releaseDate": {
+            "nullable": true,
+            "description": "Fecha de lanzamiento: la fecha parcial más temprana de sus ediciones publicadas y no canceladas que tienen fecha, incluidas las futuras; null si no tiene. Se calcula al leer. Ausente en una ficha retirada",
             "type": "object",
             "allOf": [
               {
