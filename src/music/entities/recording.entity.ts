@@ -14,7 +14,11 @@ import { Credit, Work, applyAll, creditChecks, creditJoins } from './work.entity
  * microchanges write them.
  */
 
-/** The ranks of an artist credit, of a recording or printed on a track. */
+/**
+ * The ranks of an artist credit, of a recording or printed on a track. The
+ * database enum keeps its first name, `track_artist_rank`, from before
+ * recordings had a credit.
+ */
 export const ARTIST_CREDIT_RANKS = ['main', 'featured', 'remixer'] as const;
 export type ArtistCreditRank = (typeof ARTIST_CREDIT_RANKS)[number];
 
