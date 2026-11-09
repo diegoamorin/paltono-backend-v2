@@ -26,7 +26,7 @@ import {
   writeRecordingGenre,
 } from '../music/recordings';
 import { artistIdOfIdentity } from '../music/releases';
-import { RECORDING_WORK_RELATION_TYPES, ARTIST_CREDIT_RANKS } from '../music/entities/recording.entity';
+import { ARTIST_CREDIT_RANKS, RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entity';
 import { artistProblems } from './release-credit-changes';
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
