@@ -27,7 +27,7 @@ import {
   validateTargetKey,
 } from './operation-registry';
 import { possibleDuplicateRoot } from './possible-duplicates';
-import { checkReferences,checkRootReferences, keyRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
+import { checkReferences, checkRootReferences, keyRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
 
 export interface NewChange {
   entityId: string;

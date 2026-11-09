@@ -50,8 +50,8 @@ export class RecordingsController {
       'de una identidad acreditada; `filter[work]`, el id de una obra relacionada; `filter[artist]`, el public_id de un artista ' +
       'de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de ' +
       'grabación; `filter[releaseYear]`, el año de su fecha de lanzamiento; `filter[isExplicit]`, `true` o `false`. Orden ' +
-      '`title` (por defecto), `-recordingDate`, `-releaseDate` (fechas desconocidas al final en ambos) o `-createdAt`. `include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en ' +
-      '`displayName`.',
+      '`title` (por defecto), `-recordingDate`, `-releaseDate` (fechas desconocidas al final en ambos) o `-createdAt`. ' +
+      '`include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`.',
   })
   @ApiJsonApiQuery(RECORDINGS_QUERY)
   @ApiJsonApiCollectionResponse(RecordingResource)

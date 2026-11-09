@@ -35,7 +35,7 @@ export type ValueEnvelope = { exists: true; value: object | string | number | bo
 @Check('proposal_changes_base_value_envelope', `jsonb_typeof(base_value -> 'exists') = 'boolean'`)
 @Check('proposal_changes_proposed_value_envelope', `jsonb_typeof(proposed_value -> 'exists') = 'boolean'`)
 @Check('proposal_changes_possible_duplicate_of_creation', `possible_duplicate_of IS NULL OR operation = 'create_entity'`)
-@Check('proposal_changes_resolution',`(status IN ('pending', 'conflicted')) = (resolved_at IS NULL)`)
+@Check('proposal_changes_resolution', `(status IN ('pending', 'conflicted')) = (resolved_at IS NULL)`)
 export class ProposalChange {
   @PrimaryColumn({ type: 'uuid' })
   id: string;
