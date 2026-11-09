@@ -1,4 +1,4 @@
-import { EntityManager, Not, QueryFailedError } from 'typeorm';
+import { EntityManager, In, Not, QueryFailedError } from 'typeorm';
 import { Work } from './entities/work.entity';
 
 /*
@@ -28,6 +28,18 @@ const SLUG_MAX_LENGTH = 300;
 export async function workIdOf(manager: EntityManager, editorialEntityId: string): Promise<string | null> {
   const work = await manager.findOne(Work, { select: { id: true }, where: { editorialEntityId } });
   return work?.id ?? null;
+}
+
+/** The editorial root of the work whose public id, its own id, is the given one, or null if there is none. */
+export async function workRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const work = await manager.createQueryBuilder(Work, 'work').select('work.editorialEntityId').where('work.id::text = :publicId', { publicId }).getOne();
+  return work?.editorialEntityId ?? null;
+}
+
+/** The public id, its own id, of the work of each given editorial root, by root. */
+export async function workPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const works = await manager.find(Work, { select: { editorialEntityId: true, id: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(works.map(({ editorialEntityId, id }) => [editorialEntityId, id]));
 }
 
 /** The work of an editorial root with the value its rows hold, or null while it is only reserved. */

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { EntityManager, Not } from 'typeorm';
+import { EntityManager, In, Not } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Work } from './entities/work.entity';
@@ -49,6 +49,18 @@ export interface RecordingWorkValue {
 export async function recordingIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
   const recording = await manager.findOne(Recording, { select: { id: true }, where: { editorialEntityId } });
   return recording?.id ?? null;
+}
+
+/** The editorial root of the recording with the given public id, or null if there is none. */
+export async function recordingRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const recording = await manager.findOne(Recording, { select: { editorialEntityId: true }, where: { publicId } });
+  return recording?.editorialEntityId ?? null;
+}
+
+/** The public id of the recording of each given editorial root, by root. */
+export async function recordingPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const recordings = await manager.find(Recording, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(recordings.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findCreatedRecording(manager: EntityManager, editorialEntityId: string): Promise<{ recording: Recording; value: RecordingValue } | null> {

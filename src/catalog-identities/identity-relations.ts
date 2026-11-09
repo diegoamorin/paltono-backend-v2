@@ -1,4 +1,4 @@
-import { EntityManager, Not } from 'typeorm';
+import { EntityManager, In, Not } from 'typeorm';
 import { CatalogIdentity } from './entities/catalog-identity.entity';
 import { CatalogIdentityAlias, CatalogIdentityPlatformLink, OrganizationTypeAssignment, PersonNationality } from './entities/identity-relation.entity';
 
@@ -26,6 +26,18 @@ export interface PlatformLinkValue {
 export async function identityIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
   const identity = await manager.findOne(CatalogIdentity, { select: { id: true }, where: { editorialEntityId } });
   return identity?.id ?? null;
+}
+
+/** The editorial root of the identity with the given public id, or null if there is none. */
+export async function identityRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const identity = await manager.findOne(CatalogIdentity, { select: { editorialEntityId: true }, where: { publicId } });
+  return identity?.editorialEntityId ?? null;
+}
+
+/** The public id of the identity of each given editorial root, by root. */
+export async function identityPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const identities = await manager.find(CatalogIdentity, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(identities.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findAlias(manager: EntityManager, catalogIdentityId: number, id: number): Promise<AliasValue | null> {

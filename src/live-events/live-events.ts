@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import {
@@ -118,6 +118,18 @@ export async function tourIdOf(manager: EntityManager, editorialEntityId: string
   return tour?.id ?? null;
 }
 
+/** The editorial root of the tour with the given public id, or null if there is none. */
+export async function tourRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const tour = await manager.findOne(Tour, { select: { editorialEntityId: true }, where: { publicId } });
+  return tour?.editorialEntityId ?? null;
+}
+
+/** The public id of the tour of each given editorial root, by root. */
+export async function tourPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const tours = await manager.find(Tour, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(tours.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
+}
+
 export async function findCreatedTour(manager: EntityManager, editorialEntityId: string): Promise<{ tour: Tour; value: Required<TourValue> } | null> {
   const tour = await manager.findOneBy(Tour, { editorialEntityId });
   if (!tour) return null;
@@ -174,6 +186,18 @@ export async function writeTourField(manager: EntityManager, editorialEntityId: 
 export async function eventIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
   const event = await manager.findOne(LiveEvent, { select: { id: true }, where: { editorialEntityId: editorialEntityId.toLowerCase() } });
   return event?.id ?? null;
+}
+
+/** The editorial root of the event with the given public id, or null if there is none. */
+export async function eventRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const event = await manager.findOne(LiveEvent, { select: { editorialEntityId: true }, where: { publicId } });
+  return event?.editorialEntityId ?? null;
+}
+
+/** The public id of the event of each given editorial root, by root. */
+export async function eventPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const events = await manager.find(LiveEvent, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(events.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findCreatedEvent(manager: EntityManager, editorialEntityId: string): Promise<{ event: LiveEvent; value: Required<EventValue> } | null> {

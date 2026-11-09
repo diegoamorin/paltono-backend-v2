@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { EntityManager, IsNull, Not } from 'typeorm';
+import { EntityManager, In, IsNull, Not } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
@@ -7,7 +7,7 @@ import { PartialDateValue, partialDateColumns, partialDateValue } from '../commo
 import { Release, ReleaseArtistCredit, ReleaseGroup, ReleaseGroupType } from './entities/release.entity';
 
 /*
- * The writes of release groups, their presentation credits and releases. The
+ * The writes of release groups, their artist credits and releases. The
  * editorial flow calls them inside the transaction that applies a microchange,
  * once it holds the locks of every root involved. Another root is named by its
  * editorial UUID, as `{"entity_id": …}`, since its domain ids are not public.
@@ -59,7 +59,7 @@ export const RELEASE_FIELDS = {
 } as const;
 export type ReleaseFieldPath = keyof typeof RELEASE_FIELDS;
 
-/** A presentation credit of a release group, keyed by the group and the artist. */
+/** An artist credit of a release group, keyed by the group and the artist. */
 export interface ReleaseArtistCreditValue {
   position: number;
   creditedAs?: string | null;
@@ -71,6 +71,18 @@ export interface ReleaseArtistCreditValue {
 export async function releaseGroupIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
   const group = await manager.findOne(ReleaseGroup, { select: { id: true }, where: { editorialEntityId: editorialEntityId.toLowerCase() } });
   return group?.id ?? null;
+}
+
+/** The editorial root of the release group with the given public id, or null if there is none. */
+export async function releaseGroupRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const group = await manager.findOne(ReleaseGroup, { select: { editorialEntityId: true }, where: { publicId } });
+  return group?.editorialEntityId ?? null;
+}
+
+/** The public id of the release group of each given editorial root, by root. */
+export async function releaseGroupPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const groups = await manager.find(ReleaseGroup, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(groups.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findCreatedReleaseGroup(
@@ -147,7 +159,7 @@ async function repackageOfId(manager: EntityManager, original: RootReference | n
   return original === null ? null : (await releaseGroupIdOf(manager, original.entity_id))!;
 }
 
-// Presentation credits
+// Artist credits
 
 /** The internal id of the artist profile of an identity root, or null while it has none. */
 export async function artistIdOfIdentity(manager: EntityManager, identityEntityId: string): Promise<number | null> {
@@ -189,6 +201,18 @@ export async function deleteReleaseArtistCredit(manager: EntityManager, releaseG
 export async function releaseIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
   const release = await manager.findOne(Release, { select: { id: true }, where: { editorialEntityId } });
   return release?.id ?? null;
+}
+
+/** The editorial root of the release with the given public id, or null if there is none. */
+export async function releaseRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
+  const release = await manager.findOne(Release, { select: { editorialEntityId: true }, where: { publicId } });
+  return release?.editorialEntityId ?? null;
+}
+
+/** The public id of the release of each given editorial root, by root. */
+export async function releasePublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
+  const releases = await manager.find(Release, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  return new Map(releases.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findCreatedRelease(manager: EntityManager, editorialEntityId: string): Promise<{ release: Release; value: Required<ReleaseValue> } | null> {
