@@ -1,0 +1,7 @@
+{
+  // Tests only transpile each file; `pnpm typecheck` checks the types.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true
+  }
+}
