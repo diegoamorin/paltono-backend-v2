@@ -31,7 +31,7 @@ export interface ReleaseGroupEntry {
   group: ReleaseGroup;
   dates: ReleaseGroupDates;
   /**
-   * Its presentation credit, by position: loaded along with its relations, and
+   * Its artist credit, by position: loaded along with its relations, and
    * on an entry whose reader offers it (a search result); never on a withdrawn
    * release group.
    */

@@ -459,8 +459,8 @@ export class CatalogWriter {
   }
 
   /**
-   * A release group with its presentation credits and its releases, each with
-   * its tracks and their presentation credits: all keyed by roots or
+   * A release group with its artist credits and its releases, each with
+   * its tracks and their printed credits: all keyed by roots or
    * insertions of the same proposal. The credits of each release, keyed by
    * their generated id, wait for the completion.
    */

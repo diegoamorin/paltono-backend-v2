@@ -52,7 +52,7 @@ export class ReleaseGroupsController {
     description:
       'Lanzamientos publicados; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir ' +
       'mayúsculas ni acentos; `filter[type]` admite `album`, `ep`, `single` y `compilation`; `filter[artist]` toma el public_id ' +
-      'de un artista con crédito de presentación; `filter[upcoming]`, `true` o `false`; `filter[releasedFrom]` y ' +
+      'de un artista de su crédito de artista; `filter[upcoming]`, `true` o `false`; `filter[releasedFrom]` y ' +
       '`filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) acotan la fecha derivada, e incluyen una fecha parcial que se solapa ' +
       `con el rango. ${DATES} Orden \`-releaseDate\` (por defecto), \`releaseDate\` (útil con \`upcoming\`), \`title\` o ` +
       '`-createdAt`; los lanzamientos sin fecha van al final.',
@@ -69,7 +69,7 @@ export class ReleaseGroupsController {
   @ApiOperation({
     summary: 'Ver un lanzamiento',
     description:
-      'Título, tipo y descripción, con sus créditos de presentación, ediciones y lanzamiento original si es un repackage. ' +
+      'Título, tipo y descripción, con su crédito de artista, ediciones y lanzamiento original si es un repackage. ' +
       `${DATES} \`nextReleaseDate\` es la fecha de su próxima edición por salir y \`releaseInstant\`, el instante de la primera ` +
       'edición próxima con hora, para la cuenta regresiva. `meta.editorialEntityId` es su UUID editorial. Una reserva responde ' +
       '404; una ficha retirada solo muestra su aviso.',

@@ -136,7 +136,7 @@ export interface OperationDefinition {
   rootReferences?(value: unknown): RootReference[];
   /**
    * Members of the target key that name another root of the catalog, such as
-   * the artist of a presentation credit, by name. Each one is checked like a
+   * the artist of an artist credit, by name. Each one is checked like a
    * root the value names: published, or a reservation this proposal creates.
    */
   keyRoots?: Record<string, KeyRoot>;

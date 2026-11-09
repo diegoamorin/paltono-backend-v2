@@ -25,7 +25,7 @@ Una grabación puede aparecer en varias ediciones y posiciones. Una obra puede t
 
 ### Lanzamiento
 
-Un lanzamiento posee su título, su tipo (`album | ep | single | compilation`), una descripción opcional, `repackage_of_id` y los créditos de presentación de sus artistas (`release_artist_credits`), que valen para todas sus ediciones.
+Un lanzamiento posee su título, su tipo (`album | ep | single | compilation`), una descripción opcional, `repackage_of_id` y su crédito de artista (`release_artist_credits`), que vale para todas sus ediciones.
 
 - **Tipo.** Es una decisión editorial con fuente sobre cómo lo anunció su artista o agencia; nunca se calcula por número de pistas ni duración. Un single sigue siendo single aunque una edición añada remixes o un instrumental. Las ediciones no tienen tipo propio.
 - **Alta mínima.** Basta un título no vacío y un tipo válido; puede publicarse sin ediciones para registrar un anuncio.
@@ -73,11 +73,11 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 | `work_contributions` | `work` | Autoría y aportes a la obra: composición, letra, adaptación, traducción, arreglo de obra | Obra |
 | `recording_contributions` | `recording` | Interpretación, producción, arreglo de grabación, grabación y mezcla | Grabación |
 | `release_contributions` | `release` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
-| `release_artist_credits` | Presentación | Artistas con que se presenta el lanzamiento, en orden | Lanzamiento |
-| `recording_artist_credits` | Presentación | Crédito de artista de la grabación: `main`, `featured` o `remixer`, en orden | Grabación |
-| `track_artist_credits` | Presentación | Crédito impreso de una pista, solo si la edición acredita la grabación de otra forma | Edición de la pista |
+| `release_artist_credits` | Crédito de artista | Artistas con que se presenta el lanzamiento, en orden | Lanzamiento |
+| `recording_artist_credits` | Crédito de artista | Crédito de artista de la grabación: `main`, `featured` o `remixer`, en orden | Grabación |
+| `track_artist_credits` | Crédito impreso | Crédito impreso de una pista, solo si la edición acredita la grabación de otra forma | Edición de la pista |
 
-- Los créditos de presentación referencian `artists` y no atribuyen autoría, interpretación ni producción. `credited_as` conserva el nombre literal de la fuente; NULL muestra el nombre visible de la identidad.
+- Los créditos de artista y los impresos referencian `artists` y no atribuyen autoría, interpretación ni producción. `credited_as` conserva el nombre literal de la fuente; NULL muestra el nombre visible de la identidad.
 - Una pista con crédito impreso lo muestra entero; sin él, muestra el crédito de artista de su grabación, leído al mostrarla y sin copiarlo (ADR 0008). Una grabación retirada no presta su crédito. Ninguno de los dos tiene un mínimo de filas.
 - Los créditos de participación referencian `catalog_identities` y un rol de `contribution_roles` válido para su ámbito mediante una FK compuesta con `contribution_role_scopes`. Una persona u organización puede recibir créditos sin perfil artístico.
 - `position` es un orden editorial, no importancia ni porcentaje. `details` describe instrumentos o funciones adicionales; `source_text`/`source_url` conservan la referencia del crédito.

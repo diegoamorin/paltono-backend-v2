@@ -7745,7 +7745,7 @@
     },
     "/v1/release-groups": {
       "get": {
-        "description": "Lanzamientos publicados; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[type]` admite `album`, `ep`, `single` y `compilation`; `filter[artist]` toma el public_id de un artista con crédito de presentación; `filter[upcoming]`, `true` o `false`; `filter[releasedFrom]` y `filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) acotan la fecha derivada, e incluyen una fecha parcial que se solapa con el rango. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Orden `-releaseDate` (por defecto), `releaseDate` (útil con `upcoming`), `title` o `-createdAt`; los lanzamientos sin fecha van al final.",
+        "description": "Lanzamientos publicados; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[type]` admite `album`, `ep`, `single` y `compilation`; `filter[artist]` toma el public_id de un artista de su crédito de artista; `filter[upcoming]`, `true` o `false`; `filter[releasedFrom]` y `filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) acotan la fecha derivada, e incluyen una fecha parcial que se solapa con el rango. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Orden `-releaseDate` (por defecto), `releaseDate` (útil con `upcoming`), `title` o `-createdAt`; los lanzamientos sin fecha van al final.",
         "operationId": "ReleaseGroupsController_list",
         "parameters": [
           {
@@ -7938,7 +7938,7 @@
     },
     "/v1/release-groups/{id}": {
       "get": {
-        "description": "Título, tipo y descripción, con sus créditos de presentación, ediciones y lanzamiento original si es un repackage. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). `nextReleaseDate` es la fecha de su próxima edición por salir y `releaseInstant`, el instante de la primera edición próxima con hora, para la cuenta regresiva. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
+        "description": "Título, tipo y descripción, con su crédito de artista, ediciones y lanzamiento original si es un repackage. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). `nextReleaseDate` es la fecha de su próxima edición por salir y `releaseInstant`, el instante de la primera edición próxima con hora, para la cuenta regresiva. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
         "operationId": "ReleaseGroupsController_show",
         "parameters": [
           {
@@ -8830,7 +8830,7 @@
     },
     "/v1/artists/{id}/release-groups": {
       "get": {
-        "description": "Lanzamientos publicados con crédito de presentación del artista: uno por lanzamiento, aunque tenga varias ediciones. `filter[type]` admite `album`, `ep`, `single` y `compilation`. Los órdenes son los de `GET /v1/release-groups`. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Un artista cuya identidad está retirada no muestra lanzamientos.",
+        "description": "Lanzamientos publicados en cuyo crédito de artista figura el artista: uno por lanzamiento, aunque tenga varias ediciones. `filter[type]` admite `album`, `ep`, `single` y `compilation`. Los órdenes son los de `GET /v1/release-groups`. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Un artista cuya identidad está retirada no muestra lanzamientos.",
         "operationId": "ArtistReleaseGroupsController_list",
         "parameters": [
           {

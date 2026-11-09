@@ -88,7 +88,7 @@ export async function artistReferences(manager: EntityManager, catalogIdentityId
             EXISTS (SELECT 1 FROM track_artist_credits WHERE artist_id = $1) AS "onTracks"`,
     [artistId],
   );
-  if (credited) references.push('El perfil artístico tiene créditos de presentación en lanzamientos; quítalos antes de quitar el perfil');
+  if (credited) references.push('El perfil artístico tiene créditos de artista en lanzamientos; quítalos antes de quitar el perfil');
   if (onRecordings) references.push('El perfil artístico tiene créditos de artista en grabaciones; quítalos antes de quitar el perfil');
   if (onTracks) references.push('El perfil artístico tiene créditos impresos en pistas; quítalos antes de quitar el perfil');
   // Tours and events belong to the live-events module, whose roots own their announced artists.

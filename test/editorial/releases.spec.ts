@@ -251,7 +251,7 @@ describe('release groups and releases in the editorial flow', () => {
     });
   });
 
-  describe('presentation credits', () => {
+  describe('artist credits', () => {
     /** Publishes an identity with an artist profile; returns its editorial root and the artist's public id. */
     async function publishArtist(displayName: string): Promise<{ entityId: string; id: string }> {
       const entityId = await reserve('identity');

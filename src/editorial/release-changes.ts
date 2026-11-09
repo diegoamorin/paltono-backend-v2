@@ -35,7 +35,7 @@ import { DESCRIPTION, envelope } from './work-changes';
  * title and a type and may be published before any release, to record an
  * announcement. A release needs only its release group, published or created
  * by the same proposal; moving it to another group is a field change of the
- * release. Presentation credits of a release group are in
+ * release. Artist credits of a release group are in
  * `release-credit-changes.ts`; the tracks of a release, in `track-changes.ts`.
  */
 

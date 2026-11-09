@@ -59,7 +59,7 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
   });
 }
 
-/** Release group entries with their presentation credit, which a withdrawn release group does not show. */
+/** Release group entries with their artist credit, which a withdrawn release group does not show. */
 export async function withReleaseArtistCredits(manager: EntityManager, entries: ReleaseGroupEntry[]): Promise<ReleaseGroupEntry[]> {
   const ids = entries.map(({ group }) => group).filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return entries;
@@ -129,7 +129,7 @@ async function explicitReleaseIds(manager: EntityManager, releaseIds: number[]):
   return new Set(rows.map(({ releaseId }) => releaseId));
 }
 
-/** Presentation credits with their artists and identities, in the given order. */
+/** Artist credits with their artists and identities, in the given order. */
 async function artistCreditEntries(manager: EntityManager, credits: ReleaseArtistCredit[]): Promise<ReleaseArtistCreditEntry[]> {
   if (credits.length === 0) return [];
   const artists = await manager.find(Artist, { where: { id: In([...new Set(credits.map(({ artistId }) => artistId))]) } });

@@ -96,7 +96,7 @@ async function trackColumns(manager: EntityManager, value: TrackValue) {
   };
 }
 
-// Presentation credits
+// Printed credits
 
 export async function findTrackArtistCredit(manager: EntityManager, releaseId: number, trackId: number, artistId: number): Promise<Required<TrackArtistCreditValue> | null> {
   if (!(await isTrackOf(manager, releaseId, trackId))) return null;

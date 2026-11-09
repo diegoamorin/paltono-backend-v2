@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * The rows a release owns besides its fields (docs/music-catalog-model.md §3
- * and §4): its tracks, the presentation credits and platform links of each
+ * and §4): its tracks, the printed credits and platform links of each
  * track, and the credits of the release itself. Only applied microchanges
  * write them.
  */

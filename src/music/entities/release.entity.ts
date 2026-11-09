@@ -5,7 +5,7 @@ import { EditorialEntity } from '../../editorial/entities/editorial-entity.entit
 
 /*
  * The release group and release editorial roots' domain rows, and the
- * presentation credits a release group owns. Only applied microchanges write
+ * artist credits a release group owns. Only applied microchanges write
  * them; a release group's date and upcoming state are derived from its
  * releases, never stored.
  */

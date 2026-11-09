@@ -112,7 +112,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C5 | `GET /v1/identities/{id}/organized-events` y `/organized-tours` | Eventos y tours donde figura como organizador | ok |
 | C6 | `GET /v1/artists` | Perfiles artísticos | ok val |
 | C7 | `GET /v1/artists/{id}` | Perfil y su identidad | ok authz |
-| C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de presentación, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
+| C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de artista, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
 | C9 | `GET /v1/artists/{id}/tracks` | Pistas cuyo crédito mostrado incluye al artista: el impreso si existe; si no, el de su grabación publicada (`filter[rank]`, sobre ese mismo crédito) | ok val |
 | C10 | `GET /v1/artists/{id}/events` y `/tours` | Anunciado en eventos y tours | ok val |
 | C11 | `GET /v1/anniversaries` | Aniversarios: una fila por cada fecha con mes conocido (`birth`, `death`, `debut`, `founding`, `dissolution`) de una identidad publicada. Sin consulta individual | ok val |

@@ -244,7 +244,7 @@ describe('artist credits of recordings and printed credits of tracks', () => {
     });
   });
 
-  describe('the presentation credit of a release group', () => {
+  describe('the artist credit of a release group', () => {
     it('shows the name to show', async () => {
       await publish([
         {

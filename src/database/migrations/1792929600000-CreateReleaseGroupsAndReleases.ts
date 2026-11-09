@@ -5,7 +5,7 @@ const partialDateCheck = (prefix: string) =>
 
 /**
  * The release group and release editorial roots (docs/music-catalog-model.md
- * §3) and the presentation credits a release group owns. Only applied
+ * §3) and the artist credits a release group owns. Only applied
  * microchanges write them.
  */
 export class CreateReleaseGroupsAndReleases1792929600000 implements MigrationInterface {

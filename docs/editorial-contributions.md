@@ -27,8 +27,8 @@ Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permi
 | `identity` | `catalog_identities` | `people` o `organizations`, perfil `artists`, alias, nacionalidades, categorías y enlaces; membresías y roles pertenecen a la organización; afiliaciones pertenecen a la identidad del artista. |
 | `work` | `works` | Créditos `work_contributions`. |
 | `recording` | `recordings` | Créditos, géneros y relaciones con obras (`recording_works`). |
-| `release_group` | `release_groups` | Título, tipo, descripción, vínculo de repackage y créditos de presentación del lanzamiento (`release_artist_credits`). |
-| `release` | `releases` | Edición: pertenencia a su lanzamiento, nombre de edición, fecha y hora, cancelación, créditos de la edición (`release_contributions`), pistas, créditos de presentación de las pistas y enlaces de las pistas. |
+| `release_group` | `release_groups` | Título, tipo, descripción, vínculo de repackage y crédito de artista del lanzamiento (`release_artist_credits`). |
+| `release` | `releases` | Edición: pertenencia a su lanzamiento, nombre de edición, fecha y hora, cancelación, créditos de la edición (`release_contributions`), pistas, créditos impresos de las pistas y enlaces de las pistas. |
 | `event` | `events` | Participantes, organizadores y enlaces del concierto. |
 | `tour` | `tours` | Artistas, organizadores y enlaces del tour. |
 

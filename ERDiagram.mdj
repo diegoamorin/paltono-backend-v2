@@ -14387,7 +14387,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Lanzamiento: album, EP, single or compilation as announced by its artist or agency, independent of how many editions it has. Approved 2026-10-17. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. A group may be published with only a nonblank title and valid type, before any edition exists, to record an announcement. Owns its title, type, description, repackage link and presentation credits (release_artist_credits). Its release date and upcoming state are derived from its non-cancelled editions, never stored. No automatic merge of groups. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
+					"documentation": "Lanzamiento: album, EP, single or compilation as announced by its artist or agency, independent of how many editions it has. Approved 2026-10-17. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. A group may be published with only a nonblank title and valid type, before any edition exists, to record an announcement. Owns its title, type, description, repackage link and artist credits (release_artist_credits). Its release date and upcoming state are derived from its non-cancelled editions, never stored. No automatic merge of groups. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14836,7 +14836,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "release_artist_credits",
-					"documentation": " Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,release_group_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name. Owned by the release group editorial root (approved 2026-10-17); editions carry no separate artist credits.",
+					"documentation": " Artist credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,release_group_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name. Owned by the release group editorial root (approved 2026-10-17); editions carry no separate artist credits.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14856,7 +14856,7 @@
 								"$ref": "AAAAAAGeD8zCFIEg0E4="
 							},
 							"name": "release_group_id",
-							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Presentation credits belong to the release group and apply to all its editions.",
+							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Artist credits belong to the release group and apply to all its editions.",
 							"type": "INTEGER",
 							"primaryKey": true,
 							"foreignKey": true
@@ -15041,7 +15041,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "track_artist_credits",
-					"documentation": "Credito impreso de una pista (main/featured/remixer), ADR 0008: solo existe si la edicion acredita la grabacion de otra forma, y entonces sustituye entero al credito de artista de la grabacion (recording_artist_credits) en esa pista. track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Presentation credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"documentation": "Credito impreso de una pista (main/featured/remixer), ADR 0008: solo existe si la edicion acredita la grabacion de otra forma, y entonces sustituye entero al credito de artista de la grabacion (recording_artist_credits) en esa pista. track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Printed credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -34996,7 +34996,7 @@
 							"top": 2064,
 							"width": 672,
 							"height": 100,
-							"text": "Exactly one matching domain root per published/withdrawn editorial entity; reserved roots have none. Identity owns artist/person/organization details. Release owns tracks and presentation credits. Events and tours use the same moderation policy as music."
+							"text": "Exactly one matching domain root per published/withdrawn editorial entity; reserved roots have none. Identity owns artist/person/organization details. Release owns tracks and their printed credits. Events and tours use the same moderation policy as music."
 						},
 						{
 							"_type": "ERDEntityView",

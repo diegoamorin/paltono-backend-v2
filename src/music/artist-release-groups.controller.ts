@@ -19,7 +19,7 @@ export class ArtistReleaseGroupsController {
   @ApiOperation({
     summary: 'Discografía de un artista',
     description:
-      'Lanzamientos publicados con crédito de presentación del artista: uno por lanzamiento, aunque tenga varias ediciones. ' +
+      'Lanzamientos publicados en cuyo crédito de artista figura el artista: uno por lanzamiento, aunque tenga varias ediciones. ' +
       '`filter[type]` admite `album`, `ep`, `single` y `compilation`. Los órdenes son los de `GET /v1/release-groups`. ' +
       `${DATES} Un artista cuya identidad está retirada no muestra lanzamientos.`,
   })

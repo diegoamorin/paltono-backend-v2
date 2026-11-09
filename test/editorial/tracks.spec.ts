@@ -285,7 +285,7 @@ describe('tracks and credits of releases in the editorial flow', () => {
     });
   });
 
-  describe('presentation credits and links of a track', () => {
+  describe('printed credits and links of a track', () => {
     async function publishArtist(displayName: string): Promise<string> {
       const entityId = await reserve('identity');
       await publish(artistCreation(entityId, displayName));

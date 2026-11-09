@@ -14,7 +14,7 @@ import { reference } from './identity-relation-changes';
 import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
 
 /*
- * Presentation credits of a release group: the artists it is presented with,
+ * Artist credits of a release group: the artists it is presented with,
  * in order, for all its releases. A credit is keyed by the group and the
  * artist, whose profile has no root of its own: the key names the artist's
  * identity by its editorial UUID, checked like any other root a change names.
@@ -54,7 +54,7 @@ export async function artistProblems(manager: EntityManager, targetKey: object |
   const identity = (targetKey as { artist_id: { entity_id: string } }).artist_id.entity_id;
   const identityId = await identityIdOf(manager, identity.toLowerCase());
   if (identityId === null || (await hasArtist(manager, identityId))) return [];
-  return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile receives a presentation credit', member: 'targetKey/artist_id' }];
+  return [{ code: 'no_artist_profile', detail: 'Only an identity with an artist profile receives an artist credit', member: 'targetKey/artist_id' }];
 }
 
 const base = {
@@ -88,7 +88,7 @@ export const RELEASE_CREDIT_CHANGES: OperationDefinition[] = [
   {
     ...base,
     operation: 'remove_relation',
-    description: 'Quita un artista de la presentación del lanzamiento; la revisión guarda sus valores anteriores.',
+    description: 'Quita un artista del crédito de artista del lanzamiento; la revisión guarda sus valores anteriores.',
     valueSchema: null,
     apply: async (manager, _root, _value, now, key) => {
       await deleteReleaseArtistCredit(manager, key!.release_group_id, key!.artist_id, now);
