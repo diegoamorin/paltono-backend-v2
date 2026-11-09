@@ -15,8 +15,8 @@ import { Credit, Work, applyAll, creditChecks, creditJoins } from './work.entity
  */
 
 /** The ranks of an artist credit, of a recording or printed on a track. */
-export const TRACK_ARTIST_RANKS = ['main', 'featured', 'remixer'] as const;
-export type TrackArtistRank = (typeof TRACK_ARTIST_RANKS)[number];
+export const ARTIST_CREDIT_RANKS = ['main', 'featured', 'remixer'] as const;
+export type ArtistCreditRank = (typeof ARTIST_CREDIT_RANKS)[number];
 
 export const RECORDING_WORK_RELATION_TYPES = ['performance', 'interpolation', 'sample'] as const;
 export type RecordingWorkRelationType = (typeof RECORDING_WORK_RELATION_TYPES)[number];
@@ -124,8 +124,8 @@ export class RecordingArtistCredit {
   @JoinColumn({ name: 'recording_id', foreignKeyConstraintName: 'recording_artist_credits_recording_id_fkey' })
   recording?: Recording;
 
-  @Column({ type: 'enum', enum: TRACK_ARTIST_RANKS, enumName: 'track_artist_rank' })
-  rank: TrackArtistRank;
+  @Column({ type: 'enum', enum: ARTIST_CREDIT_RANKS, enumName: 'track_artist_rank' })
+  rank: ArtistCreditRank;
 
   @Column({ type: 'smallint' })
   position: number;

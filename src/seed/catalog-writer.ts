@@ -3,7 +3,7 @@ import { BirthValue, PartialDateValue } from '../common/partial-date/partial-dat
 import { EditorialEntityType } from '../editorial/entities/editorial-entity.entity';
 import { EventStatus, LiveArtistRole, TourStatus } from '../live-events/entities/live-event.entity';
 import { ReleaseGroupType } from '../music/entities/release.entity';
-import { TrackArtistRank } from '../music/entities/track.entity';
+import { ArtistCreditRank } from '../music/entities/recording.entity';
 import { EditorialSeeder, SeedChange } from './editorial-seeder';
 import { SeedImages } from './seed-images';
 import { CountryCode, GenreSlug, OrganizationTypeSlug, PlatformSlug, RoleSlug, SeedVocabularies } from './seed-vocabularies';
@@ -88,7 +88,7 @@ export interface WorkSpec {
 
 export interface ArtistCreditSpec {
   artist: string;
-  rank: TrackArtistRank;
+  rank: ArtistCreditRank;
   creditedAs?: string;
 }
 

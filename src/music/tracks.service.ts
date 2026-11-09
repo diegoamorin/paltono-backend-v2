@@ -5,7 +5,8 @@ import { Clock } from '../common/clock/clock';
 import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, requireOneOf } from '../common/json-api/query';
-import { TRACK_ARTIST_RANKS, Track } from './entities/track.entity';
+import { ARTIST_CREDIT_RANKS } from './entities/recording.entity';
+import { Track } from './entities/track.entity';
 import { publishedTracksOf } from './music-entries';
 import { RecordingsService } from './recordings.service';
 import { ReleasesService } from './releases.service';
@@ -62,7 +63,7 @@ export class TracksService {
    */
   async ofArtist(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
     const { rank } = query.filter;
-    if (rank !== undefined) requireOneOf('filter[rank]', rank, TRACK_ARTIST_RANKS);
+    if (rank !== undefined) requireOneOf('filter[rank]', rank, ARTIST_CREDIT_RANKS);
     const artist = await this.dataSource.manager.findOne(Artist, { where: { publicId }, relations: { identity: { editorialEntity: true } } });
     if (!artist) throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'artist_not_found', detail: 'The artist does not exist' }]);
     // The profile of a withdrawn identity shows only its notice.

@@ -1,7 +1,7 @@
 import { EntityManager, Not } from 'typeorm';
-import { Recording } from './entities/recording.entity';
+import { ArtistCreditRank, Recording } from './entities/recording.entity';
 import { Release } from './entities/release.entity';
-import { Track, TrackArtistCredit, TrackArtistRank, TrackPlatformLink } from './entities/track.entity';
+import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
 import { recordingIdOf } from './recordings';
 import { RootReference } from './releases';
 
@@ -22,7 +22,7 @@ export interface TrackValue {
 
 /** An artist of the printed credit of a track (ADR 0008), keyed by the track and the artist. */
 export interface TrackArtistCreditValue {
-  rank: TrackArtistRank;
+  rank: ArtistCreditRank;
   position: number;
   creditedAs?: string | null;
 }

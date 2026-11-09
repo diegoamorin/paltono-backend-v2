@@ -3,7 +3,7 @@ import { EntityManager, In, Not } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Work } from './entities/work.entity';
-import { Recording, RecordingArtistCredit, RecordingGenre, RecordingWork, RecordingWorkRelationType, TrackArtistRank } from './entities/recording.entity';
+import { Recording, RecordingArtistCredit, RecordingGenre, RecordingWork, RecordingWorkRelationType, ArtistCreditRank } from './entities/recording.entity';
 
 /*
  * The writes of a recording and of the rows it owns besides its credits
@@ -109,7 +109,7 @@ export async function writeRecordingField(
 
 /** An artist of a recording, keyed by the recording and the artist. */
 export interface RecordingArtistCreditValue {
-  rank: TrackArtistRank;
+  rank: ArtistCreditRank;
   position: number;
   creditedAs?: string | null;
 }

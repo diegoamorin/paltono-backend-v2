@@ -26,7 +26,7 @@ import {
   writeRecordingGenre,
 } from '../music/recordings';
 import { artistIdOfIdentity } from '../music/releases';
-import { RECORDING_WORK_RELATION_TYPES, TRACK_ARTIST_RANKS } from '../music/entities/recording.entity';
+import { RECORDING_WORK_RELATION_TYPES, ARTIST_CREDIT_RANKS } from '../music/entities/recording.entity';
 import { artistProblems } from './release-credit-changes';
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
@@ -179,7 +179,7 @@ const ARTIST_CREDIT = {
   additionalProperties: false,
   required: ['rank', 'position'],
   properties: {
-    rank: { enum: TRACK_ARTIST_RANKS, description: '`main`, `featured` o `remixer`; una por artista y grabación' },
+    rank: { enum: ARTIST_CREDIT_RANKS, description: '`main`, `featured` o `remixer`; una por artista y grabación' },
     position: { type: 'integer', minimum: 0, maximum: 32767, description: 'Orden de presentación' },
     creditedAs: { type: ['string', 'null'], maxLength: 200, pattern: '\\S', description: 'Nombre literal de la fuente; null muestra el nombre visible' },
   },

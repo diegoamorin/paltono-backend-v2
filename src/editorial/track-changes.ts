@@ -1,5 +1,5 @@
 import { EntityManager } from 'typeorm';
-import { TRACK_ARTIST_RANKS } from '../music/entities/track.entity';
+import { ARTIST_CREDIT_RANKS } from '../music/entities/recording.entity';
 import { artistIdOfIdentity, releaseIdOf } from '../music/releases';
 import {
   TrackArtistCreditValue,
@@ -178,7 +178,7 @@ const TRACK_CREDIT = {
   additionalProperties: false,
   required: ['rank', 'position'],
   properties: {
-    rank: { enum: TRACK_ARTIST_RANKS, description: '`main`, `featured` o `remixer`; una por artista y pista' },
+    rank: { enum: ARTIST_CREDIT_RANKS, description: '`main`, `featured` o `remixer`; una por artista y pista' },
     position: { type: 'integer', minimum: 0, maximum: 32767, description: 'Orden de presentación' },
     creditedAs: { type: ['string', 'null'], maxLength: 200, pattern: '\\S', description: 'Nombre literal de la fuente; null muestra el nombre visible' },
   },

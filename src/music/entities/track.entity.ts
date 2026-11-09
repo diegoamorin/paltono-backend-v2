@@ -3,7 +3,7 @@ import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScope, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
 import { Platform } from '../../vocabularies/entities/platform.entity';
-import { Recording, TRACK_ARTIST_RANKS, TrackArtistRank } from './recording.entity';
+import { ARTIST_CREDIT_RANKS, ArtistCreditRank, Recording } from './recording.entity';
 import { Release } from './release.entity';
 import { Credit, applyAll, creditChecks, creditJoins } from './work.entity';
 
@@ -13,8 +13,6 @@ import { Credit, applyAll, creditChecks, creditJoins } from './work.entity';
  * editorial root of its own; only applied microchanges of its release write
  * them.
  */
-
-export { TRACK_ARTIST_RANKS, TrackArtistRank };
 
 // Mirrors the CreateTracksAndReleaseContributions migration, so `migration:generate` finds no drift.
 @Entity('tracks')
@@ -82,8 +80,8 @@ export class TrackArtistCredit {
   @JoinColumn({ name: 'track_id', foreignKeyConstraintName: 'track_artist_credits_track_id_fkey' })
   track?: Track;
 
-  @Column({ type: 'enum', enum: TRACK_ARTIST_RANKS, enumName: 'track_artist_rank' })
-  rank: TrackArtistRank;
+  @Column({ type: 'enum', enum: ARTIST_CREDIT_RANKS, enumName: 'track_artist_rank' })
+  rank: ArtistCreditRank;
 
   @Column({ type: 'smallint' })
   position: number;
