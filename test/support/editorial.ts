@@ -74,6 +74,7 @@ export interface ChangeInput {
   position?: number;
   atomicGroupId?: string | null;
   targetKey?: unknown;
+  possibleDuplicateOf?: string | null;
 }
 
 function changeDocument({ entityId, ...attributes }: ChangeInput, id?: string) {

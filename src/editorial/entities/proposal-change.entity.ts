@@ -34,7 +34,8 @@ export type ValueEnvelope = { exists: true; value: object | string | number | bo
 @Check('proposal_changes_position_nonnegative', `position >= 0`)
 @Check('proposal_changes_base_value_envelope', `jsonb_typeof(base_value -> 'exists') = 'boolean'`)
 @Check('proposal_changes_proposed_value_envelope', `jsonb_typeof(proposed_value -> 'exists') = 'boolean'`)
-@Check('proposal_changes_resolution', `(status IN ('pending', 'conflicted')) = (resolved_at IS NULL)`)
+@Check('proposal_changes_possible_duplicate_of_creation', `possible_duplicate_of IS NULL OR operation = 'create_entity'`)
+@Check('proposal_changes_resolution',`(status IN ('pending', 'conflicted')) = (resolved_at IS NULL)`)
 export class ProposalChange {
   @PrimaryColumn({ type: 'uuid' })
   id: string;
@@ -88,6 +89,17 @@ export class ProposalChange {
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })
   resolvedAt: Date | null;
+
+  /** A creation's mark for moderation: the published root of the same type it may duplicate. */
+  @Column({ name: 'possible_duplicate_of', type: 'uuid', nullable: true })
+  possibleDuplicateOfId: string | null;
+
+  @ManyToOne(() => EditorialEntity, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'possible_duplicate_of', foreignKeyConstraintName: 'proposal_changes_possible_duplicate_of_fkey' })
+  possibleDuplicateOfEntity?: EditorialEntity;
+
+  /** The public id of `possibleDuplicateOfId`'s entry, when loaded; not a column. */
+  possibleDuplicateOf?: string | null;
 
   /** The microchanges of the proposal it depends on, when loaded; not a column. */
   dependsOnIds?: string[];

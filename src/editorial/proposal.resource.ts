@@ -53,6 +53,7 @@ const proposedAttributes = {
   proposedValue: (change: ProposalChange) => change.proposedValue,
   atomicGroupId: (change: ProposalChange) => change.atomicGroupId,
   position: (change: ProposalChange) => change.position,
+  possibleDuplicateOf: (change: ProposalChange) => change.possibleDuplicateOf ?? null,
   createdAt: (change: ProposalChange) => change.createdAt.toISOString(),
 };
 
@@ -222,6 +223,15 @@ class ChangeAttributes {
 
   @ApiProperty({ description: 'Orden estable dentro de la propuesta' })
   position: number;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      'Solo en un alta: id del recurso público de la ficha publicada del mismo tipo que podría duplicar (su `publicId`, o el id de la obra). ' +
+      'Aviso para la moderación; se puede cambiar mientras la propuesta es borrador y no pasa a la ficha',
+  })
+  possibleDuplicateOf: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt: string;

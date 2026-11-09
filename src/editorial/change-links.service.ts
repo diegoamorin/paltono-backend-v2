@@ -12,6 +12,7 @@ import { ProposalChange } from './entities/proposal-change.entity';
 import { isObsolete } from './operation-registry';
 import { ChangeDependency, ChangeSource } from './entities/proposal-links.entity';
 import { ProposalSource } from './entities/proposal-source.entity';
+import { publicIdsOf } from './possible-duplicates';
 
 /** The links of a draft microchange to other rows of its proposal: the microchanges it depends on and the sources that back it. */
 @Injectable()
@@ -102,7 +103,8 @@ async function sourcesOf(manager: EntityManager, changeId: string): Promise<stri
 
 /**
  * Microchanges with the ids of the microchanges they depend on and of their
- * linked sources, and whether their payload schema version is still current.
+ * linked sources, whether their payload schema version is still current and
+ * the public id of the entry a creation may duplicate.
  */
 export async function withLinks(manager: EntityManager, changes: ProposalChange[]): Promise<ProposalChange[]> {
   const ids = changes.map(({ id }) => id);
@@ -110,7 +112,13 @@ export async function withLinks(manager: EntityManager, changes: ProposalChange[
   const sources = ids.length > 0 ? await manager.find(ChangeSource, { where: { changeId: In(ids) }, order: { sourceId: 'ASC' } }) : [];
   const entityIds = [...new Set(changes.map(({ entityId }) => entityId))];
   const types = new Map((entityIds.length > 0 ? await manager.findBy(EditorialEntity, { id: In(entityIds) }) : []).map(({ id, entityType }) => [id, entityType]));
+  // A possible duplicate has its creation's type.
+  const duplicates = await publicIdsOf(
+    manager,
+    changes.flatMap(({ entityId, possibleDuplicateOfId }) => (possibleDuplicateOfId ? [{ id: possibleDuplicateOfId, entityType: types.get(entityId)! }] : [])),
+  );
   for (const change of changes) {
+    change.possibleDuplicateOf = change.possibleDuplicateOfId ? duplicates.get(change.possibleDuplicateOfId)! : null;
     change.dependsOnIds = dependencies.filter(({ changeId }) => changeId === change.id).map(({ dependsOnChangeId }) => dependsOnChangeId);
     change.sourceIds = sources.filter(({ changeId }) => changeId === change.id).map(({ sourceId }) => sourceId);
     change.payloadSchemaStatus = isObsolete(types.get(change.entityId)!, change) ? 'obsolete' : 'current';

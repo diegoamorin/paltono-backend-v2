@@ -44,7 +44,7 @@ Suspender y reactivar cuentas corresponde exclusivamente a administradores, con 
 |---|---|
 | `editorial_entities` | UUID, tipo inmutable, estado `reserved/published/withdrawn`, creador, versión y referencia a la creación aplicada. |
 | `change_proposals` | Autor, descripción, estado `draft/open/closed`, fechas y propuesta anterior opcional. |
-| `proposal_changes` | Operación, raíz, selector, base, propuesta, versión del payload, grupo atómico, orden y estado. |
+| `proposal_changes` | Operación, raíz, selector, base, propuesta, versión del payload, grupo atómico, orden, estado y, en un alta, la marca opcional de posible duplicado. |
 | `change_dependencies` | Grafo de dependencias dentro de una propuesta; PK `(change_id, depends_on_change_id)`. |
 | `proposal_sources` | Fuentes generales; URL HTTP(S), referencia bibliográfica o ambas. |
 | `change_sources` | Asociación opcional; PK `(change_id, source_id)`. |
@@ -57,7 +57,7 @@ Todos los IDs de las tablas nuevas son UUID salvo las referencias a `users.id`, 
 
 Restricciones que la implementación SQL debe materializar, además de los indicadores PK/FK/UNIQUE del diagrama:
 
-- `proposal_changes`: UNIQUE `(proposal_id,id)`, `(id,entity_id)` y `(proposal_id,position)`; versiones no negativas y orden no negativo. `payload_schema_version` es positiva y no tiene valor por defecto.
+- `proposal_changes`: UNIQUE `(proposal_id,id)`, `(id,entity_id)` y `(proposal_id,position)`; versiones no negativas y orden no negativo. `payload_schema_version` es positiva y no tiene valor por defecto. `possible_duplicate_of` es una FK opcional a `editorial_entities.id`, solo con `operation = 'create_entity'`: una raíz publicada del mismo tipo que el alta podría duplicar. Es un aviso para la moderación, fuera del payload; no bloquea ninguna decisión ni pasa a la ficha.
 - `change_dependencies`: dos FKs compuestas desde `(proposal_id,change_id)` y `(proposal_id,depends_on_change_id)` a `proposal_changes(proposal_id,id)`. Prohibir autorreferencia y ciclos; comprobar también que colapsar los grupos atómicos no produzca ciclos.
 - `proposal_sources`: UNIQUE `(proposal_id,id)`; exigir al menos una URL o referencia no vacía por fila. Una URL proporcionada no puede estar vacía ni usar otro protocolo.
 - `change_sources`: FKs compuestas `(proposal_id,change_id)` y `(proposal_id,source_id)` a las claves anteriores. Impiden usar una fuente de otra propuesta.

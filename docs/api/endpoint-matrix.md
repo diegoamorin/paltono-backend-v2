@@ -194,8 +194,8 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E8 | `GET /v1/proposals/{id}` | Ver propuesta | Pub (proyección); autor y personal con estados; borrador solo autor | Como E7, el autor ve marcados los microcambios obsoletos de su borrador | ok authz spec |
 | E9 | `PATCH /v1/proposals/{id}` | Editar borrador | Own | Solo `draft`; enviado responde 409 | ok val authz state |
 | E10 | `DELETE /v1/proposals/{id}` | Descartar borrador | Own | Solo `draft`; no es una decisión de moderación | ok authz state |
-| E11 | `POST /v1/proposals/{id}/changes` | Añadir microcambio | Own | operación, raíz, selector, payload, grupo atómico, posición; valida contra E1. Sin `payloadSchemaVersion` guarda la vigente; una anterior responde 422 `obsolete_payload_schema_version` | ok val authz state |
-| E12 | `PATCH`/`DELETE /v1/proposals/{id}/changes/{changeId}` | Editar o quitar microcambio del borrador | Own | Editar con una versión anterior responde 422 `obsolete_payload_schema_version`; un microcambio obsoleto se quita o se rehace en la vigente | ok val authz state |
+| E11 | `POST /v1/proposals/{id}/changes` | Añadir microcambio | Own | operación, raíz, selector, payload, grupo atómico, posición; valida contra E1. Sin `payloadSchemaVersion` guarda la vigente; una anterior responde 422 `obsolete_payload_schema_version`. Un alta admite `possibleDuplicateOf` (ver abajo) | ok val authz state |
+| E12 | `PATCH`/`DELETE /v1/proposals/{id}/changes/{changeId}` | Editar o quitar microcambio del borrador | Own | Editar con una versión anterior responde 422 `obsolete_payload_schema_version`; un microcambio obsoleto se quita o se rehace en la vigente. `possibleDuplicateOf` se pone o se quita (`null`) aquí | ok val authz state |
 | E13 | `GET /v1/proposals/{id}/changes` | Listar microcambios | Como E8 | | ok authz |
 | E14 | `POST`/`DELETE /v1/proposal-changes/{id}/relationships/dependencies` | Declarar dependencias | Own | Rechaza ciclos, también al colapsar grupos atómicos | ok val state spec |
 | E15 | `POST /v1/proposals/{id}/sources`, `PATCH`/`DELETE …/sources/{sourceId}` | Fuentes generales | Own | URL HTTP(S), cita o ambas | ok val state |
@@ -213,6 +213,8 @@ Los borradores son visibles solo para su autor, también frente al personal: cua
 | E21 | `GET /v1/proposal-changes/{id}/decisions` | Historial de decisiones | Autor y personal | Incluye decisiones automáticas | ok authz |
 
 E19: `filter[status]=pending|conflicted` (defecto ambos), `filter[entityType]`, `filter[operation]`, `filter[author]`, `filter[entity]`; orden `createdAt` (defecto, más antiguo primero), `-createdAt`; `include=proposal,proposal.sources,entity` **[P10]**.
+
+**Posible duplicado.** Un microcambio `create_entity` admite el atributo opcional `possibleDuplicateOf`: el id del recurso público de una ficha publicada del mismo tipo (su `publicId`, o el id de la obra). Se guarda como referencia a la raíz editorial, fuera del payload, así que no cambia ninguna versión. Se pone y se quita mientras la propuesta es borrador y queda fijado al enviarla. Responde 422 `possible_duplicate_not_found` si no hay ficha de ese tipo con ese id, `possible_duplicate_not_published` si no está publicada y `possible_duplicate_not_allowed` en cualquier otra operación. Se muestra en el recurso del microcambio (E11 a E13, E8) y en la cola E19; es solo un aviso: no bloquea ninguna decisión ni pasa a la ficha.
 
 E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[entityType]`; orden `-submittedAt`, `-updatedAt` (borradores).
 

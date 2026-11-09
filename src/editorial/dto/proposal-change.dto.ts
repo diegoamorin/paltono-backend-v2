@@ -56,6 +56,21 @@ const Position = () =>
     Max(POSITION_MAX),
   );
 
+const PossibleDuplicateOf = () =>
+  applyDecorators(
+    ApiPropertyOptional({
+      type: String,
+      nullable: true,
+      example: 'V1StGXR8_Z5jdHi6B-myT',
+      description:
+        'Solo en un alta (`create_entity`): id del recurso público de una ficha publicada del mismo tipo que podría duplicar ' +
+        '(su `publicId`, o el id de la obra). Es un aviso para la moderación: no bloquea nada ni pasa a la ficha. null la quita',
+    }),
+    ValidateIf((_, value) => value !== undefined && value !== null),
+    IsString(),
+    MaxLength(100),
+  );
+
 class NewChangeAttributes {
   @ApiProperty({ enum: CHANGE_OPERATIONS, description: 'Operación del registro E1' })
   @IsString()
@@ -82,6 +97,9 @@ class NewChangeAttributes {
 
   @Position()
   position?: number;
+
+  @PossibleDuplicateOf()
+  possibleDuplicateOf?: string | null;
 }
 
 /** What can still change in a microchange of a draft; an omitted member keeps its value. */
@@ -97,6 +115,9 @@ class ChangeUpdateAttributes {
 
   @Position()
   position?: number;
+
+  @PossibleDuplicateOf()
+  possibleDuplicateOf?: string | null;
 }
 
 class EntityIdentifier {

@@ -25231,6 +25231,38 @@
 								"cardinality": "0..1"
 							},
 							"identifying": false
+						},
+						{
+							"_type": "ERDRelationship",
+							"_id": "20cc3a1d52a542f183ea5e6f9ef81209",
+							"_parent": {
+								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
+							},
+							"name": "possible_duplicate_of",
+							"documentation": "FK described on the child column. ON DELETE RESTRICT.",
+							"end1": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "c400dd59af764da09c0a46db800a8f49",
+								"_parent": {
+									"$ref": "20cc3a1d52a542f183ea5e6f9ef81209"
+								},
+								"reference": {
+									"$ref": "3b7372001e4648e791a1fe4ae735cc03"
+								},
+								"cardinality": "0..1"
+							},
+							"end2": {
+								"_type": "ERDRelationshipEnd",
+								"_id": "0e1bf6f6d71d4739a477db98d2b36b0b",
+								"_parent": {
+									"$ref": "20cc3a1d52a542f183ea5e6f9ef81209"
+								},
+								"reference": {
+									"$ref": "5250d6cd46b7454594fe3de5a57865dc"
+								},
+								"cardinality": "0..*"
+							},
+							"identifying": false
 						}
 					],
 					"documentation": "Stable editorial root for identity, work, recording, release group, release edition, event or tour. Reserved roots have version=0, no domain row and NULL creation_change_id/published_at/withdrawn_at. Published or withdrawn roots have exactly one matching domain row, current_version>=1 and nonnull creation_change_id/published_at; withdrawn_at is nonnull iff withdrawn. Enforce type/exclusive root and revision consistency transactionally. Creator equals the creation proposal author, never the approving moderator. Publication does not grant ownership permissions. Retain IDs and historical rows after withdrawal; no cascade deletion. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
@@ -25885,6 +25917,18 @@
 							"name": "resolved_at",
 							"documentation": "NULL iff pending/conflicted; terminal outcome timestamp.",
 							"type": "TIMESTAMPTZ",
+							"nullable": true
+						},
+						{
+							"_type": "ERDColumn",
+							"_id": "a95d715a17964b83963fc61442033860",
+							"_parent": {
+								"$ref": "5250d6cd46b7454594fe3de5a57865dc"
+							},
+							"name": "possible_duplicate_of",
+							"documentation": "FK -> editorial_entities.id, ON DELETE RESTRICT. CHECK only with operation create_entity. Optional mark for moderation: a published root of the same type the creation may duplicate. Set and cleared while the proposal is a draft, fixed on submission; outside the payload and never copied to the entry.",
+							"type": "UUID",
+							"foreignKey": true,
 							"nullable": true
 						}
 					]
@@ -27304,6 +27348,23 @@
 											"top": 975,
 											"width": 540,
 											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "a5efa4ad4e584f35840a4fb369020299",
+											"_parent": {
+												"$ref": "00e631243868469a8686de100fcfa720"
+											},
+											"model": {
+												"$ref": "a95d715a17964b83963fc61442033860"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 2101,
+											"top": 989,
+											"width": 540,
+											"height": 12
 										}
 									],
 									"fillColor": "#E7F3FF",
@@ -27312,7 +27373,7 @@
 									"left": 2096,
 									"top": 774,
 									"width": 550,
-									"height": 218
+									"height": 232
 								}
 							],
 							"fillColor": "#E7F3FF",
@@ -27321,7 +27382,7 @@
 							"left": 2096,
 							"top": 752,
 							"width": 550,
-							"height": 412,
+							"height": 426,
 							"nameLabel": {
 								"$ref": "2124ece1d4b54d399de618c1d62d8dab"
 							},
@@ -28895,6 +28956,23 @@
 											"top": 323,
 											"width": 540,
 											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "24e93b21450a49bb9a606888b52cf9e4",
+											"_parent": {
+												"$ref": "d523401441054a22bbbbbc0ef024b791"
+											},
+											"model": {
+												"$ref": "a95d715a17964b83963fc61442033860"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 865,
+											"top": 337,
+											"width": 540,
+											"height": 12
 										}
 									],
 									"fillColor": "#E7F3FF",
@@ -28903,7 +28981,7 @@
 									"left": 860,
 									"top": 122,
 									"width": 550,
-									"height": 218
+									"height": 232
 								}
 							],
 							"fillColor": "#E7F3FF",
@@ -28912,7 +28990,7 @@
 							"left": 860,
 							"top": 100,
 							"width": 550,
-							"height": 340,
+							"height": 354,
 							"nameLabel": {
 								"$ref": "529d436a29cf49e8b3bbdfa302e1c5cf"
 							},
@@ -30233,6 +30311,23 @@
 											"top": 351,
 											"width": 540,
 											"height": 12
+										},
+										{
+											"_type": "ERDColumnView",
+											"_id": "7181119db2c34770b18e098897979e04",
+											"_parent": {
+												"$ref": "e4bc7ac031a1416f97752ca98d0260e7"
+											},
+											"model": {
+												"$ref": "a95d715a17964b83963fc61442033860"
+											},
+											"fillColor": "#E7F3FF",
+											"font": "Arial;12;0",
+											"parentStyle": true,
+											"left": 865,
+											"top": 365,
+											"width": 540,
+											"height": 12
 										}
 									],
 									"fillColor": "#E7F3FF",
@@ -30241,7 +30336,7 @@
 									"left": 860,
 									"top": 150,
 									"width": 550,
-									"height": 218
+									"height": 232
 								}
 							],
 							"fillColor": "#E7F3FF",
@@ -30250,7 +30345,7 @@
 							"left": 860,
 							"top": 128,
 							"width": 550,
-							"height": 340,
+							"height": 354,
 							"nameLabel": {
 								"$ref": "ac6b4ebe67b646a8b61243937994cec1"
 							},

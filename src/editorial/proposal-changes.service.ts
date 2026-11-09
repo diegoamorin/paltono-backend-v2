@@ -26,7 +26,8 @@ import {
   validatePayload,
   validateTargetKey,
 } from './operation-registry';
-import { checkReferences, checkRootReferences, keyRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
+import { possibleDuplicateRoot } from './possible-duplicates';
+import { checkReferences,checkRootReferences, keyRootReferences, namesRoot, normalizeKey, normalizeReferences, resolveKey } from './row-references';
 
 export interface NewChange {
   entityId: string;
@@ -37,9 +38,11 @@ export interface NewChange {
   proposedValue: unknown;
   atomicGroupId?: string | null;
   position?: number;
+  /** The public id of a published entry of the same type that a creation may duplicate. */
+  possibleDuplicateOf?: string | null;
 }
 
-export type ChangeUpdate = Partial<Pick<NewChange, 'proposedValue' | 'payloadSchemaVersion' | 'atomicGroupId' | 'position'>>;
+export type ChangeUpdate = Partial<Pick<NewChange, 'proposedValue' | 'payloadSchemaVersion' | 'atomicGroupId' | 'position' | 'possibleDuplicateOf'>>;
 
 /**
  * A rule a microchange breaks. `member` names what is wrong: an attribute, a
@@ -81,13 +84,15 @@ export class ProposalChangesService {
         atomicGroupId: input.atomicGroupId ?? null,
         position: input.position ?? (await nextPosition(manager, proposalId)),
       };
-      const problems = await changeProblems(manager, proposal, change, entity, 'draft', this.images);
+      const duplicate = await possibleDuplicate(manager, change.operation, entity, input.possibleDuplicateOf ?? null);
+      const problems = [...(await changeProblems(manager, proposal, change, entity, 'draft', this.images)), ...duplicate.problems];
       if (problems.length > 0) throw invalid(problems.map(asBodyError));
       await checkPosition(manager, proposalId, change.id, change.position);
 
       const now = this.clock.now();
       await manager.insert(ProposalChange, {
         ...change,
+        possibleDuplicateOfId: duplicate.rootId,
         // changeProblems found its selector registered, so it has a version.
         payloadSchemaVersion: change.payloadSchemaVersion!,
         operation: change.operation as ChangeOperation,
@@ -107,13 +112,19 @@ export class ProposalChangesService {
     return this.dataSource.transaction(async (manager) => {
       const proposal = await lockOwnDraft(manager, user, proposalId);
       const current = await findChange(manager, proposalId, changeId);
+      const { possibleDuplicateOf, ...attributes } = input;
       const change = {
         ...current,
-        ...Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)),
+        ...Object.fromEntries(Object.entries(attributes).filter(([, value]) => value !== undefined)),
       } as ProposalChange;
       change.proposedValue = normalizeReferences(change.proposedValue) as ValueEnvelope;
       const entity = await manager.findOneBy(EditorialEntity, { id: change.entityId });
-      const problems = await changeProblems(manager, proposal, change, entity, 'draft', this.images);
+      // Omitted, the mark stays as it was.
+      const duplicate =
+        possibleDuplicateOf === undefined
+          ? { rootId: current.possibleDuplicateOfId, problems: [] }
+          : await possibleDuplicate(manager, change.operation, entity, possibleDuplicateOf);
+      const problems = [...(await changeProblems(manager, proposal, change, entity, 'draft', this.images)), ...duplicate.problems];
       if (problems.length > 0) throw invalid(problems.map(asBodyError));
       await checkPosition(manager, proposalId, change.id, change.position);
 
@@ -125,6 +136,7 @@ export class ProposalChangesService {
           payloadSchemaVersion: change.payloadSchemaVersion,
           atomicGroupId: change.atomicGroupId,
           position: change.position,
+          possibleDuplicateOfId: duplicate.rootId,
           // An insertion's base is the row its value would collide with, so it follows the value.
           ...(change.operation === 'add_relation' ? { baseValue: await readBase(manager, entity!, change) } : {}),
         },
@@ -507,6 +519,28 @@ async function creationProblems(manager: EntityManager, change: ChangeFields, en
     });
   }
   return problems;
+}
+
+/**
+ * The root of the published entry a creation is marked as a possible duplicate
+ * of, named by its public id and of the creation's type. Only a creation takes
+ * the mark; a missing root is reported by `changeProblems`.
+ */
+async function possibleDuplicate(
+  manager: EntityManager,
+  operation: string,
+  entity: EditorialEntity | null,
+  publicId: string | null,
+): Promise<{ rootId: string | null; problems: ChangeProblem[] }> {
+  if (publicId === null) return { rootId: null, problems: [] };
+  const member = 'possibleDuplicateOf';
+  if (operation !== 'create_entity') {
+    return { rootId: null, problems: [{ code: 'possible_duplicate_not_allowed', detail: 'Only a creation can be marked as a possible duplicate', member }] };
+  }
+  if (!entity) return { rootId: null, problems: [] };
+  const found = await possibleDuplicateRoot(manager, entity.entityType, publicId);
+  if ('problem' in found) return { rootId: null, problems: [{ ...found.problem, member }] };
+  return { rootId: found.rootId, problems: [] };
 }
 
 async function payloadProblems(manager: EntityManager, definition: OperationDefinition, proposed: unknown): Promise<ChangeProblem[]> {
