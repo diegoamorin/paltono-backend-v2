@@ -26,7 +26,7 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
 
   const ids = groups.filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
-  const credits = await artistCreditEntries(manager, await manager.find(ReleaseArtistCredit, { where: { releaseGroupId: In(ids) }, order: { position: 'ASC', artistId: 'ASC' } }));
+  const credited = await withReleaseArtistCredits(manager, plain);
   const releases = await manager
     .createQueryBuilder(Release, 'release')
     .innerJoinAndSelect('release.editorialEntity', 'root')
@@ -46,18 +46,27 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
     false,
   );
 
-  return plain.map((entry) => {
+  return credited.map((entry) => {
     const { group } = entry;
     if (!ids.includes(group.id)) return { ...entry, relations: null };
     return {
       ...entry,
       relations: {
-        artistCredits: credits.filter(({ credit }) => credit.releaseGroupId === group.id),
         releases: releaseList.filter(({ release }) => release.releaseGroupId === group.id),
         repackageOf: originals.find(({ group: original }) => original.id === group.repackageOfId) ?? null,
       },
     };
   });
+}
+
+/** Release group entries with their presentation credit, which a withdrawn release group does not show. */
+export async function withReleaseArtistCredits(manager: EntityManager, entries: ReleaseGroupEntry[]): Promise<ReleaseGroupEntry[]> {
+  const ids = entries.map(({ group }) => group).filter(notWithdrawn).map(({ id }) => id);
+  if (ids.length === 0) return entries;
+  const credits = await artistCreditEntries(manager, await manager.find(ReleaseArtistCredit, { where: { releaseGroupId: In(ids) }, order: { position: 'ASC', artistId: 'ASC' } }));
+  return entries.map((entry) =>
+    ids.includes(entry.group.id) ? { ...entry, artistCredits: credits.filter(({ credit }) => credit.releaseGroupId === entry.group.id) } : entry,
+  );
 }
 
 /** Releases, each with its editorial root loaded, as entries with their group; with their relations when `withRelations`. */

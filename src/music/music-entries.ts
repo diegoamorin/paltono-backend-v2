@@ -10,7 +10,7 @@ import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from 
 import { Credit, Work, WorkContribution } from './entities/work.entity';
 import { FirstRecordingEntry, RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
 import { CreditEntry, CreditScope } from './resource-primitives';
-import { recordingReleaseDates, recordingReleaseSql } from './release-dates';
+import { performancesSql, recordingReleaseDates, recordingReleaseSql } from './release-dates';
 
 /*
  * Loads works and recordings as entries with their relations. The targets of
@@ -34,12 +34,9 @@ export async function plainWorkEntries(manager: EntityManager, works: Work[]): P
 async function firstRecordings(manager: EntityManager, workIds: string[]): Promise<Map<string, FirstRecordingEntry>> {
   if (workIds.length === 0) return new Map();
   const rows: { workId: string; recordingId: number }[] = await manager.query(
-    `SELECT DISTINCT ON (link.work_id) link.work_id AS "workId", recording.id AS "recordingId"
-      FROM recording_works link
-      JOIN recordings recording ON recording.id = link.recording_id
-      JOIN editorial_entities root ON root.id = recording.editorial_entity_id
-      WHERE link.work_id = ANY($1) AND link.relation_type = 'performance' AND root.publication_status = 'published'
-      ORDER BY link.work_id, ${recordingReleaseSql('recording').start} NULLS LAST, recording.public_id`,
+    `SELECT DISTINCT ON (recording_link.work_id) recording_link.work_id AS "workId", recording.id AS "recordingId"
+      ${performancesSql('recording', 'ANY($1)')}
+      ORDER BY recording_link.work_id, ${recordingReleaseSql('recording').start} NULLS LAST, recording.public_id`,
     [workIds],
   );
   if (rows.length === 0) return new Map();
@@ -82,11 +79,19 @@ export async function plainRecordingEntries(manager: EntityManager, recordings: 
   return recordings.map((recording) => ({ recording, releaseDate: dates.get(recording.id)! }));
 }
 
+/** Recording entries with their artist credit, which a withdrawn recording does not show. */
+export async function withArtistCredits(manager: EntityManager, entries: RecordingEntry[]): Promise<RecordingEntry[]> {
+  const shown = entries.map(({ recording }) => recording).filter(notWithdrawn);
+  const credits = await recordingArtistCreditEntries(manager, shown);
+  return entries.map((entry) =>
+    shown.includes(entry.recording) ? { ...entry, artistCredits: credits.filter(({ credit }) => credit.recordingId === entry.recording.id) } : entry,
+  );
+}
+
 export async function recordingEntries(manager: EntityManager, recordings: Recording[], now: Date): Promise<RecordingEntry[]> {
-  const plain = await plainRecordingEntries(manager, recordings);
+  const plain = await withArtistCredits(manager, await plainRecordingEntries(manager, recordings));
   const ids = recordings.filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
-  const artistCredits = await recordingArtistCreditEntries(manager, recordings.filter(notWithdrawn));
   const credits = await manager.find(RecordingContribution, { where: { recordingId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });
   const contributions = await creditEntries(manager, 'recording', credits);
   const genres = await manager.find(RecordingGenre, {
@@ -116,7 +121,6 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
     return {
       ...entry,
       relations: {
-        artistCredits: artistCredits.filter(({ credit }) => credit.recordingId === recording.id),
         contributions: contributions.filter(({ credit }) => (credit as RecordingContribution).recordingId === recording.id),
         genres: own.map(({ genre }) => genre!),
         primaryGenreId: own.find(({ isPrimary }) => isPrimary)?.genreId ?? null,

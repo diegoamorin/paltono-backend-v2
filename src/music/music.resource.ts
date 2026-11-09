@@ -39,9 +39,13 @@ export interface RecordingEntry {
   recording: Recording;
   /** Derived from its releases on each read, never stored. */
   releaseDate: PartialDate | null;
+  /**
+   * Its artist credit, by position: loaded along with its relations, and on a
+   * target whose reader offers it (a credit's recording); never on a withdrawn
+   * recording.
+   */
+  artistCredits?: RecordingArtistCreditEntry[];
   relations?: {
-    /** By position. */
-    artistCredits: RecordingArtistCreditEntry[];
     contributions: CreditEntry[];
     /** The primary genre first. */
     genres: Genre[];
@@ -166,7 +170,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     updatedAt: recordingContent(({ recording }) => recording.updatedAt.toISOString()),
   },
   relationships: {
-    artistCredits: { schema: () => recordingArtistCreditSchema, get: ({ relations }) => relations?.artistCredits },
+    artistCredits: { schema: () => recordingArtistCreditSchema, get: ({ artistCredits }) => artistCredits },
     contributions: { schema: () => recordingContributionSchema, get: ({ relations }) => relations?.contributions },
     genres: { schema: () => GENRES.schema, get: ({ relations }) => relations?.genres },
     recordingWorks: { schema: () => recordingWorkSchema, get: ({ relations }) => relations?.recordingWorks },

@@ -38,7 +38,7 @@ export interface ReleaseGroupDates {
 }
 
 /** SQL expressions over a `releases` row aliased `r` that do not depend on the current time. */
-function releaseDateSql(r: string) {
+export function releaseDateSql(r: string) {
   const { start, end } = partialDateIntervalSql(r, 'release');
   const instant = `CASE WHEN ${r}.release_time IS NOT NULL THEN (make_date(${r}.release_year, ${r}.release_month, ${r}.release_day) + ${r}.release_time) AT TIME ZONE ${r}.timezone END`;
   return { start, end, instant };
@@ -97,6 +97,27 @@ export function recordingReleaseSql(rec: string) {
   const { start, instant } = releaseDateSql(r);
   const first = (column: string) => `(SELECT ${column} ${releasesOfRecordingSql(r, `${rec}.id`)} ORDER BY ${start}, ${instant} NULLS LAST, ${r}.id LIMIT 1)`;
   return { start: first(start), year: first(`${r}.release_year`) };
+}
+
+/**
+ * The recordings that may be the first recording of a work: the published
+ * ones that perform it, aliased `rec`, linked through `${rec}_link`. Samples
+ * and interpolations do not count.
+ */
+export function performancesSql(rec: string, work: string): string {
+  return `FROM recording_works ${rec}_link
+      JOIN recordings ${rec} ON ${rec}.id = ${rec}_link.recording_id
+      JOIN editorial_entities ${rec}_root ON ${rec}_root.id = ${rec}.editorial_entity_id
+    WHERE ${rec}_link.work_id = ${work} AND ${rec}_link.relation_type = 'performance' AND ${rec}_root.publication_status = 'published'`;
+}
+
+/**
+ * SQL expression over a `works` row aliased `w`, for sorts: the first day of
+ * the release date of its first recording, null without one.
+ */
+export function workReleaseStartSql(w: string): string {
+  const rec = `${w}_recording`;
+  return `(SELECT min(${recordingReleaseSql(rec).start}) ${performancesSql(rec, `${w}.id`)})`;
 }
 
 /**

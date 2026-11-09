@@ -108,7 +108,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C1 | `GET /v1/identities` | Personas y organizaciones | ok val |
 | C2 | `GET /v1/identities/{id}` | Datos comunes y subtipo (`person` u `organization`) | ok authz |
 | C3 | `GET /v1/identities/{id}/memberships` | Membresías como organización o como miembro (`filter[side]=organization|member`) con roles | ok val |
-| C4 | `GET /v1/identities/{id}/credits` | Créditos en obras, grabaciones y lanzamientos (`filter[scope]`, `filter[role]`) | ok val |
+| C4 | `GET /v1/identities/{id}/credits` | Créditos en obras, grabaciones y lanzamientos (`filter[scope]`, `filter[role]`); `include` de `recording.artistCredits`, `work.firstRecording` y `work.firstRecordingArtistCredits` para leerlos como discografía; orden `createdAt` (por defecto) o `releaseDate` según la fecha de lo que acredita cada crédito (grabación, primera grabación de la obra o edición), sin fecha al final y desempate por el orden por defecto | ok val |
 | C5 | `GET /v1/identities/{id}/organized-events` y `/organized-tours` | Eventos y tours donde figura como organizador | ok |
 | C6 | `GET /v1/artists` | Perfiles artísticos | ok val |
 | C7 | `GET /v1/artists/{id}` | Perfil y su identidad | ok authz |
@@ -222,7 +222,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 | # | Método y ruta | Contenido | Pruebas |
 |---|---|---|---|
-| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; sin `filter[type]` se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad y aparecería dos veces; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas | ok val |
+| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; sin `filter[type]` se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad y aparecería dos veces; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas. `include=artistCredits,artistCredits.artist` trae los artistas de `recordings` y `release-groups`; los demás tipos lo ignoran | ok val |
 
 `discovery` solo lee, a través de los servicios públicos de lectura de cada módulo, para no acoplarse a sus tablas.
 

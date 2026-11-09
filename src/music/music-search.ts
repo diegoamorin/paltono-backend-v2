@@ -4,7 +4,7 @@ import { ReleaseGroup } from './entities/release.entity';
 import { Work } from './entities/work.entity';
 import { recordingEntries, workEntries } from './music-entries';
 import { recordingSchema, workSchema } from './music.resource';
-import { releaseGroupEntries } from './release-entries';
+import { releaseGroupEntries, withReleaseArtistCredits } from './release-entries';
 import { releaseGroupSchema } from './release.resource';
 
 /*
@@ -51,5 +51,6 @@ export const RELEASE_GROUP_SEARCH = titleSearch({
       WHERE release.title IS NOT NULL`,
   entity: ReleaseGroup,
   relations: { editorialEntity: true },
-  entries: (manager, groups, now) => releaseGroupEntries(manager, groups, now, false),
+  // Without their releases, but with their artists for a preview.
+  entries: async (manager, groups, now) => withReleaseArtistCredits(manager, await releaseGroupEntries(manager, groups, now, false)),
 });

@@ -15,6 +15,8 @@ const [FIRST, ...OTHERS] = SOURCES;
 
 const SEARCH_QUERY = collectionQuery(FIRST.schema, {
   alsoOf: OTHERS.map(({ schema }) => schema),
+  // Only recordings and release groups have them; other results ignore the include.
+  include: ['artistCredits', 'artistCredits.artist'],
   sort: ['relevance'],
   defaultSort: '-relevance',
   filters: ['q', 'type'],
@@ -38,7 +40,8 @@ export class SearchController {
       '`filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, ' +
       '`events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su ' +
       'identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. ' +
-      'Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.',
+      'Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`. `include` admite `artistCredits` y ' +
+      '`artistCredits.artist`, que se aplican a `recordings` y `release-groups`, con el nombre listo para mostrar en `displayName`.',
   })
   @ApiJsonApiQuery(SEARCH_QUERY)
   @ApiJsonApiCollectionResponse(RESULT_RESOURCES)

@@ -10,9 +10,10 @@ import { Work, WorkContribution } from './entities/work.entity';
 import { Release } from './entities/release.entity';
 import { ReleaseContribution } from './entities/track.entity';
 import { Clock } from '../common/clock/clock';
-import { creditEntries, plainRecordingEntries, plainWorkEntries } from './music-entries';
+import { creditEntries, plainRecordingEntries, plainWorkEntries, withArtistCredits } from './music-entries';
 import { CreditEntry, CreditScope } from './resource-primitives';
 import { releaseEntries } from './release-entries';
+import { recordingReleaseSql, releaseDateSql, workReleaseStartSql } from './release-dates';
 
 /** The scopes a credit filter accepts: those of credits, not of membership roles. */
 const CREDIT_SCOPES = CONTRIBUTION_ROLE_SCOPES.filter((scope) => scope !== 'membership');
@@ -34,8 +35,10 @@ export class IdentityCreditsService {
     // A withdrawn identity shows only its notice, not what it is credited for.
     if (identity.editorialEntity!.publicationStatus === 'withdrawn') return { entries: [], total: 0 };
 
-    const credits = (table: string, owner: string, ownerTable: string, creditScope: string) => `
-      SELECT '${creditScope}' AS scope, credit.id, credit.created_at
+    const byDate = query.sort.find(({ field }) => field === 'releaseDate');
+    // The first day of the release date of what each credit credits, only when sorting by it.
+    const credits = (table: string, owner: string, ownerTable: string, creditScope: string, releaseStart: string) => `
+      SELECT '${creditScope}' AS scope, credit.id, credit.created_at${byDate ? `, ${releaseStart} AS release_start` : ''}
       FROM ${table} credit
       JOIN ${ownerTable} owner ON owner.id = credit.${owner}
       JOIN editorial_entities root ON root.id = owner.editorial_entity_id
@@ -44,16 +47,19 @@ export class IdentityCreditsService {
         AND ($2::varchar IS NULL OR credit_role.slug = $2)
         AND ($3::varchar IS NULL OR $3 = '${creditScope}')`;
     const union = [
-      credits('work_contributions', 'work_id', 'works', 'work'),
-      credits('recording_contributions', 'recording_id', 'recordings', 'recording'),
-      credits('release_contributions', 'release_id', 'releases', 'release'),
+      credits('work_contributions', 'work_id', 'works', 'work', workReleaseStartSql('owner')),
+      credits('recording_contributions', 'recording_id', 'recordings', 'recording', recordingReleaseSql('owner').start),
+      credits('release_contributions', 'release_id', 'releases', 'release', releaseDateSql('owner').start),
     ].join(' UNION ALL ');
     const parameters = [identity.id, role ?? null, scope ?? null];
     const [{ total }] = await manager.query(`SELECT count(*)::int AS total FROM (${union}) credits`, parameters);
-    const direction = query.sort.find(({ field }) => field === 'createdAt')?.direction ?? 'ASC';
+    // By date, those without one go last and a tie keeps the default order.
+    const order = byDate
+      ? `release_start ${byDate.direction} NULLS LAST, created_at ASC`
+      : `created_at ${query.sort.find(({ field }) => field === 'createdAt')?.direction ?? 'ASC'}`;
     const { skip, take } = pageWindow(query);
     const page: { scope: CreditScope; id: number }[] = await manager.query(
-      `SELECT scope, id FROM (${union}) credits ORDER BY created_at ${direction}, scope ASC, id ASC OFFSET $4 LIMIT $5`,
+      `SELECT scope, id FROM (${union}) credits ORDER BY ${order}, scope ASC, id ASC OFFSET $4 LIMIT $5`,
       [...parameters, skip, take],
     );
     return { entries: await this.load(page), total };
@@ -69,9 +75,13 @@ export class IdentityCreditsService {
       manager,
       await manager.find(Work, { where: { id: In(workCredits.map(({ workId }) => workId)) }, relations: { editorialEntity: true } }),
     );
-    const recordings = await plainRecordingEntries(
+    // A credited recording shows its artists, so that a discography names them.
+    const recordings = await withArtistCredits(
       manager,
-      await manager.find(Recording, { where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } }),
+      await plainRecordingEntries(
+        manager,
+        await manager.find(Recording, { where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } }),
+      ),
     );
     const releaseCredits = await manager.findBy(ReleaseContribution, { id: In(idsOf('release')) });
     const releases = await releaseEntries(

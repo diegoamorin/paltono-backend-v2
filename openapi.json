@@ -7529,7 +7529,7 @@
     },
     "/v1/identities/{id}/credits": {
       "get": {
-        "description": "Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas (`recording-contributions`) y ediciones publicadas (`release-contributions`). `filter[scope]` admite `work`, `recording` y `release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `recording`, `release` y `role`. Orden `createdAt` (por defecto) o `-createdAt`. Una identidad retirada no muestra créditos.",
+        "description": "Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas (`recording-contributions`) y ediciones publicadas (`release-contributions`). `filter[scope]` admite `work`, `recording` y `release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, `work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `release` y `role`, para leer los créditos como una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o `-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad retirada no muestra créditos.",
         "operationId": "IdentityCreditsController_list",
         "parameters": [
           {
@@ -7587,6 +7587,15 @@
             }
           },
           {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "fields[releases]",
             "required": false,
             "in": "query",
@@ -7608,7 +7617,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: work, recording, release, role",
+            "description": "Relaciones separadas por comas: work, work.firstRecording, work.firstRecordingArtistCredits, recording, recording.artistCredits, release, role",
             "schema": {
               "type": "string"
             }
@@ -7635,7 +7644,7 @@
             "name": "sort",
             "required": false,
             "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: createdAt, id. Por defecto createdAt; el id desempata",
+            "description": "Campos separados por comas, con - para orden descendente: createdAt, releaseDate, id. Por defecto createdAt; el id desempata",
             "schema": {
               "type": "string"
             }
@@ -16322,7 +16331,7 @@
     },
     "/v1/search": {
       "get": {
-        "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`.",
+        "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`. `include` admite `artistCredits` y `artistCredits.artist`, que se aplican a `recordings` y `release-groups`, con el nombre listo para mostrar en `displayName`.",
         "operationId": "SearchController_list",
         "parameters": [
           {
@@ -16384,6 +16393,33 @@
             "required": false,
             "in": "query",
             "description": "Campos de tours separados por comas: publicationStatus, withdrawnAt, title, status, description, image, startDate, endDate, countries, eventDates, createdAt, updatedAt, artists, organizers, links, events",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recording-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recording-artist-credits separados por comas: rank, position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[release-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist",
             "schema": {
               "type": "string"
             }

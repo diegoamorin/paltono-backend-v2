@@ -12,8 +12,8 @@ const SCHEMAS = { work: workContributionSchema, recording: recordingContribution
 
 const CREDITS_QUERY = collectionQuery(workContributionSchema, {
   alsoOf: [recordingContributionSchema, releaseContributionSchema],
-  include: ['work', 'recording', 'release', 'role'],
-  sort: ['createdAt'],
+  include: ['work', 'work.firstRecording', 'work.firstRecordingArtistCredits', 'recording', 'recording.artistCredits', 'release', 'role'],
+  sort: ['createdAt', 'releaseDate'],
   defaultSort: 'createdAt',
   filters: ['scope', 'role'],
 });
@@ -29,8 +29,12 @@ export class IdentityCreditsController {
     description:
       'Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas ' +
       '(`recording-contributions`) y ediciones publicadas (`release-contributions`). `filter[scope]` admite `work`, `recording` y ' +
-      '`release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `recording`, `release` y `role`. Orden ' +
-      '`createdAt` (por defecto) o `-createdAt`. Una identidad retirada no muestra créditos.',
+      '`release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, ' +
+      '`work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `release` y `role`, para leer los créditos como ' +
+      'una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o ' +
+      '`-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la ' +
+      'edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad ' +
+      'retirada no muestra créditos.',
   })
   @ApiParam({ name: 'id', description: 'public_id de la identidad' })
   @ApiJsonApiQuery(CREDITS_QUERY)

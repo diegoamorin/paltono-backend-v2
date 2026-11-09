@@ -30,8 +30,13 @@ export interface ReleaseGroupEntry {
   /** With its editorial root. */
   group: ReleaseGroup;
   dates: ReleaseGroupDates;
+  /**
+   * Its presentation credit, by position: loaded along with its relations, and
+   * on an entry whose reader offers it (a search result); never on a withdrawn
+   * release group.
+   */
+  artistCredits?: ReleaseArtistCreditEntry[];
   relations?: {
-    artistCredits: ReleaseArtistCreditEntry[];
     releases: ReleaseEntry[];
     repackageOf: ReleaseGroupEntry | null;
   } | null;
@@ -93,7 +98,7 @@ export const releaseGroupSchema: ResourceSchema<ReleaseGroupEntry> = defineResou
     updatedAt: groupContent(({ group }) => group.updatedAt.toISOString()),
   },
   relationships: {
-    artistCredits: { schema: () => releaseArtistCreditSchema, get: ({ relations }) => relations?.artistCredits },
+    artistCredits: { schema: () => releaseArtistCreditSchema, get: ({ artistCredits }) => artistCredits },
     releases: { schema: () => releaseSchema, get: ({ relations }) => relations?.releases },
     repackageOf: { schema: () => releaseGroupSchema, get: ({ relations }) => (relations ? relations.repackageOf : undefined) },
   },
