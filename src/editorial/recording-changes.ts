@@ -25,9 +25,8 @@ import {
   writeRecordingField,
   writeRecordingGenre,
 } from '../music/recordings';
-import { artistIdOfIdentity } from '../music/releases';
-import { ARTIST_CREDIT_RANKS, RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entity';
-import { artistProblems } from './release-credit-changes';
+import { RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entity';
+import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
@@ -164,76 +163,24 @@ const GENRE_CHANGES: OperationDefinition[] = [
 
 // Artist credit (ADR 0008)
 
-const ARTIST_CREDIT_KEY = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['recording_id', 'artist_id'],
-  properties: {
-    recording_id: reference('entity_id', 'Raíz editorial de la grabación: la del microcambio'),
-    artist_id: reference('entity_id', 'Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico'),
-  },
-};
-
-const ARTIST_CREDIT = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['rank', 'position'],
-  properties: {
-    rank: { enum: ARTIST_CREDIT_RANKS, description: '`main`, `featured` o `remixer`; una por artista y grabación' },
-    position: { type: 'integer', minimum: 0, maximum: 32767, description: 'Orden de presentación' },
-    creditedAs: { type: ['string', 'null'], maxLength: 200, pattern: '\\S', description: 'Nombre literal de la fuente; null muestra el nombre visible' },
-  },
-};
-
-const readArtistCredit = async (manager: EntityManager, _root: EditorialEntity, key: RowKey | null): Promise<ValueEnvelope> => {
-  const credit = key && (await findRecordingArtistCredit(manager, key.recording_id, key.artist_id));
-  return credit ? { exists: true, value: { ...credit } } : ABSENT;
-};
-
-const artistCreditBase = {
+const ARTIST_CREDIT_CHANGES = artistCreditChanges({
   entityType: 'recording',
   targetPath: 'recording_artist_credits',
-  payloadSchemaVersion: 1,
-  targetKeySchema: ARTIST_CREDIT_KEY,
-  keyRoots: { artist_id: { entityType: 'identity', idOf: artistIdOfIdentity } },
-  check: () => [],
-  references: () => [],
-  read: readArtistCredit,
-} satisfies Partial<OperationDefinition>;
-
-const artistCreditWrite = (operation: 'add_relation' | 'update_relation', description: string): OperationDefinition => ({
-  ...artistCreditBase,
-  operation,
-  description,
-  valueSchema: ARTIST_CREDIT,
-  targetProblems: (manager, _root, _value, targetKey) => artistProblems(manager, targetKey),
-  constraintProblems: async (manager, root, key) =>
-    operation === 'update_relation' && !(await readArtistCredit(manager, root, key)).exists ? ['El crédito ya no existe'] : [],
-  apply: async (manager, root, value, now, key) => {
-    await writeRecordingArtistCredit(manager, key!.recording_id, key!.artist_id, value as RecordingArtistCreditValue, now);
-    return { afterValue: await readArtistCredit(manager, root, key), resultKey: key };
-  },
-});
-
-const ARTIST_CREDIT_CHANGES: OperationDefinition[] = [
-  artistCreditWrite(
-    'add_relation',
-    'Acredita a un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`) en la grabación. Su clave es la ' +
+  ownerKey: { recording_id: reference('entity_id', 'Raíz editorial de la grabación: la del microcambio') },
+  value: artistCreditValue('grabación'),
+  descriptions: {
+    add:
+      'Acredita a un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`) en la grabación. Su clave es la ' +
       'grabación, que puede crearse en la misma propuesta, y la identidad del artista. Las pistas sin crédito impreso lo muestran. ' +
       'No atribuye autoría, interpretación ni producción.',
-  ),
-  artistCreditWrite('update_relation', 'Cambia la clase, la posición o el nombre acreditado de un artista de la grabación.'),
-  {
-    ...artistCreditBase,
-    operation: 'remove_relation',
-    description: 'Quita un artista del crédito de la grabación; la revisión guarda sus valores anteriores.',
-    valueSchema: null,
-    apply: async (manager, _root, _value, now, key) => {
-      await deleteRecordingArtistCredit(manager, key!.recording_id, key!.artist_id, now);
-      return { afterValue: ABSENT, resultKey: key };
-    },
+    update: 'Cambia la clase, la posición o el nombre acreditado de un artista de la grabación.',
+    remove: 'Quita un artista del crédito de la grabación; la revisión guarda sus valores anteriores.',
   },
-];
+  find: (manager, _root, key) => findRecordingArtistCredit(manager, key.recording_id, key.artist_id),
+  write: (manager, _root, key, value, now) =>
+    writeRecordingArtistCredit(manager, key.recording_id, key.artist_id, value as RecordingArtistCreditValue, now),
+  remove: (manager, _root, key, now) => deleteRecordingArtistCredit(manager, key.recording_id, key.artist_id, now),
+});
 
 const OPTIONAL_TEXT = { type: ['string', 'null'], maxLength: 10000 };
 

@@ -1,6 +1,5 @@
 import { EntityManager } from 'typeorm';
-import { ARTIST_CREDIT_RANKS } from '../music/entities/recording.entity';
-import { artistIdOfIdentity, releaseIdOf } from '../music/releases';
+import { releaseIdOf } from '../music/releases';
 import {
   TrackArtistCreditValue,
   TrackPlatformLinkValue,
@@ -30,7 +29,7 @@ import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { INT4, ROW_KEY, envelope, reference } from './identity-relation-changes';
 import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
-import { artistProblems } from './release-credit-changes';
+import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 
 /*
  * Relation changes of the tracks of a release, which owns them: the tracks,
@@ -163,85 +162,33 @@ async function trackGone(manager: EntityManager, root: EditorialEntity, key: Row
 
 // Printed credits of a track (ADR 0008): the payload keeps its v1, only its meaning changed
 
-const TRACK_CREDIT_KEY = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['track_id', 'artist_id'],
-  properties: {
-    track_id: { ...ROW_ID, description: 'Pista de la edición, o inserción de este envío que la creará' },
-    artist_id: reference('entity_id', 'Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico'),
-  },
-};
-
-const TRACK_CREDIT = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['rank', 'position'],
-  properties: {
-    rank: { enum: ARTIST_CREDIT_RANKS, description: '`main`, `featured` o `remixer`; una por artista y pista' },
-    position: { type: 'integer', minimum: 0, maximum: 32767, description: 'Orden de presentación' },
-    creditedAs: { type: ['string', 'null'], maxLength: 200, pattern: '\\S', description: 'Nombre literal de la fuente; null muestra el nombre visible' },
-  },
-};
-
-const readCredit = async (manager: EntityManager, root: EditorialEntity, key: RowKey | null): Promise<ValueEnvelope> => {
-  const releaseId = await releaseOf(manager, root);
-  const credit = key && releaseId !== null && (await findTrackArtistCredit(manager, releaseId, key.track_id, key.artist_id));
-  return credit ? { exists: true, value: { ...credit } } : ABSENT;
-};
-
-const creditBase = {
+const TRACK_CREDIT_CHANGES = artistCreditChanges({
   entityType: 'release',
   targetPath: 'track_artist_credits',
-  payloadSchemaVersion: 1,
-  targetKeySchema: TRACK_CREDIT_KEY,
-  keyRoots: { artist_id: { entityType: 'identity', idOf: artistIdOfIdentity } },
+  ownerKey: { track_id: { ...ROW_ID, description: 'Pista de la edición, o inserción de este envío que la creará' } },
   keyRows: TRACK_ROW,
-  check: () => [],
-  references: () => [],
-  read: readCredit,
-} satisfies Partial<OperationDefinition>;
-
-const creditWrite = (operation: 'add_relation' | 'update_relation', description: string): OperationDefinition => ({
-  ...creditBase,
-  operation,
-  description,
-  valueSchema: TRACK_CREDIT,
-  targetProblems: async (manager, root, _value, targetKey) => [
-    ...(await trackProblems(manager, root, targetKey)),
-    ...(await artistProblems(manager, targetKey)),
-  ],
-  constraintProblems: async (manager, root, key) => {
-    if (operation === 'update_relation' && !(await readCredit(manager, root, key)).exists) return ['El crédito ya no existe'];
-    return trackGone(manager, root, key);
-  },
-  apply: async (manager, root, value, now, key) => {
-    await writeTrackArtistCredit(manager, await releaseOrFail(manager, root), key!.track_id, key!.artist_id, value as TrackArtistCreditValue, now);
-    return { afterValue: await readCredit(manager, root, key), resultKey: key };
-  },
-});
-
-const TRACK_CREDIT_CHANGES: OperationDefinition[] = [
-  creditWrite(
-    'add_relation',
-    'Añade un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`) al crédito impreso de una pista, solo ' +
+  value: artistCreditValue('pista'),
+  descriptions: {
+    add:
+      'Añade un artista principal (`main`), invitado (`featured`) o remezclador (`remixer`) al crédito impreso de una pista, solo ' +
       'cuando la edición acredita la grabación de otra forma. Una pista con crédito impreso lo muestra entero en lugar del crédito ' +
       'de artista de su grabación. Su clave es la pista y la identidad del artista. No atribuye autoría, interpretación ni producción.',
-  ),
-  creditWrite('update_relation', 'Cambia la clase, la posición o el nombre acreditado de un artista del crédito impreso de la pista.'),
-  {
-    ...creditBase,
-    operation: 'remove_relation',
-    description:
+    update: 'Cambia la clase, la posición o el nombre acreditado de un artista del crédito impreso de la pista.',
+    remove:
       'Quita un artista del crédito impreso de la pista; sin ninguno, la pista muestra el crédito de su grabación. La revisión ' +
       'guarda sus valores anteriores.',
-    valueSchema: null,
-    apply: async (manager, root, _value, now, key) => {
-      await deleteTrackArtistCredit(manager, await releaseOrFail(manager, root), key!.track_id, key!.artist_id, now);
-      return { afterValue: ABSENT, resultKey: key };
-    },
   },
-];
+  find: async (manager, root, key) => {
+    const releaseId = await releaseOf(manager, root);
+    return releaseId === null ? null : findTrackArtistCredit(manager, releaseId, key.track_id, key.artist_id);
+  },
+  write: async (manager, root, key, value, now) =>
+    writeTrackArtistCredit(manager, await releaseOrFail(manager, root), key.track_id, key.artist_id, value as TrackArtistCreditValue, now),
+  remove: async (manager, root, key, now) =>
+    deleteTrackArtistCredit(manager, await releaseOrFail(manager, root), key.track_id, key.artist_id, now),
+  ownerProblems: trackProblems,
+  ownerGone: trackGone,
+});
 
 // Platform links of a track
 
