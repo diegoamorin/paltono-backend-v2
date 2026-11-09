@@ -59,6 +59,7 @@ describe('microchanges and sources of a draft', () => {
             proposedValue: personCreation(),
             atomicGroupId: null,
             position: 0,
+            possibleDuplicateOf: null,
             createdAt: '2026-01-01T00:00:00.000Z',
             status: 'pending',
             resolvedAt: null,
