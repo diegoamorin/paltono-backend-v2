@@ -32,8 +32,8 @@ export class IdentityCreditsController {
       '`edition`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, ' +
       '`work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `edition` y `role`, para leer los créditos como ' +
       'una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o ' +
-      '`-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la ' +
-      'edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad ' +
+      '`-releaseDate`: la fecha de lanzamiento de la grabación o de la primera grabación de la obra, o la fecha de salida de la ' +
+      'edición, según lo que acredite cada crédito, con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad ' +
       'retirada no muestra créditos.',
   })
   @ApiParam({ name: 'id', description: 'public_id de la identidad' })
