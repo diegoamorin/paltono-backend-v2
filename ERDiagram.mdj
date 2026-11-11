@@ -14421,7 +14421,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "type",
-							"documentation": "album|ep|single|compilation. Editorial classification as announced by the artist or agency, backed by sources; never derived from track count or duration. Editions carry no type of their own.",
+							"documentation": "Enum release_type: album | ep | single | compilation. Editorial classification as announced by the artist or agency, backed by sources; never derived from track count or duration. Editions carry no type of their own.",
 							"type": "enum"
 						},
 						{
