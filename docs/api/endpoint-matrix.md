@@ -5,7 +5,7 @@ Aprobada el 2026-10-17, incluidas las decisiones P1–P7. Deriva de `ERDiagram.m
 ## Convenciones comunes
 
 - Prefijo `/v1`; `Content-Type` y `Accept`: `application/vnd.api+json` (415/406 según JSON:API). `/health` queda fuera.
-- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos (`release-groups`), ediciones (`releases`), eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**; `public_id` de la identidad y `kind`, separados por un punto, en aniversarios, que no tienen fila propia. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
+- Identificadores de recurso (`id`, siempre cadena): `public_id` en identidades, artistas, grabaciones, lanzamientos (`releases`), ediciones (`editions`), eventos y tours; `works.id`; `users.uuid` para cuentas **[P1]**; UUID en recursos editoriales; PK entera para filas dependientes como pistas y créditos **[P2]**; `public_id` de la identidad y `kind`, separados por un punto, en aniversarios, que no tienen fila propia. Cada ficha expone `meta.editorialEntityId` para operar en el flujo editorial.
 - Paginación `page[number]`/`page[size]` (20 por defecto, 100 máximo), con `meta.total` y enlaces `first/prev/next/last`. Orden estable: toda ordenación añade el `id` como desempate.
 - `include` hasta dos niveles, solo por las rutas listadas. `fields[tipo]` en todos los recursos. Un `include`, `sort` o filtro no listado responde 400.
 - Las columnas de orden listan campos: cada uno admite ambas direcciones, y la dirección escrita es la habitual **[P12]**. Un filtro por código o slug de un vocabulario que no existe devuelve una lista vacía, no 400 **[P13]**.
@@ -97,7 +97,7 @@ Lectura pública; escritura de administradores fuera del flujo editorial. Borrar
 | V2 | `genres` | Igual | `q`, `slug` | `name` | ok val authz state |
 | V3 | `platforms` | Igual | `q`, `slug`, `supports=catalog_identity|recording|album` | `name` | ok val authz state |
 | V4 | `organization-types` | Igual | `q`, `slug` | `name` | ok val authz state |
-| V5 | `contribution-roles` | Igual; el atributo `scopes` (work/recording/release/membership) se gestiona como conjunto. Quitar un ámbito en uso responde 409 | `q`, `slug`, `category`, `scope` | `name`, `category` | ok val authz state |
+| V5 | `contribution-roles` | Igual; el atributo `scopes` (work/recording/edition/membership) se gestiona como conjunto. Quitar un ámbito en uso responde 409 | `q`, `slug`, `category`, `scope` | `name`, `category` | ok val authz state |
 
 ## 4. Catálogo: identidades (módulo `catalog-identities`)
 
@@ -112,7 +112,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | C5 | `GET /v1/identities/{id}/organized-events` y `/organized-tours` | Eventos y tours donde figura como organizador | ok |
 | C6 | `GET /v1/artists` | Perfiles artísticos | ok val |
 | C7 | `GET /v1/artists/{id}` | Perfil y su identidad | ok authz |
-| C8 | `GET /v1/artists/{id}/release-groups` | Discografía: lanzamientos con crédito de artista, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
+| C8 | `GET /v1/artists/{id}/releases` | Discografía: lanzamientos con crédito de artista, uno por lanzamiento aunque tenga varias ediciones (`filter[type]`) | ok val |
 | C9 | `GET /v1/artists/{id}/tracks` | Pistas cuyo crédito mostrado incluye al artista: el impreso si existe; si no, el de su grabación publicada (`filter[rank]`, sobre ese mismo crédito) | ok val |
 | C10 | `GET /v1/artists/{id}/events` y `/tours` | Anunciado en eventos y tours | ok val |
 | C11 | `GET /v1/anniversaries` | Aniversarios: una fila por cada fecha con mes conocido (`birth`, `death`, `debut`, `founding`, `dissolution`) de una identidad publicada. Sin consulta individual | ok val |
@@ -122,7 +122,7 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | `identities` | `q` (nombre visible y alias), `type`, `hasArtistProfile`, `nationality`, `birthCountry`, `originCountry`, `organizationType` | `displayName` (defecto), `-createdAt` | `aliases`, `nationalities`, `birthCountry`, `originCountry`, `organizationTypes`, `platformLinks`, `platformLinks.platform`, `artist` |
 | `artists` | `q`, `identityType`, `affiliatedWith` (organización), `affiliationStatus` | `displayName` (defecto), `-createdAt` | `identity`, `identity.aliases`, `affiliations`, `affiliations.organization` |
 | `organization-memberships` (C3) | `side=organization|member` (sin él, ambos lados) | `joined` (defecto, fechas desconocidas al final), `-createdAt` | `organization`, `member`, `roles`, `roles.role` |
-| `work-contributions`, `recording-contributions`, `release-contributions` (C4, documento heterogéneo) | `scope=work|recording|release`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `release`, `role` |
+| `work-contributions`, `recording-contributions`, `edition-contributions` (C4, documento heterogéneo) | `scope=work|recording|edition`, `role` (slug) | `createdAt` (defecto), `-createdAt` | `work`, `recording`, `edition`, `role` |
 | `anniversaries` (C11) | `month` (1 a 12), `day` (1 a 31, exige `month`; deja fuera las fechas sin día), `kind` (uno o varios, separados por comas), `deceased=true|false` (según haya fallecimiento registrado; `false` excluye todas las filas de la identidad), `hasArtistProfile=true|false` | Fijo: mes, día con los nulos al final de su mes, `displayName`, `kind` e identidad. No acepta `sort` | `identity` |
 
 ## 5. Catálogo: música (módulo `music`)
@@ -135,21 +135,21 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | M4 | `GET /v1/recordings` | Grabaciones | ok val |
 | M5 | `GET /v1/recordings/{id}` | Grabación | ok authz |
 | M6 | `GET /v1/recordings/{id}/tracks` | Apariciones en ediciones | ok |
-| M7 | `GET /v1/releases` | Ediciones | ok val |
-| M8 | `GET /v1/releases/{id}` | Edición, con su disponibilidad derivada y su instante de salida | ok authz |
-| M9 | `GET /v1/releases/{id}/tracks` | Lista de pistas por disco y número | ok |
+| M7 | `GET /v1/editions` | Ediciones | ok val |
+| M8 | `GET /v1/editions/{id}` | Edición, con su disponibilidad derivada y su instante de salida | ok authz |
+| M9 | `GET /v1/editions/{id}/tracks` | Lista de pistas por disco y número | ok |
 | M10 | `GET /v1/tracks/{id}` | Pista | ok authz |
-| M11 | `GET /v1/release-groups` | Lanzamientos | ok val |
-| M12 | `GET /v1/release-groups/{id}` | Lanzamiento, con fecha, próxima salida y cuenta regresiva derivadas de sus ediciones | ok authz |
-| M13 | `GET /v1/release-groups/{id}/releases` | Ediciones del lanzamiento | ok val |
-| M14 | `GET /v1/release-groups/{id}/repackages` | Repackages que apuntan a este lanzamiento | ok |
+| M11 | `GET /v1/releases` | Lanzamientos | ok val |
+| M12 | `GET /v1/releases/{id}` | Lanzamiento, con fecha, próxima salida y cuenta regresiva derivadas de sus ediciones | ok authz |
+| M13 | `GET /v1/releases/{id}/editions` | Ediciones del lanzamiento | ok val |
+| M14 | `GET /v1/releases/{id}/repackages` | Repackages que apuntan a este lanzamiento | ok |
 
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
 | `works` | `q` (título), `slug`, `iswc`, `contributor` (identidad), `role` | `title` (defecto), `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `recordingWorks`, `recordingWorks.recording`, `firstRecording`, `firstRecordingArtistCredits`, `firstRecordingArtistCredits.artist` |
-| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de artista de la grabación, o crédito impreso de una pista en una edición publicada), `year` (año de grabación), `releaseYear` (año de la fecha de lanzamiento), `isExplicit` | `title` (defecto), `-recordingDate`, `-releaseDate` (nulos al final en ambos sentidos), `-createdAt` | `artistCredits`, `artistCredits.artist`, `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `platformLinks`, `platformLinks.platform`, `tracks`, `tracks.release` |
-| `release-groups` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `releases`, `repackageOf` |
-| `releases` | `q`, `releaseGroup`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `releaseGroup`, `releaseGroup.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
+| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de artista de la grabación, o crédito impreso de una pista en una edición publicada), `year` (año de grabación), `releaseYear` (año de la fecha de lanzamiento), `isExplicit` | `title` (defecto), `-recordingDate`, `-releaseDate` (nulos al final en ambos sentidos), `-createdAt` | `artistCredits`, `artistCredits.artist`, `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `platformLinks`, `platformLinks.platform`, `tracks`, `tracks.edition` |
+| `releases` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `editions`, `repackageOf` |
+| `editions` | `q`, `release`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `release`, `release.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
 | `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `recording.platformLinks`, `artistCredits`, `artistCredits.artist` |
 
 Créditos de artista (ADR 0008): `recording-artist-credits` (id `{grabación}.{artista}`) es el crédito de artista de una grabación; `track-artist-credits` (id `{pista}.{artista}`), el crédito impreso de una pista; `release-artist-credits`, el de un lanzamiento. Los tres tienen `displayName`: `creditedAs` o, si falta, el nombre visible de la identidad del artista, y la relación `artist` con el perfil artístico. La relación `artistCredits` de `tracks` apunta al crédito impreso si la pista lo tiene y, si no, al de su grabación, leído al mostrarla; el `type` de cada elemento dice cuál es. Una grabación retirada no presta su crédito.
@@ -224,7 +224,7 @@ E7/E8 y listados de propuestas: `filter[status]`, `filter[entity]`, `filter[enti
 
 | # | Método y ruta | Contenido | Pruebas |
 |---|---|---|---|
-| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,release-groups,events,tours`; sin `filter[type]` se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad y aparecería dos veces; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas. `include=artistCredits,artistCredits.artist` trae los artistas de `recordings` y `release-groups`; los demás tipos lo ignoran | ok val |
+| S1 | `GET /v1/search` | `filter[q]` obligatorio, `filter[type]=identities,artists,works,recordings,releases,events,tours`; sin `filter[type]` se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad y aparecería dos veces; devuelve lanzamientos, no ediciones, para que un álbum aparezca una sola vez. Documento heterogéneo ordenado por relevancia (`pg_trgm` y `unaccent` sobre nombres, alias y títulos); sin transliteración automática. Excluye reservas y fichas retiradas. `include=artistCredits,artistCredits.artist` trae los artistas de `recordings` y `releases`; los demás tipos lo ignoran | ok val |
 
 `discovery` solo lee, a través de los servicios públicos de lectura de cada módulo, para no acoplarse a sus tablas.
 

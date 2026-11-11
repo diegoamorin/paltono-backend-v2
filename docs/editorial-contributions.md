@@ -27,8 +27,8 @@ Se elimina `artist_team_members`. Crear una ficha no confiere propiedad ni permi
 | `identity` | `catalog_identities` | `people` o `organizations`, perfil `artists`, alias, nacionalidades, categorías y enlaces; membresías y roles pertenecen a la organización; afiliaciones pertenecen a la identidad del artista. |
 | `work` | `works` | Créditos `work_contributions`. |
 | `recording` | `recordings` | Créditos, crédito de artista, géneros, relaciones con obras (`recording_works`) y enlaces de plataforma (`recording_platform_links`), uno por plataforma. |
-| `release_group` | `release_groups` | Título, tipo, descripción, vínculo de repackage y crédito de artista del lanzamiento (`release_artist_credits`). |
-| `release` | `releases` | Edición: pertenencia a su lanzamiento, nombre de edición, fecha y hora, cancelación, créditos de la edición (`release_contributions`), pistas y créditos impresos de las pistas. |
+| `release` | `releases` | Título, tipo, descripción, vínculo de repackage y crédito de artista del lanzamiento (`release_artist_credits`). |
+| `edition` | `editions` | Edición: pertenencia a su lanzamiento, nombre de edición, fecha y hora, cancelación, créditos de la edición (`edition_contributions`), pistas y créditos impresos de las pistas. |
 | `event` | `events` | Participantes, organizadores y enlaces del concierto. |
 | `tour` | `tours` | Artistas, organizadores y enlaces del tour. |
 
@@ -185,7 +185,7 @@ El validador estructural se ejecuta con `python scripts/validate_erd.py`. Para c
 | Visitante consulta historial | Ve todos los envíos y fuentes, sin estados individuales ni motivos; nunca ve borradores. |
 | Autor retira pendientes de un envío parcialmente aplicado | Se conservan las revisiones aplicadas; se cierran pendientes/dependientes según su resultado. |
 | Alta de una edición cuyo lanzamiento se rechaza | La edición queda bloqueada; nunca se publica una edición sin lanzamiento publicado. |
-| Dos ediciones sin nombre en el mismo lanzamiento | La segunda se rechaza por la unicidad de `(release_group_id, edition_name)`. |
+| Dos ediciones sin nombre en el mismo lanzamiento | La segunda se rechaza por la unicidad de `(release_id, edition_name)`. |
 | Repackage que crearía un ciclo o apunta a sí mismo | Rechazo bajo bloqueo, sin escritura ni revisión. |
 | Mover una edición a otro lanzamiento mientras otra propuesta cambia esa edición | Se aplica como `set_fields` de la edición; la segunda queda en conflicto si su base cambió. |
 | Borrador con un microcambio en una versión del payload obsoleta | El autor lo ve marcado como obsoleto con su valor original; enviar se rechaza con `obsolete_payload_schema_version` e indica el microcambio; quitarlo respeta dependencias y grupos. |

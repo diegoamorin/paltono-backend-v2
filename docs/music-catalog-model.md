@@ -74,7 +74,7 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 |---|---|---|---|
 | `work_contributions` | `work` | Autoría y aportes a la obra: composición, letra, adaptación, traducción, arreglo de obra | Obra |
 | `recording_contributions` | `recording` | Interpretación, producción, arreglo de grabación, grabación y mezcla | Grabación |
-| `edition_contributions` | `release` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
+| `edition_contributions` | `edition` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
 | `release_artist_credits` | Crédito de artista | Artistas con que se presenta el lanzamiento, en orden | Lanzamiento |
 | `recording_artist_credits` | Crédito de artista | Crédito de artista de la grabación: `main`, `featured` o `remixer`, en orden | Grabación |
 | `track_artist_credits` | Crédito impreso | Crédito impreso de una pista, solo si la edición acredita la grabación de otra forma | Edición de la pista |
