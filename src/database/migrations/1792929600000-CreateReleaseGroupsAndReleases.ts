@@ -58,7 +58,7 @@ export class CreateReleaseGroupsAndReleases1792929600000 implements MigrationInt
     await queryRunner.query(`CREATE INDEX release_artist_credits_release_group_id_idx ON release_artist_credits (release_group_id)`);
 
     await queryRunner.query(`
-      CREATE TABLE releases (
+      CREATE TABLE editions (
         id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         uuid uuid NOT NULL,
         public_id varchar(21) NOT NULL,
@@ -75,28 +75,28 @@ export class CreateReleaseGroupsAndReleases1792929600000 implements MigrationInt
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
         editorial_entity_id uuid NOT NULL,
-        CONSTRAINT releases_uuid_key UNIQUE (uuid),
-        CONSTRAINT releases_public_id_key UNIQUE (public_id),
-        CONSTRAINT releases_editorial_entity_id_key UNIQUE (editorial_entity_id),
+        CONSTRAINT editions_uuid_key UNIQUE (uuid),
+        CONSTRAINT editions_public_id_key UNIQUE (public_id),
+        CONSTRAINT editions_editorial_entity_id_key UNIQUE (editorial_entity_id),
         -- At most one unnamed, standard edition per release group.
-        CONSTRAINT releases_release_group_id_edition_name_key UNIQUE NULLS NOT DISTINCT (release_group_id, edition_name),
-        CONSTRAINT releases_editorial_entity_id_fkey
+        CONSTRAINT editions_release_group_id_edition_name_key UNIQUE NULLS NOT DISTINCT (release_group_id, edition_name),
+        CONSTRAINT editions_editorial_entity_id_fkey
           FOREIGN KEY (editorial_entity_id) REFERENCES editorial_entities (id) ON DELETE RESTRICT,
-        CONSTRAINT releases_release_group_id_fkey FOREIGN KEY (release_group_id) REFERENCES release_groups (id) ON DELETE RESTRICT,
-        CONSTRAINT releases_title_nonblank CHECK (title IS NULL OR btrim(title) <> ''),
-        CONSTRAINT releases_edition_name_nonblank CHECK (edition_name IS NULL OR btrim(edition_name) <> ''),
-        CONSTRAINT releases_release_date CHECK (${partialDateCheck('release')}),
+        CONSTRAINT editions_release_group_id_fkey FOREIGN KEY (release_group_id) REFERENCES release_groups (id) ON DELETE RESTRICT,
+        CONSTRAINT editions_title_nonblank CHECK (title IS NULL OR btrim(title) <> ''),
+        CONSTRAINT editions_edition_name_nonblank CHECK (edition_name IS NULL OR btrim(edition_name) <> ''),
+        CONSTRAINT editions_release_date CHECK (${partialDateCheck('release')}),
         -- The time and its IANA zone go together, and only with a complete date.
-        CONSTRAINT releases_release_time CHECK (
+        CONSTRAINT editions_release_time CHECK (
           (release_time IS NULL AND timezone IS NULL) OR (release_time IS NOT NULL AND timezone IS NOT NULL AND release_day IS NOT NULL)
         ),
-        CONSTRAINT releases_cover_art_url_format CHECK (cover_art_url IS NULL OR cover_art_url ~* '^https?://[^\\s]+$')
+        CONSTRAINT editions_cover_art_url_format CHECK (cover_art_url IS NULL OR cover_art_url ~* '^https?://[^\\s]+$')
       )
     `);
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP TABLE releases');
+    await queryRunner.query('DROP TABLE editions');
     await queryRunner.query('DROP TABLE release_artist_credits');
     await queryRunner.query('DROP TABLE release_groups');
     await queryRunner.query('DROP TYPE release_group_type');

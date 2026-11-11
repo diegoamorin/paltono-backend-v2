@@ -3,8 +3,8 @@ import { CatalogIdentity } from '../catalog-identities/entities/catalog-identity
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { ContributionRoleScope } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution } from './entities/recording.entity';
-import { Release } from './entities/release.entity';
-import { ReleaseContribution } from './entities/track.entity';
+import { Edition } from './entities/edition.entity';
+import { EditionContribution } from './entities/track.entity';
 import { Credit, Work, WorkContribution } from './entities/work.entity';
 
 /*
@@ -33,7 +33,7 @@ export type OwnerId = string | number;
 const TABLES = {
   work: { entity: WorkContribution, owner: 'workId', root: Work },
   recording: { entity: RecordingContribution, owner: 'recordingId', root: Recording },
-  release: { entity: ReleaseContribution, owner: 'releaseId', root: Release },
+  release: { entity: EditionContribution, owner: 'editionId', root: Edition },
 } as const;
 
 /** Whether a role may be credited in a scope; the composite foreign key enforces it too. */

@@ -3,19 +3,19 @@ import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScope, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
 import { ARTIST_CREDIT_RANKS, ArtistCreditRank, Recording } from './recording.entity';
-import { Release } from './release.entity';
+import { Edition } from './edition.entity';
 import { Credit, applyAll, creditChecks, creditJoins } from './work.entity';
 
 /*
- * The rows a release owns besides its fields: its tracks, with their printed
- * credits, and the credits of the release. A track has no editorial root of
- * its own; only applied microchanges of its release write them. A track has
+ * The rows an edition owns besides its fields: its tracks, with their printed
+ * credits, and the credits of the edition. A track has no editorial root of
+ * its own; only applied microchanges of its edition write them. A track has
  * no platform links: they are its recording's (ADR 0009).
  */
 
-// Mirrors the CreateTracksAndReleaseContributions migration, so `migration:generate` finds no drift.
+// Mirrors the CreateTracksAndEditionContributions migration, so `migration:generate` finds no drift.
 @Entity('tracks')
-@Unique('tracks_release_id_disc_number_track_number_key', ['releaseId', 'discNumber', 'trackNumber'])
+@Unique('tracks_edition_id_disc_number_track_number_key', ['editionId', 'discNumber', 'trackNumber'])
 @Index('tracks_recording_id_idx', ['recordingId'])
 @Check('tracks_position_positive', `disc_number > 0 AND track_number > 0`)
 @Check('tracks_title_nonblank', `title IS NULL OR btrim(title) <> ''`)
@@ -23,12 +23,12 @@ export class Track {
   @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
   id: number;
 
-  @Column({ name: 'release_id', type: 'integer' })
-  releaseId: number;
+  @Column({ name: 'edition_id', type: 'integer' })
+  editionId: number;
 
-  @ManyToOne(() => Release, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'release_id', foreignKeyConstraintName: 'tracks_release_id_fkey' })
-  release?: Release;
+  @ManyToOne(() => Edition, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'edition_id', foreignKeyConstraintName: 'tracks_edition_id_fkey' })
+  edition?: Edition;
 
   @Column({ name: 'recording_id', type: 'integer' })
   recordingId: number;
@@ -43,7 +43,7 @@ export class Track {
   @Column({ name: 'track_number', type: 'smallint' })
   trackNumber: number;
 
-  /** The literal title in this release; null shows the recording's current title without copying it. */
+  /** The literal title in this edition; null shows the recording's current title without copying it. */
   @Column({ type: 'varchar', length: 512, nullable: true })
   title: string | null;
 
@@ -96,27 +96,27 @@ export class TrackArtistCredit {
   creditedAs: string | null;
 }
 
-const releaseCreditJoins = creditJoins('release_contributions');
+const editionCreditJoins = creditJoins('edition_contributions');
 
-/** A credit of a release: mastering, restoration or documented overall production. */
-@Entity('release_contributions')
-@Index('release_contributions_release_id_idx', ['releaseId'])
-@Index('release_contributions_catalog_identity_id_idx', ['catalogIdentityId'])
-@applyAll(creditChecks('release_contributions', 'release'))
-export class ReleaseContribution extends Credit {
-  @Column({ name: 'release_id', type: 'integer' })
-  releaseId: number;
+/** A credit of an edition: mastering, restoration or documented overall production. */
+@Entity('edition_contributions')
+@Index('edition_contributions_edition_id_idx', ['editionId'])
+@Index('edition_contributions_catalog_identity_id_idx', ['catalogIdentityId'])
+@applyAll(creditChecks('edition_contributions', 'release'))
+export class EditionContribution extends Credit {
+  @Column({ name: 'edition_id', type: 'integer' })
+  editionId: number;
 
   @Column({ name: 'role_scope', type: 'enum', enum: CONTRIBUTION_ROLE_SCOPES, enumName: 'contribution_role_scope', default: 'release' })
   roleScope: ContributionRoleScopeName;
 
-  @ManyToOne(() => Release, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'release_id', foreignKeyConstraintName: 'release_contributions_release_id_fkey' })
-  release?: Release;
+  @ManyToOne(() => Edition, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'edition_id', foreignKeyConstraintName: 'edition_contributions_edition_id_fkey' })
+  edition?: Edition;
 
-  @applyAll(releaseCreditJoins.identity)
+  @applyAll(editionCreditJoins.identity)
   identity?: CatalogIdentity;
 
-  @applyAll(releaseCreditJoins.role)
+  @applyAll(editionCreditJoins.role)
   roleInScope?: ContributionRoleScope;
 }

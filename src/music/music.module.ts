@@ -3,7 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Recording, RecordingArtistCredit, RecordingContribution, RecordingGenre, RecordingPlatformLink, RecordingWork } from './entities/recording.entity';
 import { Work, WorkContribution } from './entities/work.entity';
 import { ArtistReleaseGroupsController } from './artist-release-groups.controller';
-import { Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
+import { ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
 import { IdentityCreditsController } from './identity-credits.controller';
 import { IdentityCreditsService } from './identity-credits.service';
 import { RecordingsController } from './recordings.controller';
@@ -12,7 +13,7 @@ import { ReleaseGroupsController } from './release-groups.controller';
 import { ReleaseGroupsService } from './release-groups.service';
 import { ReleasesController } from './releases.controller';
 import { ReleasesService } from './releases.service';
-import { ReleaseContribution, Track, TrackArtistCredit } from './entities/track.entity';
+import { EditionContribution, Track, TrackArtistCredit } from './entities/track.entity';
 import { TracksController } from './tracks.controller';
 import { TracksService } from './tracks.service';
 import { WorksController } from './works.controller';
@@ -38,8 +39,8 @@ import { WorksService } from './works.service';
       RecordingPlatformLink,
       ReleaseGroup,
       ReleaseArtistCredit,
-      Release,
-      ReleaseContribution,
+      Edition,
+      EditionContribution,
       Track,
       TrackArtistCredit,
     ]),

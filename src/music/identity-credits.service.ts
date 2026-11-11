@@ -7,8 +7,8 @@ import { CollectionQuery, requireOneOf } from '../common/json-api/query';
 import { CONTRIBUTION_ROLE_SCOPES } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution } from './entities/recording.entity';
 import { Work, WorkContribution } from './entities/work.entity';
-import { Release } from './entities/release.entity';
-import { ReleaseContribution } from './entities/track.entity';
+import { Edition } from './entities/edition.entity';
+import { EditionContribution } from './entities/track.entity';
 import { Clock } from '../common/clock/clock';
 import { creditEntries, plainRecordingEntries, plainWorkEntries, withArtistCredits } from './music-entries';
 import { CreditEntry, CreditScope } from './resource-primitives';
@@ -49,7 +49,7 @@ export class IdentityCreditsService {
     const union = [
       credits('work_contributions', 'work_id', 'works', 'work', workReleaseStartSql('owner')),
       credits('recording_contributions', 'recording_id', 'recordings', 'recording', recordingReleaseSql('owner').start),
-      credits('release_contributions', 'release_id', 'releases', 'release', releaseDateSql('owner').start),
+      credits('edition_contributions', 'edition_id', 'editions', 'release', releaseDateSql('owner').start),
     ].join(' UNION ALL ');
     const parameters = [identity.id, role ?? null, scope ?? null];
     const [{ total }] = await manager.query(`SELECT count(*)::int AS total FROM (${union}) credits`, parameters);
@@ -83,10 +83,10 @@ export class IdentityCreditsService {
         await manager.find(Recording, { where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } }),
       ),
     );
-    const releaseCredits = await manager.findBy(ReleaseContribution, { id: In(idsOf('release')) });
+    const releaseCredits = await manager.findBy(EditionContribution, { id: In(idsOf('release')) });
     const releases = await releaseEntries(
       manager,
-      await manager.find(Release, { where: { id: In(releaseCredits.map(({ releaseId }) => releaseId)) }, relations: { editorialEntity: true } }),
+      await manager.find(Edition, { where: { id: In(releaseCredits.map(({ editionId }) => editionId)) }, relations: { editorialEntity: true } }),
       this.clock.now(),
       false,
     );
@@ -101,7 +101,7 @@ export class IdentityCreditsService {
       })),
       ...(await creditEntries(manager, 'release', releaseCredits)).map((entry) => ({
         ...entry,
-        release: releases.find(({ release }) => release.id === (entry.credit as ReleaseContribution).releaseId)!,
+        release: releases.find(({ release }) => release.id === (entry.credit as EditionContribution).editionId)!,
       })),
     ];
     return page.map(({ scope, id }) => entries.find((entry) => entry.scope === scope && entry.credit.id === id)!);

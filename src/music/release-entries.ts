@@ -2,8 +2,9 @@ import { EntityManager, In } from 'typeorm';
 import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { shownImages } from '../images/shown-images';
-import { Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
-import { ReleaseContribution, Track } from './entities/track.entity';
+import { Edition } from './entities/edition.entity';
+import { ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { EditionContribution, Track } from './entities/track.entity';
 import { creditEntries } from './music-entries';
 import { trackEntries } from './track-entries';
 import { releaseGroupDates, releaseTimes } from './release-dates';
@@ -16,7 +17,7 @@ import { ReleaseArtistCreditEntry, ReleaseEntry, ReleaseGroupEntry } from './rel
  * levels.
  */
 
-const notWithdrawn = (root: ReleaseGroup | Release) => root.editorialEntity!.publicationStatus !== 'withdrawn';
+const notWithdrawn = (root: ReleaseGroup | Edition) => root.editorialEntity!.publicationStatus !== 'withdrawn';
 
 /** Release groups, each with its editorial root loaded, as entries; with their relations when `withRelations`. */
 export async function releaseGroupEntries(manager: EntityManager, groups: ReleaseGroup[], now: Date, withRelations = true): Promise<ReleaseGroupEntry[]> {
@@ -28,14 +29,14 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
   if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
   const credited = await withReleaseArtistCredits(manager, plain);
   const releases = await manager
-    .createQueryBuilder(Release, 'release')
-    .innerJoinAndSelect('release.editorialEntity', 'root')
-    .where('release.release_group_id IN (:...ids)', { ids })
+    .createQueryBuilder(Edition, 'edition')
+    .innerJoinAndSelect('edition.editorialEntity', 'root')
+    .where('edition.release_group_id IN (:...ids)', { ids })
     .andWhere(`root.publication_status = 'published'`)
-    .orderBy('release.release_year', 'ASC', 'NULLS LAST')
-    .addOrderBy('release.release_month', 'ASC', 'NULLS FIRST')
-    .addOrderBy('release.release_day', 'ASC', 'NULLS FIRST')
-    .addOrderBy('release.id', 'ASC')
+    .orderBy('edition.release_year', 'ASC', 'NULLS LAST')
+    .addOrderBy('edition.release_month', 'ASC', 'NULLS FIRST')
+    .addOrderBy('edition.release_day', 'ASC', 'NULLS FIRST')
+    .addOrderBy('edition.id', 'ASC')
     .getMany();
   const releaseList = await releaseEntries(manager, releases, now, false);
   const originalIds = [...new Set(groups.flatMap(({ repackageOfId }) => (repackageOfId === null ? [] : [repackageOfId])))];
@@ -70,7 +71,7 @@ export async function withReleaseArtistCredits(manager: EntityManager, entries: 
 }
 
 /** Releases, each with its editorial root loaded, as entries with their group; with their relations when `withRelations`. */
-export async function releaseEntries(manager: EntityManager, releases: Release[], now: Date, withRelations = true): Promise<ReleaseEntry[]> {
+export async function releaseEntries(manager: EntityManager, releases: Edition[], now: Date, withRelations = true): Promise<ReleaseEntry[]> {
   if (releases.length === 0) return [];
   const times = await releaseTimes(manager, releases.map(({ id }) => id), now);
   const groupIds = [...new Set(releases.map(({ releaseGroupId }) => releaseGroupId))];
@@ -91,11 +92,11 @@ export async function releaseEntries(manager: EntityManager, releases: Release[]
   const contributions = await creditEntries(
     manager,
     'release',
-    await manager.find(ReleaseContribution, { where: { releaseId: In(ids) }, order: { position: 'ASC', id: 'ASC' } }),
+    await manager.find(EditionContribution, { where: { editionId: In(ids) }, order: { position: 'ASC', id: 'ASC' } }),
   );
   const tracks = await trackEntries(
     manager,
-    await manager.find(Track, { where: { releaseId: In(ids) }, order: { discNumber: 'ASC', trackNumber: 'ASC' } }),
+    await manager.find(Track, { where: { editionId: In(ids) }, order: { discNumber: 'ASC', trackNumber: 'ASC' } }),
     now,
     false,
   );
@@ -105,8 +106,8 @@ export async function releaseEntries(manager: EntityManager, releases: Release[]
     return {
       ...entry,
       relations: {
-        contributions: contributions.filter(({ credit }) => (credit as ReleaseContribution).releaseId === release.id),
-        tracks: tracks.filter(({ track }) => track.releaseId === release.id),
+        contributions: contributions.filter(({ credit }) => (credit as EditionContribution).editionId === release.id),
+        tracks: tracks.filter(({ track }) => track.editionId === release.id),
       },
     };
   });
@@ -119,11 +120,11 @@ export async function releaseEntries(manager: EntityManager, releases: Release[]
  */
 async function explicitReleaseIds(manager: EntityManager, releaseIds: number[]): Promise<Set<number>> {
   const rows: { releaseId: number }[] = await manager.query(
-    `SELECT DISTINCT track.release_id AS "releaseId"
+    `SELECT DISTINCT track.edition_id AS "releaseId"
      FROM tracks track
      JOIN recordings recording ON recording.id = track.recording_id
      JOIN editorial_entities root ON root.id = recording.editorial_entity_id
-     WHERE track.release_id = ANY($1) AND recording.is_explicit AND root.publication_status = 'published'`,
+     WHERE track.edition_id = ANY($1) AND recording.is_explicit AND root.publication_status = 'published'`,
     [releaseIds],
   );
   return new Set(rows.map(({ releaseId }) => releaseId));

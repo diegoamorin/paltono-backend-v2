@@ -3,7 +3,8 @@ import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
-import { RELEASE_GROUP_TYPES, Release, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
+import { RELEASE_GROUP_TYPES, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
 import {
   CreditEntry,
   EntryMeta,
@@ -44,7 +45,7 @@ export interface ReleaseGroupEntry {
 
 export interface ReleaseEntry {
   /** With its editorial root. */
-  release: Release;
+  release: Edition;
   times: ReleaseTimes;
   /** Derived from the recordings of its tracks, never stored. */
   isExplicit: boolean;

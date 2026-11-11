@@ -5,7 +5,7 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, period, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
-import { Release } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
 import { RELEASE_AVAILABILITIES, releaseSql } from './release-dates';
 import { releaseEntries } from './release-entries';
 import { ReleaseGroupsService } from './release-groups.service';
@@ -36,7 +36,7 @@ export class ReleasesService {
   ) {}
 
   async show(publicId: string): Promise<ReleaseEntry> {
-    const release = await this.dataSource.manager.findOne(Release, { where: { publicId }, relations: { editorialEntity: true } });
+    const release = await this.dataSource.manager.findOne(Edition, { where: { publicId }, relations: { editorialEntity: true } });
     if (!release) throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'release_not_found', detail: 'The release does not exist' }]);
     return (await releaseEntries(this.dataSource.manager, [release], this.clock.now()))[0];
   }
@@ -55,9 +55,9 @@ export class ReleasesService {
     return this.page(this.filtered(query).andWhere('release.release_group_id = :groupId', { groupId: group.group.id }), query);
   }
 
-  private filtered(query: CollectionQuery): SelectQueryBuilder<Release> {
+  private filtered(query: CollectionQuery): SelectQueryBuilder<Edition> {
     const builder = this.dataSource.manager
-      .createQueryBuilder(Release, 'release')
+      .createQueryBuilder(Edition, 'release')
       .innerJoinAndSelect('release.editorialEntity', 'root')
       .innerJoin('release.releaseGroup', 'grp')
       .where(`root.publication_status = 'published'`);
@@ -72,8 +72,8 @@ export class ReleasesService {
     if (contributor !== undefined) {
       builder.andWhere(
         `EXISTS (
-          SELECT 1 FROM release_contributions credit JOIN catalog_identities credited ON credited.id = credit.catalog_identity_id
-          WHERE credit.release_id = release.id AND credited.public_id = :contributor
+          SELECT 1 FROM edition_contributions credit JOIN catalog_identities credited ON credited.id = credit.catalog_identity_id
+          WHERE credit.edition_id = release.id AND credited.public_id = :contributor
         )`,
         { contributor },
       );
@@ -88,7 +88,7 @@ export class ReleasesService {
     return builder;
   }
 
-  private async page(builder: SelectQueryBuilder<Release>, query: CollectionQuery): Promise<{ entries: ReleaseEntry[]; total: number }> {
+  private async page(builder: SelectQueryBuilder<Edition>, query: CollectionQuery): Promise<{ entries: ReleaseEntry[]; total: number }> {
     const now = this.clock.now();
     builder.setParameter('now', now);
     query.sort.forEach(({ field, direction }, index) => {

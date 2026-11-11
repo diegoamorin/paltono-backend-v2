@@ -1,14 +1,14 @@
 import { EntityManager, Not } from 'typeorm';
 import { ArtistCreditRank, Recording } from './entities/recording.entity';
-import { Release } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
 import { Track, TrackArtistCredit } from './entities/track.entity';
 import { recordingIdOf } from './recordings';
 import { RootReference } from './releases';
 
 /*
- * The writes of the tracks of a release, with their printed credits. The
+ * The writes of the tracks of an edition, with their printed credits. The
  * editorial flow calls them inside the transaction that
- * applies a microchange of the release. Every read is scoped to one release,
+ * applies a microchange of the edition. Every read is scoped to one edition,
  * so a key never reaches the track of another one.
  */
 
@@ -29,50 +29,50 @@ export interface TrackArtistCreditValue {
 
 // Tracks
 
-export async function findTrack(manager: EntityManager, releaseId: number, id: number): Promise<Required<TrackValue> | null> {
-  const track = await manager.findOneBy(Track, { id, releaseId });
+export async function findTrack(manager: EntityManager, editionId: number, id: number): Promise<Required<TrackValue> | null> {
+  const track = await manager.findOneBy(Track, { id, editionId });
   return track && trackValue(manager, track);
 }
 
-/** The track at a position of a release, which an insertion of that position would collide with. */
-export async function findTrackAt(manager: EntityManager, releaseId: number, { discNumber, trackNumber }: TrackValue): Promise<Required<TrackValue> | null> {
-  const track = await manager.findOneBy(Track, { releaseId, discNumber, trackNumber });
+/** The track at a position of an edition, which an insertion of that position would collide with. */
+export async function findTrackAt(manager: EntityManager, editionId: number, { discNumber, trackNumber }: TrackValue): Promise<Required<TrackValue> | null> {
+  const track = await manager.findOneBy(Track, { editionId, discNumber, trackNumber });
   return track && trackValue(manager, track);
 }
 
 /** What a track at a position would break besides itself: a position holds one track, whatever selector proposes it. */
-export async function trackClashes(manager: EntityManager, releaseId: number, { discNumber, trackNumber }: TrackValue, exceptId: number | null): Promise<string[]> {
-  const taken = await manager.existsBy(Track, { releaseId, discNumber, trackNumber, ...(exceptId === null ? {} : { id: Not(exceptId) }) });
+export async function trackClashes(manager: EntityManager, editionId: number, { discNumber, trackNumber }: TrackValue, exceptId: number | null): Promise<string[]> {
+  const taken = await manager.existsBy(Track, { editionId, discNumber, trackNumber, ...(exceptId === null ? {} : { id: Not(exceptId) }) });
   return taken ? [`La edición ya tiene una pista en el disco ${discNumber}, número ${trackNumber}`] : [];
 }
 
-export async function insertTrack(manager: EntityManager, releaseId: number, value: TrackValue, now: Date): Promise<number> {
-  const { identifiers } = await manager.insert(Track, { releaseId, ...(await trackColumns(manager, value)), createdAt: now, updatedAt: now });
-  await touchRelease(manager, releaseId, now);
+export async function insertTrack(manager: EntityManager, editionId: number, value: TrackValue, now: Date): Promise<number> {
+  const { identifiers } = await manager.insert(Track, { editionId, ...(await trackColumns(manager, value)), createdAt: now, updatedAt: now });
+  await touchEdition(manager, editionId, now);
   return identifiers[0].id as number;
 }
 
-export async function updateTrack(manager: EntityManager, releaseId: number, id: number, value: TrackValue, now: Date): Promise<void> {
-  await manager.update(Track, { id, releaseId }, { ...(await trackColumns(manager, value)), updatedAt: now });
-  await touchRelease(manager, releaseId, now);
+export async function updateTrack(manager: EntityManager, editionId: number, id: number, value: TrackValue, now: Date): Promise<void> {
+  await manager.update(Track, { id, editionId }, { ...(await trackColumns(manager, value)), updatedAt: now });
+  await touchEdition(manager, editionId, now);
 }
 
-export async function deleteTrack(manager: EntityManager, releaseId: number, id: number, now: Date): Promise<void> {
-  await manager.delete(Track, { id, releaseId });
-  await touchRelease(manager, releaseId, now);
+export async function deleteTrack(manager: EntityManager, editionId: number, id: number, now: Date): Promise<void> {
+  await manager.delete(Track, { id, editionId });
+  await touchEdition(manager, editionId, now);
 }
 
 /** What still refers to a track, which keeps it from being removed: foreign keys are respected, never cascaded. */
-export async function trackReferences(manager: EntityManager, releaseId: number, id: number): Promise<string[]> {
-  if (!(await manager.existsBy(Track, { id, releaseId }))) return [];
+export async function trackReferences(manager: EntityManager, editionId: number, id: number): Promise<string[]> {
+  if (!(await manager.existsBy(Track, { id, editionId }))) return [];
   const references: string[] = [];
   if (await manager.existsBy(TrackArtistCredit, { trackId: id })) references.push('La pista tiene crédito impreso; quítalo antes de quitar la pista');
   return references;
 }
 
-/** Whether a track belongs to a release. */
-export function isTrackOf(manager: EntityManager, releaseId: number, id: number): Promise<boolean> {
-  return manager.existsBy(Track, { id, releaseId });
+/** Whether a track belongs to an edition. */
+export function isTrackOf(manager: EntityManager, editionId: number, id: number): Promise<boolean> {
+  return manager.existsBy(Track, { id, editionId });
 }
 
 async function trackValue(manager: EntityManager, track: Track): Promise<Required<TrackValue>> {
@@ -92,15 +92,15 @@ async function trackColumns(manager: EntityManager, value: TrackValue) {
 
 // Printed credits
 
-export async function findTrackArtistCredit(manager: EntityManager, releaseId: number, trackId: number, artistId: number): Promise<Required<TrackArtistCreditValue> | null> {
-  if (!(await isTrackOf(manager, releaseId, trackId))) return null;
+export async function findTrackArtistCredit(manager: EntityManager, editionId: number, trackId: number, artistId: number): Promise<Required<TrackArtistCreditValue> | null> {
+  if (!(await isTrackOf(manager, editionId, trackId))) return null;
   const row = await manager.findOneBy(TrackArtistCredit, { trackId, artistId });
   return row && { rank: row.rank, position: row.position, creditedAs: row.creditedAs };
 }
 
 export async function writeTrackArtistCredit(
   manager: EntityManager,
-  releaseId: number,
+  editionId: number,
   trackId: number,
   artistId: number,
   value: TrackArtistCreditValue,
@@ -112,14 +112,14 @@ export async function writeTrackArtistCredit(
   } else {
     await manager.insert(TrackArtistCredit, { trackId, artistId, ...columns, createdAt: now, updatedAt: now });
   }
-  await touchRelease(manager, releaseId, now);
+  await touchEdition(manager, editionId, now);
 }
 
-export async function deleteTrackArtistCredit(manager: EntityManager, releaseId: number, trackId: number, artistId: number, now: Date): Promise<void> {
+export async function deleteTrackArtistCredit(manager: EntityManager, editionId: number, trackId: number, artistId: number, now: Date): Promise<void> {
   await manager.delete(TrackArtistCredit, { trackId, artistId });
-  await touchRelease(manager, releaseId, now);
+  await touchEdition(manager, editionId, now);
 }
 
-async function touchRelease(manager: EntityManager, releaseId: number, now: Date): Promise<void> {
-  await manager.update(Release, { id: releaseId }, { updatedAt: now });
+async function touchEdition(manager: EntityManager, editionId: number, now: Date): Promise<void> {
+  await manager.update(Edition, { id: editionId }, { updatedAt: now });
 }

@@ -46,7 +46,7 @@ export class TracksService {
   async ofRelease(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
     const release = await this.releases.show(publicId);
     if (release.relations === null) return { entries: [], total: 0 };
-    return this.page(publishedTracksOf(this.dataSource.manager).andWhere('track.release_id = :releaseId', { releaseId: release.release.id }), query);
+    return this.page(publishedTracksOf(this.dataSource.manager).andWhere('track.edition_id = :editionId', { editionId: release.release.id }), query);
   }
 
   /** The appearances of a recording in published releases; a withdrawn recording shows none. */

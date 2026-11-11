@@ -83,11 +83,11 @@ export class RecordingsService {
           )
           OR EXISTS (
             SELECT 1 FROM tracks track
-            JOIN releases release ON release.id = track.release_id
-            JOIN editorial_entities release_root ON release_root.id = release.editorial_entity_id
+            JOIN editions edition ON edition.id = track.edition_id
+            JOIN editorial_entities edition_root ON edition_root.id = edition.editorial_entity_id
             JOIN track_artist_credits credit ON credit.track_id = track.id
             JOIN artists credited ON credited.id = credit.artist_id
-            WHERE track.recording_id = recording.id AND release_root.publication_status = 'published' AND credited.public_id = :artist
+            WHERE track.recording_id = recording.id AND edition_root.publication_status = 'published' AND credited.public_id = :artist
           )
         )`,
         { artist },

@@ -33,7 +33,7 @@ export const RECORDING_SEARCH = titleSearch({
   alsoTexts: `
     SELECT recording.id::text AS id, track.title AS text FROM recordings recording ${publishedRoot('recording')}
       JOIN tracks track ON track.recording_id = recording.id
-      JOIN releases release ON release.id = track.release_id ${publishedRoot('release')}
+      JOIN editions edition ON edition.id = track.edition_id ${publishedRoot('edition')}
       WHERE track.title IS NOT NULL`,
   entity: Recording,
   relations: { editorialEntity: true },
@@ -46,9 +46,9 @@ export const RELEASE_GROUP_SEARCH = titleSearch({
   table: 'release_groups',
   alias: 'grp',
   alsoTexts: `
-    SELECT grp.id::text AS id, release.title AS text FROM release_groups grp ${publishedRoot('grp')}
-      JOIN releases release ON release.release_group_id = grp.id ${publishedRoot('release')}
-      WHERE release.title IS NOT NULL`,
+    SELECT grp.id::text AS id, edition.title AS text FROM release_groups grp ${publishedRoot('grp')}
+      JOIN editions edition ON edition.release_group_id = grp.id ${publishedRoot('edition')}
+      WHERE edition.title IS NOT NULL`,
   entity: ReleaseGroup,
   relations: { editorialEntity: true },
   // Without their releases, but with their artists for a preview.

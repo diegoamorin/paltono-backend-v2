@@ -1,6 +1,6 @@
 import { EntityManager, In, SelectQueryBuilder } from 'typeorm';
 import { EditorialEntity } from '../editorial/entities/editorial-entity.entity';
-import { Release } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
 import { Track } from './entities/track.entity';
 import { trackEntries } from './track-entries';
 import { recordingArtistCreditEntries } from './artist-credit-entries';
@@ -136,9 +136,9 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
 export function publishedTracksOf(manager: EntityManager): SelectQueryBuilder<Track> {
   return manager
     .createQueryBuilder(Track, 'track')
-    .innerJoin(Release, 'release', 'release.id = track.release_id')
-    .innerJoin(EditorialEntity, 'release_root', 'release_root.id = release.editorial_entity_id')
-    .where(`release_root.publication_status = 'published'`);
+    .innerJoin(Edition, 'edition', 'edition.id = track.edition_id')
+    .innerJoin(EditorialEntity, 'edition_root', 'edition_root.id = edition.editorial_entity_id')
+    .where(`edition_root.publication_status = 'published'`);
 }
 
 /** Credits with their identities and roles, in the given order. */

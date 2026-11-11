@@ -37,14 +37,14 @@ export interface ReleaseGroupDates {
   releaseInstant: Date | null;
 }
 
-/** SQL expressions over a `releases` row aliased `r` that do not depend on the current time. */
+/** SQL expressions over an `editions` row aliased `r` that do not depend on the current time. */
 export function releaseDateSql(r: string) {
   const { start, end } = partialDateIntervalSql(r, 'release');
   const instant = `CASE WHEN ${r}.release_time IS NOT NULL THEN (make_date(${r}.release_year, ${r}.release_month, ${r}.release_day) + ${r}.release_time) AT TIME ZONE ${r}.timezone END`;
   return { start, end, instant };
 }
 
-/** SQL expressions over a `releases` row aliased `r`; `now` is an SQL expression of a timestamptz. */
+/** SQL expressions over an `editions` row aliased `r`; `now` is an SQL expression of a timestamptz. */
 export function releaseSql(r: string, now: string) {
   const year = `${r}.release_year`;
   const { start, end, instant } = releaseDateSql(r);
@@ -60,7 +60,7 @@ export function releaseSql(r: string, now: string) {
 
 /** The releases a release group's dates come from: published, not cancelled and with a date. */
 export function datedReleasesSql(r: string, group: string): string {
-  return `FROM releases ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
+  return `FROM editions ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
     WHERE ${r}.release_group_id = ${group} AND NOT ${r}.is_cancelled AND ${r}.release_year IS NOT NULL
       AND ${r}_root.publication_status = 'published'`;
 }
@@ -82,8 +82,8 @@ export function releaseGroupSql(g: string, now: string) {
  * it, under the same rule as a release group's.
  */
 function releasesOfRecordingSql(r: string, recording: string): string {
-  return `FROM releases ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
-      JOIN tracks ${r}_track ON ${r}_track.release_id = ${r}.id
+  return `FROM editions ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
+      JOIN tracks ${r}_track ON ${r}_track.edition_id = ${r}.id
     WHERE ${r}_track.recording_id = ${recording} AND NOT ${r}.is_cancelled AND ${r}.release_year IS NOT NULL
       AND ${r}_root.publication_status = 'published'`;
 }
@@ -145,7 +145,7 @@ export async function releaseTimes(manager: EntityManager, ids: number[], now: D
   if (ids.length === 0) return new Map();
   const { instant, availability } = releaseSql('r', '$2::timestamptz');
   const rows: { id: number; instant: Date | null; availability: ReleaseAvailability }[] = await manager.query(
-    `SELECT r.id, ${instant} AS instant, ${availability} AS availability FROM releases r WHERE r.id = ANY($1)`,
+    `SELECT r.id, ${instant} AS instant, ${availability} AS availability FROM editions r WHERE r.id = ANY($1)`,
     [ids, now],
   );
   return new Map(rows.map(({ id, instant: at, availability: state }) => [id, { instant: at && new Date(at), availability: state }]));
@@ -162,7 +162,7 @@ export async function releaseGroupDates(manager: EntityManager, ids: number[], n
     await manager.query(
       `SELECT r.release_group_id AS "groupId", r.release_year AS "releaseYear", r.release_month AS "releaseMonth", r.release_day AS "releaseDay",
           ${instant} AS instant, ${arrived} AS arrived
-        FROM releases r JOIN editorial_entities root ON root.id = r.editorial_entity_id
+        FROM editions r JOIN editorial_entities root ON root.id = r.editorial_entity_id
         WHERE r.release_group_id = ANY($1) AND NOT r.is_cancelled AND r.release_year IS NOT NULL AND root.publication_status = 'published'
         ORDER BY ${start}, ${instant} NULLS LAST, r.id`,
       [ids, now],

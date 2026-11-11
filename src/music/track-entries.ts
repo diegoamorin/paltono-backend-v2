@@ -1,7 +1,7 @@
 import { EntityManager, In } from 'typeorm';
 import { recordingArtistCreditEntries, trackArtistCreditEntries } from './artist-credit-entries';
 import { Recording } from './entities/recording.entity';
-import { Release } from './entities/release.entity';
+import { Edition } from './entities/edition.entity';
 import { Track } from './entities/track.entity';
 import { withPlatformLinks } from './platform-link-entries';
 import { recordingReleaseDates } from './release-dates';
@@ -30,7 +30,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
     : recordings.map((recording) => ({ recording, releaseDate: releaseDates.get(recording.id)! }));
   const releases = await releaseEntries(
     manager,
-    await manager.find(Release, { where: { id: In([...new Set(tracks.map(({ releaseId }) => releaseId))]) }, relations: { editorialEntity: true } }),
+    await manager.find(Edition, { where: { id: In([...new Set(tracks.map(({ editionId }) => editionId))]) }, relations: { editorialEntity: true } }),
     now,
     false,
   );
@@ -50,7 +50,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
 
   function ends(track: Track) {
     return {
-      release: releases.find(({ release }) => release.id === track.releaseId)!,
+      release: releases.find(({ release }) => release.id === track.editionId)!,
       recording: shownRecordings.find(({ recording }) => recording.id === track.recordingId)!,
     };
   }

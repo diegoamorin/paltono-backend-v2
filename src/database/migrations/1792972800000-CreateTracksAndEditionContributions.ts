@@ -1,28 +1,27 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * The rows a release owns besides its fields (docs/music-catalog-model.md §3
+ * The rows an edition owns besides its fields (docs/music-catalog-model.md §3
  * and §4): its tracks, the printed credit of each track, and the credits of
- * the release itself. Only applied microchanges
- * write them.
+ * the edition itself. Only applied microchanges write them.
  */
-export class CreateTracksAndReleaseContributions1792972800000 implements MigrationInterface {
-  name = 'CreateTracksAndReleaseContributions1792972800000';
+export class CreateTracksAndEditionContributions1792972800000 implements MigrationInterface {
+  name = 'CreateTracksAndEditionContributions1792972800000';
 
   async up(queryRunner: QueryRunner): Promise<void> {
-    // A recording may appear in several releases and positions; a position holds one track.
+    // A recording may appear in several editions and positions; a position holds one track.
     await queryRunner.query(`
       CREATE TABLE tracks (
         id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-        release_id integer NOT NULL,
+        edition_id integer NOT NULL,
         recording_id integer NOT NULL,
         disc_number smallint NOT NULL,
         track_number smallint NOT NULL,
         title varchar(512),
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
-        CONSTRAINT tracks_release_id_disc_number_track_number_key UNIQUE (release_id, disc_number, track_number),
-        CONSTRAINT tracks_release_id_fkey FOREIGN KEY (release_id) REFERENCES releases (id) ON DELETE RESTRICT,
+        CONSTRAINT tracks_edition_id_disc_number_track_number_key UNIQUE (edition_id, disc_number, track_number),
+        CONSTRAINT tracks_edition_id_fkey FOREIGN KEY (edition_id) REFERENCES editions (id) ON DELETE RESTRICT,
         CONSTRAINT tracks_recording_id_fkey FOREIGN KEY (recording_id) REFERENCES recordings (id) ON DELETE RESTRICT,
         CONSTRAINT tracks_position_positive CHECK (disc_number > 0 AND track_number > 0),
         -- NULL shows the recording's current title, never a copy of it.
@@ -51,9 +50,9 @@ export class CreateTracksAndReleaseContributions1792972800000 implements Migrati
     await queryRunner.query(`CREATE INDEX track_artist_credits_track_id_idx ON track_artist_credits (track_id)`);
 
     await queryRunner.query(`
-      CREATE TABLE release_contributions (
+      CREATE TABLE edition_contributions (
         id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-        release_id integer NOT NULL,
+        edition_id integer NOT NULL,
         catalog_identity_id integer NOT NULL,
         contribution_role_id integer NOT NULL,
         role_scope contribution_role_scope NOT NULL DEFAULT 'release',
@@ -64,25 +63,25 @@ export class CreateTracksAndReleaseContributions1792972800000 implements Migrati
         source_url text,
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
-        CONSTRAINT release_contributions_release_id_fkey FOREIGN KEY (release_id) REFERENCES releases (id) ON DELETE RESTRICT,
-        CONSTRAINT release_contributions_catalog_identity_id_fkey
+        CONSTRAINT edition_contributions_edition_id_fkey FOREIGN KEY (edition_id) REFERENCES editions (id) ON DELETE RESTRICT,
+        CONSTRAINT edition_contributions_catalog_identity_id_fkey
           FOREIGN KEY (catalog_identity_id) REFERENCES catalog_identities (id) ON DELETE RESTRICT,
         -- A role is only creditable in the scopes it allows.
-        CONSTRAINT release_contributions_role_fkey
+        CONSTRAINT edition_contributions_role_fkey
           FOREIGN KEY (contribution_role_id, role_scope) REFERENCES contribution_role_scopes (contribution_role_id, scope) ON DELETE RESTRICT,
-        CONSTRAINT release_contributions_role_scope CHECK (role_scope = 'release'),
-        CONSTRAINT release_contributions_credited_as_nonblank CHECK (credited_as IS NULL OR btrim(credited_as) <> ''),
-        CONSTRAINT release_contributions_position_nonnegative CHECK (position >= 0),
-        CONSTRAINT release_contributions_source_url_format CHECK (source_url IS NULL OR source_url ~* '^https?://[^\\s]+$')
+        CONSTRAINT edition_contributions_role_scope CHECK (role_scope = 'release'),
+        CONSTRAINT edition_contributions_credited_as_nonblank CHECK (credited_as IS NULL OR btrim(credited_as) <> ''),
+        CONSTRAINT edition_contributions_position_nonnegative CHECK (position >= 0),
+        CONSTRAINT edition_contributions_source_url_format CHECK (source_url IS NULL OR source_url ~* '^https?://[^\\s]+$')
       )
     `);
-    await queryRunner.query(`CREATE INDEX release_contributions_release_id_idx ON release_contributions (release_id)`);
-    await queryRunner.query(`CREATE INDEX release_contributions_catalog_identity_id_idx ON release_contributions (catalog_identity_id)`);
-    await queryRunner.query(`CREATE INDEX release_contributions_role_idx ON release_contributions (contribution_role_id, role_scope)`);
+    await queryRunner.query(`CREATE INDEX edition_contributions_edition_id_idx ON edition_contributions (edition_id)`);
+    await queryRunner.query(`CREATE INDEX edition_contributions_catalog_identity_id_idx ON edition_contributions (catalog_identity_id)`);
+    await queryRunner.query(`CREATE INDEX edition_contributions_role_idx ON edition_contributions (contribution_role_id, role_scope)`);
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP TABLE release_contributions');
+    await queryRunner.query('DROP TABLE edition_contributions');
     await queryRunner.query('DROP TABLE track_artist_credits');
     await queryRunner.query('DROP TABLE tracks');
   }
