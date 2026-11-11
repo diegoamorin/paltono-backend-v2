@@ -3,7 +3,7 @@ import { User } from '../../accounts/entities/user.entity';
 import { bigintNumber } from './bigint-number';
 import { ProposalChange } from './proposal-change.entity';
 
-export const EDITORIAL_ENTITY_TYPES = ['identity', 'work', 'recording', 'release_group', 'release', 'event', 'tour'] as const;
+export const EDITORIAL_ENTITY_TYPES = ['identity', 'work', 'recording', 'release', 'edition', 'event', 'tour'] as const;
 export type EditorialEntityType = (typeof EDITORIAL_ENTITY_TYPES)[number];
 export const PUBLICATION_STATUSES = ['reserved', 'published', 'withdrawn'] as const;
 export type PublicationStatus = (typeof PUBLICATION_STATUSES)[number];

@@ -55,7 +55,7 @@ export class CreateTracksAndEditionContributions1792972800000 implements Migrati
         edition_id integer NOT NULL,
         catalog_identity_id integer NOT NULL,
         contribution_role_id integer NOT NULL,
-        role_scope contribution_role_scope NOT NULL DEFAULT 'release',
+        role_scope contribution_role_scope NOT NULL DEFAULT 'edition',
         credited_as varchar(200),
         position smallint NOT NULL DEFAULT 0,
         details text,
@@ -69,7 +69,7 @@ export class CreateTracksAndEditionContributions1792972800000 implements Migrati
         -- A role is only creditable in the scopes it allows.
         CONSTRAINT edition_contributions_role_fkey
           FOREIGN KEY (contribution_role_id, role_scope) REFERENCES contribution_role_scopes (contribution_role_id, scope) ON DELETE RESTRICT,
-        CONSTRAINT edition_contributions_role_scope CHECK (role_scope = 'release'),
+        CONSTRAINT edition_contributions_role_scope CHECK (role_scope = 'edition'),
         CONSTRAINT edition_contributions_credited_as_nonblank CHECK (credited_as IS NULL OR btrim(credited_as) <> ''),
         CONSTRAINT edition_contributions_position_nonnegative CHECK (position >= 0),
         CONSTRAINT edition_contributions_source_url_format CHECK (source_url IS NULL OR source_url ~* '^https?://[^\\s]+$')

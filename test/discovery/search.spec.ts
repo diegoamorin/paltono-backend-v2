@@ -54,9 +54,9 @@ describe('global search (S1)', () => {
     // A reservation, never published.
     await reserveEntity(app, admin.accessToken, 'identity').expect(201);
 
-    await publishRoot('bornPink', 'release_group', 'release_groups', { title: 'BORN PINK', type: 'album' });
-    await publishRoot('standard', 'release', 'releases', { releaseGroup: { entity_id: roots.bornPink } });
-    await publishRoot('deluxe', 'release', 'releases', { releaseGroup: { entity_id: roots.bornPink }, title: 'BORN PINK (Pink Venom Edition)', editionName: 'Deluxe' });
+    await publishRoot('bornPink', 'release', 'releases', { title: 'BORN PINK', type: 'album' });
+    await publishRoot('standard', 'edition', 'editions', { release: { entity_id: roots.bornPink } });
+    await publishRoot('deluxe', 'edition', 'editions', { release: { entity_id: roots.bornPink }, title: 'BORN PINK (Pink Venom Edition)', editionName: 'Deluxe' });
     await publishRoot('shutDown', 'work', 'works', { title: 'Shut Down' });
     await publishRoot('shutDownRecording', 'recording', 'recordings', { title: 'Shut Down' });
     await publish([
@@ -64,7 +64,7 @@ describe('global search (S1)', () => {
         entityId: roots.deluxe,
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: { entity_id: roots.deluxe } },
+        targetKey: { edition_id: { entity_id: roots.deluxe } },
         proposedValue: present({ recording: { entity_id: roots.shutDownRecording }, discNumber: 1, trackNumber: 1, title: 'Shut Down (Remix Ver.)' }),
       },
     ]);
@@ -88,16 +88,17 @@ describe('global search (S1)', () => {
     expect(await search('filter[q]=BEYONCE')).toEqual([`identities:${publicIds.beyonce}`]);
   });
 
-  it('returns a release group once, never its releases, also when a release title matches', async () => {
+  it('returns a release once, never its editions, also when an edition title matches', async () => {
     const results = await search('filter[q]=born%20pink');
-    expect(results.filter((result) => result.startsWith('release-groups:'))).toEqual([`release-groups:${publicIds.bornPink}`]);
-    expect(results.some((result) => result.startsWith('releases:'))).toBe(false);
-    expect(await search('filter[q]=venom')).toEqual([`release-groups:${publicIds.bornPink}`]);
+    expect(results.filter((result) => result.startsWith('releases:'))).toEqual([`releases:${publicIds.bornPink}`]);
+    expect(results.some((result) => result.startsWith('editions:'))).toBe(false);
+    expect(await search('filter[q]=venom')).toEqual([`releases:${publicIds.bornPink}`]);
+    expect(await search('filter[q]=venom&filter[type]=releases')).toEqual([`releases:${publicIds.bornPink}`]);
   });
 
   it('ranks a name equal to the text above names that contain it, across types', async () => {
     const results = await search('filter[q]=born%20pink');
-    expect(results[0]).toBe(`release-groups:${publicIds.bornPink}`);
+    expect(results[0]).toBe(`releases:${publicIds.bornPink}`);
     expect(results.slice(1).sort()).toEqual([`events:${publicIds.event}`, `tours:${publicIds.tour}`].sort());
     const { body } = await getJsonApi(app, '/v1/search?filter[q]=born%20pink&page[size]=1').expect(200);
     expect(body.meta.total).toBe(3);
@@ -126,7 +127,7 @@ describe('global search (S1)', () => {
   it('requires a text and refuses unknown types and parameters', async () => {
     await search('', 400);
     await search('filter[q]=%20%20', 400);
-    await search('filter[q]=pink&filter[type]=releases', 400);
+    await search('filter[q]=pink&filter[type]=editions', 400);
     await search('filter[q]=pink&include=artist', 400);
     await search('filter[q]=pink&sort=title', 400);
   });

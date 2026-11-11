@@ -102,12 +102,12 @@ const editionCreditJoins = creditJoins('edition_contributions');
 @Entity('edition_contributions')
 @Index('edition_contributions_edition_id_idx', ['editionId'])
 @Index('edition_contributions_catalog_identity_id_idx', ['catalogIdentityId'])
-@applyAll(creditChecks('edition_contributions', 'release'))
+@applyAll(creditChecks('edition_contributions', 'edition'))
 export class EditionContribution extends Credit {
   @Column({ name: 'edition_id', type: 'integer' })
   editionId: number;
 
-  @Column({ name: 'role_scope', type: 'enum', enum: CONTRIBUTION_ROLE_SCOPES, enumName: 'contribution_role_scope', default: 'release' })
+  @Column({ name: 'role_scope', type: 'enum', enum: CONTRIBUTION_ROLE_SCOPES, enumName: 'contribution_role_scope', default: 'edition' })
   roleScope: ContributionRoleScopeName;
 
   @ManyToOne(() => Edition, { onDelete: 'RESTRICT' })

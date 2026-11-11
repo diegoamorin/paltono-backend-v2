@@ -12,7 +12,7 @@ import {
 import { RecordingResource, recordingSchema } from './music.resource';
 import { RecordingsService } from './recordings.service';
 
-// `include` stops at two levels: the linkage of each included release names its release group.
+// `include` stops at two levels: the linkage of each included edition names its release.
 const INCLUDE = [
   'artistCredits',
   'artistCredits.artist',
@@ -25,7 +25,7 @@ const INCLUDE = [
   'platformLinks',
   'platformLinks.platform',
   'tracks',
-  'tracks.release',
+  'tracks.edition',
 ];
 
 /** What lists of recordings accept, besides their filters. */

@@ -5,14 +5,14 @@ import { Edition } from './entities/edition.entity';
 import { Track } from './entities/track.entity';
 import { withPlatformLinks } from './platform-link-entries';
 import { recordingReleaseDates } from './release-dates';
-import { releaseEntries } from './release-entries';
+import { editionEntries } from './release-entries';
 import { isWithdrawn } from './resource-primitives';
 import { TrackEntry } from './track.resource';
 
 /*
- * Loads tracks as entries with their release and recording, and, for the
+ * Loads tracks as entries with their edition and recording, and, for the
  * primary data, the artist credit each shows and the platform links of its
- * recording. The release and the recording carry no relations of their own,
+ * recording. The edition and the recording carry no relations of their own,
  * as an include reaches at most two levels.
  */
 
@@ -28,7 +28,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
   const shownRecordings = withRelations
     ? await withPlatformLinks(manager, recordings.map((recording) => ({ recording, releaseDate: releaseDates.get(recording.id)! })))
     : recordings.map((recording) => ({ recording, releaseDate: releaseDates.get(recording.id)! }));
-  const releases = await releaseEntries(
+  const editions = await editionEntries(
     manager,
     await manager.find(Edition, { where: { id: In([...new Set(tracks.map(({ editionId }) => editionId))]) }, relations: { editorialEntity: true } }),
     now,
@@ -50,7 +50,7 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
 
   function ends(track: Track) {
     return {
-      release: releases.find(({ release }) => release.id === track.editionId)!,
+      edition: editions.find(({ edition }) => edition.id === track.editionId)!,
       recording: shownRecordings.find(({ recording }) => recording.id === track.recordingId)!,
     };
   }

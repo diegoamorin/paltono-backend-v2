@@ -9,8 +9,8 @@ import { reference } from './identity-relation-changes';
 import type { KeyRow, OperationDefinition, RowKey, TargetProblem } from './operation-registry';
 
 /*
- * Relation changes of an artist credit (ADR 0008): the artists a release
- * group, a recording or a track is credited to, in order. A credit is keyed
+ * Relation changes of an artist credit (ADR 0008): the artists a release, a
+ * recording or a track is credited to, in order. A credit is keyed
  * by its owner and the artist, whose profile has no root of its own: the key
  * names the artist's identity by its editorial UUID, checked like any other
  * root a change names. They do not credit authorship, performance or

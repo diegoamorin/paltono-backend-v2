@@ -27,7 +27,7 @@ export async function seedModeration(seeder: EditorialSeeder, catalog: CatalogWr
   };
   const describeBornPink = (author: User, value: string) =>
     submit(author, 'Descripción de Born Pink', BORN_PINK_SOURCES, [
-      { entityId: bornPink, operation: 'set_fields', targetPath: 'release_groups.description', value },
+      { entityId: bornPink, operation: 'set_fields', targetPath: 'releases.description', value },
     ]);
 
   // Three descriptions of the same field: once one applies, the identical one is satisfied and the other loses its base.
@@ -38,19 +38,19 @@ export async function seedModeration(seeder: EditorialSeeder, catalog: CatalogWr
   await seeder.decide(moderator, applied.changeIds[0], { action: 'apply' });
 
   const wrongType = await submit(contributor, 'Born Pink es un EP', BORN_PINK_SOURCES, [
-    { entityId: bornPink, operation: 'set_fields', targetPath: 'release_groups.type', value: 'ep' },
+    { entityId: bornPink, operation: 'set_fields', targetPath: 'releases.type', value: 'ep' },
   ]);
   await seeder.decide(moderator, wrongType.changeIds[0], { action: 'reject', reason: 'La fuente lo presenta como el segundo álbum de estudio del grupo.' });
 
-  // A duplicate of a published release group: rejecting its creation blocks the credit that depends on it.
-  const duplicate = await seeder.reserve(editor, 'release_group');
+  // A duplicate of a published release: rejecting its creation blocks the credit that depends on it.
+  const duplicate = await seeder.reserve(editor, 'release');
   const duplicated = await submit(editor, 'Alta de Born Pink', BORN_PINK_SOURCES, [
-    { entityId: duplicate, operation: 'create_entity', targetPath: 'release_groups', value: { title: 'Born Pink', type: 'album', description: null, repackageOf: null } },
+    { entityId: duplicate, operation: 'create_entity', targetPath: 'releases', value: { title: 'Born Pink', type: 'album', description: null, repackageOf: null } },
     {
       entityId: duplicate,
       operation: 'add_relation',
       targetPath: 'release_artist_credits',
-      targetKey: { release_group_id: { entity_id: duplicate }, artist_id: { entity_id: catalog.root('blackpink') } },
+      targetKey: { release_id: { entity_id: duplicate }, artist_id: { entity_id: catalog.root('blackpink') } },
       value: { position: 0, creditedAs: null },
     },
   ]);

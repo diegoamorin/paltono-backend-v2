@@ -6937,16 +6937,16 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -6955,7 +6955,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.edition",
             "schema": {
               "type": "string"
             }
@@ -7181,16 +7181,16 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7199,7 +7199,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.edition",
             "schema": {
               "type": "string"
             }
@@ -7488,16 +7488,16 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7506,7 +7506,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.release",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, contributions, contributions.identity, contributions.role, genres, recordingWorks, recordingWorks.work, platformLinks, platformLinks.platform, tracks, tracks.edition",
             "schema": {
               "type": "string"
             }
@@ -7583,7 +7583,7 @@
     },
     "/v1/identities/{id}/credits": {
       "get": {
-        "description": "Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas (`recording-contributions`) y ediciones publicadas (`release-contributions`). `filter[scope]` admite `work`, `recording` y `release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, `work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `release` y `role`, para leer los créditos como una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o `-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad retirada no muestra créditos.",
+        "description": "Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas (`recording-contributions`) y ediciones publicadas (`edition-contributions`). `filter[scope]` admite `work`, `recording` y `edition`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, `work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `edition` y `role`, para leer los créditos como una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o `-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad retirada no muestra créditos.",
         "operationId": "IdentityCreditsController_list",
         "parameters": [
           {
@@ -7614,10 +7614,10 @@
             }
           },
           {
-            "name": "fields[release-contributions]",
+            "name": "fields[edition-contributions]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, release",
+            "description": "Campos de edition-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, edition",
             "schema": {
               "type": "string"
             }
@@ -7650,10 +7650,10 @@
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7671,7 +7671,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: work, work.firstRecording, work.firstRecordingArtistCredits, recording, recording.artistCredits, release, role",
+            "description": "Relaciones separadas por comas: work, work.firstRecording, work.firstRecordingArtistCredits, recording, recording.artistCredits, edition, role",
             "schema": {
               "type": "string"
             }
@@ -7797,16 +7797,16 @@
         ]
       }
     },
-    "/v1/release-groups": {
+    "/v1/releases": {
       "get": {
         "description": "Lanzamientos publicados; una ficha retirada solo se consulta por su id. `filter[q]` busca en el título sin distinguir mayúsculas ni acentos; `filter[type]` admite `album`, `ep`, `single` y `compilation`; `filter[artist]` toma el public_id de un artista de su crédito de artista; `filter[upcoming]`, `true` o `false`; `filter[releasedFrom]` y `filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) acotan la fecha derivada, e incluyen una fecha parcial que se solapa con el rango. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Orden `-releaseDate` (por defecto), `releaseDate` (útil con `upcoming`), `title` o `-createdAt`; los lanzamientos sin fecha van al final.",
-        "operationId": "ReleaseGroupsController_list",
+        "operationId": "ReleasesController_list",
         "parameters": [
           {
-            "name": "fields[release-groups]",
+            "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -7830,10 +7830,10 @@
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -7842,7 +7842,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, releases, repackageOf",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -7942,7 +7942,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ReleaseGroupResource"
+                        "$ref": "#/components/schemas/ReleaseResource"
                       }
                     },
                     "included": {
@@ -7990,752 +7990,16 @@
         ]
       }
     },
-    "/v1/release-groups/{id}": {
-      "get": {
-        "description": "Título, tipo y descripción, con su crédito de artista, ediciones y lanzamiento original si es un repackage. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). `nextReleaseDate` es la fecha de su próxima edición por salir y `releaseInstant`, el instante de la primera edición próxima con hora, para la cuenta regresiva. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
-        "operationId": "ReleaseGroupsController_show",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "public_id del lanzamiento",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-groups]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-artist-credits]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[artists]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[releases]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "include",
-            "required": false,
-            "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data"
-                  ],
-                  "properties": {
-                    "jsonapi": {
-                      "$ref": "#/components/schemas/JsonApiVersion"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/ReleaseGroupResource"
-                    },
-                    "included": {
-                      "type": "array",
-                      "description": "Recursos relacionados pedidos con include",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/JsonApiResourceLinks"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not Acceptable",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Ver un lanzamiento",
-        "tags": [
-          "music"
-        ]
-      }
-    },
-    "/v1/release-groups/{id}/releases": {
-      "get": {
-        "description": "Ediciones publicadas del lanzamiento, con los filtros `q`, `availability`, `releasedFrom` y `releasedTo` y los órdenes de `GET /v1/releases`. Un lanzamiento retirado no muestra ninguna.",
-        "operationId": "ReleaseGroupsController_releasesOf",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "public_id del lanzamiento",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[releases]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-groups]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-artist-credits]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[tracks]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[recordings]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-contributions]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, release",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[identities]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "include",
-            "required": false,
-            "in": "query",
-            "description": "Relaciones separadas por comas: releaseGroup, releaseGroup.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page[number]",
-            "required": false,
-            "in": "query",
-            "description": "Página, desde 1",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "page[size]",
-            "required": false,
-            "in": "query",
-            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "sort",
-            "required": false,
-            "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[q]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[availability]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[releasedFrom]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[releasedTo]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data",
-                    "links",
-                    "meta"
-                  ],
-                  "properties": {
-                    "jsonapi": {
-                      "$ref": "#/components/schemas/JsonApiVersion"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ReleaseResource"
-                      }
-                    },
-                    "included": {
-                      "type": "array",
-                      "description": "Recursos relacionados pedidos con include",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not Acceptable",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Ediciones de un lanzamiento",
-        "tags": [
-          "music"
-        ]
-      }
-    },
-    "/v1/release-groups/{id}/repackages": {
-      "get": {
-        "description": "Lanzamientos publicados que relanzan este como repackage. Un lanzamiento retirado no muestra ninguno.",
-        "operationId": "ReleaseGroupsController_repackages",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "description": "public_id del lanzamiento original",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-groups]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-artist-credits]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[artists]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[releases]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "include",
-            "required": false,
-            "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page[number]",
-            "required": false,
-            "in": "query",
-            "description": "Página, desde 1",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "page[size]",
-            "required": false,
-            "in": "query",
-            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "sort",
-            "required": false,
-            "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data",
-                    "links",
-                    "meta"
-                  ],
-                  "properties": {
-                    "jsonapi": {
-                      "$ref": "#/components/schemas/JsonApiVersion"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ReleaseGroupResource"
-                      }
-                    },
-                    "included": {
-                      "type": "array",
-                      "description": "Recursos relacionados pedidos con include",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not Acceptable",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Repackages de un lanzamiento",
-        "tags": [
-          "music"
-        ]
-      }
-    },
-    "/v1/releases": {
-      "get": {
-        "description": "Ediciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en su título (o el del lanzamiento) y su nombre de edición; `filter[releaseGroup]` toma el public_id de un lanzamiento; `filter[contributor]`, el public_id de una identidad acreditada en la edición; `filter[availability]` admite `upcoming`, `released`, `cancelled` y `unknown`; `filter[releasedFrom]` y `filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) incluyen una fecha parcial que se solapa con el rango. La disponibilidad se deriva: `cancelled` si está cancelada; sin fecha, `unknown`; si no, `upcoming` hasta su instante de salida (fecha completa, hora y zona IANA) o, sin él, hasta el primer día de su fecha parcial (UTC), y después `released`. Orden `-releaseDate` (por defecto; sin fecha al final), `title` o `-createdAt`.",
-        "operationId": "ReleasesController_list",
-        "parameters": [
-          {
-            "name": "fields[releases]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-groups]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-artist-credits]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[tracks]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[recordings]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-contributions]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, release",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[identities]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "include",
-            "required": false,
-            "in": "query",
-            "description": "Relaciones separadas por comas: releaseGroup, releaseGroup.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page[number]",
-            "required": false,
-            "in": "query",
-            "description": "Página, desde 1",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "page[size]",
-            "required": false,
-            "in": "query",
-            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
-            "schema": {
-              "type": "number"
-            }
-          },
-          {
-            "name": "sort",
-            "required": false,
-            "in": "query",
-            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[q]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[releaseGroup]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[contributor]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[availability]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[releasedFrom]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "filter[releasedTo]",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "data",
-                    "links",
-                    "meta"
-                  ],
-                  "properties": {
-                    "jsonapi": {
-                      "$ref": "#/components/schemas/JsonApiVersion"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/ReleaseResource"
-                      }
-                    },
-                    "included": {
-                      "type": "array",
-                      "description": "Recursos relacionados pedidos con include",
-                      "items": {
-                        "type": "object"
-                      }
-                    },
-                    "links": {
-                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          },
-          "406": {
-            "description": "Not Acceptable",
-            "content": {
-              "application/vnd.api+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JsonApiErrorDocument"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Listar ediciones",
-        "tags": [
-          "music"
-        ]
-      }
-    },
     "/v1/releases/{id}": {
       "get": {
-        "description": "Edición con su lanzamiento, nombre de edición, fecha parcial, hora y zona, su instante de salida y su disponibilidad. La disponibilidad se deriva: `cancelled` si está cancelada; sin fecha, `unknown`; si no, `upcoming` hasta su instante de salida (fecha completa, hora y zona IANA) o, sin él, hasta el primer día de su fecha parcial (UTC), y después `released`. `displayTitle` muestra su título o, si no tiene, el del lanzamiento. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
+        "description": "Título, tipo y descripción, con su crédito de artista, ediciones y lanzamiento original si es un repackage. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). `nextReleaseDate` es la fecha de su próxima edición por salir y `releaseInstant`, el instante de la primera edición próxima con hora, para la cuenta regresiva. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
         "operationId": "ReleasesController_show",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "public_id de la edición",
+            "description": "public_id del lanzamiento",
             "schema": {
               "type": "string"
             }
@@ -8744,16 +8008,7 @@
             "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-groups]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -8768,37 +8023,19 @@
             }
           },
           {
-            "name": "fields[tracks]",
+            "name": "fields[artists]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "fields[recordings]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[release-contributions]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de release-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, release",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "fields[identities]",
-            "required": false,
-            "in": "query",
-            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8807,7 +8044,7 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: releaseGroup, releaseGroup.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -8876,31 +8113,254 @@
             }
           }
         },
-        "summary": "Ver una edición",
+        "summary": "Ver un lanzamiento",
         "tags": [
           "music"
         ]
       }
     },
-    "/v1/artists/{id}/release-groups": {
+    "/v1/releases/{id}/editions": {
       "get": {
-        "description": "Lanzamientos publicados en cuyo crédito de artista figura el artista: uno por lanzamiento, aunque tenga varias ediciones. `filter[type]` admite `album`, `ep`, `single` y `compilation`. Los órdenes son los de `GET /v1/release-groups`. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Un artista cuya identidad está retirada no muestra lanzamientos.",
-        "operationId": "ArtistReleaseGroupsController_list",
+        "description": "Ediciones publicadas del lanzamiento, con los filtros `q`, `availability`, `releasedFrom` y `releasedTo` y los órdenes de `GET /v1/editions`. Un lanzamiento retirado no muestra ninguna.",
+        "operationId": "ReleasesController_editionsOf",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "public_id del perfil artístico",
+            "description": "public_id del lanzamiento",
             "schema": {
               "type": "string"
             }
           },
           {
-            "name": "fields[release-groups]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[releases]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[release-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[tracks]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recordings]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[edition-contributions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de edition-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, edition",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[identities]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: release, release.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page[number]",
+            "required": false,
+            "in": "query",
+            "description": "Página, desde 1",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page[size]",
+            "required": false,
+            "in": "query",
+            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[q]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[availability]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[releasedFrom]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[releasedTo]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "links",
+                    "meta"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EditionResource"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Ediciones de un lanzamiento",
+        "tags": [
+          "music"
+        ]
+      }
+    },
+    "/v1/releases/{id}/repackages": {
+      "get": {
+        "description": "Lanzamientos publicados que relanzan este como repackage. Un lanzamiento retirado no muestra ninguno.",
+        "operationId": "ReleasesController_repackages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "public_id del lanzamiento original",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[releases]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -8924,10 +8384,10 @@
             }
           },
           {
-            "name": "fields[releases]",
+            "name": "fields[editions]",
             "required": false,
             "in": "query",
-            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, releaseGroup, tracks, contributions",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
             "schema": {
               "type": "string"
             }
@@ -8936,7 +8396,547 @@
             "name": "include",
             "required": false,
             "in": "query",
-            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, releases, repackageOf",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, editions, repackageOf",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page[number]",
+            "required": false,
+            "in": "query",
+            "description": "Página, desde 1",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page[size]",
+            "required": false,
+            "in": "query",
+            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "links",
+                    "meta"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ReleaseResource"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Repackages de un lanzamiento",
+        "tags": [
+          "music"
+        ]
+      }
+    },
+    "/v1/editions": {
+      "get": {
+        "description": "Ediciones publicadas; una ficha retirada solo se consulta por su id. `filter[q]` busca en su título (o el del lanzamiento) y su nombre de edición; `filter[release]` toma el public_id de un lanzamiento; `filter[contributor]`, el public_id de una identidad acreditada en la edición; `filter[availability]` admite `upcoming`, `released`, `cancelled` y `unknown`; `filter[releasedFrom]` y `filter[releasedTo]` (YYYY, YYYY-MM o YYYY-MM-DD) incluyen una fecha parcial que se solapa con el rango. La disponibilidad se deriva: `cancelled` si está cancelada; sin fecha, `unknown`; si no, `upcoming` hasta su instante de salida (fecha completa, hora y zona IANA) o, sin él, hasta el primer día de su fecha parcial (UTC), y después `released`. Orden `-releaseDate` (por defecto; sin fecha al final), `title` o `-createdAt`.",
+        "operationId": "EditionsController_list",
+        "parameters": [
+          {
+            "name": "fields[editions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[releases]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[release-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[tracks]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recordings]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[edition-contributions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de edition-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, edition",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[identities]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: release, release.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page[number]",
+            "required": false,
+            "in": "query",
+            "description": "Página, desde 1",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page[size]",
+            "required": false,
+            "in": "query",
+            "description": "Tamaño de página; 20 por defecto, 100 como máximo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "Campos separados por comas, con - para orden descendente: releaseDate, title, createdAt, id. Por defecto -releaseDate; el id desempata",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[q]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[release]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[contributor]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[availability]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[releasedFrom]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter[releasedTo]",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "links",
+                    "meta"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EditionResource"
+                      }
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiPaginationLinks"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/JsonApiCollectionMeta"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Listar ediciones",
+        "tags": [
+          "music"
+        ]
+      }
+    },
+    "/v1/editions/{id}": {
+      "get": {
+        "description": "Edición con su lanzamiento, nombre de edición, fecha parcial, hora y zona, su instante de salida y su disponibilidad. La disponibilidad se deriva: `cancelled` si está cancelada; sin fecha, `unknown`; si no, `upcoming` hasta su instante de salida (fecha completa, hora y zona IANA) o, sin él, hasta el primer día de su fecha parcial (UTC), y después `released`. `displayTitle` muestra su título o, si no tiene, el del lanzamiento. `meta.editorialEntityId` es su UUID editorial. Una reserva responde 404; una ficha retirada solo muestra su aviso.",
+        "operationId": "EditionsController_show",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "public_id de la edición",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[editions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[releases]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[release-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[tracks]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[recordings]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de recordings separados por comas: publicationStatus, withdrawnAt, title, description, isExplicit, isrc, recordingDate, releaseDate, primaryGenreId, createdAt, updatedAt, artistCredits, contributions, genres, recordingWorks, platformLinks, tracks",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[edition-contributions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de edition-contributions separados por comas: creditedAs, position, details, sourceText, sourceUrl, identity, role, edition",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[identities]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de identities separados por comas: publicationStatus, withdrawnAt, type, displayName, imgProfile, bio, person, organization, createdAt, updatedAt, aliases, nationalities, birthCountry, originCountry, organizationTypes, platformLinks, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: release, release.artistCredits, tracks, tracks.recording, contributions, contributions.identity",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "jsonapi": {
+                      "$ref": "#/components/schemas/JsonApiVersion"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EditionResource"
+                    },
+                    "included": {
+                      "type": "array",
+                      "description": "Recursos relacionados pedidos con include",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/JsonApiResourceLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiErrorDocument"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Ver una edición",
+        "tags": [
+          "music"
+        ]
+      }
+    },
+    "/v1/artists/{id}/releases": {
+      "get": {
+        "description": "Lanzamientos publicados en cuyo crédito de artista figura el artista: uno por lanzamiento, aunque tenga varias ediciones. `filter[type]` admite `album`, `ep`, `single` y `compilation`. Los órdenes son los de `GET /v1/releases`. La fecha de un lanzamiento es la más temprana de sus ediciones publicadas y no canceladas; es próximo mientras ninguna haya salido. Una edición sale en su instante (fecha completa, hora y zona IANA) o, sin él, el primer día de su fecha parcial (UTC). Un artista cuya identidad está retirada no muestra lanzamientos.",
+        "operationId": "ArtistReleasesController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "public_id del perfil artístico",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[releases]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[release-artist-credits]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de release-artist-credits separados por comas: position, creditedAs, displayName, artist",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[artists]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de artists separados por comas: publicationStatus, withdrawnAt, debut, createdAt, updatedAt, identity, affiliations",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields[editions]",
+            "required": false,
+            "in": "query",
+            "description": "Campos de editions separados por comas: publicationStatus, withdrawnAt, title, displayTitle, editionName, releaseDate, releaseTime, timezone, releaseInstant, availability, isCancelled, isExplicit, coverArt, createdAt, updatedAt, release, tracks, contributions",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Relaciones separadas por comas: artistCredits, artistCredits.artist, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -8996,7 +8996,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/ReleaseGroupResource"
+                        "$ref": "#/components/schemas/ReleaseResource"
                       }
                     },
                     "included": {
@@ -9072,7 +9072,7 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
@@ -9202,10 +9202,10 @@
         ]
       }
     },
-    "/v1/releases/{id}/tracks": {
+    "/v1/editions/{id}/tracks": {
       "get": {
         "description": "Tracklist de la edición, por disco y número. `displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación (`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. Los enlaces de plataforma son de la grabación (`recording.platformLinks`, cada uno con el id de su plataforma). `include` admite `recording`, `recording.platformLinks`, `artistCredits` y `artistCredits.artist`. Una edición retirada no muestra pistas.",
-        "operationId": "TracksController_ofRelease",
+        "operationId": "TracksController_ofEdition",
         "parameters": [
           {
             "name": "id",
@@ -9220,7 +9220,7 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
@@ -9403,7 +9403,7 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
@@ -9586,7 +9586,7 @@
             "name": "fields[tracks]",
             "required": false,
             "in": "query",
-            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, release, recording, artistCredits",
+            "description": "Campos de tracks separados por comas: discNumber, trackNumber, title, displayTitle, edition, recording, artistCredits",
             "schema": {
               "type": "string"
             }
@@ -16349,7 +16349,7 @@
     },
     "/v1/search": {
       "get": {
-        "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `release-groups`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`. `include` admite `artistCredits` y `artistCredits.artist`, que se aplican a `recordings` y `release-groups`, con el nombre listo para mostrar en `displayName`.",
+        "description": "Documento heterogéneo de fichas publicadas cuyo nombre visible, alias o título coincide con `filter[q]` (obligatorio), por relevancia. No distingue mayúsculas ni acentos; encuentra un texto contenido en un nombre, también en coreano, y tolera errores de escritura en romanizaciones. No translitera: «블랙핑크» no encuentra «BLACKPINK» salvo que sea uno de sus alias. `filter[type]` limita los tipos, separados por comas: `identities`, `artists`, `works`, `recordings`, `releases`, `events` y `tours`; sin él se buscan todos salvo `artists`, porque un perfil artístico forma parte de la ficha de su identidad. Devuelve lanzamientos, no ediciones: el título propio de una edición encuentra su lanzamiento, una sola vez. Excluye reservas y fichas retiradas. Orden `-relevance` (por defecto) o `relevance`. `include` admite `artistCredits` y `artistCredits.artist`, que se aplican a `recordings` y `releases`, con el nombre listo para mostrar en `displayName`.",
         "operationId": "SearchController_list",
         "parameters": [
           {
@@ -16389,10 +16389,10 @@
             }
           },
           {
-            "name": "fields[release-groups]",
+            "name": "fields[releases]",
             "required": false,
             "in": "query",
-            "description": "Campos de release-groups separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, releases, repackageOf",
+            "description": "Campos de releases separados por comas: publicationStatus, withdrawnAt, title, type, description, releaseDate, upcoming, nextReleaseDate, releaseInstant, createdAt, updatedAt, artistCredits, editions, repackageOf",
             "schema": {
               "type": "string"
             }
@@ -16519,7 +16519,7 @@
                             "$ref": "#/components/schemas/RecordingResource"
                           },
                           {
-                            "$ref": "#/components/schemas/ReleaseGroupResource"
+                            "$ref": "#/components/schemas/ReleaseResource"
                           },
                           {
                             "$ref": "#/components/schemas/EventResource"
@@ -18528,7 +18528,7 @@
               "enum": [
                 "work",
                 "recording",
-                "release",
+                "edition",
                 "membership"
               ]
             }
@@ -18600,7 +18600,7 @@
               "enum": [
                 "work",
                 "recording",
-                "release",
+                "edition",
                 "membership"
               ]
             }
@@ -18677,7 +18677,7 @@
               "enum": [
                 "work",
                 "recording",
-                "release",
+                "edition",
                 "membership"
               ]
             }
@@ -19941,8 +19941,8 @@
               }
             ]
           },
-          "release": {
-            "description": "`releases`, en un crédito de edición",
+          "edition": {
+            "description": "`editions`, en un crédito de edición",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToOneLinkage"
@@ -19963,7 +19963,7 @@
             "enum": [
               "work-contributions",
               "recording-contributions",
-              "release-contributions"
+              "edition-contributions"
             ]
           },
           "id": {
@@ -19984,7 +19984,7 @@
           "relationships"
         ]
       },
-      "ReleaseGroupAttributes": {
+      "ReleaseAttributes": {
         "type": "object",
         "properties": {
           "publicationStatus": {
@@ -20066,7 +20066,7 @@
           "withdrawnAt"
         ]
       },
-      "ReleaseGroupRelationships": {
+      "ReleaseRelationships": {
         "type": "object",
         "properties": {
           "artistCredits": {
@@ -20077,8 +20077,8 @@
               }
             ]
           },
-          "releases": {
-            "description": "`releases`: sus ediciones publicadas",
+          "editions": {
+            "description": "`editions`: sus ediciones publicadas",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToManyLinkage"
@@ -20086,7 +20086,7 @@
             ]
           },
           "repackageOf": {
-            "description": "`release-groups`: el lanzamiento original de un repackage, o null",
+            "description": "`releases`: el lanzamiento original de un repackage, o null",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToOneLinkage"
@@ -20096,17 +20096,17 @@
         },
         "required": [
           "artistCredits",
-          "releases",
+          "editions",
           "repackageOf"
         ]
       },
-      "ReleaseGroupResource": {
+      "ReleaseResource": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
             "enum": [
-              "release-groups"
+              "releases"
             ]
           },
           "id": {
@@ -20114,13 +20114,13 @@
             "description": "public_id del lanzamiento"
           },
           "attributes": {
-            "$ref": "#/components/schemas/ReleaseGroupAttributes"
+            "$ref": "#/components/schemas/ReleaseAttributes"
           },
           "relationships": {
             "description": "Ausente en una ficha retirada",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ReleaseGroupRelationships"
+                "$ref": "#/components/schemas/ReleaseRelationships"
               }
             ]
           },
@@ -20135,7 +20135,7 @@
           "meta"
         ]
       },
-      "ReleaseAttributes": {
+      "EditionAttributes": {
         "type": "object",
         "properties": {
           "publicationStatus": {
@@ -20239,11 +20239,11 @@
           "withdrawnAt"
         ]
       },
-      "ReleaseRelationships": {
+      "EditionRelationships": {
         "type": "object",
         "properties": {
-          "releaseGroup": {
-            "description": "`release-groups`",
+          "release": {
+            "description": "`releases`: su lanzamiento",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToOneLinkage"
@@ -20259,7 +20259,7 @@
             ]
           },
           "contributions": {
-            "description": "`release-contributions`, por `position`",
+            "description": "`edition-contributions`, por `position`",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToManyLinkage"
@@ -20268,18 +20268,18 @@
           }
         },
         "required": [
-          "releaseGroup",
+          "release",
           "tracks",
           "contributions"
         ]
       },
-      "ReleaseResource": {
+      "EditionResource": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
             "enum": [
-              "releases"
+              "editions"
             ]
           },
           "id": {
@@ -20287,13 +20287,13 @@
             "description": "public_id de la edición"
           },
           "attributes": {
-            "$ref": "#/components/schemas/ReleaseAttributes"
+            "$ref": "#/components/schemas/EditionAttributes"
           },
           "relationships": {
             "description": "Ausente en una ficha retirada",
             "allOf": [
               {
-                "$ref": "#/components/schemas/ReleaseRelationships"
+                "$ref": "#/components/schemas/EditionRelationships"
               }
             ]
           },
@@ -20340,8 +20340,8 @@
       "TrackRelationships": {
         "type": "object",
         "properties": {
-          "release": {
-            "description": "`releases`: su edición",
+          "edition": {
+            "description": "`editions`: su edición",
             "allOf": [
               {
                 "$ref": "#/components/schemas/ToOneLinkage"
@@ -20366,7 +20366,7 @@
           }
         },
         "required": [
-          "release",
+          "edition",
           "recording"
         ]
       },
@@ -20788,8 +20788,8 @@
               "identity",
               "work",
               "recording",
-              "release_group",
               "release",
+              "edition",
               "event",
               "tour"
             ]
@@ -20887,8 +20887,8 @@
               "identity",
               "work",
               "recording",
-              "release_group",
               "release",
+              "edition",
               "event",
               "tour"
             ]
@@ -20982,8 +20982,8 @@
               "identity",
               "work",
               "recording",
-              "release_group",
               "release",
+              "edition",
               "tour",
               "event"
             ],

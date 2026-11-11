@@ -9,7 +9,7 @@ import { ARTIST_CREDIT_RANKS } from './entities/recording.entity';
 import { Track } from './entities/track.entity';
 import { publishedTracksOf } from './music-entries';
 import { RecordingsService } from './recordings.service';
-import { ReleasesService } from './releases.service';
+import { EditionsService } from './editions.service';
 import { trackEntries } from './track-entries';
 import { TrackEntry } from './track.resource';
 
@@ -23,16 +23,16 @@ const SORT_COLUMNS: Record<string, string> = {
 const INT4 = 2_147_483_647;
 
 /**
- * Public reads of tracks. A track is shown while its release is published:
- * the tracks of a withdrawn release are part of its withdrawn content, and a
- * release is never reserved once it has rows.
+ * Public reads of tracks. A track is shown while its edition is published:
+ * the tracks of a withdrawn edition are part of its withdrawn content, and an
+ * edition is never reserved once it has rows.
  */
 @Injectable()
 export class TracksService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly clock: Clock,
-    private readonly releases: ReleasesService,
+    private readonly editions: EditionsService,
     private readonly recordings: RecordingsService,
   ) {}
 
@@ -42,14 +42,14 @@ export class TracksService {
     return (await trackEntries(this.dataSource.manager, [track], this.clock.now()))[0];
   }
 
-  /** The tracklist of a release; a withdrawn one shows none. */
-  async ofRelease(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
-    const release = await this.releases.show(publicId);
-    if (release.relations === null) return { entries: [], total: 0 };
-    return this.page(publishedTracksOf(this.dataSource.manager).andWhere('track.edition_id = :editionId', { editionId: release.release.id }), query);
+  /** The tracklist of an edition; a withdrawn one shows none. */
+  async ofEdition(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
+    const edition = await this.editions.show(publicId);
+    if (edition.relations === null) return { entries: [], total: 0 };
+    return this.page(publishedTracksOf(this.dataSource.manager).andWhere('track.edition_id = :editionId', { editionId: edition.edition.id }), query);
   }
 
-  /** The appearances of a recording in published releases; a withdrawn recording shows none. */
+  /** The appearances of a recording in published editions; a withdrawn recording shows none. */
   async ofRecording(publicId: string, query: CollectionQuery): Promise<{ entries: TrackEntry[]; total: number }> {
     const recording = await this.recordings.show(publicId);
     if (recording.relations === null) return { entries: [], total: 0 };
@@ -57,7 +57,7 @@ export class TracksService {
   }
 
   /**
-   * The tracks of published releases whose shown credit has the artist,
+   * The tracks of published editions whose shown credit has the artist,
    * optionally with one rank only: their printed credit or, without one, the
    * credit of their published recording (ADR 0008).
    */

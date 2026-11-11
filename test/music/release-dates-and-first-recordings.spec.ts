@@ -13,7 +13,7 @@ const proposed = (year: number, month?: number, day?: number) => ({ year, ...(mo
 
 /*
  * The release date of a recording: the earliest partial date of its published,
- * non-cancelled releases with a date, future ones included. And the first
+ * non-cancelled editions with a date, future ones included. And the first
  * recording of a work: of the published recordings that perform it, the one
  * released first. The test clock starts on 2026-01-01.
  */
@@ -58,16 +58,16 @@ describe('release dates of recordings and first recordings of works', () => {
     publicIds[`${name}Artist`] = body.data.relationships.artist.data.id;
   }
 
-  /** A release of its own release group, with a track of each recording. */
-  async function publishRelease(name: string, value: object, recordings: string[]): Promise<void> {
-    await publishRoot(`${name}Group`, 'release_group', 'release_groups', { title: name, type: 'single' });
-    await publishRoot(name, 'release', 'releases', { releaseGroup: { entity_id: roots[`${name}Group`] }, ...value });
+  /** An edition of its own release, with a track of each recording. */
+  async function publishEdition(name: string, value: object, recordings: string[]): Promise<void> {
+    await publishRoot(`${name}Release`, 'release', 'releases', { title: name, type: 'single' });
+    await publishRoot(name, 'edition', 'editions', { release: { entity_id: roots[`${name}Release`] }, ...value });
     await publish(
       recordings.map((recording) => ({
         entityId: roots[name],
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: { entity_id: roots[name] } },
+        targetKey: { edition_id: { entity_id: roots[name] } },
         proposedValue: present({ recording: { entity_id: roots[recording] }, discNumber: 1, trackNumber: ++trackNumber }),
       })),
     );
@@ -107,19 +107,19 @@ describe('release dates of recordings and first recordings of works', () => {
     await publishArtist('natti', 'Natti Natasha');
     await publishArtist('yoon', 'Yoon Sang');
 
-    // Sin Pijama, recorded in 2017: a cancelled and a withdrawn release come earlier than its single.
+    // Sin Pijama, recorded in 2017: a cancelled and a withdrawn edition come earlier than its single.
     await publishRoot('sinPijama', 'recording', 'recordings', { title: 'Sin Pijama', recordingDate: proposed(2017) });
     // A recording announced for the future, recorded in 2018.
     await publishRoot('announced', 'recording', 'recordings', { title: 'Anunciada', recordingDate: proposed(2018) });
-    // A recording only on a release without a date and on a cancelled one.
+    // A recording only on an edition without a date and on a cancelled one.
     await publishRoot('undated', 'recording', 'recordings', { title: 'Sin fecha' });
     await publish([recordingCredit('sinPijama', 'becky', 0), recordingCredit('sinPijama', 'natti', 1)]);
-    await publishRelease('cancelled', { releaseDate: proposed(2017, 1, 5), isCancelled: true }, ['sinPijama', 'undated']);
-    await publishRelease('hidden', { releaseDate: proposed(2017, 6) }, ['sinPijama']);
-    await publishRelease('noDate', {}, ['sinPijama', 'undated']);
-    await publishRelease('single', { releaseDate: proposed(2018, 4, 20) }, ['sinPijama']);
-    await publishRelease('compilation', { releaseDate: proposed(2018, 9) }, ['sinPijama']);
-    await publishRelease('upcoming', { releaseDate: proposed(2099, 5) }, ['announced']);
+    await publishEdition('cancelled', { releaseDate: proposed(2017, 1, 5), isCancelled: true }, ['sinPijama', 'undated']);
+    await publishEdition('hidden', { releaseDate: proposed(2017, 6) }, ['sinPijama']);
+    await publishEdition('noDate', {}, ['sinPijama', 'undated']);
+    await publishEdition('single', { releaseDate: proposed(2018, 4, 20) }, ['sinPijama']);
+    await publishEdition('compilation', { releaseDate: proposed(2018, 9) }, ['sinPijama']);
+    await publishEdition('upcoming', { releaseDate: proposed(2099, 5) }, ['announced']);
     await publish([withdrawal('hidden')]);
 
     // Árbol: performed first by Yoon Sang in 2010, covered in 2015 and sampled in 2005.
@@ -128,9 +128,9 @@ describe('release dates of recordings and first recordings of works', () => {
     await publishRoot('cover', 'recording', 'recordings', { title: 'Árbol (cover)' });
     await publishRoot('sample', 'recording', 'recordings', { title: 'Con un sample de Árbol' });
     await publish([recordingCredit('original', 'yoon', 0), performs('original', 'arbol'), performs('cover', 'arbol'), performs('sample', 'arbol', 'sample')]);
-    await publishRelease('arbolSingle', { releaseDate: proposed(2010, 3, 1) }, ['original']);
-    await publishRelease('arbolCover', { releaseDate: proposed(2015) }, ['cover']);
-    await publishRelease('sampler', { releaseDate: proposed(2005) }, ['sample']);
+    await publishEdition('arbolSingle', { releaseDate: proposed(2010, 3, 1) }, ['original']);
+    await publishEdition('arbolCover', { releaseDate: proposed(2015) }, ['cover']);
+    await publishEdition('sampler', { releaseDate: proposed(2005) }, ['sample']);
 
     // A work only performed by a recording without a date, and one only sampled.
     await publishRoot('lost', 'work', 'works', { title: 'Perdida' });
@@ -143,15 +143,15 @@ describe('release dates of recordings and first recordings of works', () => {
   });
 
   describe('the release date of a recording', () => {
-    it('is the earliest date of its published, non-cancelled releases with a date', async () => {
+    it('is the earliest date of its published, non-cancelled editions with a date', async () => {
       expect(await releaseDateOf('sinPijama')).toEqual(date(2018, 4, 20));
     });
 
-    it('includes a release still to come', async () => {
+    it('includes an edition still to come', async () => {
       expect(await releaseDateOf('announced')).toEqual(date(2099, 5));
     });
 
-    it('is null without a published, non-cancelled release with a date', async () => {
+    it('is null without a published, non-cancelled edition with a date', async () => {
       expect(await releaseDateOf('undated')).toBeNull();
     });
 
@@ -212,7 +212,7 @@ describe('release dates of recordings and first recordings of works', () => {
       await publishRoot('tusa', 'work', 'works', { title: 'Tusa' });
       await publishRoot('tusaCover', 'recording', 'recordings', { title: 'Tusa (cover)' });
       await publish([recordingCredit('tusaCover', 'becky', 0), performs('tusaCover', 'tusa')]);
-      await publishRelease('tusaCoverSingle', { releaseDate: proposed(2021, 2) }, ['tusaCover']);
+      await publishEdition('tusaCoverSingle', { releaseDate: proposed(2021, 2) }, ['tusaCover']);
       // A recording without a release date goes after one with it, whatever its id.
       await publishRoot('tusaDemo', 'recording', 'recordings', { title: 'Tusa (demo)' });
       await publish([performs('tusaDemo', 'tusa')]);
@@ -220,7 +220,7 @@ describe('release dates of recordings and first recordings of works', () => {
 
       await publishRoot('tusaOriginal', 'recording', 'recordings', { title: 'Tusa' });
       await publish([recordingCredit('tusaOriginal', 'natti', 0), performs('tusaOriginal', 'tusa')]);
-      await publishRelease('tusaSingle', { releaseDate: proposed(2019, 11, 7) }, ['tusaOriginal']);
+      await publishEdition('tusaSingle', { releaseDate: proposed(2019, 11, 7) }, ['tusaOriginal']);
       const body = await work('tusa');
 
       expect(body.data.attributes.firstReleaseDate).toEqual(date(2019, 11, 7));
@@ -233,7 +233,7 @@ describe('release dates of recordings and first recordings of works', () => {
       await publishRoot('twinA', 'recording', 'recordings', { title: 'Gemela A' });
       await publishRoot('twinB', 'recording', 'recordings', { title: 'Gemela B' });
       await publish([performs('twinA', 'twins'), performs('twinB', 'twins')]);
-      await publishRelease('twinsSingle', { releaseDate: proposed(2020) }, ['twinA', 'twinB']);
+      await publishEdition('twinsSingle', { releaseDate: proposed(2020) }, ['twinA', 'twinB']);
       // In the database's text order, ICU's root locale.
       const [first] = [publicIds.twinA, publicIds.twinB].sort((a, b) => a.localeCompare(b, 'und'));
 

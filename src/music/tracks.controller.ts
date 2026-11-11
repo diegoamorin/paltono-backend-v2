@@ -30,7 +30,7 @@ const TRACK =
 
 /**
  * Tracks of the catalog (M6, M9, M10 and C9). A track has no editorial root:
- * it is shown while its release is published.
+ * it is shown while its edition is published.
  */
 @Controller()
 export class TracksController {
@@ -50,7 +50,7 @@ export class TracksController {
     return resourceDocument(trackSchema, await this.tracks.show(id), query);
   }
 
-  @Get('releases/:id/tracks')
+  @Get('editions/:id/tracks')
   @ApiTags('music')
   @ApiOperation({
     summary: 'Pistas de una edición',
@@ -60,8 +60,8 @@ export class TracksController {
   @ApiJsonApiQuery(TRACKS_QUERY)
   @ApiJsonApiCollectionResponse(TrackResource)
   @ApiJsonApiErrorResponses(400, 404, 406)
-  async ofRelease(@Param('id') id: string, @JsonApiQuery(TRACKS_QUERY) query: CollectionQuery) {
-    const { entries, total } = await this.tracks.ofRelease(id, query);
+  async ofEdition(@Param('id') id: string, @JsonApiQuery(TRACKS_QUERY) query: CollectionQuery) {
+    const { entries, total } = await this.tracks.ofEdition(id, query);
     return collectionDocument(trackSchema, entries, total, query);
   }
 

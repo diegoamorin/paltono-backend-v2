@@ -278,8 +278,8 @@ describe('works (M1–M3), recordings (M4–M6) and the credits of an identity (
       const ofIu = async (query: string) => credited((await getJsonApi(app, `/v1/identities/${ids.IU}/credits?include=work,recording&${query}`).expect(200)).body);
       expect(await ofIu('filter[scope]=recording')).toEqual(['recording-contributions Butter']);
       expect(await ofIu('filter[role]=composer')).toEqual(['work-contributions 좋은 날']);
-      expect(await ofIu('filter[scope]=release')).toEqual([]);
-      await getJsonApi(app, `/v1/identities/${ids.IU}/credits?filter[scope]=membership`).expect(400);
+      expect(await ofIu('filter[scope]=edition')).toEqual([]);
+      for (const scope of ['membership', 'release']) await getJsonApi(app, `/v1/identities/${ids.IU}/credits?filter[scope]=${scope}`).expect(400);
 
       const yoon = await getJsonApi(app, `/v1/identities/${ids['Yoon Sang']}/credits?include=work`).expect(200);
       expect(credited(yoon.body)).toEqual(['work-contributions Butter', 'work-contributions Árbol']);

@@ -6,7 +6,7 @@ import { CONTRIBUTION_ROLES } from '../vocabularies/contribution-roles';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Credit } from './entities/work.entity';
 import type { RecordingEntry, WorkEntry } from './music.resource';
-import type { ReleaseEntry } from './release.resource';
+import type { EditionEntry } from './release.resource';
 
 /*
  * What the resources of the catalog's editorial entries share: the withdrawal
@@ -31,7 +31,7 @@ export const content =
 export const creditedName = (creditedAs: string | null, { identity }: ArtistEntry): string | null =>
   creditedAs ?? (identity.identity.editorialEntity!.publicationStatus === 'withdrawn' ? null : identity.identity.displayName);
 
-export type CreditScope = 'work' | 'recording' | 'release';
+export type CreditScope = 'work' | 'recording' | 'edition';
 
 export interface CreditEntry {
   scope: CreditScope;
@@ -39,10 +39,10 @@ export interface CreditEntry {
   identity: IdentityEntry;
   /** With its scopes. */
   role: ContributionRole;
-  /** The credited work or recording, loaded where the credit is the primary data. */
+  /** The credited work, recording or edition, loaded where the credit is the primary data. */
   work?: WorkEntry;
   recording?: RecordingEntry;
-  release?: ReleaseEntry;
+  edition?: EditionEntry;
 }
 
 export const creditAttributes = {

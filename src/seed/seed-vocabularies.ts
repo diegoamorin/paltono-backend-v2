@@ -50,7 +50,7 @@ const ROLES: Record<RoleSlug, { name: string; category: ContributionRoleCategory
   songwriter: { name: 'Autoría', category: 'writing', scopes: ['work'] },
   lyricist: { name: 'Letra', category: 'writing', scopes: ['work'] },
   composer: { name: 'Composición', category: 'writing', scopes: ['work'] },
-  producer: { name: 'Producción', category: 'production', scopes: ['recording', 'release'] },
+  producer: { name: 'Producción', category: 'production', scopes: ['recording', 'edition'] },
   leader: { name: 'Líder', category: 'performance', scopes: ['membership'] },
   vocalist: { name: 'Voz', category: 'performance', scopes: ['recording', 'membership'] },
   rapper: { name: 'Rap', category: 'performance', scopes: ['recording', 'membership'] },

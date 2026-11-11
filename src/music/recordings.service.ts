@@ -73,7 +73,7 @@ export class RecordingsService {
         { work },
       );
     }
-    // In the recording's artist credit, or printed on a track of a published release that uses it.
+    // In the recording's artist credit, or printed on a track of a published edition that uses it.
     if (artist !== undefined) {
       builder.andWhere(
         `(

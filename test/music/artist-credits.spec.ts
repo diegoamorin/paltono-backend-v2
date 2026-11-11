@@ -54,18 +54,19 @@ describe('artist credits of recordings and printed credits of tracks', () => {
     publicIds[`${name}Artist`] = body.data.relationships.artist.data.id;
   }
 
-  async function publishRelease(name: string, title: string, type: string): Promise<void> {
-    await publishRoot(`${name}Group`, 'release_group', 'release_groups', { title, type });
-    await publishRoot(name, 'release', 'releases', { releaseGroup: { entity_id: roots[`${name}Group`] } });
+  /** Publishes a release, as `${name}Release`, with its standard edition, as `name`. */
+  async function publishEdition(name: string, title: string, type: string): Promise<void> {
+    await publishRoot(`${name}Release`, 'release', 'releases', { title, type });
+    await publishRoot(name, 'edition', 'editions', { release: { entity_id: roots[`${name}Release`] } });
   }
 
-  async function publishTrack(name: string, release: string, recording: string, trackNumber: number): Promise<void> {
+  async function publishTrack(name: string, edition: string, recording: string, trackNumber: number): Promise<void> {
     const [key] = await publish([
       {
-        entityId: roots[release],
+        entityId: roots[edition],
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: { entity_id: roots[release] } },
+        targetKey: { edition_id: { entity_id: roots[edition] } },
         proposedValue: present({ recording: { entity_id: roots[recording] }, discNumber: 1, trackNumber }),
       },
     ]);
@@ -80,8 +81,8 @@ describe('artist credits of recordings and printed credits of tracks', () => {
     proposedValue: present(value),
   });
 
-  const printedCredit = (release: string, track: string, artist: string, value: object): ChangeInput => ({
-    entityId: roots[release],
+  const printedCredit = (edition: string, track: string, artist: string, value: object): ChangeInput => ({
+    entityId: roots[edition],
     operation: 'add_relation',
     targetPath: 'track_artist_credits',
     targetKey: { track_id: Number(tracks[track]), artist_id: { entity_id: roots[artist] } },
@@ -114,10 +115,10 @@ describe('artist credits of recordings and printed credits of tracks', () => {
       recordingCredit('gone', 'becky', { rank: 'main', position: 0 }),
     ]);
 
-    await publishRelease('single', 'Sin Pijama', 'single');
-    await publishRelease('compilation', 'Reggaetón Hits', 'compilation');
-    await publishRelease('album', 'BLACKPINK IN YOUR AREA', 'album');
-    await publishRelease('hidden', 'Retirada', 'single');
+    await publishEdition('single', 'Sin Pijama', 'single');
+    await publishEdition('compilation', 'Reggaetón Hits', 'compilation');
+    await publishEdition('album', 'BLACKPINK IN YOUR AREA', 'album');
+    await publishEdition('hidden', 'Retirada', 'single');
     await publishTrack('singleTrack', 'single', 'sinPijama', 1);
     await publishTrack('goneTrack', 'single', 'gone', 2);
     await publishTrack('compilationTrack', 'compilation', 'sinPijama', 1);
@@ -192,7 +193,7 @@ describe('artist credits of recordings and printed credits of tracks', () => {
       expect(ofType(body, 'recording-artist-credits')).toEqual([]);
     });
 
-    it('shows the name a release printed, and the display name in the credit of the recording', async () => {
+    it('shows the name an edition printed, and the display name in the credit of the recording', async () => {
       const printed = await trackCredits('albumTrack');
       expect(ofType(printed.body, 'track-artist-credits')[0].attributes.displayName).toBe('JENNIE (BLACKPINK)');
       const recording = await getJsonApi(app, `/v1/recordings/${publicIds.solo}?include=artistCredits`).expect(200);
@@ -204,13 +205,13 @@ describe('artist credits of recordings and printed credits of tracks', () => {
     });
 
     it('tells inherited and printed credits apart in a tracklist', async () => {
-      const { body } = await getJsonApi(app, `/v1/releases/${publicIds.compilation}/tracks?include=artistCredits`).expect(200);
+      const { body } = await getJsonApi(app, `/v1/editions/${publicIds.compilation}/tracks?include=artistCredits`).expect(200);
 
       expect(body.data.map(({ relationships }: Resource) => (relationships.artistCredits.data as { type: string }[]).map(({ type }) => type))).toEqual([
         ['track-artist-credits'],
         ['track-artist-credits'],
       ]);
-      const single = await getJsonApi(app, `/v1/releases/${publicIds.single}/tracks?include=artistCredits&fields[recording-artist-credits]=rank`).expect(200);
+      const single = await getJsonApi(app, `/v1/editions/${publicIds.single}/tracks?include=artistCredits&fields[recording-artist-credits]=rank`).expect(200);
       expect(ofType(single.body, 'recording-artist-credits').map(({ attributes }) => attributes)).toEqual([{ rank: 'main' }, { rank: 'main' }]);
     });
   });
@@ -234,36 +235,36 @@ describe('artist credits of recordings and printed credits of tracks', () => {
   });
 
   describe('recordings by artist', () => {
-    it('finds a recording by its artist credit, or by the printed credit of a track in a published release', async () => {
+    it('finds a recording by its artist credit, or by the printed credit of a track in a published edition', async () => {
       const natti = await getJsonApi(app, `/v1/recordings?filter[artist]=${publicIds.nattiArtist}`).expect(200);
       expect(ids(natti.body).sort()).toEqual([publicIds.sinPijama, publicIds.uncredited].sort());
 
-      // JENNIE is printed on a track of a withdrawn release, which does not count.
+      // JENNIE is printed on a track of a withdrawn edition, which does not count.
       const jennie = await getJsonApi(app, `/v1/recordings?filter[artist]=${publicIds.jennieArtist}`).expect(200);
       expect(ids(jennie.body)).toEqual([publicIds.solo]);
     });
   });
 
-  describe('the artist credit of a release group', () => {
+  describe('the artist credit of a release', () => {
     it('shows the name to show', async () => {
       await publish([
         {
-          entityId: roots.singleGroup,
+          entityId: roots.singleRelease,
           operation: 'add_relation',
           targetPath: 'release_artist_credits',
-          targetKey: { release_group_id: { entity_id: roots.singleGroup }, artist_id: { entity_id: roots.natti } },
+          targetKey: { release_id: { entity_id: roots.singleRelease }, artist_id: { entity_id: roots.natti } },
           proposedValue: present({ position: 0, creditedAs: 'NATTI NATASHA' }),
         },
         {
-          entityId: roots.singleGroup,
+          entityId: roots.singleRelease,
           operation: 'add_relation',
           targetPath: 'release_artist_credits',
-          targetKey: { release_group_id: { entity_id: roots.singleGroup }, artist_id: { entity_id: roots.becky } },
+          targetKey: { release_id: { entity_id: roots.singleRelease }, artist_id: { entity_id: roots.becky } },
           proposedValue: present({ position: 1 }),
         },
       ]);
 
-      const { body } = await getJsonApi(app, `/v1/release-groups/${publicIds.singleGroup}?include=artistCredits`).expect(200);
+      const { body } = await getJsonApi(app, `/v1/releases/${publicIds.singleRelease}?include=artistCredits`).expect(200);
 
       expect(ofType(body, 'release-artist-credits').map(({ attributes }) => attributes)).toEqual([
         { position: 0, creditedAs: 'NATTI NATASHA', displayName: 'NATTI NATASHA' },

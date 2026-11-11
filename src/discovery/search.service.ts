@@ -8,7 +8,7 @@ import { CollectionQuery } from '../common/json-api/query';
 import { SearchSource } from '../common/search/search-source';
 import { containsPattern } from '../database/like-pattern';
 import { EVENT_SEARCH, TOUR_SEARCH } from '../live-events/live-event-search';
-import { RECORDING_SEARCH, RELEASE_GROUP_SEARCH, WORK_SEARCH } from '../music/music-search';
+import { RECORDING_SEARCH, RELEASE_SEARCH, WORK_SEARCH } from '../music/music-search';
 
 /*
  * Global search (S1): one heterogeneous list of published entries of the
@@ -19,7 +19,7 @@ import { RECORDING_SEARCH, RELEASE_GROUP_SEARCH, WORK_SEARCH } from '../music/mu
  * Discovery only reads through the search sources of each module.
  */
 
-export const SOURCES: SearchSource[] = [IDENTITY_SEARCH, ARTIST_SEARCH, WORK_SEARCH, RECORDING_SEARCH, RELEASE_GROUP_SEARCH, EVENT_SEARCH, TOUR_SEARCH];
+export const SOURCES: SearchSource[] = [IDENTITY_SEARCH, ARTIST_SEARCH, WORK_SEARCH, RECORDING_SEARCH, RELEASE_SEARCH, EVENT_SEARCH, TOUR_SEARCH];
 
 /**
  * The types searched without `filter[type]`. An artist profile is part of its

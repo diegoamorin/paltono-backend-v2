@@ -3,20 +3,20 @@ import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
 import { Track, TrackArtistCredit } from './entities/track.entity';
 import { RecordingArtistCreditEntry, RecordingEntry, recordingArtistCreditSchema, recordingSchema } from './music.resource';
-import { ReleaseEntry, releaseSchema } from './release.resource';
+import { EditionEntry, editionSchema } from './release.resource';
 import { ToManyLinkage, ToOneLinkage, creditedName, isWithdrawn } from './resource-primitives';
 
 /*
  * The public resources of tracks and their printed credits. A track is no
- * editorial root: it is shown while its release is published. Reached as the
+ * editorial root: it is shown while its edition is published. Reached as the
  * target of a relationship it carries no credits (`relations` undefined). Its
  * platform links are its recording's (ADR 0009).
  */
 
 export interface TrackEntry {
   track: Track;
-  /** Its release and recording, without relations; either may show only its withdrawal notice. */
-  release: ReleaseEntry;
+  /** Its edition and recording, without relations; either may show only its withdrawal notice. */
+  edition: EditionEntry;
   recording: RecordingEntry;
   relations?: {
     /** The credit it shows (ADR 0008): its printed credit, or else the artist credit of its recording, by position. */
@@ -55,7 +55,7 @@ export const trackSchema: ResourceSchema<TrackEntry> = defineResource({
     displayTitle: ({ track, recording }) => track.title ?? (isWithdrawn(recording.recording) ? null : recording.recording.title),
   },
   relationships: {
-    release: { schema: () => releaseSchema, get: ({ release }) => release },
+    edition: { schema: () => editionSchema, get: ({ edition }) => edition },
     recording: { schema: () => recordingSchema, get: ({ recording }) => recording },
     artistCredits: {
       schema: () => trackArtistCreditSchema,
@@ -83,8 +83,8 @@ class TrackAttributes {
 }
 
 class TrackRelationships {
-  @ApiProperty({ type: ToOneLinkage, description: '`releases`: su edición' })
-  release: ToOneLinkage;
+  @ApiProperty({ type: ToOneLinkage, description: '`editions`: su edición' })
+  edition: ToOneLinkage;
 
   @ApiProperty({ type: ToOneLinkage, description: '`recordings`' })
   recording: ToOneLinkage;

@@ -190,47 +190,47 @@ describe('pnpm db:seed', () => {
     });
 
     it('creates releases with several editions, tracks and credits, repackages, announcements and cancelled editions', async () => {
-      const group = async (title: string) => {
-        const response = await getJsonApi(app, `/v1/release-groups?filter[q]=${encodeURIComponent(title)}&include=releases`).expect(200);
+      const release = async (title: string) => {
+        const response = await getJsonApi(app, `/v1/releases?filter[q]=${encodeURIComponent(title)}&include=editions`).expect(200);
         const found = response.body.data.find(({ attributes }: Resource) => attributes.title === title);
-        if (!found) throw new Error(`No release group is titled ${title}`);
-        const releases = response.body.included.filter(
-          ({ type, id }: Resource) => type === 'releases' && (found.relationships!.releases.data as { id: string }[]).some((each) => each.id === id),
+        if (!found) throw new Error(`No release is titled ${title}`);
+        const editions = response.body.included.filter(
+          ({ type, id }: Resource) => type === 'editions' && (found.relationships!.editions.data as { id: string }[]).some((each) => each.id === id),
         );
-        return { group: found as Resource, releases: releases as Resource[] };
+        return { release: found as Resource, editions: editions as Resource[] };
       };
-      const edition = (releases: Resource[], name: string | null) => releases.find(({ attributes }) => attributes.editionName === name)!;
-      const trackTitles = async (release: Resource) =>
-        (await getJsonApi(app, `/v1/releases/${release.id}/tracks?page[size]=100`).expect(200)).body.data.map(
+      const edition = (editions: Resource[], name: string | null) => editions.find(({ attributes }) => attributes.editionName === name)!;
+      const trackTitles = async (shown: Resource) =>
+        (await getJsonApi(app, `/v1/editions/${shown.id}/tracks?page[size]=100`).expect(200)).body.data.map(
           ({ attributes }: Resource) => attributes.displayTitle,
         );
 
-      const ruby = await group('Ruby');
-      expect(ruby.releases.map(({ attributes }) => attributes.editionName).sort()).toEqual(['Clean', 'The Complete Collection', null].sort());
-      expect(await trackTitles(edition(ruby.releases, null))).toHaveLength(15);
-      expect(await trackTitles(edition(ruby.releases, 'Clean'))).not.toContain('F.T.S.');
-      expect(await trackTitles(edition(ruby.releases, 'The Complete Collection'))).toHaveLength(21);
-      const handlebars = await getJsonApi(app, `/v1/releases/${edition(ruby.releases, null).id}/tracks?include=artistCredits&page[size]=100`).expect(200);
+      const ruby = await release('Ruby');
+      expect(ruby.editions.map(({ attributes }) => attributes.editionName).sort()).toEqual(['Clean', 'The Complete Collection', null].sort());
+      expect(await trackTitles(edition(ruby.editions, null))).toHaveLength(15);
+      expect(await trackTitles(edition(ruby.editions, 'Clean'))).not.toContain('F.T.S.');
+      expect(await trackTitles(edition(ruby.editions, 'The Complete Collection'))).toHaveLength(21);
+      const handlebars = await getJsonApi(app, `/v1/editions/${edition(ruby.editions, null).id}/tracks?include=artistCredits&page[size]=100`).expect(200);
       // Ruby credits its recordings as they are, so its tracks show their recordings' credits.
       expect(handlebars.body.included.filter(({ type }: Resource) => type === 'track-artist-credits')).toEqual([]);
       expect(handlebars.body.included.filter(({ type, attributes }: Resource) => type === 'recording-artist-credits' && attributes.rank === 'featured')).toHaveLength(6);
 
       // The compilation prints Verbal with his band, and the cancelled single prints Park Bom as «BOM».
-      const printedNames = async (release: Resource) =>
-        (await getJsonApi(app, `/v1/releases/${release.id}/tracks?include=artistCredits&page[size]=100`).expect(200)).body.included
+      const printedNames = async (shown: Resource) =>
+        (await getJsonApi(app, `/v1/editions/${shown.id}/tracks?include=artistCredits&page[size]=100`).expect(200)).body.included
           .filter(({ type }: Resource) => type === 'track-artist-credits')
           .map(({ attributes }: Resource) => attributes.displayName);
-      const bestAndUsa = await group('Best & USA');
-      expect(bestAndUsa.group.attributes.type).toBe('compilation');
-      expect(await printedNames(edition(bestAndUsa.releases, null))).toEqual(
+      const bestAndUsa = await release('Best & USA');
+      expect(bestAndUsa.release.attributes.type).toBe('compilation');
+      expect(await printedNames(edition(bestAndUsa.editions, null))).toEqual(
         expect.arrayContaining(['BoA', 'Crystal Kay', 'Verbal from M-Flo', 'Yutaka Furukawa from Doping Panda']),
       );
-      expect(await printedNames(edition((await group('OH YEAH feat BOM (from 2NE1)')).releases, null))).toEqual(['GD & TOP', 'BOM']);
+      expect(await printedNames(edition((await release('OH YEAH feat BOM (from 2NE1)')).editions, null))).toEqual(['GD & TOP', 'BOM']);
 
-      const cupid = await group('Cupid');
-      expect(await trackTitles(edition(cupid.releases, 'Sped Up'))).toEqual(['Cupid (Twin Ver.) (Sped Up)']);
+      const cupid = await release('Cupid');
+      expect(await trackTitles(edition(cupid.editions, 'Sped Up'))).toEqual(['Cupid (Twin Ver.) (Sped Up)']);
       // The bonus tracks first, then the album with the original «Energetic» moved to the end.
-      expect(await trackTitles(edition((await group('BoA')).releases, 'Deluxe'))).toEqual([
+      expect(await trackTitles(edition((await release('BoA')).editions, 'Deluxe'))).toEqual([
         'Energetic (Radio Edit)',
         'Control',
         'Crazy About',
@@ -246,27 +246,27 @@ describe('pnpm db:seed', () => {
         'Hypnotic Dancefloor',
         'Energetic',
       ]);
-      expect((await group('Twicecoaster: Lane 1')).releases.map(({ attributes }) => attributes.editionName)).toContain('Thailand Edition');
+      expect((await release('Twicecoaster: Lane 1')).editions.map(({ attributes }) => attributes.editionName)).toContain('Thailand Edition');
 
-      const bornPink = edition((await group('Born Pink')).releases, null);
-      const credits = await getJsonApi(app, `/v1/releases/${bornPink.id}?include=contributions.identity`).expect(200);
+      const bornPink = edition((await release('Born Pink')).editions, null);
+      const credits = await getJsonApi(app, `/v1/editions/${bornPink.id}?include=contributions.identity`).expect(200);
       expect(credits.body.included.filter(({ type }: Resource) => type === 'identities').map(({ attributes }: Resource) => attributes.displayName)).toEqual(['Teddy']);
       expect(await trackTitles(bornPink)).toContain('Shut Down');
 
-      const lane2 = await group('Twicecoaster: Lane 2');
-      const original = await getJsonApi(app, `/v1/release-groups/${lane2.group.id}?include=repackageOf`).expect(200);
+      const lane2 = await release('Twicecoaster: Lane 2');
+      const original = await getJsonApi(app, `/v1/releases/${lane2.release.id}?include=repackageOf`).expect(200);
       expect(original.body.included.map(({ attributes }: Resource) => attributes.title)).toEqual(['Twicecoaster: Lane 1']);
 
       // The announced time and zone give the instant a countdown goes to while it is still to come.
-      const toUs = edition((await group('To Us')).releases, null);
+      const toUs = edition((await release('To Us')).editions, null);
       expect(toUs.attributes).toMatchObject({ releaseTime: '18:00', timezone: 'Asia/Seoul', releaseInstant: '2026-11-02T09:00:00.000Z' });
-      expect(edition((await group('Perfect Storm')).releases, null).attributes).toMatchObject({ releaseTime: null, releaseInstant: null });
+      expect(edition((await release('Perfect Storm')).editions, null).attributes).toMatchObject({ releaseTime: null, releaseInstant: null });
 
       // Announced for 9 November 2011 and halted by Avex before it came out.
-      const cancelled = edition((await group('OH YEAH feat BOM (from 2NE1)')).releases, null);
+      const cancelled = edition((await release('OH YEAH feat BOM (from 2NE1)')).editions, null);
       expect(cancelled.attributes).toMatchObject({ isCancelled: true, availability: 'cancelled', releaseInstant: null });
       expect(await trackTitles(cancelled)).toEqual(['OH YEAH feat BOM (from 2NE1)', 'HIGH HIGH']);
-      expect((await group('Fake Love/Airplane pt.2')).releases.map(({ attributes }) => attributes.isCancelled)).toEqual([false]);
+      expect((await release('Fake Love/Airplane pt.2')).editions.map(({ attributes }) => attributes.isCancelled)).toEqual([false]);
     });
 
     it('creates tours and concerts with their artists, organizers and links, and a schedule that changed', async () => {

@@ -4,7 +4,7 @@ export const CONTRIBUTION_ROLE_CATEGORIES = ['writing', 'arrangement', 'performa
 export type ContributionRoleCategory = (typeof CONTRIBUTION_ROLE_CATEGORIES)[number];
 
 /** Where a role may be credited; credits reference a (role, scope) pair. */
-export const CONTRIBUTION_ROLE_SCOPES = ['work', 'recording', 'release', 'membership'] as const;
+export const CONTRIBUTION_ROLE_SCOPES = ['work', 'recording', 'edition', 'membership'] as const;
 export type ContributionRoleScopeName = (typeof CONTRIBUTION_ROLE_SCOPES)[number];
 
 /** Shared vocabulary of musical functions, such as composer or mixing engineer. */

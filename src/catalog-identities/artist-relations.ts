@@ -81,7 +81,7 @@ export async function artistReferences(manager: EntityManager, catalogIdentityId
   if (await manager.existsBy(ArtistOrganizationAffiliation, { artistId })) {
     references.push('El perfil artístico tiene afiliaciones; quítalas antes de quitar el perfil');
   }
-  // Artist credits belong to the music module, whose release groups, recordings and releases own them.
+  // Artist credits belong to the music module, whose releases, recordings and editions own them.
   const [{ credited, onRecordings, onTracks }] = await manager.query(
     `SELECT EXISTS (SELECT 1 FROM release_artist_credits WHERE artist_id = $1) AS credited,
             EXISTS (SELECT 1 FROM recording_artist_credits WHERE artist_id = $1) AS "onRecordings",

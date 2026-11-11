@@ -146,7 +146,7 @@ describe('Swagger and the OpenAPI document', () => {
 
       const data = document.paths['/v1/search'].get.responses['200'].content['application/vnd.api+json'].schema.properties.data;
       expect(data.items.oneOf.map(({ $ref }: { $ref: string }) => $ref.split('/').pop()).sort()).toEqual(
-        ['ArtistResource', 'EventResource', 'IdentityResource', 'RecordingResource', 'ReleaseGroupResource', 'TourResource', 'WorkResource'].sort(),
+        ['ArtistResource', 'EventResource', 'IdentityResource', 'RecordingResource', 'ReleaseResource', 'TourResource', 'WorkResource'].sort(),
       );
     });
   });

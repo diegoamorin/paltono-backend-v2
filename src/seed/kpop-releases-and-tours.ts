@@ -102,13 +102,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       by(recording('born-pink/tally', 'Tally'), 'blackpink'),
       by(recording('born-pink/ready-for-love', 'Ready for Love'), 'blackpink'),
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'born-pink',
         title: 'Born Pink',
         type: 'album',
         artists: ['blackpink'],
-        releases: [
+        editions: [
           {
             releaseDate: day(2022, 9, 16),
             // Producer of every track, per the album's credits.
@@ -140,13 +140,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       by(recording('lane/next-page', 'Next Page'), 'twice'),
       by(recording('lane/one-in-a-million', 'One in a Million'), 'twice'),
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'twicecoaster-lane-1',
         title: 'Twicecoaster: Lane 1',
         type: 'ep',
         artists: ['twice'],
-        releases: [
+        editions: [
           { releaseDate: day(2016, 10, 24), tracks: tracks(...LANE_1) },
           // A CD with a bonus DVD; the article does not list its tracks.
           { editionName: 'Thailand Edition', releaseDate: day(2017, 3, 17) },
@@ -159,14 +159,14 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
     description: 'Alta de Twicecoaster: Lane 2, reedición de Twicecoaster: Lane 1 con «Knock Knock»',
     sources: [wiki('Twicecoaster:_Lane_2')],
     recordings: [by(recording('lane/knock-knock', 'Knock Knock'), 'twice'), by(recording('lane/ice-cream', 'Ice Cream'), 'twice')],
-    releaseGroups: [
+    releases: [
       {
         key: 'twicecoaster-lane-2',
         title: 'Twicecoaster: Lane 2',
         type: 'ep',
         repackageOf: 'twicecoaster-lane-1',
         artists: ['twice'],
-        releases: [{ releaseDate: day(2017, 2, 20), tracks: tracks('lane/knock-knock', 'lane/ice-cream', ...LANE_1) }],
+        editions: [{ releaseDate: day(2017, 2, 20), tracks: tracks('lane/knock-knock', 'lane/ice-cream', ...LANE_1) }],
       },
     ],
   },
@@ -205,13 +205,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       rubyRecording('ruby/love-hangover-just-jennie', 'Love Hangover (Just Jennie)'),
       rubyRecording('ruby/damn-right-just-jennie', 'Damn Right (Just Jennie)'),
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'ruby',
         title: 'Ruby',
         type: 'album',
         artists: ['jennie'],
-        releases: [
+        editions: [
           { releaseDate: day(2025, 3, 7), tracks: tracks(...RUBY) },
           // Without «F.T.S.»; the article gives no date.
           { editionName: 'Clean', tracks: tracks(...RUBY.filter((key) => key !== 'ruby/fts')) },
@@ -283,13 +283,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       by(recording('cupid/instrumental', 'Cupid (Instrumental)', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'),
       by(recording('cupid/twin-sped-up', 'Cupid (Twin Ver.) (Sped Up)', [{ work: 'cupid', relationType: 'performance' }]), 'fifty-fifty'),
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'cupid-single',
         title: 'Cupid',
         type: 'single',
         artists: ['fifty-fifty'],
-        releases: [
+        editions: [
           { releaseDate: day(2023, 2, 24), tracks: tracks('cupid/original', 'cupid/twin', 'cupid/instrumental') },
           { editionName: 'Sped Up', releaseDate: day(2023, 4, 10), tracks: tracks('cupid/twin-sped-up') },
         ],
@@ -378,13 +378,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         ],
       },
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'boa-album',
         title: 'BoA',
         type: 'album',
         artists: ['boa'],
-        releases: [
+        editions: [
           {
             releaseDate: day(2009, 3, 17),
             tracks: [
@@ -469,13 +469,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       recording('best-usa/believe-in-love', 'Believe in Love feat. BoA (Acoustic Version)'),
       by(recording('best-usa/valenti', 'Valenti: Best & USA version'), 'boa'),
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'best-and-usa',
         title: 'Best & USA',
         type: 'compilation',
         artists: ['boa'],
-        releases: [
+        editions: [
           {
             releaseDate: day(2009, 3, 18),
             // The CD-only edition. The compilation prints Verbal and Yutaka Furukawa with their bands.
@@ -521,14 +521,14 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       wiki('Airplane_Pt._2'),
       'https://www.soompi.com/article/1231319wpp/big-hit-entertainment-announces-final-decision-regarding-release-btss-collaboration-akb48-producer',
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'fake-love-airplane',
         title: 'Fake Love/Airplane pt.2',
         type: 'single',
         artists: ['bts'],
         // Big Hit dropped «Bird» from it before release; the single itself came out.
-        releases: [{ releaseDate: day(2018, 11, 7) }],
+        editions: [{ releaseDate: day(2018, 11, 7) }],
       },
     ],
   },
@@ -552,13 +552,13 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
       },
       { ...by(recording('gd-top/high-high-japanese', 'HIGH HIGH'), 'gd-top'), description: 'Versión en japonés de «High High».' },
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'oh-yeah-japanese-single',
         title: 'OH YEAH feat BOM (from 2NE1)',
         type: 'single',
         artists: ['gd-top'],
-        releases: [
+        editions: [
           {
             releaseDate: day(2011, 11, 9),
             // Avex halted it in October 2011, after G-Dragon was charged with smoking marijuana.
@@ -621,7 +621,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         affiliations: [{ organization: 'bighit', type: 'agency', status: 'current' }],
       },
     ],
-    releaseGroups: [
+    releases: [
       {
         key: 'to-us',
         title: 'To Us',
@@ -629,7 +629,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         description: 'Segundo sencillo álbum de TWS.',
         artists: ['tws'],
         // Announced for 6 p.m. KST: its countdown goes to that instant.
-        releases: [{ releaseDate: day(2026, 11, 2), releaseTime: '18:00', timezone: 'Asia/Seoul' }],
+        editions: [{ releaseDate: day(2026, 11, 2), releaseTime: '18:00', timezone: 'Asia/Seoul' }],
       },
       {
         key: 'perfect-storm',
@@ -638,7 +638,7 @@ export const KPOP_RELEASES_AND_TOURS: SeedSubmission[] = [
         description: 'Noveno EP de TOMORROW X TOGETHER, de seis pistas.',
         artists: ['txt'],
         // The hour is not announced yet: no countdown.
-        releases: [{ releaseDate: day(2026, 11, 16) }],
+        editions: [{ releaseDate: day(2026, 11, 16) }],
       },
     ],
   },

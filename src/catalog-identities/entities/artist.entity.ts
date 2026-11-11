@@ -149,7 +149,7 @@ export class OrganizationMembershipRole {
   @JoinColumn({ name: 'contribution_role_id' })
   role?: ContributionRole;
 
-  @Column({ name: 'role_scope', type: 'enum', enum: ['work', 'recording', 'release', 'membership'], enumName: 'contribution_role_scope', default: 'membership' })
+  @Column({ name: 'role_scope', type: 'enum', enum: ['work', 'recording', 'edition', 'membership'], enumName: 'contribution_role_scope', default: 'membership' })
   roleScope: 'membership';
 
   @Column({ type: 'smallint' })

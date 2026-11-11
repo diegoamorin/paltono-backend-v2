@@ -19,7 +19,7 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
 
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TYPE editorial_entity_type AS ENUM ('identity', 'work', 'recording', 'release_group', 'release', 'event', 'tour')`,
+      `CREATE TYPE editorial_entity_type AS ENUM ('identity', 'work', 'recording', 'release', 'edition', 'event', 'tour')`,
     );
     await queryRunner.query(`CREATE TYPE editorial_publication_status AS ENUM ('reserved', 'published', 'withdrawn')`);
     await queryRunner.query(`CREATE TYPE change_proposal_status AS ENUM ('draft', 'open', 'closed')`);

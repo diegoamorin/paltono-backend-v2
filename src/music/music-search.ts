@@ -4,15 +4,15 @@ import { Release } from './entities/release.entity';
 import { Work } from './entities/work.entity';
 import { recordingEntries, workEntries } from './music-entries';
 import { recordingSchema, workSchema } from './music.resource';
-import { releaseGroupEntries, withReleaseArtistCredits } from './release-entries';
-import { releaseGroupSchema } from './release.resource';
+import { releaseEntries, withReleaseArtistCredits } from './release-entries';
+import { releaseSchema } from './release.resource';
 
 /*
- * What global search finds of the music catalog: titles. A release group is
- * also found by the literal titles of its published releases, which are never
- * results of their own, so an album appears once however many releases it has.
+ * What global search finds of the music catalog: titles. A release is also
+ * found by the literal titles of its published editions, which are never
+ * results of their own, so an album appears once however many editions it has.
  * Likewise a recording is found by the titles its tracks show on published
- * releases; tracks are never results of their own.
+ * editions; tracks are never results of their own.
  */
 
 export const WORK_SEARCH = titleSearch({
@@ -40,17 +40,17 @@ export const RECORDING_SEARCH = titleSearch({
   entries: (manager, recordings, now) => recordingEntries(manager, recordings, now),
 });
 
-export const RELEASE_GROUP_SEARCH = titleSearch({
-  type: 'release-groups',
-  schema: releaseGroupSchema,
+export const RELEASE_SEARCH = titleSearch({
+  type: 'releases',
+  schema: releaseSchema,
   table: 'releases',
-  alias: 'grp',
+  alias: 'release',
   alsoTexts: `
-    SELECT grp.id::text AS id, edition.title AS text FROM releases grp ${publishedRoot('grp')}
-      JOIN editions edition ON edition.release_id = grp.id ${publishedRoot('edition')}
+    SELECT release.id::text AS id, edition.title AS text FROM releases release ${publishedRoot('release')}
+      JOIN editions edition ON edition.release_id = release.id ${publishedRoot('edition')}
       WHERE edition.title IS NOT NULL`,
   entity: Release,
   relations: { editorialEntity: true },
-  // Without their releases, but with their artists for a preview.
-  entries: async (manager, groups, now) => withReleaseArtistCredits(manager, await releaseGroupEntries(manager, groups, now, false)),
+  // Without their editions, but with their artists for a preview.
+  entries: async (manager, releases, now) => withReleaseArtistCredits(manager, await releaseEntries(manager, releases, now, false)),
 });

@@ -12,13 +12,13 @@ import { EditionContribution } from './entities/track.entity';
 import { Clock } from '../common/clock/clock';
 import { creditEntries, plainRecordingEntries, plainWorkEntries, withArtistCredits } from './music-entries';
 import { CreditEntry, CreditScope } from './resource-primitives';
-import { releaseEntries } from './release-entries';
-import { recordingReleaseSql, releaseDateSql, workReleaseStartSql } from './release-dates';
+import { editionEntries } from './release-entries';
+import { editionDateSql, recordingReleaseSql, workReleaseStartSql } from './release-dates';
 
 /** The scopes a credit filter accepts: those of credits, not of membership roles. */
 const CREDIT_SCOPES = CONTRIBUTION_ROLE_SCOPES.filter((scope) => scope !== 'membership');
 
-/** The credits of an identity across works, recordings and releases, on published entries only. */
+/** The credits of an identity across works, recordings and editions, on published entries only. */
 @Injectable()
 export class IdentityCreditsService {
   constructor(
@@ -49,7 +49,7 @@ export class IdentityCreditsService {
     const union = [
       credits('work_contributions', 'work_id', 'works', 'work', workReleaseStartSql('owner')),
       credits('recording_contributions', 'recording_id', 'recordings', 'recording', recordingReleaseSql('owner').start),
-      credits('edition_contributions', 'edition_id', 'editions', 'release', releaseDateSql('owner').start),
+      credits('edition_contributions', 'edition_id', 'editions', 'edition', editionDateSql('owner').start),
     ].join(' UNION ALL ');
     const parameters = [identity.id, role ?? null, scope ?? null];
     const [{ total }] = await manager.query(`SELECT count(*)::int AS total FROM (${union}) credits`, parameters);
@@ -65,7 +65,7 @@ export class IdentityCreditsService {
     return { entries: await this.load(page), total };
   }
 
-  /** The credits of the page, in its order, with the work, recording or release each one credits. */
+  /** The credits of the page, in its order, with the work, recording or edition each one credits. */
   private async load(page: { scope: CreditScope; id: number }[]): Promise<CreditEntry[]> {
     const manager = this.dataSource.manager;
     const idsOf = (scope: string) => page.filter((row) => row.scope === scope).map(({ id }) => id);
@@ -83,10 +83,10 @@ export class IdentityCreditsService {
         await manager.find(Recording, { where: { id: In(recordingCredits.map(({ recordingId }) => recordingId)) }, relations: { editorialEntity: true } }),
       ),
     );
-    const releaseCredits = await manager.findBy(EditionContribution, { id: In(idsOf('release')) });
-    const releases = await releaseEntries(
+    const editionCredits = await manager.findBy(EditionContribution, { id: In(idsOf('edition')) });
+    const editions = await editionEntries(
       manager,
-      await manager.find(Edition, { where: { id: In(releaseCredits.map(({ editionId }) => editionId)) }, relations: { editorialEntity: true } }),
+      await manager.find(Edition, { where: { id: In(editionCredits.map(({ editionId }) => editionId)) }, relations: { editorialEntity: true } }),
       this.clock.now(),
       false,
     );
@@ -99,9 +99,9 @@ export class IdentityCreditsService {
         ...entry,
         recording: recordings.find(({ recording }) => recording.id === (entry.credit as RecordingContribution).recordingId)!,
       })),
-      ...(await creditEntries(manager, 'release', releaseCredits)).map((entry) => ({
+      ...(await creditEntries(manager, 'edition', editionCredits)).map((entry) => ({
         ...entry,
-        release: releases.find(({ release }) => release.id === (entry.credit as EditionContribution).editionId)!,
+        edition: editions.find(({ edition }) => edition.id === (entry.credit as EditionContribution).editionId)!,
       })),
     ];
     return page.map(({ scope, id }) => entries.find((entry) => entry.scope === scope && entry.credit.id === id)!);

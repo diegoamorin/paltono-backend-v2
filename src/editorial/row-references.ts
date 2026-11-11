@@ -2,7 +2,7 @@ import { EntityManager } from 'typeorm';
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { eventIdOf, tourIdOf } from '../live-events/live-events';
 import { recordingIdOf } from '../music/recordings';
-import { releaseGroupIdOf, releaseIdOf } from '../music/releases';
+import { editionIdOf, releaseIdOf } from '../music/releases';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { EntityRevision } from './entities/entity-revision.entity';
 import { ProposalChange } from './entities/proposal-change.entity';
@@ -40,8 +40,8 @@ export type KeyMembers = Pick<OperationDefinition, 'keyRoots' | 'keyRows'>;
 const ROOT_IDS: Partial<Record<EditorialEntityType, (manager: EntityManager, entityId: string) => Promise<number | null>>> = {
   identity: identityIdOf,
   recording: recordingIdOf,
-  release_group: releaseGroupIdOf,
   release: releaseIdOf,
+  edition: editionIdOf,
   tour: tourIdOf,
   event: eventIdOf,
 };

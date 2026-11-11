@@ -38,7 +38,7 @@ export interface WorkEntry {
 export interface RecordingEntry {
   /** With its editorial root. */
   recording: Recording;
-  /** Derived from its releases on each read, never stored. */
+  /** Derived from its editions on each read, never stored. */
   releaseDate: PartialDate | null;
   /**
    * Its artist credit, by position: loaded along with its relations, and on a
@@ -58,7 +58,7 @@ export interface RecordingEntry {
     genres: Genre[];
     primaryGenreId: number | null;
     recordingWorks: RecordingWorkEntry[];
-    /** Its appearances in published releases, without credits. */
+    /** Its appearances in published editions, without credits. */
     tracks: TrackEntry[];
   } | null;
 }
@@ -386,12 +386,12 @@ class CreditRelationships {
   @ApiProperty({ type: ToOneLinkage, required: false, description: '`recordings`, en un crédito de grabación' })
   recording?: ToOneLinkage;
 
-  @ApiProperty({ type: ToOneLinkage, required: false, description: '`releases`, en un crédito de edición' })
-  release?: ToOneLinkage;
+  @ApiProperty({ type: ToOneLinkage, required: false, description: '`editions`, en un crédito de edición' })
+  edition?: ToOneLinkage;
 }
 
 export class CreditResource {
-  @ApiProperty({ enum: ['work-contributions', 'recording-contributions', 'release-contributions'] })
+  @ApiProperty({ enum: ['work-contributions', 'recording-contributions', 'edition-contributions'] })
   type: string;
 
   @ApiProperty({ description: 'PK entera del crédito, como cadena' })

@@ -132,7 +132,7 @@ export async function recordingEntries(manager: EntityManager, recordings: Recor
   });
 }
 
-/** The tracks of published releases: the tracks of a withdrawn release are part of its withdrawn content. */
+/** The tracks of published editions: the tracks of a withdrawn edition are part of its withdrawn content. */
 export function publishedTracksOf(manager: EntityManager): SelectQueryBuilder<Track> {
   return manager
     .createQueryBuilder(Track, 'track')

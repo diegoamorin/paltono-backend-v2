@@ -51,8 +51,17 @@ describe('release and edition names in the schema', () => {
     return row?.name;
   }
 
-  it('names nothing after a release group', async () => {
-    expect((await schemaNames()).filter((name) => name.includes('release_group'))).toEqual([]);
+  it('names nothing after the MusicBrainz name of a release', async () => {
+    // Spelled in two parts, so the old name appears nowhere else in the code (ADR 0010).
+    const musicBrainzName = `release${'_group'}`;
+    expect((await schemaNames()).filter((name) => name.includes(musicBrainzName))).toEqual([]);
+  });
+
+  it('calls the editorial roots and the credit scope of an edition by the same names', async () => {
+    const values = async (type: string) =>
+      ((await dataSource.query(`SELECT unnest(enum_range(NULL::${type}))::text AS value`)) as { value: string }[]).map(({ value }) => value);
+    expect(await values('editorial_entity_type')).toEqual(['identity', 'work', 'recording', 'release', 'edition', 'event', 'tour']);
+    expect(await values('contribution_role_scope')).toEqual(['work', 'recording', 'edition', 'membership']);
   });
 
   it('points each edition to its release, and each track and edition credit to its edition', async () => {

@@ -47,21 +47,21 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
     publicIds[`${name}Artist`] = body.data.relationships.artist.data.id;
   }
 
-  async function publishTrack(name: string, release: string, recording: string, discNumber: number, trackNumber: number, title: string | null = null) {
+  async function publishTrack(name: string, edition: string, recording: string, discNumber: number, trackNumber: number, title: string | null = null) {
     const [key] = await publish([
       {
-        entityId: roots[release],
+        entityId: roots[edition],
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: { entity_id: roots[release] } },
+        targetKey: { edition_id: { entity_id: roots[edition] } },
         proposedValue: present({ recording: { entity_id: roots[recording] }, discNumber, trackNumber, title }),
       },
     ]);
     tracks[name] = String(key.id);
   }
 
-  const credit = (release: string, track: string, artist: string, rank: string, position: number): ChangeInput => ({
-    entityId: roots[release],
+  const credit = (edition: string, track: string, artist: string, rank: string, position: number): ChangeInput => ({
+    entityId: roots[edition],
     operation: 'add_relation',
     targetPath: 'track_artist_credits',
     targetKey: { track_id: Number(tracks[track]), artist_id: { entity_id: roots[artist] } },
@@ -79,10 +79,10 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
     await publishRoot('remix', 'recording', 'recordings', { title: 'Butter (feat. Megan Thee Stallion)', isExplicit: true });
     await publishRoot('gone', 'recording', 'recordings', { title: 'Retirada' });
 
-    await publishRoot('single', 'release_group', 'release_groups', { title: 'Butter', type: 'single' });
-    await publishRoot('standard', 'release', 'releases', { releaseGroup: { entity_id: roots.single } });
-    await publishRoot('hotter', 'release', 'releases', { releaseGroup: { entity_id: roots.single }, editionName: 'Hotter' });
-    await publishRoot('withdrawn', 'release', 'releases', { releaseGroup: { entity_id: roots.single }, editionName: 'Retirada' });
+    await publishRoot('single', 'release', 'releases', { title: 'Butter', type: 'single' });
+    await publishRoot('standard', 'edition', 'editions', { release: { entity_id: roots.single } });
+    await publishRoot('hotter', 'edition', 'editions', { release: { entity_id: roots.single }, editionName: 'Hotter' });
+    await publishRoot('withdrawn', 'edition', 'editions', { release: { entity_id: roots.single }, editionName: 'Retirada' });
 
     await publishTrack('second', 'standard', 'gone', 1, 2);
     await publishTrack('first', 'standard', 'butter', 1, 1);
@@ -103,9 +103,9 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
     await app.close();
   });
 
-  describe('GET /v1/releases/{id}/tracks (M9)', () => {
+  describe('GET /v1/editions/{id}/tracks (M9)', () => {
     it('lists the tracklist by disc and number, with its derived titles', async () => {
-      const { body } = await getJsonApi(app, `/v1/releases/${publicIds.standard}/tracks`).expect(200);
+      const { body } = await getJsonApi(app, `/v1/editions/${publicIds.standard}/tracks`).expect(200);
 
       expect(ids(body)).toEqual([tracks.first, tracks.second, tracks.bonus]);
       expect(body.data[0]).toEqual({
@@ -113,7 +113,7 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
         id: tracks.first,
         attributes: { discNumber: 1, trackNumber: 1, title: null, displayTitle: 'Butter' },
         relationships: {
-          release: { data: { type: 'releases', id: publicIds.standard } },
+          edition: { data: { type: 'editions', id: publicIds.standard } },
           recording: { data: { type: 'recordings', id: publicIds.butter } },
           artistCredits: { data: [{ type: 'track-artist-credits', id: expect.any(String) }] },
         },
@@ -124,7 +124,7 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
     });
 
     it('sorts in reverse and includes the recordings and the credited artists', async () => {
-      const { body } = await getJsonApi(app, `/v1/releases/${publicIds.standard}/tracks?sort=-discNumber,-trackNumber&include=recording,artistCredits.artist`).expect(200);
+      const { body } = await getJsonApi(app, `/v1/editions/${publicIds.standard}/tracks?sort=-discNumber,-trackNumber&include=recording,artistCredits.artist`).expect(200);
 
       expect(ids(body)).toEqual([tracks.bonus, tracks.second, tracks.first]);
       const types = body.included.map(({ type }: { type: string }) => type);
@@ -133,14 +133,14 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
       expect(retired.attributes).toEqual({ publicationStatus: 'withdrawn', withdrawnAt: expect.any(String) });
     });
 
-    it('shows no tracks of a withdrawn release and answers 404 for an unknown one', async () => {
-      expect((await getJsonApi(app, `/v1/releases/${publicIds.withdrawn}/tracks`).expect(200)).body.data).toEqual([]);
-      await getJsonApi(app, '/v1/releases/unknown/tracks').expect(404);
+    it('shows no tracks of a withdrawn edition and answers 404 for an unknown one', async () => {
+      expect((await getJsonApi(app, `/v1/editions/${publicIds.withdrawn}/tracks`).expect(200)).body.data).toEqual([]);
+      await getJsonApi(app, '/v1/editions/unknown/tracks').expect(404);
     });
 
     it('refuses an unlisted sort, filter or include', async () => {
-      for (const query of ['sort=title', 'filter[rank]=main', 'include=release', 'include=recording.genres']) {
-        await getJsonApi(app, `/v1/releases/${publicIds.standard}/tracks?${query}`).expect(400);
+      for (const query of ['sort=title', 'filter[rank]=main', 'include=edition', 'include=recording.genres']) {
+        await getJsonApi(app, `/v1/editions/${publicIds.standard}/tracks?${query}`).expect(400);
       }
     });
   });
@@ -157,7 +157,7 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
       ]);
     });
 
-    it('answers 404 for a track of a withdrawn release, or one that does not exist', async () => {
+    it('answers 404 for a track of a withdrawn edition, or one that does not exist', async () => {
       await getJsonApi(app, `/v1/tracks/${tracks.hidden}`).expect(404);
       await getJsonApi(app, '/v1/tracks/999999').expect(404);
       await getJsonApi(app, '/v1/tracks/first').expect(404);
@@ -165,20 +165,20 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
   });
 
   describe('GET /v1/recordings/{id}/tracks (M6) and the tracks of a recording', () => {
-    it('lists the appearances of a recording in published releases', async () => {
+    it('lists the appearances of a recording in published editions', async () => {
       const { body } = await getJsonApi(app, `/v1/recordings/${publicIds.butter}/tracks`).expect(200);
       expect(ids(body).sort()).toEqual([tracks.first, tracks.hotterFirst].sort());
       await getJsonApi(app, '/v1/recordings/unknown/tracks').expect(404);
     });
 
-    it('includes the tracks of a recording with their releases, up to two levels', async () => {
-      const { body } = await getJsonApi(app, `/v1/recordings/${publicIds.butter}?include=tracks.release`).expect(200);
+    it('includes the tracks of a recording with their editions, up to two levels', async () => {
+      const { body } = await getJsonApi(app, `/v1/recordings/${publicIds.butter}?include=tracks.edition`).expect(200);
 
       expect(body.data.relationships.tracks.data.map(({ id }: { id: string }) => id).sort()).toEqual([tracks.first, tracks.hotterFirst].sort());
-      const releases = body.included.filter(({ type }: { type: string }) => type === 'releases');
-      expect(releases.map(({ id }: { id: string }) => id).sort()).toEqual([publicIds.standard, publicIds.hotter].sort());
-      expect(releases[0].relationships.releaseGroup.data).toEqual({ type: 'release-groups', id: publicIds.single });
-      await getJsonApi(app, `/v1/recordings/${publicIds.butter}?include=tracks.release.releaseGroup`).expect(400);
+      const editions = body.included.filter(({ type }: { type: string }) => type === 'editions');
+      expect(editions.map(({ id }: { id: string }) => id).sort()).toEqual([publicIds.standard, publicIds.hotter].sort());
+      expect(editions[0].relationships.release.data).toEqual({ type: 'releases', id: publicIds.single });
+      await getJsonApi(app, `/v1/recordings/${publicIds.butter}?include=tracks.edition.release`).expect(400);
     });
 
     it('filters recordings by an artist credited on their tracks', async () => {
@@ -187,14 +187,14 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
     });
   });
 
-  describe('releases with their tracks', () => {
-    it('includes the tracks of a release and their recordings, and derives its explicit content', async () => {
-      const { body } = await getJsonApi(app, `/v1/releases/${publicIds.standard}?include=tracks.recording`).expect(200);
+  describe('editions with their tracks', () => {
+    it('includes the tracks of an edition and their recordings, and derives its explicit content', async () => {
+      const { body } = await getJsonApi(app, `/v1/editions/${publicIds.standard}?include=tracks.recording`).expect(200);
 
       expect(body.data.attributes.isExplicit).toBe(true);
       expect(body.data.relationships.tracks.data.map(({ id }: { id: string }) => id)).toEqual([tracks.first, tracks.second, tracks.bonus]);
       expect(body.included.filter(({ type }: { type: string }) => type === 'recordings')).toHaveLength(3);
-      expect((await getJsonApi(app, `/v1/releases/${publicIds.hotter}`).expect(200)).body.data.attributes.isExplicit).toBe(false);
+      expect((await getJsonApi(app, `/v1/editions/${publicIds.hotter}`).expect(200)).body.data.attributes.isExplicit).toBe(false);
     });
   });
 

@@ -2,7 +2,7 @@ import { EntityManager } from 'typeorm';
 import { identityPublicIdsOf, identityRootOfPublicId } from '../catalog-identities/identity-relations';
 import { eventPublicIdsOf, eventRootOfPublicId, tourPublicIdsOf, tourRootOfPublicId } from '../live-events/live-events';
 import { recordingPublicIdsOf, recordingRootOfPublicId } from '../music/recordings';
-import { releaseGroupPublicIdsOf, releaseGroupRootOfPublicId, releasePublicIdsOf, releaseRootOfPublicId } from '../music/releases';
+import { editionPublicIdsOf, editionRootOfPublicId, releasePublicIdsOf, releaseRootOfPublicId } from '../music/releases';
 import { workPublicIdsOf, workRootOfPublicId } from '../music/works';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 
@@ -23,8 +23,8 @@ const PUBLIC_IDS: Record<
   identity: { rootOf: identityRootOfPublicId, publicIdsOf: identityPublicIdsOf },
   work: { rootOf: workRootOfPublicId, publicIdsOf: workPublicIdsOf },
   recording: { rootOf: recordingRootOfPublicId, publicIdsOf: recordingPublicIdsOf },
-  release_group: { rootOf: releaseGroupRootOfPublicId, publicIdsOf: releaseGroupPublicIdsOf },
   release: { rootOf: releaseRootOfPublicId, publicIdsOf: releasePublicIdsOf },
+  edition: { rootOf: editionRootOfPublicId, publicIdsOf: editionPublicIdsOf },
   event: { rootOf: eventRootOfPublicId, publicIdsOf: eventPublicIdsOf },
   tour: { rootOf: tourRootOfPublicId, publicIdsOf: tourPublicIdsOf },
 };

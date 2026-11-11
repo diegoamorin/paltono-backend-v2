@@ -102,14 +102,14 @@ describe('image URLs of the catalog', () => {
       creation: async (url) => ({ targetPath: 'catalog_identities', value: { type: 'person', displayName: 'IU', person: { imgFullBody: url } } }),
     },
     {
-      entityType: 'release',
-      fieldPath: 'releases.cover_art_url',
+      entityType: 'edition',
+      fieldPath: 'editions.cover_art_url',
       member: 'coverArtUrl',
-      resource: 'releases',
+      resource: 'editions',
       attribute: 'coverArt',
       creation: async (url) => {
-        const group = await publish('release_group', 'release_groups', { title: 'BE', type: 'album' });
-        return { targetPath: 'releases', value: { releaseGroup: { entity_id: group.entityId }, coverArtUrl: url } };
+        const release = await publish('release', 'releases', { title: 'BE', type: 'album' });
+        return { targetPath: 'editions', value: { release: { entity_id: release.entityId }, coverArtUrl: url } };
       },
     },
     {

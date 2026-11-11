@@ -1,4 +1,1090 @@
 {
+  "edition.add_relation.edition_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.add_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y pista"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "edition.add_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recording",
+            "discNumber",
+            "trackNumber"
+          ],
+          "properties": {
+            "recording": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
+            },
+            "discNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "trackNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edition_id"
+      ],
+      "properties": {
+        "edition_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la edición: la del microcambio"
+        }
+      }
+    }
+  },
+  "edition.create_entity.editions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "release"
+          ],
+          "properties": {
+            "release": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial del lanzamiento: publicado, o creado en la misma propuesta"
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "null muestra el título del lanzamiento"
+            },
+            "editionName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
+            },
+            "releaseDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "releaseTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local anunciada, HH:MM"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
+            },
+            "coverArtUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
+            },
+            "isCancelled": {
+              "type": "boolean",
+              "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.remove_relation.edition_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edition.remove_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "edition.remove_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edition.set_fields.editions.cover_art_url.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 2048,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
+          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.set_fields.editions.edition_name.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "\\S",
+          "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.set_fields.editions.is_cancelled.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "boolean",
+          "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.set_fields.editions.release.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial del lanzamiento de destino"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.set_fields.editions.release_date.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "releaseDate",
+            "releaseTime",
+            "timezone"
+          ],
+          "properties": {
+            "releaseDate": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "year"
+                  ],
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9999
+                    },
+                    "month": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 12
+                    },
+                    "day": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 31
+                    }
+                  },
+                  "dependentRequired": {
+                    "day": [
+                      "month"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "releaseTime": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Hora local anunciada, HH:MM"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 64,
+              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.set_fields.editions.title.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S",
+          "description": "null muestra el título del lanzamiento"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
+  "edition.update_relation.edition_contributions.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "roleId",
+            "position"
+          ],
+          "properties": {
+            "identity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
+            },
+            "roleId": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden editorial, no importancia ni porcentaje"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            },
+            "details": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceText": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 10000
+            },
+            "sourceUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edition.update_relation.track_artist_credits.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rank",
+            "position"
+          ],
+          "properties": {
+            "rank": {
+              "enum": [
+                "main",
+                "featured",
+                "remixer"
+              ],
+              "description": "`main`, `featured` o `remixer`; una por artista y pista"
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 32767,
+              "description": "Orden de presentación"
+            },
+            "creditedAs": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 200,
+              "pattern": "\\S",
+              "description": "Nombre literal de la fuente; null muestra el nombre visible"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "track_id",
+        "artist_id"
+      ],
+      "properties": {
+        "track_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ],
+          "description": "Pista de la edición, o inserción de este envío que la creará"
+        },
+        "artist_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
+        }
+      }
+    }
+  },
+  "edition.update_relation.tracks.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "recording",
+            "discNumber",
+            "trackNumber"
+          ],
+          "properties": {
+            "recording": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entity_id"
+              ],
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
+            },
+            "discNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "trackNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "\\S",
+              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "change_id"
+              ],
+              "properties": {
+                "change_id": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                }
+              },
+              "description": "Inserción de este envío que creará la fila, mientras no existe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edition.withdraw_entity.publication_status.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "const": "withdrawn"
+        }
+      }
+    },
+    "targetKeySchema": null
+  },
   "event.add_relation.event_artists.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -5149,7 +6235,7 @@
     },
     "targetKeySchema": null
   },
-  "release.add_relation.release_contributions.v1": {
+  "release.add_relation.release_artist_credits.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -5166,103 +6252,9 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "identity",
-            "roleId",
             "position"
           ],
           "properties": {
-            "identity": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "entity_id"
-              ],
-              "properties": {
-                "entity_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
-            },
-            "roleId": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647,
-              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
-            },
-            "position": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32767,
-              "description": "Orden editorial, no importancia ni porcentaje"
-            },
-            "creditedAs": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 200,
-              "pattern": "\\S",
-              "description": "Nombre literal de la fuente; null muestra el nombre visible"
-            },
-            "details": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 10000
-            },
-            "sourceText": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 10000
-            },
-            "sourceUrl": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.add_relation.track_artist_credits.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "rank",
-            "position"
-          ],
-          "properties": {
-            "rank": {
-              "enum": [
-                "main",
-                "featured",
-                "remixer"
-              ],
-              "description": "`main`, `featured` o `remixer`; una por artista y pista"
-            },
             "position": {
               "type": "integer",
               "minimum": 0,
@@ -5286,1003 +6278,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "track_id",
+        "release_id",
         "artist_id"
-      ],
-      "properties": {
-        "track_id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ],
-          "description": "Pista de la edición, o inserción de este envío que la creará"
-        },
-        "artist_id": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "entity_id"
-          ],
-          "properties": {
-            "entity_id": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-            }
-          },
-          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
-        }
-      }
-    }
-  },
-  "release.add_relation.tracks.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "recording",
-            "discNumber",
-            "trackNumber"
-          ],
-          "properties": {
-            "recording": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "entity_id"
-              ],
-              "properties": {
-                "entity_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
-            },
-            "discNumber": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "trackNumber": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "title": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "minLength": 1,
-              "maxLength": 512,
-              "pattern": "\\S",
-              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "release_id"
       ],
       "properties": {
         "release_id": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "entity_id"
-          ],
-          "properties": {
-            "entity_id": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-            }
-          },
-          "description": "Raíz editorial de la edición: la del microcambio"
-        }
-      }
-    }
-  },
-  "release.create_entity.releases.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "releaseGroup"
-          ],
-          "properties": {
-            "releaseGroup": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "entity_id"
-              ],
-              "properties": {
-                "entity_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Raíz editorial del lanzamiento: publicado, o creado en la misma propuesta"
-            },
-            "title": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "minLength": 1,
-              "maxLength": 512,
-              "pattern": "\\S",
-              "description": "null muestra el título del lanzamiento"
-            },
-            "editionName": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "minLength": 1,
-              "maxLength": 200,
-              "pattern": "\\S",
-              "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
-            },
-            "releaseDate": {
-              "anyOf": [
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "year"
-                  ],
-                  "properties": {
-                    "year": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 9999
-                    },
-                    "month": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 12
-                    },
-                    "day": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 31
-                    }
-                  },
-                  "dependentRequired": {
-                    "day": [
-                      "month"
-                    ]
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "releaseTime": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
-              "description": "Hora local anunciada, HH:MM"
-            },
-            "timezone": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 64,
-              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
-            },
-            "coverArtUrl": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
-              "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
-            },
-            "isCancelled": {
-              "type": "boolean",
-              "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.remove_relation.release_contributions.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists"
-      ],
-      "properties": {
-        "exists": {
-          "const": false
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "release.remove_relation.track_artist_credits.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists"
-      ],
-      "properties": {
-        "exists": {
-          "const": false
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "track_id",
-        "artist_id"
-      ],
-      "properties": {
-        "track_id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ],
-          "description": "Pista de la edición, o inserción de este envío que la creará"
-        },
-        "artist_id": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "entity_id"
-          ],
-          "properties": {
-            "entity_id": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-            }
-          },
-          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
-        }
-      }
-    }
-  },
-  "release.remove_relation.tracks.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists"
-      ],
-      "properties": {
-        "exists": {
-          "const": false
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "release.set_fields.releases.cover_art_url.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "maxLength": 2048,
-          "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$",
-          "description": "URL de una imagen subida para el catálogo con POST /v1/images, o null"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.set_fields.releases.edition_name.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "minLength": 1,
-          "maxLength": 200,
-          "pattern": "\\S",
-          "description": "Deluxe, Sped Up, Japan Edition…; null para la edición estándar, como mucho una por lanzamiento"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.set_fields.releases.is_cancelled.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "boolean",
-          "description": "Una edición cancelada no tiene cuenta regresiva ni se considera publicada"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.set_fields.releases.release_date.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "releaseDate",
-            "releaseTime",
-            "timezone"
-          ],
-          "properties": {
-            "releaseDate": {
-              "anyOf": [
-                {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "year"
-                  ],
-                  "properties": {
-                    "year": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 9999
-                    },
-                    "month": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 12
-                    },
-                    "day": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 31
-                    }
-                  },
-                  "dependentRequired": {
-                    "day": [
-                      "month"
-                    ]
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "releaseTime": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
-              "description": "Hora local anunciada, HH:MM"
-            },
-            "timezone": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 64,
-              "description": "Zona IANA, como Asia/Seoul; nunca se deduce del país"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.set_fields.releases.release_group.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "entity_id"
-          ],
-          "properties": {
-            "entity_id": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-            }
-          },
-          "description": "Raíz editorial del lanzamiento de destino"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.set_fields.releases.title.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "minLength": 1,
-          "maxLength": 512,
-          "pattern": "\\S",
-          "description": "null muestra el título del lanzamiento"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release.update_relation.release_contributions.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "identity",
-            "roleId",
-            "position"
-          ],
-          "properties": {
-            "identity": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "entity_id"
-              ],
-              "properties": {
-                "entity_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Raíz editorial de la identidad acreditada: publicada, o creada en la misma propuesta"
-            },
-            "roleId": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647,
-              "description": "id en /v1/contribution-roles de un rol que admite este ámbito"
-            },
-            "position": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32767,
-              "description": "Orden editorial, no importancia ni porcentaje"
-            },
-            "creditedAs": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 200,
-              "pattern": "\\S",
-              "description": "Nombre literal de la fuente; null muestra el nombre visible"
-            },
-            "details": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 10000
-            },
-            "sourceText": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 10000
-            },
-            "sourceUrl": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "release.update_relation.track_artist_credits.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "rank",
-            "position"
-          ],
-          "properties": {
-            "rank": {
-              "enum": [
-                "main",
-                "featured",
-                "remixer"
-              ],
-              "description": "`main`, `featured` o `remixer`; una por artista y pista"
-            },
-            "position": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32767,
-              "description": "Orden de presentación"
-            },
-            "creditedAs": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 200,
-              "pattern": "\\S",
-              "description": "Nombre literal de la fuente; null muestra el nombre visible"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "track_id",
-        "artist_id"
-      ],
-      "properties": {
-        "track_id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ],
-          "description": "Pista de la edición, o inserción de este envío que la creará"
-        },
-        "artist_id": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "entity_id"
-          ],
-          "properties": {
-            "entity_id": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-            }
-          },
-          "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
-        }
-      }
-    }
-  },
-  "release.update_relation.tracks.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "recording",
-            "discNumber",
-            "trackNumber"
-          ],
-          "properties": {
-            "recording": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "entity_id"
-              ],
-              "properties": {
-                "entity_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Raíz editorial de la grabación: publicada, o creada en la misma propuesta"
-            },
-            "discNumber": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "trackNumber": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 32767
-            },
-            "title": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "minLength": 1,
-              "maxLength": 512,
-              "pattern": "\\S",
-              "description": "Título literal de la pista en esta edición; null muestra el título vigente de la grabación sin copiarlo"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "release.withdraw_entity.publication_status.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "const": "withdrawn"
-        }
-      }
-    },
-    "targetKeySchema": null
-  },
-  "release_group.add_relation.release_artist_credits.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "position"
-          ],
-          "properties": {
-            "position": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 32767,
-              "description": "Orden de presentación"
-            },
-            "creditedAs": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "maxLength": 200,
-              "pattern": "\\S",
-              "description": "Nombre literal de la fuente; null muestra el nombre visible"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "release_group_id",
-        "artist_id"
-      ],
-      "properties": {
-        "release_group_id": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -6313,7 +6313,7 @@
       }
     }
   },
-  "release_group.create_entity.release_groups.v1": {
+  "release.create_entity.releases.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6383,7 +6383,7 @@
     },
     "targetKeySchema": null
   },
-  "release_group.remove_relation.release_artist_credits.v1": {
+  "release.remove_relation.release_artist_credits.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6401,11 +6401,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "release_group_id",
+        "release_id",
         "artist_id"
       ],
       "properties": {
-        "release_group_id": {
+        "release_id": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -6436,7 +6436,7 @@
       }
     }
   },
-  "release_group.set_fields.release_groups.description.v1": {
+  "release.set_fields.releases.description.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6460,7 +6460,7 @@
     },
     "targetKeySchema": null
   },
-  "release_group.set_fields.release_groups.repackage_of.v1": {
+  "release.set_fields.releases.repackage_of.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6498,7 +6498,7 @@
     },
     "targetKeySchema": null
   },
-  "release_group.set_fields.release_groups.title.v1": {
+  "release.set_fields.releases.title.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6521,7 +6521,7 @@
     },
     "targetKeySchema": null
   },
-  "release_group.set_fields.release_groups.type.v1": {
+  "release.set_fields.releases.type.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6547,7 +6547,7 @@
     },
     "targetKeySchema": null
   },
-  "release_group.update_relation.release_artist_credits.v1": {
+  "release.update_relation.release_artist_credits.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
@@ -6590,11 +6590,11 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "release_group_id",
+        "release_id",
         "artist_id"
       ],
       "properties": {
-        "release_group_id": {
+        "release_id": {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -6625,7 +6625,7 @@
       }
     }
   },
-  "release_group.withdraw_entity.publication_status.v1": {
+  "release.withdraw_entity.publication_status.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",

@@ -1,5 +1,5 @@
 import { EntityManager } from 'typeorm';
-import { releaseIdOf } from '../music/releases';
+import { editionIdOf } from '../music/releases';
 import {
   TrackArtistCreditValue,
   TrackValue,
@@ -23,19 +23,19 @@ import type { OperationDefinition, RowKey, TargetProblem } from './operation-reg
 import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 
 /*
- * Relation changes of the tracks of a release, which owns them: the tracks,
+ * Relation changes of the tracks of an edition, which owns them: the tracks,
  * keyed by their generated id, and the printed credits of each track, keyed
- * by the track and the artist. An insertion names the release in its key, so
- * a release created by the same proposal can receive its tracks; a credit
+ * by the track and the artist. An insertion names the edition in its key, so
+ * an edition created by the same proposal can receive its tracks; a credit
  * names its track by id or by the insertion of the same proposal that creates
- * it. A track needs its recording and its release published, or published in
+ * it. A track needs its recording and its edition published, or published in
  * the same transaction. A track has no platform links: they are its
  * recording's (ADR 0009).
  */
 
 const ABSENT: ValueEnvelope = { exists: false };
 const TRACKS = 'tracks';
-/** The track a printed credit belongs to: a row of the tracks of the same release. */
+/** The track a printed credit belongs to: a row of the tracks of the same edition. */
 const TRACK_ROW = { track_id: { targetPath: TRACKS, resultMember: 'id' } };
 
 const ROW_ID = ROW_KEY.properties.id;
@@ -43,8 +43,8 @@ const ROW_ID = ROW_KEY.properties.id;
 const TRACK_PARENT_KEY = {
   type: 'object',
   additionalProperties: false,
-  required: ['release_id'],
-  properties: { release_id: reference('entity_id', 'Raíz editorial de la edición: la del microcambio') },
+  required: ['edition_id'],
+  properties: { edition_id: reference('entity_id', 'Raíz editorial de la edición: la del microcambio') },
 };
 
 const TRACK = {
@@ -65,8 +65,8 @@ const TRACK = {
   },
 };
 
-const releaseOf = async (manager: EntityManager, root: EditorialEntity) => releaseIdOf(manager, root.id);
-const releaseOrFail = async (manager: EntityManager, root: EditorialEntity) => (await releaseIdOf(manager, root.id))!;
+const editionOf = async (manager: EntityManager, root: EditorialEntity) => editionIdOf(manager, root.id);
+const editionOrFail = async (manager: EntityManager, root: EditorialEntity) => (await editionIdOf(manager, root.id))!;
 
 /** A track names its recording, which must be published or created by the same proposal. */
 const proposedTrackRules = {
@@ -76,11 +76,11 @@ const proposedTrackRules = {
 } satisfies Partial<OperationDefinition>;
 
 const readTrack = async (manager: EntityManager, root: EditorialEntity, key: RowKey | null): Promise<ValueEnvelope> => {
-  const releaseId = await releaseOf(manager, root);
-  return releaseId === null ? ABSENT : envelope(await findTrack(manager, releaseId, key!.id));
+  const editionId = await editionOf(manager, root);
+  return editionId === null ? ABSENT : envelope(await findTrack(manager, editionId, key!.id));
 };
 
-const trackBase = { entityType: 'release', targetPath: TRACKS, payloadSchemaVersion: 1, check: () => [], references: () => [] } satisfies Partial<OperationDefinition>;
+const trackBase = { entityType: 'edition', targetPath: TRACKS, payloadSchemaVersion: 1, check: () => [], references: () => [] } satisfies Partial<OperationDefinition>;
 
 const TRACK_CHANGES: OperationDefinition[] = [
   {
@@ -98,12 +98,12 @@ const TRACK_CHANGES: OperationDefinition[] = [
     },
     // The track the proposed position would collide with.
     read: async (manager, root, _key, value) => {
-      const releaseId = await releaseOf(manager, root);
-      return releaseId === null ? ABSENT : envelope(await findTrackAt(manager, releaseId, value as TrackValue));
+      const editionId = await editionOf(manager, root);
+      return editionId === null ? ABSENT : envelope(await findTrackAt(manager, editionId, value as TrackValue));
     },
-    constraintProblems: async (manager, root, _key, value) => trackClashes(manager, await releaseOrFail(manager, root), value as TrackValue, null),
+    constraintProblems: async (manager, root, _key, value) => trackClashes(manager, await editionOrFail(manager, root), value as TrackValue, null),
     apply: async (manager, root, value, now) => {
-      const id = await insertTrack(manager, await releaseOrFail(manager, root), value as TrackValue, now);
+      const id = await insertTrack(manager, await editionOrFail(manager, root), value as TrackValue, now);
       return { afterValue: await readTrack(manager, root, { id }), resultKey: { id } };
     },
   },
@@ -117,10 +117,10 @@ const TRACK_CHANGES: OperationDefinition[] = [
     read: readTrack,
     constraintProblems: async (manager, root, key, value) => {
       if (!(await readTrack(manager, root, key)).exists) return ['La pista ya no existe'];
-      return trackClashes(manager, await releaseOrFail(manager, root), value as TrackValue, key!.id);
+      return trackClashes(manager, await editionOrFail(manager, root), value as TrackValue, key!.id);
     },
     apply: async (manager, root, value, now, key) => {
-      await updateTrack(manager, await releaseOrFail(manager, root), key!.id, value as TrackValue, now);
+      await updateTrack(manager, await editionOrFail(manager, root), key!.id, value as TrackValue, now);
       return { afterValue: await readTrack(manager, root, key), resultKey: key };
     },
   },
@@ -131,31 +131,31 @@ const TRACK_CHANGES: OperationDefinition[] = [
     valueSchema: null,
     targetKeySchema: ROW_KEY,
     read: readTrack,
-    constraintProblems: async (manager, root, key) => trackReferences(manager, await releaseOrFail(manager, root), key!.id),
+    constraintProblems: async (manager, root, key) => trackReferences(manager, await editionOrFail(manager, root), key!.id),
     apply: async (manager, root, _value, now, key) => {
-      await deleteTrack(manager, await releaseOrFail(manager, root), key!.id, now);
+      await deleteTrack(manager, await editionOrFail(manager, root), key!.id, now);
       return { afterValue: ABSENT, resultKey: key };
     },
   },
 ];
 
-/** A track a key names by its id belongs to the release; one an insertion creates does by construction. */
+/** A track a key names by its id belongs to the edition; one an insertion creates does by construction. */
 async function trackProblems(manager: EntityManager, root: EditorialEntity, targetKey: object | null): Promise<TargetProblem[]> {
   const trackId = (targetKey as { track_id: unknown }).track_id;
-  const releaseId = await releaseOf(manager, root);
-  if (typeof trackId !== 'number' || releaseId === null || (await isTrackOf(manager, releaseId, trackId))) return [];
-  return [{ code: 'relation_row_not_found', detail: 'The release has no track with this id', member: 'targetKey/track_id' }];
+  const editionId = await editionOf(manager, root);
+  if (typeof trackId !== 'number' || editionId === null || (await isTrackOf(manager, editionId, trackId))) return [];
+  return [{ code: 'relation_row_not_found', detail: 'The edition has no track with this id', member: 'targetKey/track_id' }];
 }
 
-/** The track a resolved key names is still a track of the release. */
+/** The track a resolved key names is still a track of the edition. */
 async function trackGone(manager: EntityManager, root: EditorialEntity, key: RowKey | null): Promise<string[]> {
-  return (await isTrackOf(manager, await releaseOrFail(manager, root), key!.track_id)) ? [] : ['La pista ya no existe'];
+  return (await isTrackOf(manager, await editionOrFail(manager, root), key!.track_id)) ? [] : ['La pista ya no existe'];
 }
 
 // Printed credits of a track (ADR 0008): the payload keeps its v1, only its meaning changed
 
 const TRACK_CREDIT_CHANGES = artistCreditChanges({
-  entityType: 'release',
+  entityType: 'edition',
   targetPath: 'track_artist_credits',
   ownerKey: { track_id: { ...ROW_ID, description: 'Pista de la edición, o inserción de este envío que la creará' } },
   keyRows: TRACK_ROW,
@@ -171,16 +171,16 @@ const TRACK_CREDIT_CHANGES = artistCreditChanges({
       'guarda sus valores anteriores.',
   },
   find: async (manager, root, key) => {
-    const releaseId = await releaseOf(manager, root);
-    return releaseId === null ? null : findTrackArtistCredit(manager, releaseId, key.track_id, key.artist_id);
+    const editionId = await editionOf(manager, root);
+    return editionId === null ? null : findTrackArtistCredit(manager, editionId, key.track_id, key.artist_id);
   },
   write: async (manager, root, key, value, now) =>
-    writeTrackArtistCredit(manager, await releaseOrFail(manager, root), key.track_id, key.artist_id, value as TrackArtistCreditValue, now),
+    writeTrackArtistCredit(manager, await editionOrFail(manager, root), key.track_id, key.artist_id, value as TrackArtistCreditValue, now),
   remove: async (manager, root, key, now) =>
-    deleteTrackArtistCredit(manager, await releaseOrFail(manager, root), key.track_id, key.artist_id, now),
+    deleteTrackArtistCredit(manager, await editionOrFail(manager, root), key.track_id, key.artist_id, now),
   ownerProblems: trackProblems,
   ownerGone: trackGone,
 });
 
-export const RELEASE_TRACK_CHANGES: OperationDefinition[] = [...TRACK_CHANGES, ...TRACK_CREDIT_CHANGES];
+export const EDITION_TRACK_CHANGES: OperationDefinition[] = [...TRACK_CHANGES, ...TRACK_CREDIT_CHANGES];
 

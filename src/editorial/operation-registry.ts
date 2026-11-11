@@ -16,7 +16,7 @@ import { IDENTITY_FIELD_CHANGES, IDENTITY_FIELD_CHANGES_V1 } from './identity-fi
 import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 import { EVENT_CHANGES, TOUR_CHANGES } from './live-event-changes';
 import { RECORDING_CHANGES } from './recording-changes';
-import { RELEASE_CHANGES, RELEASE_GROUP_CHANGES } from './release-changes';
+import { EDITION_CHANGES, RELEASE_CHANGES } from './release-changes';
 import { WORK_CHANGES } from './work-changes';
 
 /*
@@ -197,10 +197,10 @@ export const OPERATIONS: readonly PublishedOperation[] = [
   withdrawalOf('work'),
   ...RECORDING_CHANGES,
   withdrawalOf('recording'),
-  ...RELEASE_GROUP_CHANGES,
-  withdrawalOf('release_group'),
   ...RELEASE_CHANGES,
   withdrawalOf('release'),
+  ...EDITION_CHANGES,
+  withdrawalOf('edition'),
   ...TOUR_CHANGES,
   withdrawalOf('tour'),
   ...EVENT_CHANGES,

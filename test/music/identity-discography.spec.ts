@@ -17,9 +17,9 @@ const ofType = (body: Document, type: string) => (body.included ?? []).filter((r
  * The credits of an identity read as a discography: with the artists of what
  * they credit, and sorted by when it came out. Andrés, a composer and producer
  * without an artist profile, is credited on "Sin Pijama" by Becky G and Natti
- * Natasha, on the work "Árbol" first recorded by Natti Natasha, on a release
- * and on entries without a date. And the artists of recordings and release
- * groups among search results.
+ * Natasha, on the work "Árbol" first recorded by Natti Natasha, on an edition
+ * and on entries without a date. And the artists of recordings and releases
+ * among search results.
  */
 describe('the credits of an identity as a discography, and artists in search', () => {
   let app: TestApp;
@@ -63,17 +63,17 @@ describe('the credits of an identity as a discography, and artists in search', (
     publicIds[`${name}Artist`] = body.data.relationships.artist.data.id;
   }
 
-  /** A release of its own release group, titled after the name, with a track of each recording. */
-  async function publishRelease(name: string, title: string, value: object, recordings: string[]): Promise<void> {
-    await publishRoot(`${name}Group`, 'release_group', 'release_groups', { title, type: 'single' });
-    await publishRoot(name, 'release', 'releases', { releaseGroup: { entity_id: roots[`${name}Group`] }, ...value });
+  /** An edition of its own release, `${name}Release`, titled after the name, with a track of each recording. */
+  async function publishEdition(name: string, title: string, value: object, recordings: string[]): Promise<void> {
+    await publishRoot(`${name}Release`, 'release', 'releases', { title, type: 'single' });
+    await publishRoot(name, 'edition', 'editions', { release: { entity_id: roots[`${name}Release`] }, ...value });
     if (recordings.length === 0) return;
     await publish(
       recordings.map((recording) => ({
         entityId: roots[name],
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: { entity_id: roots[name] } },
+        targetKey: { edition_id: { entity_id: roots[name] } },
         proposedValue: present({ recording: { entity_id: roots[recording] }, discNumber: 1, trackNumber: ++trackNumber }),
       })),
     );
@@ -98,7 +98,7 @@ describe('the credits of an identity as a discography, and artists in search', (
   /** The names of what each credit of the page credits, in order. */
   const credited = (body: Document) =>
     body.data.map(({ relationships }) => {
-      const target = (relationships.work ?? relationships.recording ?? relationships.release).data as Linkage;
+      const target = (relationships.work ?? relationships.recording ?? relationships.edition).data as Linkage;
       return Object.keys(publicIds).find((name) => publicIds[name] === target.id);
     });
 
@@ -114,7 +114,7 @@ describe('the credits of an identity as a discography, and artists in search', (
     };
     await role('composer', 'work');
     await role('producer', 'recording');
-    await role('mastering', 'release');
+    await role('mastering', 'edition');
 
     await publishArtist('becky', 'Becky G');
     await publishArtist('natti', 'Natti Natasha');
@@ -131,15 +131,15 @@ describe('the credits of an identity as a discography, and artists in search', (
       recordingCredit('original', 'natti', 0),
       { entityId: roots.original, operation: 'add_relation', targetPath: 'recording_works', proposedValue: present({ work: { entity_id: roots.arbol }, relationType: 'performance' }) },
     ]);
-    await publishRelease('single', 'Sin Pijama', { releaseDate: proposed(2018, 4, 20) }, ['sinPijama']);
-    await publishRelease('arbolSingle', 'Árbol', { releaseDate: proposed(2010, 3, 1) }, ['original']);
-    await publishRelease('remaster', 'Remasterizado', { releaseDate: proposed(2005, 6) }, []);
+    await publishEdition('single', 'Sin Pijama', { releaseDate: proposed(2018, 4, 20) }, ['sinPijama']);
+    await publishEdition('arbolSingle', 'Árbol', { releaseDate: proposed(2010, 3, 1) }, ['original']);
+    await publishEdition('remaster', 'Remasterizado', { releaseDate: proposed(2005, 6) }, []);
     await publish([
       {
-        entityId: roots.singleGroup,
+        entityId: roots.singleRelease,
         operation: 'add_relation',
         targetPath: 'release_artist_credits',
-        targetKey: { release_group_id: { entity_id: roots.singleGroup }, artist_id: { entity_id: roots.becky } },
+        targetKey: { release_id: { entity_id: roots.singleRelease }, artist_id: { entity_id: roots.becky } },
         proposedValue: present({ position: 0 }),
       },
     ]);
@@ -149,7 +149,7 @@ describe('the credits of an identity as a discography, and artists in search', (
       ['unreleased', 'recording_contributions', 'producer'],
       ['sinPijama', 'recording_contributions', 'producer'],
       ['arbol', 'work_contributions', 'composer'],
-      ['remaster', 'release_contributions', 'mastering'],
+      ['remaster', 'edition_contributions', 'mastering'],
       ['unrecorded', 'work_contributions', 'composer'],
     ];
     for (const [name, targetPath, role] of credits) {
@@ -188,6 +188,13 @@ describe('the credits of an identity as a discography, and artists in search', (
       expect(ofType(body, 'recording-artist-credits').map(({ attributes }) => attributes.displayName)).toEqual(['Becky G', 'Natti Natasha']);
     });
 
+    it('filter the credits of editions, which include their edition', async () => {
+      const body = await creditsOf('&filter[scope]=edition&include=edition');
+      expect(body.data.map(({ type }) => type)).toEqual(['edition-contributions']);
+      expect(credited(body)).toEqual(['remaster']);
+      expect(ofType(body, 'editions').map(({ id }) => id)).toEqual([publicIds.remaster]);
+    });
+
     it('include the first recording of a credited work and its artists', async () => {
       const body = await creditsOf('&filter[scope]=work&include=work.firstRecording,work.firstRecordingArtistCredits');
       const arbol = ofType(body, 'works').find(({ id }) => id === publicIds.arbol)!;
@@ -200,10 +207,10 @@ describe('the credits of an identity as a discography, and artists in search', (
   describe('search', () => {
     const search = (query: string) => getJsonApi(app, `/v1/search?filter[q]=sin%20pijama${query}`).expect(200);
 
-    it('includes the artists of recordings and release groups on request', async () => {
+    it('includes the artists of recordings and releases on request', async () => {
       const { body } = await search('&include=artistCredits.artist');
       expect(body.data.map(({ type, id }: Linkage) => `${type}:${id}`).sort()).toEqual(
-        [`recordings:${publicIds.sinPijama}`, `release-groups:${publicIds.singleGroup}`].sort(),
+        [`recordings:${publicIds.sinPijama}`, `releases:${publicIds.singleRelease}`].sort(),
       );
       expect(ofType(body, 'recording-artist-credits').map(({ attributes }) => attributes.displayName)).toEqual(['Becky G', 'Natti Natasha']);
       expect(ofType(body, 'release-artist-credits').map(({ attributes }) => attributes.displayName)).toEqual(['Becky G']);

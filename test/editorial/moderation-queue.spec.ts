@@ -112,6 +112,8 @@ describe('GET /v1/moderation/changes (E19)', () => {
     expect(await list('filter[status]=pending,conflicted&sort=-createdAt')).toEqual([pending.changeId, conflicted.changeId]);
     expect(await list('filter[entityType]=identity')).toHaveLength(2);
     expect(await list('filter[entityType]=work')).toEqual([]);
+    expect(await list('filter[entityType]=release')).toEqual([]);
+    expect(await list('filter[entityType]=edition')).toEqual([]);
     expect(await list('filter[operation]=create_entity')).toEqual([pending.changeId]);
     expect(await list(`filter[author]=${luis.uuid}`)).toHaveLength(2);
     expect(await list(`filter[author]=${ana.uuid}`)).toEqual([]);
@@ -123,6 +125,7 @@ describe('GET /v1/moderation/changes (E19)', () => {
       'filter[status]=applied',
       'filter[operation]=drop_table',
       'filter[entityType]=song',
+      `filter[entityType]=release${'_group'}`,
       'filter[author]=nobody',
       'filter[entity]=nothing',
       'filter[proposal]=x',

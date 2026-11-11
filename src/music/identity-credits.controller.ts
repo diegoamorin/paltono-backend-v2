@@ -6,13 +6,13 @@ import { CollectionQuery, collectionQuery } from '../common/json-api/query';
 import { ApiJsonApiCollectionResponse, ApiJsonApiErrorResponses, ApiJsonApiQuery } from '../common/json-api/swagger';
 import { IdentityCreditsService } from './identity-credits.service';
 import { CreditResource, recordingContributionSchema, workContributionSchema } from './music.resource';
-import { releaseContributionSchema } from './release.resource';
+import { editionContributionSchema } from './release.resource';
 
-const SCHEMAS = { work: workContributionSchema, recording: recordingContributionSchema, release: releaseContributionSchema };
+const SCHEMAS = { work: workContributionSchema, recording: recordingContributionSchema, edition: editionContributionSchema };
 
 const CREDITS_QUERY = collectionQuery(workContributionSchema, {
-  alsoOf: [recordingContributionSchema, releaseContributionSchema],
-  include: ['work', 'work.firstRecording', 'work.firstRecordingArtistCredits', 'recording', 'recording.artistCredits', 'release', 'role'],
+  alsoOf: [recordingContributionSchema, editionContributionSchema],
+  include: ['work', 'work.firstRecording', 'work.firstRecordingArtistCredits', 'recording', 'recording.artistCredits', 'edition', 'role'],
   sort: ['createdAt', 'releaseDate'],
   defaultSort: 'createdAt',
   filters: ['scope', 'role'],
@@ -28,9 +28,9 @@ export class IdentityCreditsController {
     summary: 'Créditos de una identidad',
     description:
       'Documento heterogéneo con los créditos de la identidad en obras publicadas (`work-contributions`), grabaciones publicadas ' +
-      '(`recording-contributions`) y ediciones publicadas (`release-contributions`). `filter[scope]` admite `work`, `recording` y ' +
-      '`release`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, ' +
-      '`work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `release` y `role`, para leer los créditos como ' +
+      '(`recording-contributions`) y ediciones publicadas (`edition-contributions`). `filter[scope]` admite `work`, `recording` y ' +
+      '`edition`; `filter[role]` toma el slug de un rol musical. `include` admite `work`, `work.firstRecording`, ' +
+      '`work.firstRecordingArtistCredits`, `recording`, `recording.artistCredits`, `edition` y `role`, para leer los créditos como ' +
       'una discografía con los artistas de cada grabación. Orden `createdAt` (por defecto), `-createdAt`, `releaseDate` o ' +
       '`-releaseDate`: la fecha de lanzamiento de lo que acredita cada crédito (la grabación, la primera grabación de la obra o la ' +
       'edición), con los créditos sin fecha al final en ambos sentidos y, entre iguales, el orden por defecto. Una identidad ' +

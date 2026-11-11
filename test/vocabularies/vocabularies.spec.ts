@@ -423,7 +423,7 @@ describe('vocabularies', () => {
     it('filters by category and scope and sorts by name or category', async () => {
       const vocals = await role('vocals', 'Voz', 'performance', ['recording', 'membership']);
       const lyricist = await role('lyricist', 'Letra', 'writing', ['work']);
-      const mixing = await role('mixing', 'Mezcla', 'engineering', ['recording', 'release']);
+      const mixing = await role('mixing', 'Mezcla', 'engineering', ['recording', 'edition']);
 
       expect(await listIds('contribution-roles')).toEqual([lyricist, mixing, vocals]);
       // Categories sort in their declared order: writing, arrangement, performance, production, engineering.
@@ -434,8 +434,8 @@ describe('vocabularies', () => {
       expect(await listIds('contribution-roles', { 'filter[slug]': 'mixing' })).toEqual([mixing]);
 
       // Filtering by scope still lists every scope of the matching roles.
-      const listed = await getPublic(app, 'contribution-roles', { 'filter[scope]': 'release' }).expect(200);
-      expect(listed.body.data[0].attributes.scopes).toEqual(['recording', 'release']);
+      const listed = await getPublic(app, 'contribution-roles', { 'filter[scope]': 'edition' }).expect(200);
+      expect(listed.body.data[0].attributes.scopes).toEqual(['recording', 'edition']);
 
       await getPublic(app, 'contribution-roles', { 'filter[category]': 'marketing' }).expect(400);
       await getPublic(app, 'contribution-roles', { 'filter[scope]': 'album' }).expect(400);

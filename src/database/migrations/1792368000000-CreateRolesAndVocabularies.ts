@@ -87,7 +87,7 @@ export class CreateRolesAndVocabularies1792368000000 implements MigrationInterfa
     await queryRunner.query(
       `CREATE TYPE contribution_role_category AS ENUM ('writing', 'arrangement', 'performance', 'production', 'engineering')`,
     );
-    await queryRunner.query(`CREATE TYPE contribution_role_scope AS ENUM ('work', 'recording', 'release', 'membership')`);
+    await queryRunner.query(`CREATE TYPE contribution_role_scope AS ENUM ('work', 'recording', 'edition', 'membership')`);
 
     await queryRunner.query(`
       CREATE TABLE contribution_roles (

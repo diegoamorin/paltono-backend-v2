@@ -119,21 +119,21 @@ export interface TrackSpec {
   artists?: ArtistCreditSpec[];
 }
 
-export interface ReleaseSpec {
-  /** Absent for the standard edition, at most one per release group. */
+export interface EditionSpec {
+  /** Absent for the standard edition, at most one per release. */
   editionName?: string;
   releaseDate?: PartialDateValue;
   /** HH:MM, local to `timezone`; only with a complete date. A countdown goes to this instant. */
   releaseTime?: string;
   timezone?: string;
   isCancelled?: boolean;
-  /** Credits of the edition itself, in the `release` scope. */
+  /** Credits of the edition itself, in the `edition` scope. */
   credits?: CreditSpec[];
   /** An unknown tracklist stays empty. */
   tracks?: TrackSpec[];
 }
 
-export interface ReleaseGroupSpec {
+export interface ReleaseSpec {
   key: string;
   title: string;
   type: ReleaseType;
@@ -142,7 +142,7 @@ export interface ReleaseGroupSpec {
   repackageOf?: string;
   /** The artists it is presented with, in order. */
   artists: string[];
-  releases: ReleaseSpec[];
+  editions: EditionSpec[];
 }
 
 export interface LiveArtistSpec {
@@ -207,7 +207,7 @@ export interface Submission {
   memberships?: { organization: string; members: MemberSpec[]; source: string }[];
   works?: WorkSpec[];
   recordings?: RecordingSpec[];
-  releaseGroups?: ReleaseGroupSpec[];
+  releases?: ReleaseSpec[];
   tours?: TourSpec[];
   events?: EventSpec[];
   fieldChanges?: FieldChangeSpec[];
@@ -240,7 +240,7 @@ export class CatalogWriter {
   async write(author: User, submission: Submission): Promise<void> {
     const plan: Plan = { creations: [], completions: [] };
     const { organizations = [], people = [], memberships = [], works = [], recordings = [] } = submission;
-    const { releaseGroups = [], tours = [], events = [], fieldChanges = [] } = submission;
+    const { releases = [], tours = [], events = [], fieldChanges = [] } = submission;
 
     for (const organization of organizations) await this.planOrganization(author, plan, organization);
     for (const person of people) await this.planPerson(author, plan, person);
@@ -256,7 +256,7 @@ export class CatalogWriter {
     }
     for (const work of works) await this.planWork(author, plan, work);
     for (const recording of recordings) await this.planRecording(author, plan, recording);
-    for (const group of releaseGroups) await this.planReleaseGroup(author, plan, group);
+    for (const release of releases) await this.planRelease(author, plan, release);
     for (const tour of tours) await this.planTour(author, plan, tour);
     for (const event of events) await this.planEvent(author, plan, event);
     for (const { entry, targetPath, value } of fieldChanges) {
@@ -470,17 +470,17 @@ export class CatalogWriter {
   }
 
   /**
-   * A release group with its artist credits and its releases, each with
-   * its tracks and their printed credits: all keyed by roots or
-   * insertions of the same proposal. The credits of each release, keyed by
-   * their generated id, wait for the completion.
+   * A release with its artist credits and its editions, each with its
+   * tracks and their printed credits: all keyed by roots or insertions of
+   * the same proposal. The credits of each edition, keyed by their generated
+   * id, wait for the completion.
    */
-  private async planReleaseGroup(author: User, plan: Plan, spec: ReleaseGroupSpec): Promise<void> {
-    const id = await this.reserve(author, spec.key, 'release_group');
+  private async planRelease(author: User, plan: Plan, spec: ReleaseSpec): Promise<void> {
+    const id = await this.reserve(author, spec.key, 'release');
     plan.creations.push({
       entityId: id,
       operation: 'create_entity',
-      targetPath: 'release_groups',
+      targetPath: 'releases',
       value: {
         title: spec.title,
         type: spec.type,
@@ -493,21 +493,21 @@ export class CatalogWriter {
         entityId: id,
         operation: 'add_relation',
         targetPath: 'release_artist_credits',
-        targetKey: { release_group_id: entity(id), artist_id: entity(this.root(artist)) },
+        targetKey: { release_id: entity(id), artist_id: entity(this.root(artist)) },
         value: { position, creditedAs: null },
       });
     }
-    for (const release of spec.releases) await this.planRelease(author, plan, `${spec.key}#${release.editionName ?? 'standard'}`, id, release);
+    for (const edition of spec.editions) await this.planEdition(author, plan, `${spec.key}#${edition.editionName ?? 'standard'}`, id, edition);
   }
 
-  private async planRelease(author: User, plan: Plan, key: string, groupId: string, spec: ReleaseSpec): Promise<void> {
-    const id = await this.reserve(author, key, 'release');
+  private async planEdition(author: User, plan: Plan, key: string, releaseId: string, spec: EditionSpec): Promise<void> {
+    const id = await this.reserve(author, key, 'edition');
     plan.creations.push({
       entityId: id,
       operation: 'create_entity',
-      targetPath: 'releases',
+      targetPath: 'editions',
       value: {
-        releaseGroup: entity(groupId),
+        release: entity(releaseId),
         title: null,
         editionName: spec.editionName ?? null,
         releaseDate: spec.releaseDate ?? null,
@@ -527,7 +527,7 @@ export class CatalogWriter {
         entityId: id,
         operation: 'add_relation',
         targetPath: 'tracks',
-        targetKey: { release_id: entity(id) },
+        targetKey: { edition_id: entity(id) },
         value: { recording: entity(this.root(track.recording)), discNumber: disc, trackNumber: number, title: track.title ?? null },
         label,
       });
@@ -541,7 +541,7 @@ export class CatalogWriter {
         });
       }
     }
-    plan.completions.push(...this.credits(id, 'release_contributions', spec.credits));
+    plan.completions.push(...this.credits(id, 'edition_contributions', spec.credits));
   }
 
   private async planTour(author: User, plan: Plan, spec: TourSpec): Promise<void> {
