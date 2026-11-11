@@ -417,7 +417,10 @@ async function closeObsolete(manager: EntityManager, obsolete: ProposalChange[],
   for (const change of obsolete) {
     const root = await manager.findOneByOrFail(EditorialEntity, { id: change.entityId });
     const currentVersion = currentVersionOf({ entityType: root.entityType, operation: change.operation, targetPath: change.targetPath });
-    const reason = `La versión ${change.payloadSchemaVersion} del payload de ${change.targetPath} es obsoleta y no tiene traducción a la vigente, la ${currentVersion}`;
+    const reason =
+      currentVersion === undefined
+        ? `La operación de ${change.targetPath} se retiró y ninguna versión de su payload se aplica`
+        : `La versión ${change.payloadSchemaVersion} del payload de ${change.targetPath} es obsoleta y no tiene traducción a la vigente, la ${currentVersion}`;
     await recordDecision(manager, decisionOf(change, { root, current: null }, 'mark_obsolete', 'blocked', null, reason, now));
     closed.push({ ...change, status: 'blocked' });
   }

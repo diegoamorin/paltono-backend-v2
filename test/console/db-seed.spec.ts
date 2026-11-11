@@ -112,6 +112,18 @@ describe('pnpm db:seed', () => {
       expect(purposes).toEqual(['platform_icon']);
     });
 
+    it('links recordings where they can be heard, one link per platform', async () => {
+      const response = await getJsonApi(app, '/v1/recordings?filter[q]=Gangnam%20Style&include=platformLinks.platform').expect(200);
+
+      expect(response.body.data[0].relationships.platformLinks.data).toHaveLength(1);
+      expect(response.body.included).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'recording-platform-links', attributes: { url: 'https://www.youtube.com/watch?v=9bZkp7q19f0' } }),
+          expect.objectContaining({ type: 'platforms', attributes: expect.objectContaining({ slug: 'youtube', supportsRecording: true }) }),
+        ]),
+      );
+    });
+
     it('creates accounts of each role and status, among them the seed moderator', async () => {
       const admin = await accessTokenFor(app.server, 'seed_admin', SEED_PASSWORD);
 

@@ -17,6 +17,7 @@ import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 import { EVENT_CHANGES, TOUR_CHANGES } from './live-event-changes';
 import { RECORDING_CHANGES } from './recording-changes';
 import { RELEASE_CHANGES, RELEASE_GROUP_CHANGES } from './release-changes';
+import { RETIRED_TRACK_PLATFORM_LINK_CHANGES } from './track-changes';
 import { WORK_CHANGES } from './work-changes';
 
 /*
@@ -200,6 +201,7 @@ export const OPERATIONS: readonly PublishedOperation[] = [
   ...RELEASE_GROUP_CHANGES,
   withdrawalOf('release_group'),
   ...RELEASE_CHANGES,
+  ...RETIRED_TRACK_PLATFORM_LINK_CHANGES,
   withdrawalOf('release'),
   ...TOUR_CHANGES,
   withdrawalOf('tour'),
@@ -235,10 +237,17 @@ function versionsOf({ entityType, operation, targetPath }: Selector): PublishedO
   return registry.filter((each) => each.entityType === entityType && each.operation === operation && each.targetPath === targetPath);
 }
 
-/** The current version of a selector, or undefined when the registry has none. */
+/**
+ * The current version of a selector: its highest, while it has code to apply
+ * it with. A selector whose highest version has none was retired, so every
+ * version is obsolete, like the platform links of a track (ADR 0009). Undefined
+ * when the registry has no current version.
+ */
 export function currentVersionOf(selector: Selector): number | undefined {
-  const versions = versionsOf(selector).map(({ payloadSchemaVersion }) => payloadSchemaVersion);
-  return versions.length === 0 ? undefined : Math.max(...versions);
+  const versions = versionsOf(selector);
+  if (versions.length === 0) return undefined;
+  const highest = versions.reduce((found, each) => (each.payloadSchemaVersion > found.payloadSchemaVersion ? each : found));
+  return isExecutable(highest) ? highest.payloadSchemaVersion : undefined;
 }
 
 export function versionStatus(entry: PublishedOperation): VersionStatus {
@@ -268,11 +277,12 @@ export interface ChangeSelector {
 /**
  * How a microchange's selector and version resolve: to the definition it
  * applies with while its version is current, as obsolete once a higher one
- * replaced it, or to nothing outside the registry.
+ * replaced it or its selector was retired (no current version), or to nothing
+ * outside the registry.
  */
 export type Resolution =
   | { status: 'current'; definition: OperationDefinition }
-  | { status: 'obsolete'; currentVersion: number }
+  | { status: 'obsolete'; currentVersion: number | undefined }
   | { status: 'unregistered' };
 
 /**
@@ -284,12 +294,14 @@ export function resolveOperation(
   entityType: EditorialEntityType,
   { operation, targetPath, payloadSchemaVersion }: ChangeSelector,
 ): Resolution {
-  const versions = versionsOf({ entityType, operation: operation as ChangeOperation, targetPath });
+  const selector = { entityType, operation: operation as ChangeOperation, targetPath };
+  const versions = versionsOf(selector);
+  const currentVersion = currentVersionOf(selector);
+  // A new microchange without a version takes the current one; a retired selector has none to give it.
+  if (payloadSchemaVersion === undefined && versions.length > 0 && currentVersion === undefined) return { status: 'obsolete', currentVersion };
   const entry = versions.find((each) => each.payloadSchemaVersion === payloadSchemaVersion);
   if (!entry) return { status: 'unregistered' };
-  const currentVersion = currentVersionOf(entry)!;
-  if (payloadSchemaVersion !== currentVersion) return { status: 'obsolete', currentVersion };
-  if (!isExecutable(entry)) throw new Error(`The current version of ${operationId(entry)} has no definition to apply it with`);
+  if (payloadSchemaVersion !== currentVersion || !isExecutable(entry)) return { status: 'obsolete', currentVersion };
   return { status: 'current', definition: entry };
 }
 

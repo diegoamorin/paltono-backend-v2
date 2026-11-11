@@ -12,6 +12,7 @@ import {
   reserveIdentity,
   submitProposal,
 } from '../support/editorial';
+import { uploadedPlatformIconUrl } from '../support/images';
 import { TestApp, createTestApp } from '../support/test-app';
 import { createdEntryId } from '../support/vocabularies';
 
@@ -255,6 +256,98 @@ describe('recordings in the editorial flow', () => {
       expect((await apply(linked).expect(409)).body.errors[0].code).toBe('dependency_unresolved');
       await apply(creation).expect(201);
       await apply(linked).expect(201);
+    });
+  });
+
+  describe('platform links (ADR 0009)', () => {
+    const SPOTIFY_URL = 'https://open.spotify.com/track/0t1kP63rueHleOhQkYSXFY';
+    let spotify: number;
+    let instagram: number;
+
+    beforeEach(async () => {
+      const platform = async (slug: string, supportsRecording: boolean) =>
+        Number(
+          await createdEntryId(app, admin.accessToken, 'platforms', {
+            name: slug,
+            slug,
+            iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, slug),
+            supportsRecording,
+          }),
+        );
+      spotify = await platform('spotify', true);
+      instagram = await platform('instagram', false);
+    });
+
+    const link = (entityId: string, platformId: number, url: string | null, operation = 'add_relation'): ChangeInput => ({
+      entityId,
+      operation,
+      targetPath: 'recording_platform_links',
+      targetKey: { recording_id: { entity_id: entityId }, platform_id: platformId },
+      proposedValue: url === null ? { exists: false } : present({ url }),
+    });
+
+    it('links a recording on a platform that supports recordings, shown with the recording', async () => {
+      const { entityId, id } = await publishRecording();
+
+      const [linked] = await submitChanges([link(entityId, spotify, SPOTIFY_URL)]);
+      await apply(linked).expect(201);
+
+      const { body } = await getJsonApi(app, `/v1/recordings/${id}?include=platformLinks.platform`).expect(200);
+      expect(body.data.relationships.platformLinks.data).toEqual([{ type: 'recording-platform-links', id: `${id}.${spotify}` }]);
+      expect(body.included).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'recording-platform-links', attributes: { url: SPOTIFY_URL } }),
+          expect.objectContaining({ type: 'platforms', id: String(spotify) }),
+        ]),
+      );
+    });
+
+    it('accepts a link only on a platform that supports recordings, and only on an HTTP(S) URL', async () => {
+      const { entityId } = await publishRecording();
+      const proposalId = await createDraft(app, ana.accessToken);
+      const refused = async (change: ChangeInput) => (await addChange(app, ana.accessToken, proposalId, change).expect(422)).body.errors[0];
+
+      expect(await refused(link(entityId, instagram, 'https://www.instagram.com/p/C1'))).toEqual(
+        expect.objectContaining({ code: 'unsupported_platform', source: { pointer: '/data/attributes/targetKey/platform_id' } }),
+      );
+      expect(await refused(link(entityId, instagram + 100, SPOTIFY_URL))).toEqual(
+        expect.objectContaining({ code: 'unknown_vocabulary_entry', source: { pointer: '/data/attributes/targetKey/platform_id' } }),
+      );
+      expect((await refused(link(entityId, spotify, 'ftp://open.spotify.com/track/1'))).source.pointer).toBe('/data/attributes/proposedValue/value/url');
+    });
+
+    it('replaces only the URL and removes the link, keeping the previous URL in the revision', async () => {
+      const { entityId, id } = await publishRecording();
+      const albumUrl = 'https://open.spotify.com/track/5QDLhrAOJJdNAmCTJ8xMyW';
+      const [added] = await submitChanges([link(entityId, spotify, SPOTIFY_URL)]);
+      expect((await apply(added).expect(201)).body.included[0].attributes.resultKey).toEqual({ recording_id: expect.any(Number), platform_id: spotify });
+
+      const [replaced] = await submitChanges([link(entityId, spotify, albumUrl, 'update_relation')]);
+      expect((await apply(replaced).expect(201)).body.included[0].attributes).toEqual(
+        expect.objectContaining({ beforeValue: present({ url: SPOTIFY_URL }), afterValue: present({ url: albumUrl }) }),
+      );
+      const shown = await getJsonApi(app, `/v1/recordings/${id}?include=platformLinks`).expect(200);
+      expect(shown.body.included).toEqual([expect.objectContaining({ id: `${id}.${spotify}`, attributes: { url: albumUrl } })]);
+
+      const [removed] = await submitChanges([link(entityId, spotify, null, 'remove_relation')]);
+      expect((await apply(removed).expect(201)).body.included[0].attributes).toEqual(
+        expect.objectContaining({ beforeValue: present({ url: albumUrl }), afterValue: { exists: false } }),
+      );
+      const { body } = await getJsonApi(app, `/v1/recordings/${id}`).expect(200);
+      expect(body.data.relationships.platformLinks.data).toEqual([]);
+    });
+
+    it('keeps one link per platform: a second one of the same platform conflicts, the same URL is satisfied', async () => {
+      const { entityId, id } = await publishRecording();
+      const [first] = await submitChanges([link(entityId, spotify, SPOTIFY_URL)]);
+      const [same] = await submitChanges([link(entityId, spotify, SPOTIFY_URL)]);
+      const [other] = await submitChanges([link(entityId, spotify, 'https://open.spotify.com/track/5QDLhrAOJJdNAmCTJ8xMyW')]);
+      await apply(first).expect(201);
+
+      expect((await apply(same).expect(201)).body.data[0].attributes.resultingStatus).toBe('satisfied');
+      expect((await apply(other).expect(409)).body.errors[0].code).toBe('base_changed');
+      const { body } = await getJsonApi(app, `/v1/recordings/${id}?include=platformLinks`).expect(200);
+      expect(body.included).toEqual([expect.objectContaining({ attributes: { url: SPOTIFY_URL } })]);
     });
   });
 

@@ -15,6 +15,7 @@ import {
   getJsonApi,
   personCreation,
   removeChange,
+  reserveEntity,
   reserveIdentity,
   submitIdentityCreation,
   submitProposal,
@@ -74,6 +75,15 @@ describe('payload schema versions', () => {
       expect(statusOf('identity.create_entity.catalog_identities.v3')).toBe('current');
       expect(statusOf('identity.set_fields.catalog_identities.display_name.v1')).toBe('current');
     });
+
+    it('lists every version of a retired selector as obsolete: the platform links of a track (ADR 0009)', async () => {
+      const operations = await listOperations();
+
+      const statusOf = (id: string) => operations.find((operation) => operation.id === id)?.attributes.status;
+      for (const operation of ['add_relation', 'update_relation', 'remove_relation']) {
+        expect(statusOf(`release.${operation}.track_platform_links.v1`)).toBe('obsolete');
+      }
+    });
   });
 
   describe('POST and PATCH /v1/proposals/{id}/changes', () => {
@@ -107,6 +117,25 @@ describe('payload schema versions', () => {
         ]);
       }
       await updateChange(app, diego.accessToken, proposalId, changeId, { payloadSchemaVersion: 3, proposedValue: personCreation() }).expect(200);
+    });
+
+    it('rejects a microchange of a retired selector, with or without a version', async () => {
+      const entityId = (await reserveEntity(app, diego.accessToken, 'release').expect(201)).body.data.id;
+      const proposalId = await createDraft(app, diego.accessToken);
+      const link = {
+        entityId,
+        operation: 'add_relation',
+        targetPath: 'track_platform_links',
+        targetKey: { track_id: 1 },
+        proposedValue: { exists: true, value: { platformId: 1, url: 'https://open.spotify.com/track/0t1kP63rueHleOhQkYSXFY' } },
+      };
+
+      for (const payloadSchemaVersion of [1, undefined]) {
+        const { body } = await addChange(app, diego.accessToken, proposalId, { ...link, payloadSchemaVersion }).expect(422);
+        expect(body.errors).toEqual([
+          expect.objectContaining({ code: 'obsolete_payload_schema_version', source: { pointer: '/data/attributes/payloadSchemaVersion' } }),
+        ]);
+      }
     });
   });
 

@@ -103,6 +103,8 @@ export interface RecordingSpec {
   artists?: ArtistCreditSpec[];
   credits?: CreditSpec[];
   works: { work: string; relationType: 'performance' | 'interpolation' | 'sample' }[];
+  /** Where it can be heard, at most one per platform (ADR 0009). */
+  links?: Partial<Record<PlatformSlug, string>>;
 }
 
 export interface TrackSpec {
@@ -436,6 +438,15 @@ export class CatalogWriter {
         targetPath: 'recording_genres',
         targetKey: { recording_id: entity(id), genre_id: this.vocabularies.genres[genre] },
         value: { isPrimary: index === 0 },
+      });
+    }
+    for (const [platform, url] of Object.entries(spec.links ?? {}) as [PlatformSlug, string][]) {
+      plan.creations.push({
+        entityId: id,
+        operation: 'add_relation',
+        targetPath: 'recording_platform_links',
+        targetKey: { recording_id: entity(id), platform_id: this.vocabularies.platforms[platform] },
+        value: { url },
       });
     }
     for (const [position, { artist, rank, creditedAs }] of (spec.artists ?? []).entries()) {

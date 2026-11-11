@@ -81,24 +81,24 @@ const VOCABULARIES: VocabularyCase[] = [
   },
   {
     type: 'platforms',
-    create: { name: 'Spotify', slug: 'spotify', iconUrl: ICON, supportsTrack: true },
+    create: { name: 'Spotify', slug: 'spotify', iconUrl: ICON, supportsRecording: true },
     created: {
       name: 'Spotify',
       slug: 'spotify',
       iconUrl: ICON,
       supportsCatalogIdentity: false,
-      supportsTrack: true,
+      supportsRecording: true,
       supportsAlbum: false,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     },
     update: { supportsAlbum: true },
-    updated: { supportsTrack: true, supportsAlbum: true },
+    updated: { supportsRecording: true, supportsAlbum: true },
     invalid: [
       [{ name: 'Spotify', slug: 'spotify', iconUrl: 'ftp://img.example.com/spotify.svg' }, '/data/attributes/iconUrl'],
       [{ name: 'Spotify', slug: 'spotify' }, '/data/attributes/iconUrl'],
       [{ name: 'Spotify', slug: 'spotify', iconUrl: 'https://cdn.example.com/spotify.svg' }, '/data/attributes/iconUrl'],
-      [{ name: 'Spotify', slug: 'spotify', iconUrl: OTHER_ICON, supportsTrack: 'yes' }, '/data/attributes/supportsTrack'],
+      [{ name: 'Spotify', slug: 'spotify', iconUrl: OTHER_ICON, supportsRecording: 'yes' }, '/data/attributes/supportsRecording'],
     ],
     duplicate: [
       [{ name: 'Spotify', slug: 'spotify-2', iconUrl: OTHER_ICON }, 'name'],
@@ -304,7 +304,7 @@ describe('vocabularies', () => {
         slug: 'spotify',
         iconUrl: icons[ICON],
         supportsCatalogIdentity: true,
-        supportsTrack: true,
+        supportsRecording: true,
         supportsAlbum: true,
       });
       const instagram = await createdEntryId(app, admin.accessToken, 'platforms', {
@@ -316,7 +316,7 @@ describe('vocabularies', () => {
 
       expect(await listIds('platforms')).toEqual([instagram, spotify]);
       expect(await listIds('platforms', { 'filter[supports]': 'catalog_identity' })).toEqual([instagram, spotify]);
-      expect(await listIds('platforms', { 'filter[supports]': 'track' })).toEqual([spotify]);
+      expect(await listIds('platforms', { 'filter[supports]': 'recording' })).toEqual([spotify]);
       expect(await listIds('platforms', { 'filter[supports]': 'album', 'filter[q]': 'insta' })).toEqual([]);
       expect(await listIds('platforms', { 'filter[slug]': 'instagram' })).toEqual([instagram]);
       await getPublic(app, 'platforms', { 'filter[supports]': 'artist' }).expect(400);
@@ -379,7 +379,7 @@ describe('vocabularies', () => {
       const id = await platform(icons[ICON]);
 
       await updateEntry(app, admin.accessToken, 'platforms', id, { name: 'Spotify', iconUrl: icons[ICON] }).expect(200);
-      await updateEntry(app, admin.accessToken, 'platforms', id, { supportsTrack: true }).expect(200);
+      await updateEntry(app, admin.accessToken, 'platforms', id, { supportsRecording: true }).expect(200);
 
       await fetchImage(app, icons[ICON]).expect(200);
       expect(await fileRemovedAt(app, icons[ICON])).toBeNull();

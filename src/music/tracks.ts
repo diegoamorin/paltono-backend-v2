@@ -1,13 +1,13 @@
 import { EntityManager, Not } from 'typeorm';
 import { ArtistCreditRank, Recording } from './entities/recording.entity';
 import { Release } from './entities/release.entity';
-import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
+import { Track, TrackArtistCredit } from './entities/track.entity';
 import { recordingIdOf } from './recordings';
 import { RootReference } from './releases';
 
 /*
- * The writes of the tracks of a release, with their printed credits and
- * platform links. The editorial flow calls them inside the transaction that
+ * The writes of the tracks of a release, with their printed credits. The
+ * editorial flow calls them inside the transaction that
  * applies a microchange of the release. Every read is scoped to one release,
  * so a key never reaches the track of another one.
  */
@@ -25,11 +25,6 @@ export interface TrackArtistCreditValue {
   rank: ArtistCreditRank;
   position: number;
   creditedAs?: string | null;
-}
-
-export interface TrackPlatformLinkValue {
-  platformId: number;
-  url: string;
 }
 
 // Tracks
@@ -72,7 +67,6 @@ export async function trackReferences(manager: EntityManager, releaseId: number,
   if (!(await manager.existsBy(Track, { id, releaseId }))) return [];
   const references: string[] = [];
   if (await manager.existsBy(TrackArtistCredit, { trackId: id })) references.push('La pista tiene crédito impreso; quítalo antes de quitar la pista');
-  if (await manager.existsBy(TrackPlatformLink, { trackId: id })) references.push('La pista tiene enlaces a plataformas; quítalos antes de quitar la pista');
   return references;
 }
 
@@ -123,54 +117,6 @@ export async function writeTrackArtistCredit(
 
 export async function deleteTrackArtistCredit(manager: EntityManager, releaseId: number, trackId: number, artistId: number, now: Date): Promise<void> {
   await manager.delete(TrackArtistCredit, { trackId, artistId });
-  await touchRelease(manager, releaseId, now);
-}
-
-// Platform links
-
-export async function findTrackLink(manager: EntityManager, releaseId: number, id: number): Promise<TrackPlatformLinkValue | null> {
-  const link = await linkOf(manager, releaseId, id);
-  return link && { platformId: link.platformId, url: link.url };
-}
-
-/** The link of a track that an insertion of the same platform and URL would collide with. */
-export async function findTrackLinkByUrl(manager: EntityManager, trackId: number, { platformId, url }: TrackPlatformLinkValue): Promise<TrackPlatformLinkValue | null> {
-  const link = await manager.findOneBy(TrackPlatformLink, { trackId, platformId, url });
-  return link && { platformId: link.platformId, url: link.url };
-}
-
-/** What a link would break besides itself: a platform and URL appear once per track. */
-export async function trackLinkClashes(manager: EntityManager, trackId: number, { platformId, url }: TrackPlatformLinkValue, exceptId: number | null): Promise<string[]> {
-  const taken = await manager.existsBy(TrackPlatformLink, { trackId, platformId, url, ...(exceptId === null ? {} : { id: Not(exceptId) }) });
-  return taken ? ['La pista ya tiene este enlace en esta plataforma'] : [];
-}
-
-/** The track of an existing link of a release, or null. */
-export async function trackOfLink(manager: EntityManager, releaseId: number, id: number): Promise<number | null> {
-  return (await linkOf(manager, releaseId, id))?.trackId ?? null;
-}
-
-function linkOf(manager: EntityManager, releaseId: number, id: number): Promise<TrackPlatformLink | null> {
-  return manager
-    .createQueryBuilder(TrackPlatformLink, 'link')
-    .innerJoin(Track, 'track', 'track.id = link.track_id')
-    .where('link.id = :id AND track.release_id = :releaseId', { id, releaseId })
-    .getOne();
-}
-
-export async function insertTrackLink(manager: EntityManager, releaseId: number, trackId: number, value: TrackPlatformLinkValue, now: Date): Promise<number> {
-  const { identifiers } = await manager.insert(TrackPlatformLink, { trackId, platformId: value.platformId, url: value.url, createdAt: now, updatedAt: now });
-  await touchRelease(manager, releaseId, now);
-  return identifiers[0].id as number;
-}
-
-export async function updateTrackLink(manager: EntityManager, releaseId: number, id: number, value: TrackPlatformLinkValue, now: Date): Promise<void> {
-  await manager.update(TrackPlatformLink, { id }, { platformId: value.platformId, url: value.url, updatedAt: now });
-  await touchRelease(manager, releaseId, now);
-}
-
-export async function deleteTrackLink(manager: EntityManager, releaseId: number, id: number, now: Date): Promise<void> {
-  await manager.delete(TrackPlatformLink, { id });
   await touchRelease(manager, releaseId, now);
 }
 

@@ -22,6 +22,8 @@ const INCLUDE = [
   'genres',
   'recordingWorks',
   'recordingWorks.work',
+  'platformLinks',
+  'platformLinks.platform',
   'tracks',
   'tracks.release',
 ];
@@ -51,7 +53,8 @@ export class RecordingsController {
       'de su crédito de artista o del crédito impreso de una pista en una edición publicada; `filter[year]`, el año de ' +
       'grabación; `filter[releaseYear]`, el año de su fecha de lanzamiento; `filter[isExplicit]`, `true` o `false`. Orden ' +
       '`title` (por defecto), `-recordingDate`, `-releaseDate` (fechas desconocidas al final en ambos) o `-createdAt`. ' +
-      '`include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`.',
+      '`include` admite `artistCredits` y `artistCredits.artist`, con el nombre listo para mostrar en `displayName`, y ' +
+      '`platformLinks.platform` para escucharla.',
   })
   @ApiJsonApiQuery(RECORDINGS_QUERY)
   @ApiJsonApiCollectionResponse(RecordingResource)
@@ -66,8 +69,8 @@ export class RecordingsController {
     summary: 'Ver una grabación',
     description:
       'Título, contenido explícito, ISRC, fecha parcial de grabación y fecha de lanzamiento (la más temprana de sus ediciones ' +
-      'publicadas y no canceladas con fecha, incluidas las futuras), con su crédito de artista, sus créditos, géneros, obras y ' +
-      'apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo ' +
+      'publicadas y no canceladas con fecha, incluidas las futuras), con su crédito de artista, sus créditos, géneros, obras, ' +
+      'enlaces de plataforma (dónde escucharla, a lo sumo uno por plataforma) y apariciones en ediciones. `meta.editorialEntityId` es su UUID editorial. Una reserva no existe: responde 404. Una ficha retirada solo ' +
       'muestra su aviso.',
   })
   @ApiParam({ name: 'id', description: 'public_id de la grabación' })

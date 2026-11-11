@@ -149,7 +149,7 @@ describe('organization types and platform links of identities', () => {
           slug,
           iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, slug),
           supportsCatalogIdentity,
-          supportsTrack: true,
+          supportsRecording: true,
         });
       spotify = Number(await platform('spotify', true));
       melon = Number(await platform('melon', false));

@@ -25,8 +25,9 @@ export class Platform {
   @Column({ name: 'supports_catalog_identity', type: 'boolean', default: false })
   supportsCatalogIdentity: boolean;
 
-  @Column({ name: 'supports_track', type: 'boolean', default: false })
-  supportsTrack: boolean;
+  /** Recordings, one link per platform (ADR 0009). */
+  @Column({ name: 'supports_recording', type: 'boolean', default: false })
+  supportsRecording: boolean;
 
   @Column({ name: 'supports_album', type: 'boolean', default: false })
   supportsAlbum: boolean;

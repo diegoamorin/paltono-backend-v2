@@ -2,48 +2,40 @@ import { EntityManager } from 'typeorm';
 import { releaseIdOf } from '../music/releases';
 import {
   TrackArtistCreditValue,
-  TrackPlatformLinkValue,
   TrackValue,
   deleteTrack,
   deleteTrackArtistCredit,
-  deleteTrackLink,
   findTrack,
   findTrackArtistCredit,
   findTrackAt,
-  findTrackLink,
-  findTrackLinkByUrl,
   insertTrack,
-  insertTrackLink,
   isTrackOf,
   trackClashes,
-  trackLinkClashes,
-  trackOfLink,
   trackReferences,
   updateTrack,
-  updateTrackLink,
   writeTrackArtistCredit,
 } from '../music/tracks';
-import { Platform } from '../vocabularies/entities/platform.entity';
 import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { INT4, ROW_KEY, envelope, reference } from './identity-relation-changes';
-import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
+import type { OperationDefinition, PublishedOperation, RowKey, TargetProblem } from './operation-registry';
 import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 
 /*
  * Relation changes of the tracks of a release, which owns them: the tracks,
- * keyed by their generated id, the printed credits of each track, keyed
- * by the track and the artist, and its platform links. An insertion names the
- * release in its key, so a release created by the same proposal can receive
- * its tracks; a credit or a link names its track by id or by the insertion of
- * the same proposal that creates it. A track needs its recording and its
- * release published, or published in the same transaction.
+ * keyed by their generated id, and the printed credits of each track, keyed
+ * by the track and the artist. An insertion names the release in its key, so
+ * a release created by the same proposal can receive its tracks; a credit
+ * names its track by id or by the insertion of the same proposal that creates
+ * it. A track needs its recording and its release published, or published in
+ * the same transaction. A track has no platform links: they are its
+ * recording's (ADR 0009).
  */
 
 const ABSENT: ValueEnvelope = { exists: false };
 const TRACKS = 'tracks';
-/** The track a credit or a link belongs to: a row of the tracks of the same release. */
+/** The track a printed credit belongs to: a row of the tracks of the same release. */
 const TRACK_ROW = { track_id: { targetPath: TRACKS, resultMember: 'id' } };
 
 const ROW_ID = ROW_KEY.properties.id;
@@ -135,7 +127,7 @@ const TRACK_CHANGES: OperationDefinition[] = [
   {
     ...trackBase,
     operation: 'remove_relation',
-    description: 'Quita una pista de la edición, una vez quitados sus créditos y enlaces; la revisión guarda sus valores anteriores.',
+    description: 'Quita una pista de la edición, una vez quitado su crédito impreso; la revisión guarda sus valores anteriores.',
     valueSchema: null,
     targetKeySchema: ROW_KEY,
     read: readTrack,
@@ -190,10 +182,11 @@ const TRACK_CREDIT_CHANGES = artistCreditChanges({
   ownerGone: trackGone,
 });
 
-// Platform links of a track
+export const RELEASE_TRACK_CHANGES: OperationDefinition[] = [...TRACK_CHANGES, ...TRACK_CREDIT_CHANGES];
 
-// No play count: it is deferred beyond the MVP, so no write sets it.
-const TRACK_LINK = {
+// Platform links of a track, retired without a successor (ADR 0009): kept to read the history, never applied.
+
+const TRACK_PLATFORM_LINK = {
   type: 'object',
   additionalProperties: false,
   required: ['platformId', 'url'],
@@ -203,97 +196,36 @@ const TRACK_LINK = {
   },
 };
 
-const TRACK_LINK_PARENT_KEY = {
+const TRACK_PLATFORM_LINK_KEY = {
   type: 'object',
   additionalProperties: false,
   required: ['track_id'],
   properties: { track_id: { ...ROW_ID, description: 'Pista de la edición, o inserción de este envío que la creará' } },
 };
 
-const readLink = async (manager: EntityManager, root: EditorialEntity, key: RowKey | null): Promise<ValueEnvelope> => {
-  const releaseId = await releaseOf(manager, root);
-  return releaseId === null ? ABSENT : envelope(await findTrackLink(manager, releaseId, key!.id));
-};
+const retiredTrackPlatformLink = { entityType: 'release', targetPath: 'track_platform_links', payloadSchemaVersion: 1 } satisfies Partial<PublishedOperation>;
 
-const linkBase = { entityType: 'release', targetPath: 'track_platform_links', payloadSchemaVersion: 1, check: () => [] } satisfies Partial<OperationDefinition>;
-
-/** What a proposed link needs besides its schema: a platform that exists and supports tracks. */
-const proposedLinkRules = {
-  references: (value: unknown) => [{ vocabulary: 'platforms' as const, id: (value as TrackPlatformLinkValue).platformId, path: '/value/platformId' }],
-  // Run on the current vocabulary each time, as an administrator may change what a platform supports.
-  linkProblems: async (manager: EntityManager, value: unknown): Promise<TargetProblem[]> => {
-    const platform = await manager.findOneBy(Platform, { id: (value as TrackPlatformLinkValue).platformId });
-    if (!platform || platform.supportsTrack) return [];
-    return [{ code: 'unsupported_platform', detail: `${platform.name} does not support track links`, member: 'proposedValue/value/platformId' }];
-  },
-};
-
-const TRACK_LINK_CHANGES: OperationDefinition[] = [
+export const RETIRED_TRACK_PLATFORM_LINK_CHANGES: PublishedOperation[] = [
   {
-    ...linkBase,
-    references: proposedLinkRules.references,
+    ...retiredTrackPlatformLink,
     operation: 'add_relation',
-    description:
-      'Añade un enlace HTTP(S) de una pista en una plataforma que admite pistas. Plataforma y URL son únicas en la pista. Su clave ' +
-      'es la pista, por id o por la inserción de este envío que la creará.',
-    valueSchema: TRACK_LINK,
-    targetKeySchema: TRACK_LINK_PARENT_KEY,
-    keyRows: TRACK_ROW,
-    naturalKey: (value) => {
-      const { platformId, url } = (value ?? {}) as Partial<TrackPlatformLinkValue>;
-      return typeof platformId === 'number' && typeof url === 'string' ? { platformId, url } : undefined;
-    },
-    targetProblems: async (manager, root, value, targetKey) => [
-      ...(await trackProblems(manager, root, targetKey)),
-      ...(await proposedLinkRules.linkProblems(manager, value)),
-    ],
-    // The link the proposed platform and URL would collide with.
-    read: async (manager, root, key, value) => {
-      const releaseId = await releaseOf(manager, root);
-      if (!key || releaseId === null || !(await isTrackOf(manager, releaseId, key.track_id))) return ABSENT;
-      return envelope(await findTrackLinkByUrl(manager, key.track_id, value as TrackPlatformLinkValue));
-    },
-    constraintProblems: async (manager, root, key, value) => {
-      const gone = await trackGone(manager, root, key);
-      return gone.length > 0 ? gone : trackLinkClashes(manager, key!.track_id, value as TrackPlatformLinkValue, null);
-    },
-    apply: async (manager, root, value, now, key) => {
-      const id = await insertTrackLink(manager, await releaseOrFail(manager, root), key!.track_id, value as TrackPlatformLinkValue, now);
-      return { afterValue: await readLink(manager, root, { id }), resultKey: { id } };
-    },
+    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Añadía un enlace de una pista en una plataforma.',
+    valueSchema: TRACK_PLATFORM_LINK,
+    targetKeySchema: TRACK_PLATFORM_LINK_KEY,
   },
   {
-    ...linkBase,
-    references: proposedLinkRules.references,
+    ...retiredTrackPlatformLink,
     operation: 'update_relation',
-    description: 'Sustituye la plataforma y la URL de un enlace existente de una pista de la edición.',
-    valueSchema: TRACK_LINK,
+    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Sustituía la plataforma y la URL de un enlace de una pista.',
+    valueSchema: TRACK_PLATFORM_LINK,
     targetKeySchema: ROW_KEY,
-    targetProblems: (manager, _root, value) => proposedLinkRules.linkProblems(manager, value),
-    read: readLink,
-    constraintProblems: async (manager, root, key, value) => {
-      const trackId = await trackOfLink(manager, await releaseOrFail(manager, root), key!.id);
-      if (trackId === null) return ['El enlace ya no existe'];
-      return trackLinkClashes(manager, trackId, value as TrackPlatformLinkValue, key!.id);
-    },
-    apply: async (manager, root, value, now, key) => {
-      await updateTrackLink(manager, await releaseOrFail(manager, root), key!.id, value as TrackPlatformLinkValue, now);
-      return { afterValue: await readLink(manager, root, key), resultKey: key };
-    },
   },
   {
-    ...linkBase,
-    references: () => [],
+    ...retiredTrackPlatformLink,
     operation: 'remove_relation',
-    description: 'Quita un enlace de una pista de la edición; la revisión guarda sus valores anteriores.',
+    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Quitaba un enlace de una pista.',
     valueSchema: null,
     targetKeySchema: ROW_KEY,
-    read: readLink,
-    apply: async (manager, root, _value, now, key) => {
-      await deleteTrackLink(manager, await releaseOrFail(manager, root), key!.id, now);
-      return { afterValue: ABSENT, resultKey: key };
-    },
   },
 ];
 
-export const RELEASE_TRACK_CHANGES: OperationDefinition[] = [...TRACK_CHANGES, ...TRACK_CREDIT_CHANGES, ...TRACK_LINK_CHANGES];

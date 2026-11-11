@@ -3,11 +3,20 @@ import { EntityManager, In, Not } from 'typeorm';
 import { newPublicId } from '../catalog-identities/identity-creations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Work } from './entities/work.entity';
-import { ArtistCreditRank, Recording, RecordingArtistCredit, RecordingGenre, RecordingWork, RecordingWorkRelationType } from './entities/recording.entity';
+import {
+  ArtistCreditRank,
+  Recording,
+  RecordingArtistCredit,
+  RecordingGenre,
+  RecordingPlatformLink,
+  RecordingWork,
+  RecordingWorkRelationType,
+} from './entities/recording.entity';
 
 /*
  * The writes of a recording and of the rows it owns besides its credits
- * (`credits.ts`): its artist credit, its genres and the works it relates to. The editorial flow
+ * (`credits.ts`): its artist credit, its genres, the works it relates to and
+ * its platform links. The editorial flow
  * calls them inside the transaction that applies a microchange. Every read is
  * scoped to one recording, so a key never reaches the row of another one.
  */
@@ -200,6 +209,36 @@ export async function updateRecordingWork(manager: EntityManager, recordingId: n
 
 export async function deleteRecordingWork(manager: EntityManager, recordingId: number, id: number, now: Date): Promise<void> {
   await manager.delete(RecordingWork, { recordingId, id });
+  await touchRecording(manager, recordingId, now);
+}
+
+/** Where a recording can be heard on a platform, keyed by the recording and the platform (ADR 0009). */
+export interface RecordingPlatformLinkValue {
+  url: string;
+}
+
+export async function findRecordingPlatformLink(manager: EntityManager, recordingId: number, platformId: number): Promise<RecordingPlatformLinkValue | null> {
+  const row = await manager.findOneBy(RecordingPlatformLink, { recordingId, platformId });
+  return row && { url: row.url };
+}
+
+export async function writeRecordingPlatformLink(
+  manager: EntityManager,
+  recordingId: number,
+  platformId: number,
+  value: RecordingPlatformLinkValue,
+  now: Date,
+): Promise<void> {
+  if (await manager.existsBy(RecordingPlatformLink, { recordingId, platformId })) {
+    await manager.update(RecordingPlatformLink, { recordingId, platformId }, { url: value.url, updatedAt: now });
+  } else {
+    await manager.insert(RecordingPlatformLink, { recordingId, platformId, url: value.url, createdAt: now, updatedAt: now });
+  }
+  await touchRecording(manager, recordingId, now);
+}
+
+export async function deleteRecordingPlatformLink(manager: EntityManager, recordingId: number, platformId: number, now: Date): Promise<void> {
+  await manager.delete(RecordingPlatformLink, { recordingId, platformId });
   await touchRecording(manager, recordingId, now);
 }
 

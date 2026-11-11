@@ -2,16 +2,15 @@ import { Check, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn, Pri
 import { Artist } from '../../catalog-identities/entities/artist.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScope, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
-import { Platform } from '../../vocabularies/entities/platform.entity';
 import { ARTIST_CREDIT_RANKS, ArtistCreditRank, Recording } from './recording.entity';
 import { Release } from './release.entity';
 import { Credit, applyAll, creditChecks, creditJoins } from './work.entity';
 
 /*
  * The rows a release owns besides its fields: its tracks, with their printed
- * credits and platform links, and the credits of the release. A track has no
- * editorial root of its own; only applied microchanges of its release write
- * them.
+ * credits, and the credits of the release. A track has no editorial root of
+ * its own; only applied microchanges of its release write them. A track has
+ * no platform links: they are its recording's (ADR 0009).
  */
 
 // Mirrors the CreateTracksAndReleaseContributions migration, so `migration:generate` finds no drift.
@@ -95,39 +94,6 @@ export class TrackArtistCredit {
   /** The literal name in the source; null shows the identity's display name. */
   @Column({ name: 'credited_as', type: 'varchar', length: 200, nullable: true })
   creditedAs: string | null;
-}
-
-/** A link of a track on a platform that supports tracks. */
-@Entity('track_platform_links')
-@Unique('track_platform_links_track_platform_url_key', ['trackId', 'platformId', 'url'])
-@Index('track_platform_links_platform_id_idx', ['platformId'])
-@Check('track_platform_links_url_format', `url ~* '^https?://[^\\s]+$'`)
-export class TrackPlatformLink {
-  @PrimaryGeneratedColumn('identity', { generatedIdentity: 'ALWAYS' })
-  id: number;
-
-  @Column({ name: 'platform_id', type: 'integer' })
-  platformId: number;
-
-  @ManyToOne(() => Platform, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'platform_id', foreignKeyConstraintName: 'track_platform_links_platform_id_fkey' })
-  platform?: Platform;
-
-  @Column({ name: 'track_id', type: 'integer' })
-  trackId: number;
-
-  @ManyToOne(() => Track, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'track_id', foreignKeyConstraintName: 'track_platform_links_track_id_fkey' })
-  track?: Track;
-
-  @Column({ type: 'varchar', length: 2048 })
-  url: string;
-
-  @Column({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date;
-
-  @Column({ name: 'updated_at', type: 'timestamptz' })
-  updatedAt: Date;
 }
 
 const releaseCreditJoins = creditJoins('release_contributions');

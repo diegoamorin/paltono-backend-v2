@@ -4,14 +4,15 @@ import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
 import { CONTRIBUTION_ROLE_SCOPES, ContributionRoleScopeName } from '../../vocabularies/entities/contribution-role.entity';
 import { Genre } from '../../vocabularies/entities/genre.entity';
+import { Platform } from '../../vocabularies/entities/platform.entity';
 import { CatalogIdentity } from '../../catalog-identities/entities/catalog-identity.entity';
 import { ContributionRoleScope } from '../../vocabularies/entities/contribution-role.entity';
 import { Credit, Work, applyAll, creditChecks, creditJoins } from './work.entity';
 
 /*
  * The recording editorial root's domain rows and the rows it owns: its
- * credits, artist credit, genres and the works it relates to. Only applied
- * microchanges write them.
+ * credits, artist credit, genres, the works it relates to and its platform
+ * links. Only applied microchanges write them.
  */
 
 /**
@@ -212,6 +213,39 @@ export class RecordingGenre {
 
   @Column({ name: 'is_primary', type: 'boolean', default: false })
   isPrimary: boolean;
+
+  @Column({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
+
+  @Column({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
+}
+
+/**
+ * Where a recording can be heard on a platform, at most one per platform: its
+ * tracks all sound the same, so any of their URLs serves (ADR 0009).
+ */
+// Mirrors the MovePlatformLinksToRecordings migration.
+@Entity('recording_platform_links')
+@Index('recording_platform_links_platform_id_idx', ['platformId'])
+@Check('recording_platform_links_url_format', `url ~* '^https?://[^\\s]+$'`)
+export class RecordingPlatformLink {
+  @PrimaryColumn({ name: 'recording_id', type: 'integer', primaryKeyConstraintName: 'recording_platform_links_pkey' })
+  recordingId: number;
+
+  @ManyToOne(() => Recording, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'recording_id', foreignKeyConstraintName: 'recording_platform_links_recording_id_fkey' })
+  recording?: Recording;
+
+  @PrimaryColumn({ name: 'platform_id', type: 'integer', primaryKeyConstraintName: 'recording_platform_links_pkey' })
+  platformId: number;
+
+  @ManyToOne(() => Platform, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'platform_id', foreignKeyConstraintName: 'recording_platform_links_platform_id_fkey' })
+  platform?: Platform;
+
+  @Column({ type: 'varchar', length: 2048 })
+  url: string;
 
   @Column({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

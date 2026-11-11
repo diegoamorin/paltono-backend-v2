@@ -513,6 +513,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         title: 'Dynamite',
         artists: [{ artist: 'bts', rank: 'main' }],
         description: 'Primera canción de BTS grabada íntegramente en inglés, publicada el 21 de agosto de 2020.',
+        links: { youtube: 'https://www.youtube.com/watch?v=gdZLi9oWNZg' },
         recordingDate: { year: 2020, month: 7 },
         genres: ['disco', 'pop'],
         works: [{ work: 'dynamite', relationType: 'performance' }],
@@ -536,6 +537,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         title: 'Butter',
         artists: [{ artist: 'bts', rank: 'main' }],
         description: 'Sencillo de BTS publicado el 21 de mayo de 2021.',
+        links: { youtube: 'https://www.youtube.com/watch?v=WMweEpGlu_U' },
         genres: ['dance-pop', 'disco-pop', 'edm'],
         works: [{ work: 'butter', relationType: 'performance' }],
         credits: [
@@ -684,6 +686,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         title: 'How You Like That',
         artists: [{ artist: 'blackpink', rank: 'main' }],
         description: 'Sencillo de BLACKPINK publicado el 26 de junio de 2020, grabado en The Black Label.',
+        links: { youtube: 'https://www.youtube.com/watch?v=ioNng23DkIM' },
         genres: ['pop', 'hip-hop', 'trap', 'edm'],
         works: [{ work: 'how-you-like-that', relationType: 'performance' }],
         credits: [
@@ -767,6 +770,7 @@ export const KPOP_CATALOG: SeedSubmission[] = [
         title: 'Gangnam Style',
         artists: [{ artist: 'psy', rank: 'main' }],
         description: 'Sencillo de Psy publicado el 15 de julio de 2012.',
+        links: { youtube: 'https://www.youtube.com/watch?v=9bZkp7q19f0' },
         genres: ['k-pop', 'hip-hop', 'dance-pop', 'edm'],
         works: [{ work: 'gangnam-style', relationType: 'performance' }],
         credits: [

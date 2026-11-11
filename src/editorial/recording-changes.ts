@@ -5,15 +5,18 @@ import {
   RecordingArtistCreditValue,
   RecordingFieldPath,
   RecordingGenreValue,
+  RecordingPlatformLinkValue,
   RecordingValue,
   RecordingWorkValue,
   createRecording,
   deleteRecordingArtistCredit,
   deleteRecordingGenre,
+  deleteRecordingPlatformLink,
   deleteRecordingWork,
   findCreatedRecording,
   findRecordingArtistCredit,
   findRecordingGenre,
+  findRecordingPlatformLink,
   findRecordingWork,
   findRecordingWorkByWork,
   insertRecordingWork,
@@ -24,22 +27,25 @@ import {
   writeRecordingArtistCredit,
   writeRecordingField,
   writeRecordingGenre,
+  writeRecordingPlatformLink,
 } from '../music/recordings';
 import { RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entity';
+import { Platform } from '../vocabularies/entities/platform.entity';
 import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { PARTIAL_DATE, partialDateProblems } from './identity-creation';
 import { INT4, ROW_KEY, reference } from './identity-relation-changes';
-import type { OperationDefinition, RowKey } from './operation-registry';
+import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
 import { DESCRIPTION, TITLE, envelope } from './work-changes';
 
 /*
  * Operations on a recording root: its minimal creation, a title, changes to
  * its fields, and the rows it owns: credits, its artist credit keyed by
- * recording and artist, genres keyed by recording and genre, and links to
- * works keyed by their generated id.
+ * recording and artist, genres keyed by recording and genre, links to works
+ * keyed by their generated id, and platform links keyed by recording and
+ * platform.
  */
 
 const ABSENT: ValueEnvelope = { exists: false };
@@ -161,6 +167,81 @@ const GENRE_CHANGES: OperationDefinition[] = [
   },
 ];
 
+// Platform links (ADR 0009): at most one per platform, so the platform is part of the key and a replacement changes only the URL.
+
+const PLATFORM_LINK_KEY = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['recording_id', 'platform_id'],
+  properties: {
+    recording_id: reference('entity_id', 'Raíz editorial de la grabación: la del microcambio'),
+    platform_id: { type: 'integer', minimum: 1, maximum: INT4, description: 'id en /v1/platforms de una plataforma que admite grabaciones' },
+  },
+};
+
+const PLATFORM_LINK = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['url'],
+  properties: { url: { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' } },
+};
+
+const platformLinkBase = {
+  entityType: 'recording',
+  targetPath: 'recording_platform_links',
+  payloadSchemaVersion: 1,
+  targetKeySchema: PLATFORM_LINK_KEY,
+  check: () => [],
+  references: () => [],
+  keyReferences: (targetKey: object) => [{ vocabulary: 'platforms', id: (targetKey as RowKey).platform_id, path: '/platform_id' }],
+  read: async (manager: EntityManager, _root: EditorialEntity, key: RowKey | null): Promise<ValueEnvelope> => {
+    const row = key && (await findRecordingPlatformLink(manager, key.recording_id, key.platform_id));
+    return row ? { exists: true, value: { ...row } } : ABSENT;
+  },
+} satisfies Partial<OperationDefinition>;
+
+/** A link needs a platform that supports recordings, checked on the current vocabulary, as an administrator may change it. */
+async function unsupportedPlatform(manager: EntityManager, targetKey: object | null): Promise<TargetProblem[]> {
+  const platform = await manager.findOneBy(Platform, { id: (targetKey as RowKey).platform_id });
+  if (!platform || platform.supportsRecording) return [];
+  return [{ code: 'unsupported_platform', detail: `${platform.name} does not support recording links`, member: 'targetKey/platform_id' }];
+}
+
+const platformLinkWrite = (operation: 'add_relation' | 'update_relation', description: string): OperationDefinition => ({
+  ...platformLinkBase,
+  operation,
+  description,
+  valueSchema: PLATFORM_LINK,
+  targetProblems: (manager, _root, _value, targetKey) => unsupportedPlatform(manager, targetKey),
+  constraintProblems: async (manager, _root, key) => {
+    if (operation === 'update_relation' && !(await findRecordingPlatformLink(manager, key!.recording_id, key!.platform_id))) return ['El enlace ya no existe'];
+    return [];
+  },
+  apply: async (manager, root, value, now, key) => {
+    await writeRecordingPlatformLink(manager, key!.recording_id, key!.platform_id, value as RecordingPlatformLinkValue, now);
+    return { afterValue: await platformLinkBase.read(manager, root, key), resultKey: key };
+  },
+});
+
+const PLATFORM_LINK_CHANGES: OperationDefinition[] = [
+  platformLinkWrite(
+    'add_relation',
+    'Enlaza la grabación en una plataforma que admite grabaciones: donde se puede escuchar, con una URL HTTP(S). Su clave es la ' +
+      'grabación, que puede crearse en la misma propuesta, y la plataforma; la grabación tiene a lo sumo un enlace por plataforma.',
+  ),
+  platformLinkWrite('update_relation', 'Reemplaza la URL del enlace de la grabación en una plataforma; cambiar de plataforma es quitarlo y añadir otro.'),
+  {
+    ...platformLinkBase,
+    operation: 'remove_relation',
+    description: 'Quita el enlace de la grabación en una plataforma; la revisión guarda su URL anterior.',
+    valueSchema: null,
+    apply: async (manager, _root, _value, now, key) => {
+      await deleteRecordingPlatformLink(manager, key!.recording_id, key!.platform_id, now);
+      return { afterValue: ABSENT, resultKey: key };
+    },
+  },
+];
+
 // Artist credit (ADR 0008)
 
 const ARTIST_CREDIT_CHANGES = artistCreditChanges({
@@ -275,4 +356,5 @@ export const RECORDING_CHANGES: OperationDefinition[] = [
   ...ARTIST_CREDIT_CHANGES,
   ...GENRE_CHANGES,
   ...RECORDING_WORK_CHANGES,
+  ...PLATFORM_LINK_CHANGES,
 ];

@@ -4087,6 +4087,66 @@
       }
     }
   },
+  "recording.add_relation.recording_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "platform_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "platform_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id en /v1/platforms de una plataforma que admite grabaciones"
+        }
+      }
+    }
+  },
   "recording.add_relation.recording_works.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -4395,6 +4455,51 @@
           "minimum": 1,
           "maximum": 2147483647,
           "description": "id del género en /v1/genres"
+        }
+      }
+    }
+  },
+  "recording.remove_relation.recording_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists"
+      ],
+      "properties": {
+        "exists": {
+          "const": false
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "platform_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "platform_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id en /v1/platforms de una plataforma que admite grabaciones"
         }
       }
     }
@@ -4849,6 +4954,66 @@
           "minimum": 1,
           "maximum": 2147483647,
           "description": "id del género en /v1/genres"
+        }
+      }
+    }
+  },
+  "recording.update_relation.recording_platform_links.v1": {
+    "payloadSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "value"
+      ],
+      "properties": {
+        "exists": {
+          "const": true
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
+            }
+          }
+        }
+      }
+    },
+    "targetKeySchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recording_id",
+        "platform_id"
+      ],
+      "properties": {
+        "recording_id": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entity_id"
+          ],
+          "properties": {
+            "entity_id": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            }
+          },
+          "description": "Raíz editorial de la grabación: la del microcambio"
+        },
+        "platform_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647,
+          "description": "id en /v1/platforms de una plataforma que admite grabaciones"
         }
       }
     }

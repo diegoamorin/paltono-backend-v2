@@ -95,7 +95,7 @@ Lectura pública; escritura de administradores fuera del flujo editorial. Borrar
 |---|---|---|---|---|---|
 | V1 | `countries` | `GET` lista y detalle (Pub); `POST`, `PATCH`, `DELETE` (Admin) | `q`, `code` | `name`, `code` | ok val authz state |
 | V2 | `genres` | Igual | `q`, `slug` | `name` | ok val authz state |
-| V3 | `platforms` | Igual | `q`, `slug`, `supports=catalog_identity|track|album` | `name` | ok val authz state |
+| V3 | `platforms` | Igual | `q`, `slug`, `supports=catalog_identity|recording|album` | `name` | ok val authz state |
 | V4 | `organization-types` | Igual | `q`, `slug` | `name` | ok val authz state |
 | V5 | `contribution-roles` | Igual; el atributo `scopes` (work/recording/release/membership) se gestiona como conjunto. Quitar un ámbito en uso responde 409 | `q`, `slug`, `category`, `scope` | `name`, `category` | ok val authz state |
 
@@ -147,10 +147,10 @@ Solo lectura. Toda escritura pasa por el flujo editorial (sección 7).
 | Recurso | Filtros | Orden | `include` |
 |---|---|---|---|
 | `works` | `q` (título), `slug`, `iswc`, `contributor` (identidad), `role` | `title` (defecto), `-createdAt` | `contributions`, `contributions.identity`, `contributions.role`, `recordingWorks`, `recordingWorks.recording`, `firstRecording`, `firstRecordingArtistCredits`, `firstRecordingArtistCredits.artist` |
-| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de artista de la grabación, o crédito impreso de una pista en una edición publicada), `year` (año de grabación), `releaseYear` (año de la fecha de lanzamiento), `isExplicit` | `title` (defecto), `-recordingDate`, `-releaseDate` (nulos al final en ambos sentidos), `-createdAt` | `artistCredits`, `artistCredits.artist`, `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `tracks`, `tracks.release` |
+| `recordings` | `q`, `isrc`, `genre` (slug), `contributor`, `work`, `artist` (crédito de artista de la grabación, o crédito impreso de una pista en una edición publicada), `year` (año de grabación), `releaseYear` (año de la fecha de lanzamiento), `isExplicit` | `title` (defecto), `-recordingDate`, `-releaseDate` (nulos al final en ambos sentidos), `-createdAt` | `artistCredits`, `artistCredits.artist`, `contributions`, `contributions.identity`, `contributions.role`, `genres`, `recordingWorks`, `recordingWorks.work`, `platformLinks`, `platformLinks.platform`, `tracks`, `tracks.release` |
 | `release-groups` | `q`, `type`, `artist`, `upcoming`, `releasedFrom`, `releasedTo` (YYYY, YYYY-MM o YYYY-MM-DD, sobre la fecha derivada) | `-releaseDate` (defecto, nulos al final), `releaseDate` (útil con `upcoming`), `title`, `-createdAt` | `artistCredits`, `artistCredits.artist`, `releases`, `repackageOf` |
 | `releases` | `q`, `releaseGroup`, `contributor`, `availability=upcoming|released|cancelled|unknown`, `releasedFrom`, `releasedTo` | `-releaseDate` (defecto, nulos al final), `title`, `-createdAt` | `releaseGroup`, `releaseGroup.artistCredits`, `tracks`, `tracks.recording`, `contributions`, `contributions.identity` |
-| `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `artistCredits`, `artistCredits.artist`, `platformLinks`, `platformLinks.platform` |
+| `tracks` | (solo anidado) | `discNumber,trackNumber` | `recording`, `recording.platformLinks`, `artistCredits`, `artistCredits.artist` |
 
 Créditos de artista (ADR 0008): `recording-artist-credits` (id `{grabación}.{artista}`) es el crédito de artista de una grabación; `track-artist-credits` (id `{pista}.{artista}`), el crédito impreso de una pista; `release-artist-credits`, el de un lanzamiento. Los tres tienen `displayName`: `creditedAs` o, si falta, el nombre visible de la identidad del artista, y la relación `artist` con el perfil artístico. La relación `artistCredits` de `tracks` apunta al crédito impreso si la pista lo tiene y, si no, al de su grabación, leído al mostrarla; el `type` de cada elemento dice cuál es. Una grabación retirada no presta su crédito.
 

@@ -3245,7 +3245,7 @@
 									"top": 3669,
 									"width": 296,
 									"height": 13,
-									"text": "track_platform_links"
+									"text": "recording_platform_links"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -3293,23 +3293,6 @@
 										},
 										{
 											"_type": "ERDColumnView",
-											"_id": "AAAAAAGeD8zJ+4a/rTI=",
-											"_parent": {
-												"$ref": "AAAAAAGeD8zCFYFhrkI="
-											},
-											"model": {
-												"$ref": "AAAAAAGeD8zCFYFbXPw="
-											},
-											"fillColor": "#D8E5FF",
-											"font": "Arial;13;0",
-											"parentStyle": true,
-											"left": 6053,
-											"top": 3722,
-											"width": 286,
-											"height": 13
-										},
-										{
-											"_type": "ERDColumnView",
 											"_id": "AAAAAAGeD8zJ+4bCBpQ=",
 											"_parent": {
 												"$ref": "AAAAAAGeD8zCFYFhrkI="
@@ -3321,7 +3304,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6053,
-											"top": 3737,
+											"top": 3722,
 											"width": 286,
 											"height": 13
 										},
@@ -3338,7 +3321,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6053,
-											"top": 3752,
+											"top": 3737,
 											"width": 286,
 											"height": 13
 										},
@@ -3355,7 +3338,7 @@
 											"font": "Arial;13;0",
 											"parentStyle": true,
 											"left": 6053,
-											"top": 3767,
+											"top": 3752,
 											"width": 286,
 											"height": 13
 										}
@@ -3366,7 +3349,7 @@
 									"left": 6048,
 									"top": 3687,
 									"width": 296,
-									"height": 98
+									"height": 83
 								}
 							],
 							"fillColor": "#D8E5FF",
@@ -3375,7 +3358,7 @@
 							"left": 6048,
 							"top": 3664,
 							"width": 296,
-							"height": 280,
+							"height": 265,
 							"nameLabel": {
 								"$ref": "AAAAAAGeD8zCFYFgnnA="
 							},
@@ -5788,10 +5771,10 @@
 								"$ref": "AAAAAAGeD8zCFYFfcwQ="
 							},
 							"tail": {
-								"$ref": "AAAAAAGeD8zCFIEdz/4="
+								"$ref": "AAAAAAGeD8zCE4EF4sI="
 							},
 							"lineStyle": 2,
-							"points": "6112:3456;6112:3488;6192:3488;6192:3664",
+							"points": "6192:2544;6196:2544;6196:3664",
 							"nameLabel": {
 								"$ref": "332rK9jff7n6AvNSddY9"
 							},
@@ -13949,7 +13932,7 @@
 									"$ref": "AAAAAAGeD8zCG4I8/AU="
 								},
 								"reference": {
-									"$ref": "AAAAAAGeD8zCFIEVo6k="
+									"$ref": "AAAAAAGeD8zCE4D9upI="
 								}
 							},
 							"end2": {
@@ -15434,7 +15417,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Para los campos supports_*\n\nTambien podría ser un array de supports ('artist', 'track', 'album') pero por el momento no trae ventajas reales.\n\nsuports_* permite mostrar plataformas dependiente de la entidad Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
+					"documentation": "Para los campos supports_*\n\nTambien podría ser un array de supports ('catalog_identity', 'recording', 'album') pero por el momento no trae ventajas reales.\n\nsuports_* permite mostrar plataformas dependiente de la entidad Public read; admin-only writes outside editorial proposals. Delete only when unreferenced; reject deletion of in-use entries without cascading.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -15496,7 +15479,7 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCFYFOCsU="
 							},
-							"name": "supports_track",
+							"name": "supports_recording",
 							"type": "BOOLEAN",
 							"length": 0
 						},
@@ -15536,7 +15519,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
-					"name": "track_platform_links",
+					"name": "recording_platform_links",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -15544,10 +15527,11 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCFYFYiss="
 							},
-							"name": "id",
+							"name": "recording_id",
 							"type": "INTEGER",
 							"length": 0,
-							"primaryKey": true
+							"primaryKey": true,
+							"foreignKey": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -15557,17 +15541,8 @@
 							},
 							"name": "platform_id",
 							"type": "INTEGER",
-							"foreignKey": true
-						},
-						{
-							"_type": "ERDColumn",
-							"_id": "AAAAAAGeD8zCFYFbXPw=",
-							"_parent": {
-								"$ref": "AAAAAAGeD8zCFYFYiss="
-							},
-							"name": "track_id",
-							"type": "INTEGER",
-							"foreignKey": true
+							"foreignKey": true,
+							"primaryKey": true
 						},
 						{
 							"_type": "ERDColumn",
@@ -15596,7 +15571,8 @@
 							"name": "updated_at",
 							"type": "TIMESTAMPTZ"
 						}
-					]
+					],
+					"documentation": "Dónde se puede escuchar una grabación, a lo sumo uno por plataforma (ADR 0009). PK (recording_id, platform_id); FKs recording_id -> recordings.id y platform_id -> platforms.id; CHECK url HTTP(S). Reemplazarlo cambia solo la URL. Las pistas no tienen enlaces: todas las de una grabación suenan igual."
 				},
 				{
 					"_type": "ERDEntity",

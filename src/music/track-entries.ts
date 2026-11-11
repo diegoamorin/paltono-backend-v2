@@ -2,7 +2,8 @@ import { EntityManager, In } from 'typeorm';
 import { recordingArtistCreditEntries, trackArtistCreditEntries } from './artist-credit-entries';
 import { Recording } from './entities/recording.entity';
 import { Release } from './entities/release.entity';
-import { Track, TrackPlatformLink } from './entities/track.entity';
+import { Track } from './entities/track.entity';
+import { withPlatformLinks } from './platform-link-entries';
 import { recordingReleaseDates } from './release-dates';
 import { releaseEntries } from './release-entries';
 import { isWithdrawn } from './resource-primitives';
@@ -10,9 +11,9 @@ import { TrackEntry } from './track.resource';
 
 /*
  * Loads tracks as entries with their release and recording, and, for the
- * primary data, the artist credit each shows and their platform links. The
- * release and the recording carry no relations of their own, as an include
- * reaches at most two levels.
+ * primary data, the artist credit each shows and the platform links of its
+ * recording. The release and the recording carry no relations of their own,
+ * as an include reaches at most two levels.
  */
 
 export async function trackEntries(manager: EntityManager, tracks: Track[], now: Date, withRelations = true): Promise<TrackEntry[]> {
@@ -23,6 +24,10 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
     relations: { editorialEntity: true },
   });
   const releaseDates = await recordingReleaseDates(manager, recordings.map(({ id }) => id));
+  // A tracklist shows where each recording can be heard (ADR 0009); a recording reached otherwise carries no links.
+  const shownRecordings = withRelations
+    ? await withPlatformLinks(manager, recordings.map((recording) => ({ recording, releaseDate: releaseDates.get(recording.id)! })))
+    : recordings.map((recording) => ({ recording, releaseDate: releaseDates.get(recording.id)! }));
   const releases = await releaseEntries(
     manager,
     await manager.find(Release, { where: { id: In([...new Set(tracks.map(({ releaseId }) => releaseId))]) }, relations: { editorialEntity: true } }),
@@ -33,26 +38,20 @@ export async function trackEntries(manager: EntityManager, tracks: Track[], now:
   // A track without a printed credit shows its recording's, read now and never copied; a withdrawn recording lends none.
   const unprinted = new Set(tracks.filter(({ id }) => !printed.some(({ credit }) => credit.trackId === id)).map(({ recordingId }) => recordingId));
   const lent = withRelations ? await recordingArtistCreditEntries(manager, recordings.filter((recording) => unprinted.has(recording.id) && !isWithdrawn(recording))) : [];
-  const links = withRelations
-    ? await manager.find(TrackPlatformLink, { where: { trackId: In(ids) }, relations: { platform: true }, order: { id: 'ASC' } })
-    : [];
   return tracks.map((track) => {
     if (!withRelations) return { track, ...ends(track) };
     const own = printed.filter(({ credit }) => credit.trackId === track.id);
     return {
       track,
       ...ends(track),
-      relations: {
-        artistCredits: own.length > 0 ? own : lent.filter(({ credit }) => credit.recordingId === track.recordingId),
-        platformLinks: links.filter(({ trackId }) => trackId === track.id),
-      },
+      relations: { artistCredits: own.length > 0 ? own : lent.filter(({ credit }) => credit.recordingId === track.recordingId) },
     };
   });
 
   function ends(track: Track) {
     return {
       release: releases.find(({ release }) => release.id === track.releaseId)!,
-      recording: { recording: recordings.find(({ id }) => id === track.recordingId)!, releaseDate: releaseDates.get(track.recordingId)! },
+      recording: shownRecordings.find(({ recording }) => recording.id === track.recordingId)!,
     };
   }
 }

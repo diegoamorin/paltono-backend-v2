@@ -7,6 +7,7 @@ import { recordingArtistCreditEntries } from './artist-credit-entries';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { Recording, RecordingContribution, RecordingGenre, RecordingWork } from './entities/recording.entity';
+import { withPlatformLinks } from './platform-link-entries';
 import { Credit, Work, WorkContribution } from './entities/work.entity';
 import { FirstRecordingEntry, RecordingEntry, RecordingWorkEntry, WorkEntry } from './music.resource';
 import { CreditEntry, CreditScope } from './resource-primitives';
@@ -89,7 +90,7 @@ export async function withArtistCredits(manager: EntityManager, entries: Recordi
 }
 
 export async function recordingEntries(manager: EntityManager, recordings: Recording[], now: Date): Promise<RecordingEntry[]> {
-  const plain = await withArtistCredits(manager, await plainRecordingEntries(manager, recordings));
+  const plain = await withPlatformLinks(manager, await withArtistCredits(manager, await plainRecordingEntries(manager, recordings)));
   const ids = recordings.filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return plain.map((entry) => ({ ...entry, relations: null }));
   const credits = await manager.find(RecordingContribution, { where: { recordingId: In(ids) }, order: { position: 'ASC', id: 'ASC' } });

@@ -85,7 +85,7 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 ## 5. Géneros y enlaces
 
 - `recording_genres` asigna géneros a grabaciones, con como mucho un género primario por grabación.
-- `track_platform_links` enlaza pistas con plataformas que admitan pistas; `catalog_identity_platform_links` hace lo mismo con identidades. `play_count` queda fuera del MVP.
+- `recording_platform_links` enlaza grabaciones con plataformas que admitan grabaciones: dónde escucharlas, con `PRIMARY KEY (recording_id, platform_id)`, así que a lo sumo uno por plataforma; reemplazarlo cambia solo la URL. Las pistas no tienen enlaces: todas las de una grabación suenan igual (ADR 0009). `catalog_identity_platform_links` enlaza identidades con plataformas que admitan identidades. `play_count` queda fuera del MVP.
 
 ## 6. Fuera del MVP
 

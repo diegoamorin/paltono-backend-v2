@@ -210,6 +210,37 @@ describe('tracks and credits of releases in the editorial flow', () => {
       expect(titledTrack.displayTitle).toBe('Life Goes On (Like an arrow)');
     });
 
+    it("lists a tracklist with the platform links of each track's recording, in one response (ADR 0009)", async () => {
+      const spotify = await createdEntryId(app, admin.accessToken, 'platforms', {
+        name: 'Spotify',
+        slug: 'spotify',
+        iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, 'spotify'),
+        supportsRecording: true,
+      });
+      const recording = await publishRecording();
+      const url = 'https://open.spotify.com/track/0t1kP63rueHleOhQkYSXFY';
+      await publish([
+        {
+          entityId: recording.entityId,
+          operation: 'add_relation',
+          targetPath: 'recording_platform_links',
+          targetKey: { recording_id: { entity_id: recording.entityId }, platform_id: Number(spotify) },
+          proposedValue: present({ url }),
+        },
+      ]);
+      const release = await publishRelease();
+      await publishTrack(release.entityId, recording.entityId, { discNumber: 1, trackNumber: 1 });
+
+      const { body } = await getJsonApi(app, `/v1/releases/${release.id}/tracks?include=recording.platformLinks`).expect(200);
+
+      expect(body.data[0].relationships).not.toHaveProperty('platformLinks');
+      const shown = body.included.find(({ type }: { type: string }) => type === 'recordings');
+      expect(shown.relationships.platformLinks.data).toEqual([{ type: 'recording-platform-links', id: `${recording.id}.${spotify}` }]);
+      expect(body.included).toContainEqual(
+        expect.objectContaining({ type: 'recording-platform-links', attributes: { url }, relationships: { platform: { data: { type: 'platforms', id: spotify } } } }),
+      );
+    });
+
     it('derives the explicit content of a release from the recordings of its tracks', async () => {
       const clean = await publishRecording({ title: 'Clean' });
       const explicit = await publishRecording({ title: 'Explicit', isExplicit: true });
@@ -362,37 +393,6 @@ describe('tracks and credits of releases in the editorial flow', () => {
       await publish([trackCredit(release.entityId, trackId, bts, null, 'remove_relation')]);
       await publish([removal]);
       await getJsonApi(app, `/v1/tracks/${trackId}`).expect(404);
-    });
-
-    it('links a track on a platform that supports tracks, once per platform and URL', async () => {
-      const platform = async (slug: string, supportsTrack: boolean) =>
-        createdEntryId(app, admin.accessToken, 'platforms', {
-          name: slug,
-          slug,
-          iconUrl: await uploadedPlatformIconUrl(app, admin.accessToken, slug),
-          supportsTrack,
-        });
-      const spotify = Number(await platform('spotify', true));
-      const instagram = Number(await platform('instagram', false));
-      const recording = await publishRecording();
-      const release = await publishRelease();
-      const trackId = await publishTrack(release.entityId, recording.entityId, { discNumber: 1, trackNumber: 1 });
-      const link = (platformId: number): ChangeInput => ({
-        entityId: release.entityId,
-        operation: 'add_relation',
-        targetPath: 'track_platform_links',
-        targetKey: { track_id: trackId },
-        proposedValue: present({ platformId, url: 'https://open.spotify.com/track/0t1kP63rueHleOhQkYSXFY' }),
-      });
-      const proposalId = await createDraft(app, ana.accessToken);
-      expect((await addChange(app, ana.accessToken, proposalId, link(instagram)).expect(422)).body.errors[0].code).toBe('unsupported_platform');
-      const [linked] = await publish([link(spotify)]);
-      const [repeated] = await submitChanges([link(spotify)]);
-
-      const { body } = await getJsonApi(app, `/v1/releases/${release.id}/tracks?include=platformLinks.platform`).expect(200);
-      expect(body.data[0].relationships.platformLinks.data).toEqual([{ type: 'track-platform-links', id: String(linked.id) }]);
-      expect(body.included.map(({ type }: { type: string }) => type).sort()).toEqual(['platforms', 'track-platform-links']);
-      expect((await apply(repeated).expect(201)).body.data[0].attributes.resultingStatus).toBe('satisfied');
     });
   });
 

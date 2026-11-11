@@ -480,11 +480,14 @@ function unregistered(entity: EditorialEntity, change: ChangeFields): ChangeProb
   return problem('payloadSchemaVersion', change.payloadSchemaVersion);
 }
 
-/** A version a higher one replaced, which no upcast translates yet (ADR 0006). */
-function obsolete(change: ChangeFields, currentVersion: number): ChangeProblem {
+/** A version a higher one replaced, which no upcast translates yet (ADR 0006), or one of a retired selector. */
+function obsolete(change: ChangeFields, currentVersion: number | undefined): ChangeProblem {
   return {
     code: 'obsolete_payload_schema_version',
-    detail: `Version ${change.payloadSchemaVersion} of ${change.targetPath} is obsolete; remove the microchange or redo it in version ${currentVersion}`,
+    detail:
+      currentVersion === undefined
+        ? `${change.targetPath} was retired and no version of it applies; remove the microchange`
+        : `Version ${change.payloadSchemaVersion} of ${change.targetPath} is obsolete; remove the microchange or redo it in version ${currentVersion}`,
     member: 'payloadSchemaVersion',
   };
 }

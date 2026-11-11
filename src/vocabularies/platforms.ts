@@ -24,7 +24,7 @@ import { vocabularyController } from './vocabulary.controller';
 /** `filter[supports]` values and the flag each one checks. */
 const SUPPORTS: Record<string, keyof Platform> = {
   catalog_identity: 'supportsCatalogIdentity',
-  track: 'supportsTrack',
+  recording: 'supportsRecording',
   album: 'supportsAlbum',
 };
 
@@ -36,7 +36,7 @@ const schema = defineResource<Platform>({
     slug: (platform) => platform.slug,
     iconUrl: (platform) => platform.iconUrl,
     supportsCatalogIdentity: (platform) => platform.supportsCatalogIdentity,
-    supportsTrack: (platform) => platform.supportsTrack,
+    supportsRecording: (platform) => platform.supportsRecording,
     supportsAlbum: (platform) => platform.supportsAlbum,
     createdAt: (platform) => platform.createdAt.toISOString(),
     updatedAt: (platform) => platform.updatedAt.toISOString(),
@@ -87,10 +87,10 @@ class PlatformAttributes {
   @IsBoolean()
   supportsCatalogIdentity?: boolean;
 
-  @ApiPropertyOptional({ default: false })
+  @ApiPropertyOptional({ default: false, description: 'Admite el enlace de una grabación, uno por plataforma' })
   @IsOptional()
   @IsBoolean()
-  supportsTrack?: boolean;
+  supportsRecording?: boolean;
 
   @ApiPropertyOptional({ default: false })
   @IsOptional()
@@ -122,7 +122,7 @@ class PlatformChanges {
   @ApiPropertyOptional()
   @IfPresent()
   @IsBoolean()
-  supportsTrack?: boolean;
+  supportsRecording?: boolean;
 
   @ApiPropertyOptional()
   @IfPresent()
@@ -144,7 +144,7 @@ class PlatformResponseAttributes {
   supportsCatalogIdentity: boolean;
 
   @ApiProperty()
-  supportsTrack: boolean;
+  supportsRecording: boolean;
 
   @ApiProperty()
   supportsAlbum: boolean;

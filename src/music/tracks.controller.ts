@@ -12,7 +12,7 @@ import {
 import { TrackResource, trackSchema } from './track.resource';
 import { TracksService } from './tracks.service';
 
-const INCLUDE = ['recording', 'artistCredits', 'artistCredits.artist', 'platformLinks', 'platformLinks.platform'];
+const INCLUDE = ['recording', 'recording.platformLinks', 'artistCredits', 'artistCredits.artist'];
 
 /** What lists of tracks accept, besides their filters. */
 const TRACKS_OPTIONS: CollectionQueryOptions = { include: INCLUDE, sort: ['discNumber', 'trackNumber'], defaultSort: 'discNumber,trackNumber' };
@@ -24,8 +24,9 @@ const ARTIST_TRACKS_QUERY = collectionQuery(trackSchema, { ...TRACKS_OPTIONS, fi
 const TRACK =
   '`displayTitle` muestra su título literal o, si no tiene, el título vigente de su grabación, sin copiarlo. `artistCredits` ' +
   'muestra su crédito impreso (`track-artist-credits`) o, si no tiene, el crédito de artista de su grabación ' +
-  '(`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. `include` admite `recording`, ' +
-  '`artistCredits`, `artistCredits.artist`, `platformLinks` y `platformLinks.platform`.';
+  '(`recording-artist-credits`), también sin copiarlo; una grabación retirada no presta el suyo. Los enlaces de plataforma son ' +
+  'de la grabación (`recording.platformLinks`, cada uno con el id de su plataforma). `include` admite `recording`, ' +
+  '`recording.platformLinks`, `artistCredits` y `artistCredits.artist`.';
 
 /**
  * Tracks of the catalog (M6, M9, M10 and C9). A track has no editorial root:

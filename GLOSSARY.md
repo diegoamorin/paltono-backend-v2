@@ -42,6 +42,10 @@ _Avoid_: Adjunto, archivo.
 Servicio ajeno a Paltono donde se publica música o se mantiene un perfil, como Spotify o YouTube, al que pueden enlazar las fichas. Se muestra con su icono.
 _Avoid_: Plataforma a secas para estos servicios, porque también nombra a Paltono.
 
+**Enlace de plataforma (platform link)**:
+Dirección de una ficha en una plataforma externa. En una identidad lleva a su perfil; en una grabación, a donde se puede escuchar, con a lo sumo uno por plataforma externa, porque todas las pistas de una grabación suenan igual.
+_Avoid_: Enlace social, que en una grabación no lleva a ninguna red social; enlace de pista.
+
 **Cupo de subidas (upload quota)**:
 Número de subidas de imagen que una cuenta puede hacer en los últimos 15 días. El de catálogo y el de avatar son independientes, y el personal no tiene cupo de catálogo.
 _Avoid_: Rate limit, para no confundirlo con los límites por frecuencia de peticiones.

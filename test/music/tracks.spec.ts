@@ -116,7 +116,6 @@ describe('tracks (M6, M9, M10) and credited tracks of an artist (C9)', () => {
           release: { data: { type: 'releases', id: publicIds.standard } },
           recording: { data: { type: 'recordings', id: publicIds.butter } },
           artistCredits: { data: [{ type: 'track-artist-credits', id: expect.any(String) }] },
-          platformLinks: { data: [] },
         },
       });
       // A withdrawn recording shows only its notice, not its title.

@@ -4,7 +4,8 @@ import { ResourceSchema, defineResource } from '../common/json-api/resource-sche
 import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { Genre } from '../vocabularies/entities/genre.entity';
 import { GENRES } from '../vocabularies/genres';
-import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingArtistCredit, RecordingWork } from './entities/recording.entity';
+import { PLATFORMS } from '../vocabularies/platforms';
+import { RECORDING_WORK_RELATION_TYPES, Recording, RecordingArtistCredit, RecordingPlatformLink, RecordingWork } from './entities/recording.entity';
 import { Work } from './entities/work.entity';
 import {
   CreditEntry,
@@ -45,15 +46,28 @@ export interface RecordingEntry {
    * recording.
    */
   artistCredits?: RecordingArtistCreditEntry[];
+  /**
+   * Where it can be heard, at most one per platform (ADR 0009): loaded along
+   * with its relations, and on the recording of a track, so a tracklist shows
+   * them in one response; never on a withdrawn recording.
+   */
+  platformLinks?: RecordingPlatformLinkEntry[];
   relations?: {
     contributions: CreditEntry[];
     /** The primary genre first. */
     genres: Genre[];
     primaryGenreId: number | null;
     recordingWorks: RecordingWorkEntry[];
-    /** Its appearances in published releases, without credits nor links. */
+    /** Its appearances in published releases, without credits. */
     tracks: TrackEntry[];
   } | null;
+}
+
+/** A platform link of a recording, with the recording that names it. */
+export interface RecordingPlatformLinkEntry {
+  /** With its platform. */
+  link: RecordingPlatformLink;
+  recording: Recording;
 }
 
 /**
@@ -123,6 +137,13 @@ export const recordingWorkSchema: ResourceSchema<RecordingWorkEntry> = defineRes
   },
 });
 
+export const recordingPlatformLinkSchema: ResourceSchema<RecordingPlatformLinkEntry> = defineResource({
+  type: 'recording-platform-links',
+  id: ({ link, recording }) => `${recording.publicId}.${link.platformId}`,
+  attributes: { url: ({ link }) => link.url },
+  relationships: { platform: { schema: () => PLATFORMS.schema, get: ({ link }) => link.platform } },
+});
+
 const workContent = <V>(read: (entry: WorkEntry) => V) => content<WorkEntry>(({ work }) => work, read);
 
 export const workSchema: ResourceSchema<WorkEntry> = defineResource({
@@ -174,6 +195,7 @@ export const recordingSchema: ResourceSchema<RecordingEntry> = defineResource({
     contributions: { schema: () => recordingContributionSchema, get: ({ relations }) => relations?.contributions },
     genres: { schema: () => GENRES.schema, get: ({ relations }) => relations?.genres },
     recordingWorks: { schema: () => recordingWorkSchema, get: ({ relations }) => relations?.recordingWorks },
+    platformLinks: { schema: () => recordingPlatformLinkSchema, get: ({ platformLinks }) => platformLinks },
     tracks: { schema: () => trackSchema, get: ({ relations }) => relations?.tracks },
   },
   meta: ({ recording }) => ({ editorialEntityId: recording.editorialEntityId }),
@@ -309,6 +331,9 @@ class RecordingRelationships {
 
   @ApiProperty({ type: ToManyLinkage, description: '`recording-works`, por `position` de medley' })
   recordingWorks: ToManyLinkage;
+
+  @ApiProperty({ type: ToManyLinkage, description: '`recording-platform-links`: dónde escucharla, a lo sumo uno por plataforma' })
+  platformLinks: ToManyLinkage;
 
   @ApiProperty({ type: ToManyLinkage, description: '`tracks`: apariciones en ediciones' })
   tracks: ToManyLinkage;

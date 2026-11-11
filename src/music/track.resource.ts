@@ -1,17 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArtistEntry, artistSchema } from '../catalog-identities/artist.resource';
 import { ResourceSchema, defineResource } from '../common/json-api/resource-schema';
-import { PLATFORMS } from '../vocabularies/platforms';
-import { Track, TrackArtistCredit, TrackPlatformLink } from './entities/track.entity';
+import { Track, TrackArtistCredit } from './entities/track.entity';
 import { RecordingArtistCreditEntry, RecordingEntry, recordingArtistCreditSchema, recordingSchema } from './music.resource';
 import { ReleaseEntry, releaseSchema } from './release.resource';
 import { ToManyLinkage, ToOneLinkage, creditedName, isWithdrawn } from './resource-primitives';
 
 /*
- * The public resources of tracks, their printed credits and platform links. A
- * track is no editorial root: it is shown while its release is published.
- * Reached as the target of a relationship it carries no credits nor links
- * (`relations` undefined).
+ * The public resources of tracks and their printed credits. A track is no
+ * editorial root: it is shown while its release is published. Reached as the
+ * target of a relationship it carries no credits (`relations` undefined). Its
+ * platform links are its recording's (ADR 0009).
  */
 
 export interface TrackEntry {
@@ -22,7 +21,6 @@ export interface TrackEntry {
   relations?: {
     /** The credit it shows (ADR 0008): its printed credit, or else the artist credit of its recording, by position. */
     artistCredits: (TrackArtistCreditEntry | RecordingArtistCreditEntry)[];
-    platformLinks: TrackPlatformLink[];
   };
 }
 
@@ -46,13 +44,6 @@ export const trackArtistCreditSchema: ResourceSchema<TrackArtistCreditEntry> = d
 
 const isPrinted = (entry: unknown): entry is TrackArtistCreditEntry => (entry as TrackArtistCreditEntry).credit instanceof TrackArtistCredit;
 
-export const trackPlatformLinkSchema: ResourceSchema<TrackPlatformLink> = defineResource({
-  type: 'track-platform-links',
-  id: (link) => String(link.id),
-  attributes: { url: (link) => link.url },
-  relationships: { platform: { schema: () => PLATFORMS.schema, get: (link) => link.platform } },
-});
-
 export const trackSchema: ResourceSchema<TrackEntry> = defineResource({
   type: 'tracks',
   id: ({ track }) => String(track.id),
@@ -72,7 +63,6 @@ export const trackSchema: ResourceSchema<TrackEntry> = defineResource({
       polymorphic: { others: () => [recordingArtistCreditSchema], of: (credit) => (isPrinted(credit) ? trackArtistCreditSchema : recordingArtistCreditSchema) },
       get: ({ relations }) => relations?.artistCredits,
     },
-    platformLinks: { schema: () => trackPlatformLinkSchema, get: ({ relations }) => relations?.platformLinks },
   },
 });
 
@@ -107,9 +97,6 @@ class TrackRelationships {
       'artista de su grabación (`recording-artist-credits`), leído al mostrarla; vacío si la grabación está retirada',
   })
   artistCredits?: ToManyLinkage;
-
-  @ApiProperty({ type: ToManyLinkage, required: false, description: '`track-platform-links`' })
-  platformLinks?: ToManyLinkage;
 }
 
 export class TrackResource {

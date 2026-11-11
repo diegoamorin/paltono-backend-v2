@@ -63,10 +63,10 @@ const ROLES: Record<RoleSlug, { name: string; category: ContributionRoleCategory
  * icons of Simple Icons (CC0), uploaded through the same check as an admin's.
  */
 const PLATFORMS = {
-  youtube: { name: 'YouTube', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
-  spotify: { name: 'Spotify', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
-  'apple-music': { name: 'Apple Music', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
-  'youtube-music': { name: 'YouTube Music', supportsCatalogIdentity: true, supportsTrack: true, supportsAlbum: true },
+  youtube: { name: 'YouTube', supportsCatalogIdentity: true, supportsRecording: true, supportsAlbum: true },
+  spotify: { name: 'Spotify', supportsCatalogIdentity: true, supportsRecording: true, supportsAlbum: true },
+  'apple-music': { name: 'Apple Music', supportsCatalogIdentity: true, supportsRecording: true, supportsAlbum: true },
+  'youtube-music': { name: 'YouTube Music', supportsCatalogIdentity: true, supportsRecording: true, supportsAlbum: true },
   instagram: { name: 'Instagram', supportsCatalogIdentity: true },
   x: { name: 'X', supportsCatalogIdentity: true },
 } as const;
