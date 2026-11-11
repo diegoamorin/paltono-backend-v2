@@ -3,7 +3,7 @@ import { Artist } from '../catalog-identities/entities/artist.entity';
 import { identityEntriesById } from '../catalog-identities/identities.service';
 import { shownImages } from '../images/shown-images';
 import { Edition } from './entities/edition.entity';
-import { ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { Release, ReleaseArtistCredit } from './entities/release.entity';
 import { EditionContribution, Track } from './entities/track.entity';
 import { creditEntries } from './music-entries';
 import { trackEntries } from './track-entries';
@@ -17,10 +17,10 @@ import { ReleaseArtistCreditEntry, ReleaseEntry, ReleaseGroupEntry } from './rel
  * levels.
  */
 
-const notWithdrawn = (root: ReleaseGroup | Edition) => root.editorialEntity!.publicationStatus !== 'withdrawn';
+const notWithdrawn = (root: Release | Edition) => root.editorialEntity!.publicationStatus !== 'withdrawn';
 
 /** Release groups, each with its editorial root loaded, as entries; with their relations when `withRelations`. */
-export async function releaseGroupEntries(manager: EntityManager, groups: ReleaseGroup[], now: Date, withRelations = true): Promise<ReleaseGroupEntry[]> {
+export async function releaseGroupEntries(manager: EntityManager, groups: Release[], now: Date, withRelations = true): Promise<ReleaseGroupEntry[]> {
   const dates = await releaseGroupDates(manager, groups.map(({ id }) => id), now);
   const plain = groups.map((group) => ({ group, dates: dates.get(group.id)! }));
   if (!withRelations) return plain;
@@ -31,7 +31,7 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
   const releases = await manager
     .createQueryBuilder(Edition, 'edition')
     .innerJoinAndSelect('edition.editorialEntity', 'root')
-    .where('edition.release_group_id IN (:...ids)', { ids })
+    .where('edition.release_id IN (:...ids)', { ids })
     .andWhere(`root.publication_status = 'published'`)
     .orderBy('edition.release_year', 'ASC', 'NULLS LAST')
     .addOrderBy('edition.release_month', 'ASC', 'NULLS FIRST')
@@ -42,7 +42,7 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
   const originalIds = [...new Set(groups.flatMap(({ repackageOfId }) => (repackageOfId === null ? [] : [repackageOfId])))];
   const originals = await releaseGroupEntries(
     manager,
-    originalIds.length === 0 ? [] : await manager.find(ReleaseGroup, { where: { id: In(originalIds) }, relations: { editorialEntity: true } }),
+    originalIds.length === 0 ? [] : await manager.find(Release, { where: { id: In(originalIds) }, relations: { editorialEntity: true } }),
     now,
     false,
   );
@@ -53,7 +53,7 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
     return {
       ...entry,
       relations: {
-        releases: releaseList.filter(({ release }) => release.releaseGroupId === group.id),
+        releases: releaseList.filter(({ release }) => release.releaseId === group.id),
         repackageOf: originals.find(({ group: original }) => original.id === group.repackageOfId) ?? null,
       },
     };
@@ -64,9 +64,9 @@ export async function releaseGroupEntries(manager: EntityManager, groups: Releas
 export async function withReleaseArtistCredits(manager: EntityManager, entries: ReleaseGroupEntry[]): Promise<ReleaseGroupEntry[]> {
   const ids = entries.map(({ group }) => group).filter(notWithdrawn).map(({ id }) => id);
   if (ids.length === 0) return entries;
-  const credits = await artistCreditEntries(manager, await manager.find(ReleaseArtistCredit, { where: { releaseGroupId: In(ids) }, order: { position: 'ASC', artistId: 'ASC' } }));
+  const credits = await artistCreditEntries(manager, await manager.find(ReleaseArtistCredit, { where: { releaseId: In(ids) }, order: { position: 'ASC', artistId: 'ASC' } }));
   return entries.map((entry) =>
-    ids.includes(entry.group.id) ? { ...entry, artistCredits: credits.filter(({ credit }) => credit.releaseGroupId === entry.group.id) } : entry,
+    ids.includes(entry.group.id) ? { ...entry, artistCredits: credits.filter(({ credit }) => credit.releaseId === entry.group.id) } : entry,
   );
 }
 
@@ -74,15 +74,15 @@ export async function withReleaseArtistCredits(manager: EntityManager, entries: 
 export async function releaseEntries(manager: EntityManager, releases: Edition[], now: Date, withRelations = true): Promise<ReleaseEntry[]> {
   if (releases.length === 0) return [];
   const times = await releaseTimes(manager, releases.map(({ id }) => id), now);
-  const groupIds = [...new Set(releases.map(({ releaseGroupId }) => releaseGroupId))];
-  const groups = await releaseGroupEntries(manager, await manager.find(ReleaseGroup, { where: { id: In(groupIds) }, relations: { editorialEntity: true } }), now, false);
+  const groupIds = [...new Set(releases.map(({ releaseId }) => releaseId))];
+  const groups = await releaseGroupEntries(manager, await manager.find(Release, { where: { id: In(groupIds) }, relations: { editorialEntity: true } }), now, false);
   const explicit = await explicitReleaseIds(manager, releases.map(({ id }) => id));
   const images = await shownImages(manager, releases.filter(notWithdrawn).map(({ coverArtUrl }) => coverArtUrl));
   const plain = releases.map((release) => ({
     release,
     times: times.get(release.id)!,
     isExplicit: explicit.has(release.id),
-    group: groups.find(({ group }) => group.id === release.releaseGroupId)!,
+    group: groups.find(({ group }) => group.id === release.releaseId)!,
     coverArt: images(release.coverArtUrl),
   }));
   if (!withRelations) return plain;
@@ -135,12 +135,12 @@ async function artistCreditEntries(manager: EntityManager, credits: ReleaseArtis
   if (credits.length === 0) return [];
   const artists = await manager.find(Artist, { where: { id: In([...new Set(credits.map(({ artistId }) => artistId))]) } });
   const identities = await identityEntriesById(manager, artists.map(({ catalogIdentityId }) => catalogIdentityId));
-  const groups = await manager.find(ReleaseGroup, { where: { id: In([...new Set(credits.map(({ releaseGroupId }) => releaseGroupId))]) } });
+  const groups = await manager.find(Release, { where: { id: In([...new Set(credits.map(({ releaseId }) => releaseId))]) } });
   return credits.map((credit) => {
     const artist = artists.find(({ id }) => id === credit.artistId)!;
     return {
       credit,
-      group: groups.find(({ id }) => id === credit.releaseGroupId)!,
+      group: groups.find(({ id }) => id === credit.releaseId)!,
       artist: { artist, identity: identities.get(artist.catalogIdentityId)! },
     };
   });

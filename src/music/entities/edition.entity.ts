@@ -1,16 +1,16 @@
 import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { partialDateCheck } from '../../common/partial-date/partial-date';
 import { EditorialEntity } from '../../editorial/entities/editorial-entity.entity';
-import { ReleaseGroup } from './release.entity';
+import { Release } from './release.entity';
 
-/** One concrete digital publication of a release group. Only applied microchanges write it. */
-// Mirrors the CreateReleaseGroupsAndReleases migration, so `migration:generate` finds no drift.
+/** One concrete digital publication of a release. Only applied microchanges write it. */
+// Mirrors the CreateReleasesAndEditions migration, so `migration:generate` finds no drift.
 @Entity('editions')
 @Unique('editions_uuid_key', ['uuid'])
 @Unique('editions_public_id_key', ['publicId'])
 @Unique('editions_editorial_entity_id_key', ['editorialEntityId'])
 // UNIQUE NULLS NOT DISTINCT in the migration, which TypeORM cannot declare.
-@Unique('editions_release_group_id_edition_name_key', ['releaseGroupId', 'editionName'])
+@Unique('editions_release_id_edition_name_key', ['releaseId', 'editionName'])
 @Check('editions_title_nonblank', `title IS NULL OR btrim(title) <> ''`)
 @Check('editions_edition_name_nonblank', `edition_name IS NULL OR btrim(edition_name) <> ''`)
 @Check('editions_release_date', partialDateCheck('release'))
@@ -29,14 +29,14 @@ export class Edition {
   @Column({ name: 'public_id', type: 'varchar', length: 21 })
   publicId: string;
 
-  @Column({ name: 'release_group_id', type: 'integer' })
-  releaseGroupId: number;
+  @Column({ name: 'release_id', type: 'integer' })
+  releaseId: number;
 
-  @ManyToOne(() => ReleaseGroup, { onDelete: 'RESTRICT' })
-  @JoinColumn({ name: 'release_group_id', foreignKeyConstraintName: 'editions_release_group_id_fkey' })
-  releaseGroup?: ReleaseGroup;
+  @ManyToOne(() => Release, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'release_id', foreignKeyConstraintName: 'editions_release_id_fkey' })
+  release?: Release;
 
-  /** The literal title of this edition; null shows the release group's without copying it. */
+  /** The literal title of this edition; null shows the release's without copying it. */
   @Column({ type: 'varchar', length: 512, nullable: true })
   title: string | null;
 

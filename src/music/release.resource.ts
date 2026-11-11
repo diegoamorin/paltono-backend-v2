@@ -4,7 +4,7 @@ import { ResourceSchema, defineResource } from '../common/json-api/resource-sche
 import { PartialDate, partialDateResponse } from '../common/partial-date/partial-date';
 import { SHOWN_IMAGE_DESCRIPTION, ShownImage } from '../images/shown-images';
 import { Edition } from './entities/edition.entity';
-import { RELEASE_GROUP_TYPES, ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { RELEASE_TYPES, Release, ReleaseArtistCredit } from './entities/release.entity';
 import {
   CreditEntry,
   EntryMeta,
@@ -29,7 +29,7 @@ import { RELEASE_AVAILABILITIES, ReleaseGroupDates, ReleaseTimes } from './relea
 
 export interface ReleaseGroupEntry {
   /** With its editorial root. */
-  group: ReleaseGroup;
+  group: Release;
   dates: ReleaseGroupDates;
   /**
    * Its artist credit, by position: loaded along with its relations, and
@@ -58,7 +58,7 @@ export interface ReleaseEntry {
 
 export interface ReleaseArtistCreditEntry {
   credit: ReleaseArtistCredit;
-  group: ReleaseGroup;
+  group: Release;
   artist: ArtistEntry;
 }
 
@@ -149,7 +149,7 @@ class ReleaseGroupAttributes {
   @ApiProperty({ example: 'BE', required: false, description: WITHDRAWN })
   title?: string;
 
-  @ApiProperty({ enum: RELEASE_GROUP_TYPES, required: false, description: `Como lo anunció su artista o agencia. ${WITHDRAWN}` })
+  @ApiProperty({ enum: RELEASE_TYPES, required: false, description: `Como lo anunció su artista o agencia. ${WITHDRAWN}` })
   type?: string;
 
   @ApiProperty({ type: String, nullable: true, required: false, description: WITHDRAWN })

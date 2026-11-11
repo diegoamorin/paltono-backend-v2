@@ -61,11 +61,11 @@ export function releaseSql(r: string, now: string) {
 /** The releases a release group's dates come from: published, not cancelled and with a date. */
 export function datedReleasesSql(r: string, group: string): string {
   return `FROM editions ${r} JOIN editorial_entities ${r}_root ON ${r}_root.id = ${r}.editorial_entity_id
-    WHERE ${r}.release_group_id = ${group} AND NOT ${r}.is_cancelled AND ${r}.release_year IS NOT NULL
+    WHERE ${r}.release_id = ${group} AND NOT ${r}.is_cancelled AND ${r}.release_year IS NOT NULL
       AND ${r}_root.publication_status = 'published'`;
 }
 
-/** SQL expressions over a `release_groups` row aliased `g`, for filters and sorts. */
+/** SQL expressions over a `releases` row aliased `g`, for filters and sorts. */
 export function releaseGroupSql(g: string, now: string) {
   const r = `${g}_release`;
   const { start, end, instant, arrived } = releaseSql(r, now);
@@ -160,10 +160,10 @@ export async function releaseGroupDates(manager: EntityManager, ids: number[], n
   const { start, instant, arrived } = releaseSql('r', '$2::timestamptz');
   const rows: { groupId: number; releaseYear: number; releaseMonth: number | null; releaseDay: number | null; instant: Date | null; arrived: boolean }[] =
     await manager.query(
-      `SELECT r.release_group_id AS "groupId", r.release_year AS "releaseYear", r.release_month AS "releaseMonth", r.release_day AS "releaseDay",
+      `SELECT r.release_id AS "groupId", r.release_year AS "releaseYear", r.release_month AS "releaseMonth", r.release_day AS "releaseDay",
           ${instant} AS instant, ${arrived} AS arrived
         FROM editions r JOIN editorial_entities root ON root.id = r.editorial_entity_id
-        WHERE r.release_group_id = ANY($1) AND NOT r.is_cancelled AND r.release_year IS NOT NULL AND root.publication_status = 'published'
+        WHERE r.release_id = ANY($1) AND NOT r.is_cancelled AND r.release_year IS NOT NULL AND root.publication_status = 'published'
         ORDER BY ${start}, ${instant} NULLS LAST, r.id`,
       [ids, now],
     );

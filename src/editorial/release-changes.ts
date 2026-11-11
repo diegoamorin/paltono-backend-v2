@@ -1,6 +1,6 @@
 import { EntityManager } from 'typeorm';
 import { CATALOG_IMAGE_URL, imageUrlAt } from '../images/catalog-image-urls';
-import { RELEASE_GROUP_TYPES } from '../music/entities/release.entity';
+import { RELEASE_TYPES } from '../music/entities/release.entity';
 import {
   RELEASE_FIELDS,
   RELEASE_GROUP_FIELDS,
@@ -44,7 +44,7 @@ const noReferences = { references: () => [] } satisfies Pick<OperationDefinition
 
 const TITLE = { type: 'string', minLength: 1, maxLength: 512, pattern: '\\S' };
 const OPTIONAL_TITLE = { type: ['string', 'null'], minLength: 1, maxLength: 512, pattern: '\\S', description: 'null muestra el título del lanzamiento' };
-const TYPE = { enum: RELEASE_GROUP_TYPES, description: 'Como lo anunció su artista o agencia; nunca se calcula por número de pistas' };
+const TYPE = { enum: RELEASE_TYPES, description: 'Como lo anunció su artista o agencia; nunca se calcula por número de pistas' };
 const REPACKAGE_OF = {
   anyOf: [ENTITY_REFERENCE('Raíz editorial del lanzamiento original: publicado y distinto de este, sin ciclos'), { type: 'null' }],
 };

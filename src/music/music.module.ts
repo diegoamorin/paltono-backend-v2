@@ -4,7 +4,7 @@ import { Recording, RecordingArtistCredit, RecordingContribution, RecordingGenre
 import { Work, WorkContribution } from './entities/work.entity';
 import { ArtistReleaseGroupsController } from './artist-release-groups.controller';
 import { Edition } from './entities/edition.entity';
-import { ReleaseArtistCredit, ReleaseGroup } from './entities/release.entity';
+import { Release, ReleaseArtistCredit } from './entities/release.entity';
 import { IdentityCreditsController } from './identity-credits.controller';
 import { IdentityCreditsService } from './identity-credits.service';
 import { RecordingsController } from './recordings.controller';
@@ -37,7 +37,7 @@ import { WorksService } from './works.service';
       RecordingWork,
       RecordingGenre,
       RecordingPlatformLink,
-      ReleaseGroup,
+      Release,
       ReleaseArtistCredit,
       Edition,
       EditionContribution,

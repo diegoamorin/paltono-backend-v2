@@ -5,7 +5,7 @@ import { newPublicId } from '../catalog-identities/identity-creations';
 import { identityIdOf } from '../catalog-identities/identity-relations';
 import { PartialDateValue, partialDateColumns, partialDateValue } from '../common/partial-date/partial-date';
 import { Edition } from './entities/edition.entity';
-import { ReleaseArtistCredit, ReleaseGroup, ReleaseGroupType } from './entities/release.entity';
+import { Release, ReleaseArtistCredit, ReleaseType } from './entities/release.entity';
 
 /*
  * The writes of release groups, their artist credits and releases. The
@@ -21,7 +21,7 @@ export interface RootReference {
 /** A release group as its creation proposes it and its revisions record it. */
 export interface ReleaseGroupValue {
   title: string;
-  type: ReleaseGroupType;
+  type: ReleaseType;
   description?: string | null;
   repackageOf?: RootReference | null;
 }
@@ -70,29 +70,29 @@ export interface ReleaseArtistCreditValue {
 
 /** The internal id of the release group of an editorial root, or null while it is only reserved. */
 export async function releaseGroupIdOf(manager: EntityManager, editorialEntityId: string): Promise<number | null> {
-  const group = await manager.findOne(ReleaseGroup, { select: { id: true }, where: { editorialEntityId: editorialEntityId.toLowerCase() } });
+  const group = await manager.findOne(Release, { select: { id: true }, where: { editorialEntityId: editorialEntityId.toLowerCase() } });
   return group?.id ?? null;
 }
 
 /** The editorial root of the release group with the given public id, or null if there is none. */
 export async function releaseGroupRootOfPublicId(manager: EntityManager, publicId: string): Promise<string | null> {
-  const group = await manager.findOne(ReleaseGroup, { select: { editorialEntityId: true }, where: { publicId } });
+  const group = await manager.findOne(Release, { select: { editorialEntityId: true }, where: { publicId } });
   return group?.editorialEntityId ?? null;
 }
 
 /** The public id of the release group of each given editorial root, by root. */
 export async function releaseGroupPublicIdsOf(manager: EntityManager, editorialEntityIds: string[]): Promise<Map<string, string>> {
-  const groups = await manager.find(ReleaseGroup, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
+  const groups = await manager.find(Release, { select: { editorialEntityId: true, publicId: true }, where: { editorialEntityId: In(editorialEntityIds) } });
   return new Map(groups.map(({ editorialEntityId, publicId }) => [editorialEntityId, publicId]));
 }
 
 export async function findCreatedReleaseGroup(
   manager: EntityManager,
   editorialEntityId: string,
-): Promise<{ group: ReleaseGroup; value: Required<ReleaseGroupValue> } | null> {
-  const group = await manager.findOneBy(ReleaseGroup, { editorialEntityId });
+): Promise<{ group: Release; value: Required<ReleaseGroupValue> } | null> {
+  const group = await manager.findOneBy(Release, { editorialEntityId });
   if (!group) return null;
-  const original = group.repackageOfId === null ? null : await manager.findOneByOrFail(ReleaseGroup, { id: group.repackageOfId });
+  const original = group.repackageOfId === null ? null : await manager.findOneByOrFail(Release, { id: group.repackageOfId });
   return {
     group,
     value: {
@@ -104,8 +104,8 @@ export async function findCreatedReleaseGroup(
   };
 }
 
-export async function createReleaseGroup(manager: EntityManager, editorialEntityId: string, value: ReleaseGroupValue, now: Date): Promise<ReleaseGroup> {
-  await manager.insert(ReleaseGroup, {
+export async function createReleaseGroup(manager: EntityManager, editorialEntityId: string, value: ReleaseGroupValue, now: Date): Promise<Release> {
+  await manager.insert(Release, {
     uuid: randomUUID(),
     publicId: newPublicId(),
     title: value.title,
@@ -128,7 +128,7 @@ export async function writeReleaseGroupField(
 ): Promise<unknown> {
   const field = RELEASE_GROUP_FIELDS[path];
   const columns = field === 'repackageOf' ? { repackageOfId: await repackageOfId(manager, value as RootReference | null) } : { [field]: value };
-  await manager.update(ReleaseGroup, { editorialEntityId }, { ...columns, updatedAt: now });
+  await manager.update(Release, { editorialEntityId }, { ...columns, updatedAt: now });
   return (await findCreatedReleaseGroup(manager, editorialEntityId))!.value[field];
 }
 
@@ -139,7 +139,7 @@ export async function writeReleaseGroupField(
  * two links applied at once may close a cycle neither sees alone.
  */
 export async function closesRepackageCycle(manager: EntityManager, editorialEntityId: string, original: RootReference): Promise<boolean> {
-  await manager.query(`SELECT pg_advisory_xact_lock(hashtext('release_groups.repackage_of'))`);
+  await manager.query(`SELECT pg_advisory_xact_lock(hashtext('releases.repackage_of'))`);
   const groupId = await releaseGroupIdOf(manager, editorialEntityId);
   const originalId = await releaseGroupIdOf(manager, original.entity_id);
   if (groupId === null || originalId === null) return false;
@@ -147,7 +147,7 @@ export async function closesRepackageCycle(manager: EntityManager, editorialEnti
     `WITH RECURSIVE reached(id) AS (
        SELECT $1::integer
        UNION
-       SELECT original.repackage_of_id FROM release_groups original JOIN reached ON original.id = reached.id
+       SELECT original.repackage_of_id FROM releases original JOIN reached ON original.id = reached.id
        WHERE original.repackage_of_id IS NOT NULL
      )
      SELECT EXISTS (SELECT 1 FROM reached WHERE id = $2) AS cycle`,
@@ -170,30 +170,30 @@ export async function artistIdOfIdentity(manager: EntityManager, identityEntityI
   return artist?.id ?? null;
 }
 
-export async function findReleaseArtistCredit(manager: EntityManager, releaseGroupId: number, artistId: number): Promise<ReleaseArtistCreditValue | null> {
-  const row = await manager.findOneBy(ReleaseArtistCredit, { releaseGroupId, artistId });
+export async function findReleaseArtistCredit(manager: EntityManager, releaseId: number, artistId: number): Promise<ReleaseArtistCreditValue | null> {
+  const row = await manager.findOneBy(ReleaseArtistCredit, { releaseId, artistId });
   return row && { position: row.position, creditedAs: row.creditedAs };
 }
 
 export async function writeReleaseArtistCredit(
   manager: EntityManager,
-  releaseGroupId: number,
+  releaseId: number,
   artistId: number,
   value: ReleaseArtistCreditValue,
   now: Date,
 ): Promise<void> {
   const columns = { position: value.position, creditedAs: value.creditedAs ?? null };
-  if (await manager.existsBy(ReleaseArtistCredit, { releaseGroupId, artistId })) {
-    await manager.update(ReleaseArtistCredit, { releaseGroupId, artistId }, { ...columns, updatedAt: now });
+  if (await manager.existsBy(ReleaseArtistCredit, { releaseId, artistId })) {
+    await manager.update(ReleaseArtistCredit, { releaseId, artistId }, { ...columns, updatedAt: now });
   } else {
-    await manager.insert(ReleaseArtistCredit, { releaseGroupId, artistId, ...columns, createdAt: now, updatedAt: now });
+    await manager.insert(ReleaseArtistCredit, { releaseId, artistId, ...columns, createdAt: now, updatedAt: now });
   }
-  await manager.update(ReleaseGroup, { id: releaseGroupId }, { updatedAt: now });
+  await manager.update(Release, { id: releaseId }, { updatedAt: now });
 }
 
-export async function deleteReleaseArtistCredit(manager: EntityManager, releaseGroupId: number, artistId: number, now: Date): Promise<void> {
-  await manager.delete(ReleaseArtistCredit, { releaseGroupId, artistId });
-  await manager.update(ReleaseGroup, { id: releaseGroupId }, { updatedAt: now });
+export async function deleteReleaseArtistCredit(manager: EntityManager, releaseId: number, artistId: number, now: Date): Promise<void> {
+  await manager.delete(ReleaseArtistCredit, { releaseId, artistId });
+  await manager.update(Release, { id: releaseId }, { updatedAt: now });
 }
 
 // Releases
@@ -219,7 +219,7 @@ export async function releasePublicIdsOf(manager: EntityManager, editorialEntity
 export async function findCreatedRelease(manager: EntityManager, editorialEntityId: string): Promise<{ release: Edition; value: Required<ReleaseValue> } | null> {
   const release = await manager.findOneBy(Edition, { editorialEntityId });
   if (!release) return null;
-  const group = await manager.findOneByOrFail(ReleaseGroup, { id: release.releaseGroupId });
+  const group = await manager.findOneByOrFail(Release, { id: release.releaseId });
   return {
     release,
     value: {
@@ -246,7 +246,7 @@ export async function createRelease(manager: EntityManager, editorialEntityId: s
   await manager.insert(Edition, {
     uuid: randomUUID(),
     publicId: newPublicId(),
-    releaseGroupId: (await releaseGroupIdOf(manager, value.releaseGroup.entity_id))!,
+    releaseId: (await releaseGroupIdOf(manager, value.releaseGroup.entity_id))!,
     title: value.title ?? null,
     editionName: value.editionName ?? null,
     ...dateColumns({ releaseDate: value.releaseDate ?? null, releaseTime: value.releaseTime ?? null, timezone: value.timezone ?? null }),
@@ -262,7 +262,7 @@ export async function createRelease(manager: EntityManager, editorialEntityId: s
 export async function writeReleaseField(manager: EntityManager, editorialEntityId: string, path: ReleaseFieldPath, value: unknown, now: Date): Promise<unknown> {
   let columns: object;
   if (path === 'releases.release_date') columns = dateColumns(value as ReleaseDateValue);
-  else if (path === 'releases.release_group') columns = { releaseGroupId: (await releaseGroupIdOf(manager, (value as RootReference).entity_id))! };
+  else if (path === 'releases.release_group') columns = { releaseId: (await releaseGroupIdOf(manager, (value as RootReference).entity_id))! };
   else columns = { [RELEASE_FIELDS[path]]: value };
   await manager.update(Edition, { editorialEntityId }, { ...columns, updatedAt: now });
   return releaseFieldValue((await findCreatedRelease(manager, editorialEntityId))!.value, path);
@@ -279,10 +279,10 @@ export async function editionNameClashes(
   editionName: string | null,
   editorialEntityId: string,
 ): Promise<string[]> {
-  const releaseGroupId = await releaseGroupIdOf(manager, group.entity_id);
-  if (releaseGroupId === null) return [];
+  const releaseId = await releaseGroupIdOf(manager, group.entity_id);
+  if (releaseId === null) return [];
   const taken = await manager.existsBy(Edition, {
-    releaseGroupId,
+    releaseId,
     editionName: editionName === null ? IsNull() : editionName,
     editorialEntityId: Not(editorialEntityId),
   });

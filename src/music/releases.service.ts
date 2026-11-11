@@ -52,14 +52,14 @@ export class ReleasesService {
   async ofReleaseGroup(publicId: string, query: CollectionQuery): Promise<{ entries: ReleaseEntry[]; total: number }> {
     const group = await this.groups.show(publicId);
     if (group.relations === null) return { entries: [], total: 0 };
-    return this.page(this.filtered(query).andWhere('release.release_group_id = :groupId', { groupId: group.group.id }), query);
+    return this.page(this.filtered(query).andWhere('release.release_id = :groupId', { groupId: group.group.id }), query);
   }
 
   private filtered(query: CollectionQuery): SelectQueryBuilder<Edition> {
     const builder = this.dataSource.manager
       .createQueryBuilder(Edition, 'release')
       .innerJoinAndSelect('release.editorialEntity', 'root')
-      .innerJoin('release.releaseGroup', 'grp')
+      .innerJoin('release.release', 'grp')
       .where(`root.publication_status = 'published'`);
     const { q, contributor, availability, releasedFrom, releasedTo } = query.filter;
     if (q !== undefined) {

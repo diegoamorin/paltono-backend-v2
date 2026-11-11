@@ -6,7 +6,7 @@ import { pageWindow } from '../common/json-api/document';
 import { JsonApiException } from '../common/json-api/json-api.exception';
 import { CollectionQuery, period, requireOneOf } from '../common/json-api/query';
 import { containsPattern } from '../database/like-pattern';
-import { RELEASE_GROUP_TYPES, ReleaseGroup } from './entities/release.entity';
+import { RELEASE_TYPES, Release } from './entities/release.entity';
 import { releaseGroupSql } from './release-dates';
 import { releaseGroupEntries } from './release-entries';
 import { ReleaseGroupEntry } from './release.resource';
@@ -36,7 +36,7 @@ export class ReleaseGroupsService {
   ) {}
 
   async show(publicId: string): Promise<ReleaseGroupEntry> {
-    const group = await this.dataSource.manager.findOne(ReleaseGroup, { where: { publicId }, relations: { editorialEntity: true } });
+    const group = await this.dataSource.manager.findOne(Release, { where: { publicId }, relations: { editorialEntity: true } });
     if (!group) throw new JsonApiException(HttpStatus.NOT_FOUND, [{ code: 'release_group_not_found', detail: 'The release group does not exist' }]);
     return (await releaseGroupEntries(this.dataSource.manager, [group], this.clock.now()))[0];
   }
@@ -51,7 +51,7 @@ export class ReleaseGroupsService {
       builder.andWhere(
         `EXISTS (
           SELECT 1 FROM release_artist_credits credit JOIN artists credited ON credited.id = credit.artist_id
-          WHERE credit.release_group_id = grp.id AND credited.public_id = :artist
+          WHERE credit.release_id = grp.id AND credited.public_id = :artist
         )`,
         { artist },
       );
@@ -81,21 +81,21 @@ export class ReleaseGroupsService {
     // The profile of a withdrawn identity shows only its notice.
     if (artist.identity!.editorialEntity!.publicationStatus === 'withdrawn') return { entries: [], total: 0 };
     const builder = this.published().andWhere(
-      `EXISTS (SELECT 1 FROM release_artist_credits credit WHERE credit.release_group_id = grp.id AND credit.artist_id = :artistId)`,
+      `EXISTS (SELECT 1 FROM release_artist_credits credit WHERE credit.release_id = grp.id AND credit.artist_id = :artistId)`,
       { artistId: artist.id },
     );
     filterByType(builder, query.filter.type);
     return this.page(builder, query);
   }
 
-  private published(): SelectQueryBuilder<ReleaseGroup> {
+  private published(): SelectQueryBuilder<Release> {
     return this.dataSource.manager
-      .createQueryBuilder(ReleaseGroup, 'grp')
+      .createQueryBuilder(Release, 'grp')
       .innerJoinAndSelect('grp.editorialEntity', 'root')
       .where(`root.publication_status = 'published'`);
   }
 
-  private async page(builder: SelectQueryBuilder<ReleaseGroup>, query: CollectionQuery): Promise<{ entries: ReleaseGroupEntry[]; total: number }> {
+  private async page(builder: SelectQueryBuilder<Release>, query: CollectionQuery): Promise<{ entries: ReleaseGroupEntry[]; total: number }> {
     const now = this.clock.now();
     builder.setParameter('now', now);
     query.sort.forEach(({ field, direction }, index) => {
@@ -107,8 +107,8 @@ export class ReleaseGroupsService {
   }
 }
 
-function filterByType(builder: SelectQueryBuilder<ReleaseGroup>, type: string | undefined): void {
+function filterByType(builder: SelectQueryBuilder<Release>, type: string | undefined): void {
   if (type === undefined) return;
-  requireOneOf('filter[type]', type, RELEASE_GROUP_TYPES);
+  requireOneOf('filter[type]', type, RELEASE_TYPES);
   builder.andWhere('grp.type = :type', { type });
 }

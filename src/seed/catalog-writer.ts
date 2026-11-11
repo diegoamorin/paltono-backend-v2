@@ -3,7 +3,7 @@ import { BirthValue, PartialDateValue } from '../common/partial-date/partial-dat
 import { EditorialEntityType } from '../editorial/entities/editorial-entity.entity';
 import { EventStatus, LiveArtistRole, TourStatus } from '../live-events/entities/live-event.entity';
 import { ArtistCreditRank } from '../music/entities/recording.entity';
-import { ReleaseGroupType } from '../music/entities/release.entity';
+import { ReleaseType } from '../music/entities/release.entity';
 import { EditorialSeeder, SeedChange } from './editorial-seeder';
 import { SeedImages } from './seed-images';
 import { CountryCode, GenreSlug, OrganizationTypeSlug, PlatformSlug, RoleSlug, SeedVocabularies } from './seed-vocabularies';
@@ -136,7 +136,7 @@ export interface ReleaseSpec {
 export interface ReleaseGroupSpec {
   key: string;
   title: string;
-  type: ReleaseGroupType;
+  type: ReleaseType;
   description?: string;
   /** The original it repackages, published by an earlier submission. */
   repackageOf?: string;
