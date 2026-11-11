@@ -1486,7 +1486,7 @@
 									"top": 2765,
 									"width": 352,
 									"height": 13,
-									"text": "releases"
+									"text": "editions"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -8198,7 +8198,7 @@
 									"top": 2125,
 									"width": 480,
 									"height": 12,
-									"text": "release_contributions"
+									"text": "edition_contributions"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -8819,7 +8819,7 @@
 										"$ref": "MjBziA0gOZfu7zCJt1e7"
 									},
 									"edgePosition": 1,
-									"text": "release credit"
+									"text": "edition credit"
 								},
 								{
 									"_type": "EdgeLabelView",
@@ -9841,7 +9841,7 @@
 									"top": 2861,
 									"width": 420,
 									"height": 13,
-									"text": "release_groups"
+									"text": "releases"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -14274,7 +14274,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
-					"name": "release_groups",
+					"name": "releases",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -14313,7 +14313,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "editions",
-							"documentation": "FK releases.release_group_id. ON DELETE RESTRICT.",
+							"documentation": "FK editions.release_id. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "118b46776f7348d580df06a02f052532",
@@ -14344,7 +14344,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "repackage of",
-							"documentation": "Optional FK release_groups.repackage_of_id; acyclic. ON DELETE RESTRICT.",
+							"documentation": "Optional FK releases.repackage_of_id; acyclic. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "859d51919bfe44c8af49bfca2f502d77",
@@ -14370,7 +14370,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Lanzamiento: album, EP, single or compilation as announced by its artist or agency, independent of how many editions it has. Approved 2026-10-17. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. A group may be published with only a nonblank title and valid type, before any edition exists, to record an announcement. Owns its title, type, description, repackage link and artist credits (release_artist_credits). Its release date and upcoming state are derived from its non-cancelled editions, never stored. No automatic merge of groups. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
+					"documentation": "Lanzamiento: album, EP, single or compilation as announced by its artist or agency, independent of how many editions it has. Approved 2026-10-17. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. A release may be published with only a nonblank title and valid type, before any edition exists, to record an announcement. Owns its title, type, description, repackage link and artist credits (release_artist_credits). Its release date and upcoming state are derived from its non-cancelled editions, never stored. No automatic merge of releases. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14410,7 +14410,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "title",
-							"documentation": "Nonblank title of the release group as announced; 1..512 characters. Titles are not unique.",
+							"documentation": "Nonblank title of the release as announced; 1..512 characters. Titles are not unique.",
 							"type": "VARCHAR"
 						},
 						{
@@ -14441,7 +14441,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "repackage_of_id",
-							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Original release group relaunched by this repackage; NULL when not a repackage. When set it must reference a published group other than itself, never a reservation or a withdrawn group; chains are allowed and cycles are rejected under lock. If the original is later withdrawn the link is retained and resolves to its withdrawal notice.",
+							"documentation": "FK -> releases.id; ON DELETE RESTRICT. Original release relaunched by this repackage; NULL when not a repackage. When set it must reference a published release other than itself, never a reservation or a withdrawn release; chains are allowed and cycles are rejected under lock. If the original is later withdrawn the link is retained and resolves to its withdrawal notice.",
 							"type": "INTEGER",
 							"foreignKey": true,
 							"nullable": true
@@ -14471,7 +14471,7 @@
 								"$ref": "92a32306931143e39e7a6bf4d97cf64e"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK -> editorial_entities.id; ON DELETE RESTRICT. entity_type=release_group. Only applied content; reserved drafts have no row here. Enforce matching root type and exclusivity transactionally.",
+							"documentation": "NOT NULL UNIQUE FK -> editorial_entities.id; ON DELETE RESTRICT. entity_type=release. Only applied content; reserved drafts have no row here. Enforce matching root type and exclusivity transactionally.",
 							"type": "UUID",
 							"foreignKey": true,
 							"unique": true
@@ -14484,7 +14484,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
-					"name": "releases",
+					"name": "editions",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -14522,7 +14522,7 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
-							"name": "release credit",
+							"name": "edition credit",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "TnF10b9VNPtg9YANzFiT",
@@ -14547,7 +14547,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Edición: one concrete digital publication of a release group. A new edition exists when the tracklist changes (tracks added, removed or reordered), when the audio of any track changes even with equal titles (explicit vs clean, sped up, slowed + reverb, remastered, instrumental; each track points to its own recording), or when a regional edition has different content. Physical formats and packaging variants (photobook, A/B/C versions, vinyl vs CD) are not editions in the MVP. Approved 2026-10-17, superseding the 2026-10-13 minimum: an edition may be published with only its release group; title, cover, date and tracks may be unknown or empty. No placeholder cover or fabricated tracks. Derived availability: cancelled when is_cancelled; upcoming when the known release instant or date is in the future; released when it has passed; unknown without a date. Explicit content is derived from the recordings of its tracks, never stored. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Publishing an edition requires its release group to be published or published in the same transaction. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
+					"documentation": "Edición: one concrete digital publication of a release. A new edition exists when the tracklist changes (tracks added, removed or reordered), when the audio of any track changes even with equal titles (explicit vs clean, sped up, slowed + reverb, remastered, instrumental; each track points to its own recording), or when a regional edition has different content. Physical formats and packaging variants (photobook, A/B/C versions, vinyl vs CD) are not editions in the MVP. Approved 2026-10-17, superseding the 2026-10-13 minimum: an edition may be published with only its release; title, cover, date and tracks may be unknown or empty. No placeholder cover or fabricated tracks. Derived availability: cancelled when is_cancelled; upcoming when the known release instant or date is in the future; released when it has passed; unknown without a date. Explicit content is derived from the recordings of its tracks, never stored. Editorial root: editorial_entity_id owns publication state and version; published and withdrawn rows are retained. Publishing an edition requires its release to be published or published in the same transaction. Creator/approver and sources are traced through proposals, decisions and revisions. See docs/music-catalog-model.md and docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14576,7 +14576,7 @@
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "public_id",
-							"documentation": "Es un ID opaco donde usaremos nanoid para generarlo.\n\nNo usamos un slug tipo /release/thriller-3rklW evitar cambiar la url cuando un artista cambie el nombre del album.",
+							"documentation": "Es un ID opaco donde usaremos nanoid para generarlo.\n\nNo usamos un slug tipo /editions/thriller-3rklW evitar cambiar la url cuando un artista cambie el nombre del album.",
 							"type": "VARCHAR",
 							"length": 0,
 							"unique": true
@@ -14587,8 +14587,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
-							"name": "release_group_id",
-							"documentation": "NOT NULL FK -> release_groups.id; ON DELETE RESTRICT. Every edition belongs to exactly one release group. Moving an edition to another group is a set_fields change of the edition root; the target group must be published or published in the same transaction.",
+							"name": "release_id",
+							"documentation": "NOT NULL FK -> releases.id; ON DELETE RESTRICT. Every edition belongs to exactly one release. Moving an edition to another release is a set_fields change of the edition root; the target release must be published or published in the same transaction.",
 							"type": "INTEGER",
 							"foreignKey": true
 						},
@@ -14599,7 +14599,7 @@
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "title",
-							"documentation": "Optional literal edition title. NULL displays the release group title for display only; never copy the fallback. If present, 1..512 characters and not whitespace-only.",
+							"documentation": "Optional literal edition title. NULL displays the release title for display only; never copy the fallback. If present, 1..512 characters and not whitespace-only.",
 							"type": "VARCHAR",
 							"nullable": true
 						},
@@ -14610,7 +14610,7 @@
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "edition_name",
-							"documentation": "Optional disambiguation such as Deluxe, Sped Up, Clean or Japan Edition; nonblank when present. UNIQUE NULLS NOT DISTINCT (release_group_id, edition_name): at most one unnamed standard edition per group. Regional editions are named here; no country column in the MVP.",
+							"documentation": "Optional disambiguation such as Deluxe, Sped Up, Clean or Japan Edition; nonblank when present. UNIQUE NULLS NOT DISTINCT (release_id, edition_name): at most one unnamed standard edition per release. Regional editions are named here; no country column in the MVP.",
 							"type": "VARCHAR",
 							"nullable": true
 						},
@@ -14715,7 +14715,7 @@
 								"$ref": "AAAAAAGeD8zCE4EIN7U="
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK -> editorial_entities.id; ON DELETE RESTRICT. entity_type=release. Only applied content; reserved drafts have no row here. Enforce matching root type and exclusivity transactionally.",
+							"documentation": "NOT NULL UNIQUE FK -> editorial_entities.id; ON DELETE RESTRICT. entity_type=edition. Only applied content; reserved drafts have no row here. Enforce matching root type and exclusivity transactionally.",
 							"type": "UUID",
 							"foreignKey": true,
 							"unique": true
@@ -14729,7 +14729,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "tracks",
-					"documentation": "Una pista dentro de una edición. FKs release_id -> releases.id y recording_id -> recordings.id. UNIQUE (release_id, disc_number, track_number); Release contributions belong to the release, not individual tracks. CHECK disc_number > 0 AND track_number > 0. No UNIQUE individual en release_id/recording_id: una grabación puede aparecer en varias ediciones y posiciones. Approved 2026-10-13: nullable title preserves the edition-specific literal title; displayTitle is derived from title or the currently published and visible recording title, never persisted.",
+					"documentation": "Una pista dentro de una edición. FKs edition_id -> editions.id y recording_id -> recordings.id. UNIQUE (edition_id, disc_number, track_number); Edition contributions belong to the edition, not individual tracks. CHECK disc_number > 0 AND track_number > 0. No UNIQUE individual en edition_id/recording_id: una grabación puede aparecer en varias ediciones y posiciones. Approved 2026-10-13: nullable title preserves the edition-specific literal title; displayTitle is derived from title or the currently published and visible recording title, never persisted.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14748,7 +14748,7 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCFIEVo6k="
 							},
-							"name": "release_id",
+							"name": "edition_id",
 							"type": "INTEGER",
 							"foreignKey": true
 						},
@@ -14787,7 +14787,7 @@
 								"$ref": "AAAAAAGeD8zCFIEVo6k="
 							},
 							"name": "title",
-							"documentation": "Optional literal track title in this release edition. NULL uses the currently published and visible recording title for display only. If present, 1..512 characters and not whitespace-only. Never copy the fallback into the snapshot or create another recording. Approved 2026-10-13.",
+							"documentation": "Optional literal track title in this edition. NULL uses the currently published and visible recording title for display only. If present, 1..512 characters and not whitespace-only. Never copy the fallback into the snapshot or create another recording. Approved 2026-10-13.",
 							"type": "VARCHAR",
 							"length": 512,
 							"nullable": true
@@ -14819,7 +14819,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "release_artist_credits",
-					"documentation": " Artist credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,release_group_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name. Owned by the release group editorial root (approved 2026-10-17); editions carry no separate artist credits.",
+					"documentation": " Artist credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,release_id); position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name. Owned by the release editorial root (approved 2026-10-17); editions carry no separate artist credits.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -14838,8 +14838,8 @@
 							"_parent": {
 								"$ref": "AAAAAAGeD8zCFIEg0E4="
 							},
-							"name": "release_group_id",
-							"documentation": "FK -> release_groups.id; ON DELETE RESTRICT. Artist credits belong to the release group and apply to all its editions.",
+							"name": "release_id",
+							"documentation": "FK -> releases.id; ON DELETE RESTRICT. Artist credits belong to the release and apply to all its editions.",
 							"type": "INTEGER",
 							"primaryKey": true,
 							"foreignKey": true
@@ -15024,7 +15024,7 @@
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
 					"name": "track_artist_credits",
-					"documentation": "Credito impreso de una pista (main/featured/remixer), ADR 0008: solo existe si la edicion acredita la grabacion de otra forma, y entonces sustituye entero al credito de artista de la grabacion (recording_artist_credits) en esa pista. track_id -> tracks.id segun la relacion existente. Propiedad editorial: release de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Printed credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
+					"documentation": "Credito impreso de una pista (main/featured/remixer), ADR 0008: solo existe si la edicion acredita la grabacion de otra forma, y entonces sustituye entero al credito de artista de la grabacion (recording_artist_credits) en esa pista. track_id -> tracks.id segun la relacion existente. Propiedad editorial: edición de la pista. No atribuye autoria ni participacion tecnica; recording_contributions conserva los creditos de la grabacion. La capa editorial no reinterpreta track_id como recording_id. Vease docs/editorial-contributions.md. Printed credits referencing artists.id, not technical/creative contributions. Retain credited order; no inferred authorship, performance or production. Identity metadata is resolved through artists.catalog_identity_id. See docs/music-catalog-model.md. PK (artist_id,track_id); rank is one main/featured/remixer classification per artist and track; position >= 0. credited_as NULL resolves through artists.catalog_identity_id to catalog_identities.display_name.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -17125,7 +17125,7 @@
 								"$ref": "ocAq3XhorNiLIyNScou6"
 							},
 							"name": "scope",
-							"documentation": "work | recording | release | membership. Mismo tipo SQL que role_scope en las tablas dependientes.",
+							"documentation": "work | recording | edition | membership. Mismo tipo SQL que role_scope en las tablas dependientes.",
 							"type": "enum",
 							"primaryKey": true
 						}
@@ -17413,7 +17413,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGeD8zCEIDLyT4="
 					},
-					"name": "release_contributions",
+					"name": "edition_contributions",
 					"ownedElements": [
 						{
 							"_type": "ERDRelationship",
@@ -17464,7 +17464,7 @@
 							"_parent": {
 								"$ref": "Q4KHNYV6X3hdPCo1zt2j"
 							},
-							"name": "release_id",
+							"name": "edition_id",
 							"type": "INTEGER",
 							"foreignKey": true
 						},
@@ -17496,7 +17496,7 @@
 								"$ref": "Q4KHNYV6X3hdPCo1zt2j"
 							},
 							"name": "role_scope",
-							"documentation": "NOT NULL DEFAULT 'release'; CHECK (role_scope = 'release'). FK (contribution_role_id, role_scope) -> contribution_role_scopes(contribution_role_id, scope).",
+							"documentation": "NOT NULL DEFAULT 'edition'; CHECK (role_scope = 'edition'). FK (contribution_role_id, role_scope) -> contribution_role_scopes(contribution_role_id, scope).",
 							"type": "enum",
 							"foreignKey": true
 						},
@@ -18294,7 +18294,7 @@
 					]
 				}
 			],
-			"documentation": " Identity and credit extension: catalog_identities owns people/organizations and optional artists profile. Dedicated views show identity, memberships and credit semantics. The empty release_group placeholder is a legacy issue outside this change; see documentation."
+			"documentation": " Identity and credit extension: catalog_identities owns people/organizations and optional artists profile. Dedicated views show identity, memberships and credit semantics."
 		},
 		{
 			"_type": "ERDDataModel",
@@ -25241,7 +25241,7 @@
 							"identifying": false
 						}
 					],
-					"documentation": "Stable editorial root for identity, work, recording, release group, release edition, event or tour. Reserved roots have version=0, no domain row and NULL creation_change_id/published_at/withdrawn_at. Published or withdrawn roots have exactly one matching domain row, current_version>=1 and nonnull creation_change_id/published_at; withdrawn_at is nonnull iff withdrawn. Enforce type/exclusive root and revision consistency transactionally. Creator equals the creation proposal author, never the approving moderator. Publication does not grant ownership permissions. Retain IDs and historical rows after withdrawal; no cascade deletion. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
+					"documentation": "Stable editorial root for identity, work, recording, release, edition, event or tour. Reserved roots have version=0, no domain row and NULL creation_change_id/published_at/withdrawn_at. Published or withdrawn roots have exactly one matching domain row, current_version>=1 and nonnull creation_change_id/published_at; withdrawn_at is nonnull iff withdrawn. Enforce type/exclusive root and revision consistency transactionally. Creator equals the creation proposal author, never the approving moderator. Publication does not grant ownership permissions. Retain IDs and historical rows after withdrawal; no cascade deletion. All FKs ON DELETE RESTRICT. See docs/editorial-contributions.md.",
 					"columns": [
 						{
 							"_type": "ERDColumn",
@@ -25261,7 +25261,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "entity_type",
-							"documentation": "identity | work | recording | release_group | release | event | tour. Immutable.",
+							"documentation": "identity | work | recording | release | edition | event | tour. Immutable.",
 							"type": "enum"
 						},
 						{
@@ -25790,7 +25790,7 @@
 								"$ref": "5250d6cd46b7454594fe3de5a57865dc"
 							},
 							"name": "target_path",
-							"documentation": "Registered coherent field group or owned relation, e.g. people.height_cm or releases.release_date.",
+							"documentation": "Registered coherent field group or owned relation, e.g. people.height_cm or editions.release_date.",
 							"type": "VARCHAR"
 						},
 						{
@@ -33471,7 +33471,7 @@
 									"top": 1455,
 									"width": 550,
 									"height": 12,
-									"text": "releases"
+									"text": "editions"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",
@@ -35062,7 +35062,7 @@
 							"top": 2064,
 							"width": 672,
 							"height": 100,
-							"text": "Exactly one matching domain root per published/withdrawn editorial entity; reserved roots have none. Identity owns artist/person/organization details. Release owns tracks and their printed credits. Events and tours use the same moderation policy as music."
+							"text": "Exactly one matching domain root per published/withdrawn editorial entity; reserved roots have none. Identity owns artist/person/organization details. Edition owns tracks and their printed credits. Events and tours use the same moderation policy as music."
 						},
 						{
 							"_type": "ERDEntityView",
@@ -35087,7 +35087,7 @@
 									"top": 1955,
 									"width": 550,
 									"height": 12,
-									"text": "release_groups"
+									"text": "releases"
 								},
 								{
 									"_type": "ERDColumnCompartmentView",

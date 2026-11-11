@@ -5,6 +5,7 @@ Usage: python scripts/validate_erd.py [--baseline-git REV]
 
 import argparse
 import json
+import re
 import subprocess
 from collections import Counter
 from pathlib import Path
@@ -18,8 +19,8 @@ EDITORIAL = {
 }
 ROOTS = {
     'catalog_identities': 'identity', 'works': 'work',
-    'recordings': 'recording', 'release_groups': 'release_group',
-    'releases': 'release',
+    'recordings': 'recording', 'releases': 'release',
+    'editions': 'edition',
     'events': 'event', 'tours': 'tour',
 }
 
@@ -76,10 +77,13 @@ def main():
         check(len(columns[name]) == len(table['columns']), f'Duplicate columns: {name}')
         for c in table['columns']:
             check(c['_parent']['$ref'] == table['_id'], f'Wrong column parent: {name}.{c["name"]}')
+    check(ROOTS.keys() <= tables.keys(), f'Missing root tables: {sorted(ROOTS.keys() - tables.keys())}')
+    if errors:
+        raise SystemExit('\n'.join(errors))
     for name, kind in ROOTS.items():
         c = columns[name].get('editorial_entity_id', {})
         check(c.get('type') == 'UUID' and c.get('foreignKey') and c.get('unique') and not c.get('nullable'), f'Invalid root FK: {name}')
-        check(f'entity_type={kind}' in c.get('documentation', ''), f'Root type constraint missing: {name}')
+        check(re.search(rf'entity_type={kind}\b', c.get('documentation', '')), f'Root type constraint missing: {name}')
     for name in ['artists', 'tracks', 'people', 'organizations']:
         check('editorial_entity_id' not in columns[name], f'Duplicate editorial ownership: {name}')
     check('user | moderator | admin' in columns['users']['role']['documentation'], 'Missing global moderator role')
@@ -180,7 +184,9 @@ def main():
         if names & EDITORIAL:
             check(r['_id'] in visible_relations, f'Editorial relationship never drawn: {r["name"]}')
     serialized = json.dumps(project)
-    for obsolete in ['wiki_pages', 'docs/wiki-model.md', 'Mandatory independent review', 'Mandatory independent event-team review']:
+    # A release is the lanzamiento and an edition its publication (ADR 0010); the MusicBrainz names never return.
+    for obsolete in ['wiki_pages', 'docs/wiki-model.md', 'Mandatory independent review', 'Mandatory independent event-team review',
+                     'release_group', 'release group', 'release_contributions']:
         check(obsolete not in serialized, f'Obsolete policy: {obsolete}')
 
     if args.baseline_git:
