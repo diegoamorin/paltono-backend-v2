@@ -17,7 +17,6 @@ import { IDENTITY_RELATION_CHANGES } from './identity-relation-changes';
 import { EVENT_CHANGES, TOUR_CHANGES } from './live-event-changes';
 import { RECORDING_CHANGES } from './recording-changes';
 import { RELEASE_CHANGES, RELEASE_GROUP_CHANGES } from './release-changes';
-import { RETIRED_TRACK_PLATFORM_LINK_CHANGES } from './track-changes';
 import { WORK_CHANGES } from './work-changes';
 
 /*
@@ -201,7 +200,6 @@ export const OPERATIONS: readonly PublishedOperation[] = [
   ...RELEASE_GROUP_CHANGES,
   withdrawalOf('release_group'),
   ...RELEASE_CHANGES,
-  ...RETIRED_TRACK_PLATFORM_LINK_CHANGES,
   withdrawalOf('release'),
   ...TOUR_CHANGES,
   withdrawalOf('tour'),
@@ -240,8 +238,8 @@ function versionsOf({ entityType, operation, targetPath }: Selector): PublishedO
 /**
  * The current version of a selector: its highest, while it has code to apply
  * it with. A selector whose highest version has none was retired, so every
- * version is obsolete, like the platform links of a track (ADR 0009). Undefined
- * when the registry has no current version.
+ * version is obsolete (ADR 0006). Undefined when the registry has no current
+ * version.
  */
 export function currentVersionOf(selector: Selector): number | undefined {
   const versions = versionsOf(selector);

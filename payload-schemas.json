@@ -5331,76 +5331,6 @@
       }
     }
   },
-  "release.add_relation.track_platform_links.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "platformId",
-            "url"
-          ],
-          "properties": {
-            "platformId": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647,
-              "description": "id en /v1/platforms de una plataforma que admite pistas"
-            },
-            "url": {
-              "type": "string",
-              "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "track_id"
-      ],
-      "properties": {
-        "track_id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ],
-          "description": "Pista de la edición, o inserción de este envío que la creará"
-        }
-      }
-    }
-  },
   "release.add_relation.tracks.v1": {
     "payloadSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -5716,53 +5646,6 @@
             }
           },
           "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
-        }
-      }
-    }
-  },
-  "release.remove_relation.track_platform_links.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists"
-      ],
-      "properties": {
-        "exists": {
-          "const": false
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
         }
       }
     }
@@ -6235,75 +6118,6 @@
             }
           },
           "description": "Raíz editorial de la identidad del artista: publicada, o creada en la misma propuesta, con perfil artístico"
-        }
-      }
-    }
-  },
-  "release.update_relation.track_platform_links.v1": {
-    "payloadSchema": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "exists",
-        "value"
-      ],
-      "properties": {
-        "exists": {
-          "const": true
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "platformId",
-            "url"
-          ],
-          "properties": {
-            "platformId": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647,
-              "description": "id en /v1/platforms de una plataforma que admite pistas"
-            },
-            "url": {
-              "type": "string",
-              "maxLength": 2048,
-              "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"
-            }
-          }
-        }
-      }
-    },
-    "targetKeySchema": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id"
-      ],
-      "properties": {
-        "id": {
-          "anyOf": [
-            {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 2147483647
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "change_id"
-              ],
-              "properties": {
-                "change_id": {
-                  "type": "string",
-                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                }
-              },
-              "description": "Inserción de este envío que creará la fila, mientras no existe"
-            }
-          ]
         }
       }
     }

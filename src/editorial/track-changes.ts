@@ -18,8 +18,8 @@ import {
 import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { INT4, ROW_KEY, envelope, reference } from './identity-relation-changes';
-import type { OperationDefinition, PublishedOperation, RowKey, TargetProblem } from './operation-registry';
+import { ROW_KEY, envelope, reference } from './identity-relation-changes';
+import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
 import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 
 /*
@@ -183,49 +183,4 @@ const TRACK_CREDIT_CHANGES = artistCreditChanges({
 });
 
 export const RELEASE_TRACK_CHANGES: OperationDefinition[] = [...TRACK_CHANGES, ...TRACK_CREDIT_CHANGES];
-
-// Platform links of a track, retired without a successor (ADR 0009): kept to read the history, never applied.
-
-const TRACK_PLATFORM_LINK = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['platformId', 'url'],
-  properties: {
-    platformId: { type: 'integer', minimum: 1, maximum: INT4, description: 'id en /v1/platforms de una plataforma que admite pistas' },
-    url: { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' },
-  },
-};
-
-const TRACK_PLATFORM_LINK_KEY = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['track_id'],
-  properties: { track_id: { ...ROW_ID, description: 'Pista de la edición, o inserción de este envío que la creará' } },
-};
-
-const retiredTrackPlatformLink = { entityType: 'release', targetPath: 'track_platform_links', payloadSchemaVersion: 1 } satisfies Partial<PublishedOperation>;
-
-export const RETIRED_TRACK_PLATFORM_LINK_CHANGES: PublishedOperation[] = [
-  {
-    ...retiredTrackPlatformLink,
-    operation: 'add_relation',
-    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Añadía un enlace de una pista en una plataforma.',
-    valueSchema: TRACK_PLATFORM_LINK,
-    targetKeySchema: TRACK_PLATFORM_LINK_KEY,
-  },
-  {
-    ...retiredTrackPlatformLink,
-    operation: 'update_relation',
-    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Sustituía la plataforma y la URL de un enlace de una pista.',
-    valueSchema: TRACK_PLATFORM_LINK,
-    targetKeySchema: ROW_KEY,
-  },
-  {
-    ...retiredTrackPlatformLink,
-    operation: 'remove_relation',
-    description: 'Retirada: el enlace de plataforma es de la grabación (ADR 0009). Quitaba un enlace de una pista.',
-    valueSchema: null,
-    targetKeySchema: ROW_KEY,
-  },
-];
 

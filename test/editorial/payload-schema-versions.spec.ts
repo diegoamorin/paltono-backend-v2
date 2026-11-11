@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { IDENTITY_CREATION } from '../../src/editorial/identity-creation';
 import { OPERATIONS, useOperations } from '../../src/editorial/operation-registry';
 import { IDENTITY_FIELD_CHANGES } from '../../src/editorial/identity-field-changes';
+import { ROW_KEY } from '../../src/editorial/identity-relation-changes';
 import { Account, changeRole, registerFirstAdmin, registerVerified } from '../support/administration';
 import {
   ChangeInput,
@@ -15,7 +16,6 @@ import {
   getJsonApi,
   personCreation,
   removeChange,
-  reserveEntity,
   reserveIdentity,
   submitIdentityCreation,
   submitProposal,
@@ -35,6 +35,27 @@ const ALIASES = 'catalog_identity_aliases';
 function publishDisplayNameV2(): () => void {
   const v1 = IDENTITY_FIELD_CHANGES.find(({ targetPath }) => targetPath === DISPLAY_NAME)!;
   return useOperations([...OPERATIONS, { ...v1, payloadSchemaVersion: 2 }]);
+}
+
+const RETIRED_PATH = 'catalog_identity_fan_sites';
+
+/**
+ * Publishes a selector retired without a successor: its version keeps its
+ * description and schemas to read the history, with no code to apply it.
+ */
+function publishRetiredSelector(): () => void {
+  return useOperations([
+    ...OPERATIONS,
+    {
+      entityType: 'identity',
+      operation: 'add_relation',
+      targetPath: RETIRED_PATH,
+      payloadSchemaVersion: 1,
+      description: 'Retirada: añadía un sitio de fans a una identidad.',
+      valueSchema: { type: 'object', required: ['url'], properties: { url: { type: 'string' } } },
+      targetKeySchema: ROW_KEY,
+    },
+  ]);
 }
 
 describe('payload schema versions', () => {
@@ -76,13 +97,13 @@ describe('payload schema versions', () => {
       expect(statusOf('identity.set_fields.catalog_identities.display_name.v1')).toBe('current');
     });
 
-    it('lists every version of a retired selector as obsolete: the platform links of a track (ADR 0009)', async () => {
+    it('lists every version of a retired selector as obsolete', async () => {
+      restore = publishRetiredSelector();
+
       const operations = await listOperations();
 
       const statusOf = (id: string) => operations.find((operation) => operation.id === id)?.attributes.status;
-      for (const operation of ['add_relation', 'update_relation', 'remove_relation']) {
-        expect(statusOf(`release.${operation}.track_platform_links.v1`)).toBe('obsolete');
-      }
+      expect(statusOf(`identity.add_relation.${RETIRED_PATH}.v1`)).toBe('obsolete');
     });
   });
 
@@ -120,14 +141,15 @@ describe('payload schema versions', () => {
     });
 
     it('rejects a microchange of a retired selector, with or without a version', async () => {
-      const entityId = (await reserveEntity(app, diego.accessToken, 'release').expect(201)).body.data.id;
+      restore = publishRetiredSelector();
+      const entityId = await reserveIdentity(app, diego.accessToken);
       const proposalId = await createDraft(app, diego.accessToken);
       const link = {
         entityId,
         operation: 'add_relation',
-        targetPath: 'track_platform_links',
-        targetKey: { track_id: 1 },
-        proposedValue: { exists: true, value: { platformId: 1, url: 'https://open.spotify.com/track/0t1kP63rueHleOhQkYSXFY' } },
+        targetPath: RETIRED_PATH,
+        targetKey: { id: 1 },
+        proposedValue: { exists: true, value: { url: 'https://example.com/fans' } },
       };
 
       for (const payloadSchemaVersion of [1, undefined]) {
