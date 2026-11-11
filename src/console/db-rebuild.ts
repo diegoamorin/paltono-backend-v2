@@ -8,8 +8,8 @@ import { recreateSchema } from '../database/recreate-schema';
 import { seedKpop } from '../seed/seed-kpop';
 import { runCommand } from './run-command';
 
-// `pnpm db:rebuild`: drops the development database's schema, runs every migration and seeds it. Until the first
-// deployment the existing migrations change in place (ADR 0006), and only a rebuild applies them again.
+// `pnpm db:rebuild`: drops the development database's schema, runs every migration and seeds it. Until the public
+// launch the existing migrations change in place (ADR 0006), and only a rebuild applies them again.
 loadEnvFile();
 
 runCommand(async () => {

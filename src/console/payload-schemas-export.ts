@@ -7,7 +7,7 @@ import { runCommand } from './run-command';
 // `pnpm payload-schemas:export [--regenerate] [path]`: adds each newly published payload schema version to
 // `payload-schemas.json` by default. A published version never changes (ADR 0006), so an entry already there that
 // the registry now describes differently fails the command and leaves the file as it was: publish a new version
-// instead. Until the first deployment nothing is published yet and v1 changes in place: `--regenerate` rewrites
+// instead. Until the public launch nothing is published yet and v1 changes in place: `--regenerate` rewrites
 // the file with exactly what the registry describes now.
 runCommand(async () => {
   const { values, positionals } = parseArgs({
@@ -30,7 +30,7 @@ runCommand(async () => {
   if (changed.length > 0) {
     throw new Error(
       `Published payload schema versions changed or disappeared: ${changed.join(', ')}. Publish a new version instead, ` +
-        'or, before the first deployment, regenerate them with --regenerate.',
+        'or, before the public launch, regenerate them with --regenerate.',
     );
   }
 
