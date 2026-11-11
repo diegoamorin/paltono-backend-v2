@@ -47,7 +47,7 @@ import { ENTITY_REFERENCE } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { COUNTRY_ID, PARTIAL_DATE, partialDateProblems } from './identity-creation';
-import { ROW_KEY, envelope as rowEnvelope, reference } from './identity-relation-changes';
+import { HTTP_URL, ROW_KEY, envelope as rowEnvelope, reference } from './identity-relation-changes';
 import type { OperationDefinition, PayloadProblem, RootReference as NamedRoot, RowKey, TargetProblem, VocabularyReference } from './operation-registry';
 import { isIanaZone } from './release-changes';
 import { DESCRIPTION, envelope } from './work-changes';
@@ -440,7 +440,7 @@ function linkChanges(root: LiveRoot): OperationDefinition[] {
     required: ['label', 'url', 'purpose', 'position'],
     properties: {
       label: { type: 'string', minLength: 1, maxLength: 200, pattern: '\\S' },
-      url: { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' },
+      url: HTTP_URL,
       purpose: { enum: LINK_PURPOSES, description: 'official o tickets: una página externa, nunca una venta propia' },
       position: { type: 'integer', minimum: 0, maximum: 32767 },
       ...(root === 'tour' ? { countryId: { ...COUNTRY_ID, description: 'id del país de la página en /v1/countries; null para la general' } } : {}),

@@ -3,7 +3,7 @@ import { CreditScope, CreditValue, OwnerId, deleteCredit, findCredit, insertCred
 import { ContributionRole } from '../vocabularies/entities/contribution-role.entity';
 import { EditorialEntity, EditorialEntityType } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
-import { INT4, ROW_KEY, UUID } from './identity-relation-changes';
+import { HTTP_URL, INT4, ROW_KEY, UUID } from './identity-relation-changes';
 import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
 
 /*
@@ -24,7 +24,7 @@ export const ENTITY_REFERENCE = (description: string) => ({
 });
 
 const OPTIONAL_TEXT = { type: ['string', 'null'], maxLength: 10000 };
-export const SOURCE_URL = { type: ['string', 'null'], maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' };
+export const SOURCE_URL = { ...HTTP_URL, type: ['string', 'null'] };
 
 const CREDIT = {
   type: 'object',

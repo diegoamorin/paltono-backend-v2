@@ -35,10 +35,33 @@ import type { OperationDefinition, RowKey, TargetProblem } from './operation-reg
  * country, and the types of an organization, keyed by organization and type.
  * A target key names a row by its primary key, never by its position in a
  * list; see `row-references.ts` for the references a key may hold instead.
+ *
+ * It also holds the schema pieces and rules other roots' operations share:
+ * integer and UUID bounds, row keys, HTTP(S) URLs and platform support.
  */
 
 export const INT4 = 2_147_483_647;
 export const UUID = { type: 'string', pattern: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' };
+/** An HTTP(S) URL, as every current operation that stores a link accepts it. */
+export const HTTP_URL = { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' };
+
+const PLATFORM_SUPPORT = { identity: 'supportsCatalogIdentity', recording: 'supportsRecording' } as const;
+
+/**
+ * Whether the platform supports links of the owner, checked on the current
+ * vocabulary each time, as an administrator may change what a platform
+ * supports. `member` points the problem at the platform in the payload.
+ */
+export async function unsupportedPlatform(
+  manager: EntityManager,
+  platformId: number,
+  owner: keyof typeof PLATFORM_SUPPORT,
+  member: string,
+): Promise<TargetProblem[]> {
+  const platform = await manager.findOneBy(Platform, { id: platformId });
+  if (!platform || platform[PLATFORM_SUPPORT[owner]]) return [];
+  return [{ code: 'unsupported_platform', detail: `${platform.name} does not support ${owner} links`, member }];
+}
 
 export const reference = (member: 'change_id' | 'entity_id', description: string) => ({
   type: 'object',
@@ -98,7 +121,7 @@ const PLATFORM_LINK = {
   required: ['platformId', 'url'],
   properties: {
     platformId: { type: 'integer', minimum: 1, maximum: INT4, description: 'id en /v1/platforms de una plataforma que admite identidades' },
-    url: { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' },
+    url: HTTP_URL,
   },
 };
 
@@ -245,12 +268,8 @@ const platformLinkBase = {
 /** What a proposed link needs besides its schema: a platform that exists and supports identities. */
 const proposedLinkRules = {
   references: (value: unknown) => [{ vocabulary: 'platforms', id: (value as PlatformLinkValue).platformId, path: '/value/platformId' }],
-  // Run on the current vocabulary each time, as an administrator may change what a platform supports.
-  targetProblems: async (manager: EntityManager, _root: EditorialEntity, value: unknown): Promise<TargetProblem[]> => {
-    const platform = await manager.findOneBy(Platform, { id: (value as PlatformLinkValue).platformId });
-    if (!platform || platform.supportsCatalogIdentity) return [];
-    return [{ code: 'unsupported_platform', detail: `${platform.name} does not support identity links`, member: 'proposedValue/value/platformId' }];
-  },
+  targetProblems: (manager: EntityManager, _root: EditorialEntity, value: unknown) =>
+    unsupportedPlatform(manager, (value as PlatformLinkValue).platformId, 'identity', 'proposedValue/value/platformId'),
 } satisfies Partial<OperationDefinition>;
 
 const ADD_PLATFORM_LINK: OperationDefinition = {

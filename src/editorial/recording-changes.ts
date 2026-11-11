@@ -30,14 +30,13 @@ import {
   writeRecordingPlatformLink,
 } from '../music/recordings';
 import { RECORDING_WORK_RELATION_TYPES } from '../music/entities/recording.entity';
-import { Platform } from '../vocabularies/entities/platform.entity';
 import { artistCreditChanges, artistCreditValue } from './artist-credit-changes';
 import { ENTITY_REFERENCE, SOURCE_URL, creditChanges } from './credit-changes';
 import { EditorialEntity } from './entities/editorial-entity.entity';
 import { ValueEnvelope } from './entities/proposal-change.entity';
 import { PARTIAL_DATE, partialDateProblems } from './identity-creation';
-import { INT4, ROW_KEY, reference } from './identity-relation-changes';
-import type { OperationDefinition, RowKey, TargetProblem } from './operation-registry';
+import { HTTP_URL, INT4, ROW_KEY, reference, unsupportedPlatform } from './identity-relation-changes';
+import type { OperationDefinition, RowKey } from './operation-registry';
 import { DESCRIPTION, TITLE, envelope } from './work-changes';
 
 /*
@@ -183,7 +182,7 @@ const PLATFORM_LINK = {
   type: 'object',
   additionalProperties: false,
   required: ['url'],
-  properties: { url: { type: 'string', maxLength: 2048, pattern: '^[Hh][Tt][Tt][Pp][Ss]?://\\S+$' } },
+  properties: { url: HTTP_URL },
 };
 
 const platformLinkBase = {
@@ -200,19 +199,13 @@ const platformLinkBase = {
   },
 } satisfies Partial<OperationDefinition>;
 
-/** A link needs a platform that supports recordings, checked on the current vocabulary, as an administrator may change it. */
-async function unsupportedPlatform(manager: EntityManager, targetKey: object | null): Promise<TargetProblem[]> {
-  const platform = await manager.findOneBy(Platform, { id: (targetKey as RowKey).platform_id });
-  if (!platform || platform.supportsRecording) return [];
-  return [{ code: 'unsupported_platform', detail: `${platform.name} does not support recording links`, member: 'targetKey/platform_id' }];
-}
-
 const platformLinkWrite = (operation: 'add_relation' | 'update_relation', description: string): OperationDefinition => ({
   ...platformLinkBase,
   operation,
   description,
   valueSchema: PLATFORM_LINK,
-  targetProblems: (manager, _root, _value, targetKey) => unsupportedPlatform(manager, targetKey),
+  targetProblems: (manager, _root, _value, targetKey) =>
+    unsupportedPlatform(manager, (targetKey as RowKey).platform_id, 'recording', 'targetKey/platform_id'),
   constraintProblems: async (manager, _root, key) => {
     if (operation === 'update_relation' && !(await findRecordingPlatformLink(manager, key!.recording_id, key!.platform_id))) return ['El enlace ya no existe'];
     return [];
