@@ -84,11 +84,11 @@ _Avoid_: Inicio artístico, inicio de carrera, fundación artística.
 
 ### Música
 
-**Lanzamiento (release group)**:
+**Lanzamiento (release)**:
 Álbum, EP, single o recopilatorio tal como lo presentó su artista o agencia, independientemente de cuántas ediciones tenga. Su tipo es una decisión editorial respaldada por fuentes, no un cálculo por número de pistas.
-_Avoid_: Release a secas, porque puede referirse al lanzamiento o a una edición.
+_Avoid_: Release group, el nombre de MusicBrainz; álbum, que es solo uno de sus tipos.
 
-**Edición (release)**:
+**Edición (edition)**:
 Publicación digital concreta de un lanzamiento. Hay una edición distinta cuando cambia el tracklist, el audio de alguna pista o el contenido de una edición regional; las variantes físicas o de empaque no son ediciones.
 _Avoid_: Versión, que puede referirse a una edición, a una grabación alternativa o a una variante de photobook.
 
