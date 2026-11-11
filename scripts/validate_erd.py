@@ -184,7 +184,7 @@ def main():
         if names & EDITORIAL:
             check(r['_id'] in visible_relations, f'Editorial relationship never drawn: {r["name"]}')
     serialized = json.dumps(project)
-    # A release is the lanzamiento and an edition its publication (ADR 0010); the MusicBrainz names never return.
+    # A release is the lanzamiento and an edition its publication (ADR 0010); Paltono never uses the MusicBrainz names.
     for obsolete in ['wiki_pages', 'docs/wiki-model.md', 'Mandatory independent review', 'Mandatory independent event-team review',
                      'release_group', 'release group', 'release_contributions']:
         check(obsolete not in serialized, f'Obsolete policy: {obsolete}')

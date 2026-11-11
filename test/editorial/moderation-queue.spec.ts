@@ -125,6 +125,7 @@ describe('GET /v1/moderation/changes (E19)', () => {
       'filter[status]=applied',
       'filter[operation]=drop_table',
       'filter[entityType]=song',
+      // The MusicBrainz name of a release, spelled in two parts so that Paltono's code never names it (ADR 0010).
       `filter[entityType]=release${'_group'}`,
       'filter[author]=nobody',
       'filter[entity]=nothing',

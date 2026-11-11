@@ -4,7 +4,7 @@ Paltono llama **release** al lanzamiento (el álbum, EP, single o recopilatorio 
 
 El esquema lo leen fans, quien construye el frontend y la IA que responde preguntas sobre el catálogo, y casi nadie de ellos conoce los nombres de MusicBrainz. Para un fan, un *release* es el álbum que salió; "¿cuántos álbumes sacó BTS?" debe contar filas de `releases` y dar el número correcto sin saber nada más. Si `releases` guardara ediciones, ese conteo saldría inflado sin ningún error visible. El nombre obvio tiene que ser el correcto.
 
-Las columnas de fecha de salida de la edición (`release_year`, `release_month`, `release_day`, `release_time`) conservan su nombre: ahí *release* significa la fecha en que la edición sale, como en *release date*, no su lanzamiento.
+Las columnas de fecha de salida de la edición se llaman `release_*` (`release_year`, `release_month`, `release_day`, `release_time`) porque ahí *release* significa la fecha en que la edición sale, como en *release date*, no su lanzamiento.
 
 ## Equivalencias
 

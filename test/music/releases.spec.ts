@@ -237,13 +237,13 @@ describe('releases (M11–M14), editions (M7, M8) and discographies (C8)', () =>
       await getJsonApi(app, '/v1/releases/unknown/repackages').expect(404);
     });
 
-    it('never serves an edition as a release, nor the old paths', async () => {
+    it('never serves an edition as a release, nor a path named after MusicBrainz', async () => {
       await getJsonApi(app, `/v1/releases/${publicIds.beStandard}`).expect(404);
       await getJsonApi(app, `/v1/editions/${publicIds.be}`).expect(404);
-      // The MusicBrainz name of a release is spelled in two parts, so the old name appears nowhere else (ADR 0010).
-      const oldPath = `/v1/release${'-groups'}`;
-      await getJsonApi(app, `${oldPath}/${publicIds.be}`).expect(404);
-      await getJsonApi(app, oldPath).expect(404);
+      // The MusicBrainz name of a release is spelled in two parts so that Paltono's code never names it (ADR 0010).
+      const musicBrainzPath = `/v1/release${'-groups'}`;
+      await getJsonApi(app, `${musicBrainzPath}/${publicIds.be}`).expect(404);
+      await getJsonApi(app, musicBrainzPath).expect(404);
     });
   });
 });

@@ -5,8 +5,8 @@ import { currentTestDatabaseUrl } from '../support/console';
 /*
  * A person or an AI reading the database counts albums in `releases`, so the
  * schema must call the launch a release and the edition an edition (ADR 0010).
- * Only the release date columns of an edition keep `release` in their name,
- * because there it means the date it came out.
+ * The release date columns of an edition are called `release_*` because
+ * there release means the date it came out.
  */
 describe('release and edition names in the schema', () => {
   let dataSource: DataSource;
@@ -52,7 +52,7 @@ describe('release and edition names in the schema', () => {
   }
 
   it('names nothing after the MusicBrainz name of a release', async () => {
-    // Spelled in two parts, so the old name appears nowhere else in the code (ADR 0010).
+    // Spelled in two parts so that Paltono's code never names it (ADR 0010).
     const musicBrainzName = `release${'_group'}`;
     expect((await schemaNames()).filter((name) => name.includes(musicBrainzName))).toEqual([]);
   });
@@ -78,7 +78,7 @@ describe('release and edition names in the schema', () => {
     expect(type).toBe('release_type');
   });
 
-  it('keeps release only in the release date and the release of what belongs to an edition', async () => {
+  it('names release in what belongs to an edition only for its release date and its release', async () => {
     const editionNames = (await schemaNames()).filter((name) => /^(editions|edition_contributions|tracks)[._]/.test(name));
     expect(editionNames.filter((name) => name.replace(/^[a-z_]+\./, '').includes('release'))).toEqual([
       'editions.release_day',
