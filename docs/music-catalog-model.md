@@ -8,11 +8,13 @@ Especificación de las tablas musicales de `ERDiagram.mdj`. Recoge reglas ya doc
 |---|---|---|---|
 | Obra | `works` | Música y/o letra abstracta, independiente de sus grabaciones | Sí |
 | Grabación | `recordings` | Un audio concreto de una o varias obras | Sí |
-| Lanzamiento | `release_groups` | Álbum, EP, single o recopilatorio tal como se anunció | Sí |
-| Edición | `releases` | Publicación digital concreta de un lanzamiento | Sí |
+| Lanzamiento | `releases` | Álbum, EP, single o recopilatorio tal como se anunció | Sí |
+| Edición | `editions` | Publicación digital concreta de un lanzamiento | Sí |
 | Pista | `tracks` | Posición de una grabación dentro de una edición | No; la posee su edición |
 
 Una grabación puede aparecer en varias ediciones y posiciones. Una obra puede tener varias grabaciones, incluidas versiones cover. No se crean obras, grabaciones ni lanzamientos automáticamente por coincidencia de título.
+
+El lanzamiento se llama *release* y la edición *edition* (ADR 0010): contar filas de `releases` cuenta álbumes, EP, singles y recopilatorios, nunca sus ediciones.
 
 ## 2. Obras y grabaciones
 
@@ -25,7 +27,7 @@ Una grabación puede aparecer en varias ediciones y posiciones. Una obra puede t
 
 ### Lanzamiento
 
-Un lanzamiento posee su título, su tipo (`album | ep | single | compilation`), una descripción opcional, `repackage_of_id` y su crédito de artista (`release_artist_credits`), que vale para todas sus ediciones.
+Un lanzamiento posee su título, su tipo (`release_type`: `album | ep | single | compilation`), una descripción opcional, `repackage_of_id` y su crédito de artista (`release_artist_credits`), que vale para todas sus ediciones.
 
 - **Tipo.** Es una decisión editorial con fuente sobre cómo lo anunció su artista o agencia; nunca se calcula por número de pistas ni duración. Un single sigue siendo single aunque una edición añada remixes o un instrumental. Las ediciones no tienen tipo propio.
 - **Alta mínima.** Basta un título no vacío y un tipo válido; puede publicarse sin ediciones para registrar un anuncio.
@@ -44,10 +46,10 @@ No son ediciones distintas en el MVP los formatos físicos ni las variantes de e
 
 Reglas de la edición:
 
-- Pertenece exactamente a un lanzamiento (`release_group_id` obligatorio). Moverla a otro lanzamiento es un cambio de campo de la edición; no hay fusión automática de lanzamientos.
-- `title` es opcional: NULL muestra el título del lanzamiento sin copiarlo. `edition_name` distingue ediciones ("Deluxe", "Sped Up", "Clean", "Japan Edition"); `UNIQUE NULLS NOT DISTINCT (release_group_id, edition_name)` permite como mucho una edición sin nombre, la estándar, por lanzamiento.
+- Pertenece exactamente a un lanzamiento (`release_id` obligatorio). Moverla a otro lanzamiento es un cambio de campo de la edición; no hay fusión automática de lanzamientos.
+- `title` es opcional: NULL muestra el título del lanzamiento sin copiarlo. `edition_name` distingue ediciones ("Deluxe", "Sped Up", "Clean", "Japan Edition"); `UNIQUE NULLS NOT DISTINCT (release_id, edition_name)` permite como mucho una edición sin nombre, la estándar, por lanzamiento.
 - Alta mínima: solo su lanzamiento. Título, portada, fecha y pistas pueden ser desconocidos o estar vacíos; no se usan portadas de relleno ni pistas inventadas.
-- Fecha parcial (año, mes, día) con la misma jerarquía que el resto del catálogo. `release_time` y `timezone` (zona IANA) son opcionales, van juntos y solo con fecha completa; la zona nunca se deduce del país. Juntos definen el instante de salida que usa la cuenta regresiva.
+- Fecha de salida parcial (`release_year`, `release_month`, `release_day`) con la misma jerarquía que el resto del catálogo; ahí *release* es la fecha de salida de la edición, no su lanzamiento. `release_time` y `timezone` (zona IANA) son opcionales, van juntos y solo con fecha completa; la zona nunca se deduce del país. Juntos definen el instante de salida que usa la cuenta regresiva.
 - `is_cancelled` marca una edición cancelada. Un retraso se registra cambiando fecha y hora; las revisiones conservan los valores anteriores.
 - El contenido explícito de una edición se deriva de las grabaciones de sus pistas; no se almacena.
 
@@ -64,7 +66,7 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 
 ### Pista
 
-`UNIQUE (release_id, disc_number, track_number)`, con disco y número mayores que cero. `tracks.title` es opcional y conserva el título literal de esa edición; NULL muestra el título vigente de la grabación sin copiarlo.
+`UNIQUE (edition_id, disc_number, track_number)`, con disco y número mayores que cero. `tracks.title` es opcional y conserva el título literal de esa edición; NULL muestra el título vigente de la grabación sin copiarlo.
 
 ## 4. Créditos
 
@@ -72,7 +74,7 @@ Un lanzamiento muestra la cuenta regresiva de su primera edición próxima que t
 |---|---|---|---|
 | `work_contributions` | `work` | Autoría y aportes a la obra: composición, letra, adaptación, traducción, arreglo de obra | Obra |
 | `recording_contributions` | `recording` | Interpretación, producción, arreglo de grabación, grabación y mezcla | Grabación |
-| `release_contributions` | `release` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
+| `edition_contributions` | `release` | Créditos de una edición: masterización, restauración o producción global documentada | Edición |
 | `release_artist_credits` | Crédito de artista | Artistas con que se presenta el lanzamiento, en orden | Lanzamiento |
 | `recording_artist_credits` | Crédito de artista | Crédito de artista de la grabación: `main`, `featured` o `remixer`, en orden | Grabación |
 | `track_artist_credits` | Crédito impreso | Crédito impreso de una pista, solo si la edición acredita la grabación de otra forma | Edición de la pista |
