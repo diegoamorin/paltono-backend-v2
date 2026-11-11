@@ -58,12 +58,14 @@ export class CreateRolesAndVocabularies1792368000000 implements MigrationInterfa
         slug varchar(64) NOT NULL,
         icon_url varchar(2048) NOT NULL,
         supports_catalog_identity boolean NOT NULL DEFAULT false,
-        supports_track boolean NOT NULL DEFAULT false,
+        supports_recording boolean NOT NULL DEFAULT false,
         supports_album boolean NOT NULL DEFAULT false,
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
         CONSTRAINT platforms_name_key UNIQUE (name),
         CONSTRAINT platforms_slug_key UNIQUE (slug),
+        -- Each icon upload is the icon of a single platform (ADR 0005).
+        CONSTRAINT platforms_icon_url_key UNIQUE (icon_url),
         CONSTRAINT platforms_slug_format CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
         CONSTRAINT platforms_name_nonblank CHECK (btrim(name) <> ''),
         CONSTRAINT platforms_icon_url_format CHECK (icon_url ~ '^https?://')

@@ -28,9 +28,9 @@ const creditColumns = (table: string, scope: string) => `
 
 /**
  * The work and recording editorial roots (docs/music-catalog-model.md §2 and
- * §4) and the rows they own: the credits of each, the genres of a recording
- * and the works a recording performs, interpolates or samples. Only applied
- * microchanges write them.
+ * §4) and the rows they own: the credits of each, the genres of a recording,
+ * the works a recording performs, interpolates or samples, its artist credit
+ * and its platform links. Only applied microchanges write them.
  */
 export class CreateWorksAndRecordings1792886400000 implements MigrationInterface {
   name = 'CreateWorksAndRecordings1792886400000';
@@ -146,9 +146,48 @@ export class CreateWorksAndRecordings1792886400000 implements MigrationInterface
     // At most one primary genre per recording.
     await queryRunner.query(`CREATE UNIQUE INDEX recording_genres_primary_key ON recording_genres (recording_id) WHERE is_primary`);
     await queryRunner.query(`CREATE INDEX recording_genres_genre_id_idx ON recording_genres (genre_id)`);
+
+    // The artist credit of a recording (ADR 0008); a track's printed credit shares its ranks.
+    await queryRunner.query(`CREATE TYPE track_artist_rank AS ENUM ('main', 'featured', 'remixer')`);
+    await queryRunner.query(`
+      CREATE TABLE recording_artist_credits (
+        artist_id integer NOT NULL,
+        recording_id integer NOT NULL,
+        rank track_artist_rank NOT NULL,
+        position smallint NOT NULL,
+        credited_as varchar(200),
+        created_at timestamptz NOT NULL,
+        updated_at timestamptz NOT NULL,
+        CONSTRAINT recording_artist_credits_pkey PRIMARY KEY (artist_id, recording_id),
+        CONSTRAINT recording_artist_credits_artist_id_fkey FOREIGN KEY (artist_id) REFERENCES artists (id) ON DELETE RESTRICT,
+        CONSTRAINT recording_artist_credits_recording_id_fkey FOREIGN KEY (recording_id) REFERENCES recordings (id) ON DELETE RESTRICT,
+        CONSTRAINT recording_artist_credits_position_nonnegative CHECK (position >= 0),
+        CONSTRAINT recording_artist_credits_credited_as_nonblank CHECK (credited_as IS NULL OR btrim(credited_as) <> '')
+      )
+    `);
+    await queryRunner.query(`CREATE INDEX recording_artist_credits_recording_id_idx ON recording_artist_credits (recording_id)`);
+
+    // Where a recording can be heard on a platform, at most one link per platform (ADR 0009).
+    await queryRunner.query(`
+      CREATE TABLE recording_platform_links (
+        recording_id integer NOT NULL,
+        platform_id integer NOT NULL,
+        url varchar(2048) NOT NULL,
+        created_at timestamptz NOT NULL,
+        updated_at timestamptz NOT NULL,
+        CONSTRAINT recording_platform_links_pkey PRIMARY KEY (recording_id, platform_id),
+        CONSTRAINT recording_platform_links_recording_id_fkey FOREIGN KEY (recording_id) REFERENCES recordings (id) ON DELETE RESTRICT,
+        CONSTRAINT recording_platform_links_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES platforms (id) ON DELETE RESTRICT,
+        CONSTRAINT recording_platform_links_url_format CHECK (url ~* '^https?://[^\\s]+$')
+      )
+    `);
+    await queryRunner.query(`CREATE INDEX recording_platform_links_platform_id_idx ON recording_platform_links (platform_id)`);
   }
 
   async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query('DROP TABLE recording_platform_links');
+    await queryRunner.query('DROP TABLE recording_artist_credits');
+    await queryRunner.query('DROP TYPE track_artist_rank');
     await queryRunner.query('DROP TABLE recording_genres');
     await queryRunner.query('DROP TABLE recording_works');
     await queryRunner.query('DROP TYPE recording_work_relation_type');

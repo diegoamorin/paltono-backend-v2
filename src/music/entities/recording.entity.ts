@@ -109,7 +109,7 @@ export class RecordingContribution extends Credit {
  * An artist of a recording: main, featured or remixer, in order (ADR 0008).
  * A track without a printed credit shows these. A recording may have none.
  */
-// Mirrors the CreateRecordingArtistCredits migration.
+// Mirrors the CreateWorksAndRecordings migration.
 @Entity('recording_artist_credits')
 @Index('recording_artist_credits_recording_id_idx', ['recordingId'])
 @Check('recording_artist_credits_position_nonnegative', `position >= 0`)
@@ -225,7 +225,7 @@ export class RecordingGenre {
  * Where a recording can be heard on a platform, at most one per platform: its
  * tracks all sound the same, so any of their URLs serves (ADR 0009).
  */
-// Mirrors the MovePlatformLinksToRecordings migration.
+// Mirrors the CreateWorksAndRecordings migration.
 @Entity('recording_platform_links')
 @Index('recording_platform_links_platform_id_idx', ['platformId'])
 @Check('recording_platform_links_url_format', `url ~* '^https?://[^\\s]+$'`)

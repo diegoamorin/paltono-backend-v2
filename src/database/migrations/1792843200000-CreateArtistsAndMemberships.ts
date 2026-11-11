@@ -4,7 +4,7 @@ const partialDateCheck = (prefix: string) =>
   `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
 
 /**
- * The artist profile of an identity, the memberships of organizations with
+ * The artist profile of an identity with its debut, the memberships of organizations with
  * their roles, and the affiliations of artists with agencies, labels and
  * management. All belong to the identity root: the profile and its
  * affiliations to the artist's identity, memberships and their roles to the
@@ -24,11 +24,16 @@ export class CreateArtistsAndMemberships1792843200000 implements MigrationInterf
         catalog_identity_id integer NOT NULL,
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
+        debut_year smallint,
+        debut_month smallint,
+        debut_day smallint,
         CONSTRAINT artists_uuid_key UNIQUE (uuid),
         CONSTRAINT artists_public_id_key UNIQUE (public_id),
         CONSTRAINT artists_catalog_identity_id_key UNIQUE (catalog_identity_id),
         CONSTRAINT artists_catalog_identity_id_fkey
-          FOREIGN KEY (catalog_identity_id) REFERENCES catalog_identities (id) ON DELETE RESTRICT
+          FOREIGN KEY (catalog_identity_id) REFERENCES catalog_identities (id) ON DELETE RESTRICT,
+        -- The debut is a partial date, like the founding of an organization.
+        CONSTRAINT artists_debut_date CHECK (${partialDateCheck('debut')})
       )
     `);
 
@@ -67,6 +72,10 @@ export class CreateArtistsAndMemberships1792843200000 implements MigrationInterf
       )
     `);
     await queryRunner.query(`CREATE INDEX organization_memberships_member_identity_id_idx ON organization_memberships (member_identity_id)`);
+    // A member holds at most one current membership in an organization.
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX organization_memberships_current_key ON organization_memberships (organization_id, member_identity_id) WHERE status = 'current'`,
+    );
 
     // A role is only usable where its scopes allow, through the (role, scope) pair.
     await queryRunner.query(`
@@ -99,21 +108,27 @@ export class CreateArtistsAndMemberships1792843200000 implements MigrationInterf
         artist_id integer NOT NULL,
         organization_id integer NOT NULL,
         relationship_type affiliation_relationship_type NOT NULL,
-        started_at date,
-        ended_at date,
         status association_status NOT NULL DEFAULT 'unknown',
         description text,
         created_at timestamptz NOT NULL,
         updated_at timestamptz NOT NULL,
+        started_year smallint,
+        started_month smallint,
+        started_day smallint,
+        ended_year smallint,
+        ended_month smallint,
+        ended_day smallint,
         CONSTRAINT artist_organization_affiliations_artist_id_fkey
           FOREIGN KEY (artist_id) REFERENCES artists (id) ON DELETE RESTRICT,
         CONSTRAINT artist_organization_affiliations_organization_id_fkey
           FOREIGN KEY (organization_id) REFERENCES organizations (catalog_identity_id) ON DELETE RESTRICT,
         CONSTRAINT artist_organization_affiliations_period_key
-          UNIQUE NULLS NOT DISTINCT (artist_id, organization_id, relationship_type, started_at),
-        CONSTRAINT artist_organization_affiliations_interval CHECK (ended_at >= started_at),
+          UNIQUE NULLS NOT DISTINCT (artist_id, organization_id, relationship_type, started_year, started_month, started_day),
+        -- Start and end are partial dates, which a column check cannot compare: the interval rule lives in the code.
+        CONSTRAINT artist_organization_affiliations_started_date CHECK (${partialDateCheck('started')}),
+        CONSTRAINT artist_organization_affiliations_ended_date CHECK (${partialDateCheck('ended')}),
         CONSTRAINT artist_organization_affiliations_status CHECK (
-          (ended_at IS NULL OR status = 'former') AND (status <> 'current' OR ended_at IS NULL)
+          (ended_year IS NULL OR status = 'former') AND (status <> 'current' OR ended_year IS NULL)
         )
       )
     `);

@@ -1,5 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+const partialDateCheck = (prefix: string) =>
+  `(${prefix}_year IS NULL OR ${prefix}_year BETWEEN 1 AND 9999) AND (${prefix}_month IS NULL OR (${prefix}_year IS NOT NULL AND ${prefix}_month BETWEEN 1 AND 12)) AND (${prefix}_day IS NULL OR (${prefix}_month IS NOT NULL AND ${prefix}_day BETWEEN 1 AND extract(day FROM make_date(${prefix}_year, ${prefix}_month, 1) + interval '1 month - 1 day')))`;
+
+/** A partial date that may also be a birthday: a month and day without a year, checked against a leap year. */
+const birthDateCheck = `(birth_year IS NULL OR birth_year BETWEEN 1 AND 9999) AND (birth_month IS NULL OR birth_month BETWEEN 1 AND 12) AND (birth_day IS NULL OR (birth_month IS NOT NULL AND birth_day BETWEEN 1 AND extract(day FROM make_date(coalesce(birth_year, 2000), birth_month, 1) + interval '1 month - 1 day'))) AND (birth_year IS NOT NULL OR birth_month IS NULL OR birth_day IS NOT NULL)`;
+
 /**
  * Editorial contributions (docs/editorial-contributions.md §2): editorial roots,
  * proposals, microchanges, dependencies, sources, decisions and revisions, with
@@ -106,6 +112,7 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         status proposal_change_status NOT NULL DEFAULT 'pending',
         created_at timestamptz NOT NULL,
         resolved_at timestamptz,
+        possible_duplicate_of uuid,
         CONSTRAINT proposal_changes_proposal_id_id_key UNIQUE (proposal_id, id),
         CONSTRAINT proposal_changes_id_entity_id_key UNIQUE (id, entity_id),
         CONSTRAINT proposal_changes_proposal_id_position_key UNIQUE (proposal_id, position),
@@ -118,7 +125,12 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         CONSTRAINT proposal_changes_base_value_envelope CHECK (jsonb_typeof(base_value -> 'exists') = 'boolean'),
         CONSTRAINT proposal_changes_proposed_value_envelope CHECK (jsonb_typeof(proposed_value -> 'exists') = 'boolean'),
         -- Only the open states lack a resolution.
-        CONSTRAINT proposal_changes_resolution CHECK ((status IN ('pending', 'conflicted')) = (resolved_at IS NULL))
+        CONSTRAINT proposal_changes_resolution CHECK ((status IN ('pending', 'conflicted')) = (resolved_at IS NULL)),
+        -- A creation may be marked as a possible duplicate of a published root of its type. Kept apart from the
+        -- payload, it only warns moderation and never reaches the entry.
+        CONSTRAINT proposal_changes_possible_duplicate_of_fkey
+          FOREIGN KEY (possible_duplicate_of) REFERENCES editorial_entities (id) ON DELETE RESTRICT,
+        CONSTRAINT proposal_changes_possible_duplicate_of_creation CHECK (possible_duplicate_of IS NULL OR operation = 'create_entity')
       )
     `);
     await queryRunner.query(`CREATE INDEX proposal_changes_proposal_id_status_idx ON proposal_changes (proposal_id, status)`);
@@ -272,14 +284,20 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
       )
     `);
 
+    // Birth and death are partial dates, and the birth may be a birthday without a year. A partial
+    // date cannot be compared in a column check, so the lifespan rule lives in the code.
     await queryRunner.query(`
       CREATE TABLE people (
         catalog_identity_id integer PRIMARY KEY,
         given_name varchar(200),
         family_name varchar(200),
-        birth_date date,
+        birth_year smallint,
+        birth_month smallint,
+        birth_day smallint,
         birth_country_id integer,
-        death_date date,
+        death_year smallint,
+        death_month smallint,
+        death_day smallint,
         height_cm smallint,
         gender person_gender,
         img_full_body varchar(2048),
@@ -288,7 +306,8 @@ export class CreateEditorialContributions1792540800000 implements MigrationInter
         CONSTRAINT people_birth_country_id_fkey
           FOREIGN KEY (birth_country_id) REFERENCES countries (id) ON DELETE RESTRICT,
         CONSTRAINT people_height_cm_range CHECK (height_cm BETWEEN 1 AND 300),
-        CONSTRAINT people_lifespan CHECK (death_date >= birth_date),
+        CONSTRAINT people_birth_date CHECK (${birthDateCheck}),
+        CONSTRAINT people_death_date CHECK (${partialDateCheck('death')}),
         CONSTRAINT people_img_full_body_format CHECK (img_full_body IS NULL OR img_full_body ~* '^https?://[^\\s]+$')
       )
     `);

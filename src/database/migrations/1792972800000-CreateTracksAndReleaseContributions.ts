@@ -2,8 +2,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * The rows a release owns besides its fields (docs/music-catalog-model.md §3
- * and §4): its tracks, the printed credits and platform links of each
- * track, and the credits of the release itself. Only applied microchanges
+ * and §4): its tracks, the printed credit of each track, and the credits of
+ * the release itself. Only applied microchanges
  * write them.
  */
 export class CreateTracksAndReleaseContributions1792972800000 implements MigrationInterface {
@@ -31,7 +31,7 @@ export class CreateTracksAndReleaseContributions1792972800000 implements Migrati
     `);
     await queryRunner.query(`CREATE INDEX tracks_recording_id_idx ON tracks (recording_id)`);
 
-    await queryRunner.query(`CREATE TYPE track_artist_rank AS ENUM ('main', 'featured', 'remixer')`);
+    // A printed credit, where the track shows other artists than its recording (ADR 0008).
     await queryRunner.query(`
       CREATE TABLE track_artist_credits (
         artist_id integer NOT NULL,
@@ -49,22 +49,6 @@ export class CreateTracksAndReleaseContributions1792972800000 implements Migrati
       )
     `);
     await queryRunner.query(`CREATE INDEX track_artist_credits_track_id_idx ON track_artist_credits (track_id)`);
-
-    await queryRunner.query(`
-      CREATE TABLE track_platform_links (
-        id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-        platform_id integer NOT NULL,
-        track_id integer NOT NULL,
-        url varchar(2048) NOT NULL,
-        created_at timestamptz NOT NULL,
-        updated_at timestamptz NOT NULL,
-        CONSTRAINT track_platform_links_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES platforms (id) ON DELETE RESTRICT,
-        CONSTRAINT track_platform_links_track_id_fkey FOREIGN KEY (track_id) REFERENCES tracks (id) ON DELETE RESTRICT,
-        CONSTRAINT track_platform_links_track_platform_url_key UNIQUE (track_id, platform_id, url),
-        CONSTRAINT track_platform_links_url_format CHECK (url ~* '^https?://[^\\s]+$')
-      )
-    `);
-    await queryRunner.query(`CREATE INDEX track_platform_links_platform_id_idx ON track_platform_links (platform_id)`);
 
     await queryRunner.query(`
       CREATE TABLE release_contributions (
@@ -99,9 +83,7 @@ export class CreateTracksAndReleaseContributions1792972800000 implements Migrati
 
   async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query('DROP TABLE release_contributions');
-    await queryRunner.query('DROP TABLE track_platform_links');
     await queryRunner.query('DROP TABLE track_artist_credits');
-    await queryRunner.query('DROP TYPE track_artist_rank');
     await queryRunner.query('DROP TABLE tracks');
   }
 }

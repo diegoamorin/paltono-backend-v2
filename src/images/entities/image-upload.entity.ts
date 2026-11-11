@@ -4,7 +4,7 @@ import { User } from '../../accounts/entities/user.entity';
 export const IMAGE_UPLOAD_PURPOSES = ['catalog', 'avatar', 'platform_icon'] as const;
 export type ImageUploadPurpose = (typeof IMAGE_UPLOAD_PURPOSES)[number];
 
-// Mirrors the CreateImageUploads and AddImageUploadDimensionsAndFileRemoval migrations, so `migration:generate` finds no drift.
+// Mirrors the CreateImageUploads migration, so `migration:generate` finds no drift.
 @Entity('image_uploads')
 @Unique('image_uploads_url_key', ['url'])
 @Check('image_uploads_url_format', `url ~ '^https?://'`)
