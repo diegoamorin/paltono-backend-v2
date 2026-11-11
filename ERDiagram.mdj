@@ -13857,8 +13857,9 @@
 								"$ref": "AAAAAAGeD8zCE4DzTtg="
 							},
 							"name": "source_url",
-							"type": "TEXT",
-							"nullable": true
+							"type": "VARCHAR",
+							"nullable": true,
+							"length": 2048
 						},
 						{
 							"_type": "ERDColumn",
@@ -24998,7 +24999,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "c9ad9bc112b64a9e819ebc8ed53912e8",
@@ -25029,7 +25030,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "5049847d43c24eb4b521220154c109d0",
@@ -25060,7 +25061,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "35760d3be7dc4bbf99d1d3981ab909d7",
@@ -25091,7 +25092,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "2cdbec057a284aefb173057e810a7f61",
@@ -25122,7 +25123,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "c8bfaada6c3447e9b867673c503ada81",
@@ -25153,7 +25154,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "2d3208ebc11d448582b7bfc99835959c",
@@ -25184,7 +25185,7 @@
 								"$ref": "3b7372001e4648e791a1fe4ae735cc03"
 							},
 							"name": "editorial_entity_id",
-							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the six root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
+							"documentation": "NOT NULL UNIQUE FK on domain root. Exactly one of the seven root tables matches entity_type once published; no row while reserved. ON DELETE RESTRICT.",
 							"end1": {
 								"_type": "ERDRelationshipEnd",
 								"_id": "04a58bb72ce84a9fbeb5aa20118745d1",
